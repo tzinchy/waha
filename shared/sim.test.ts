@@ -106,6 +106,7 @@ test('бой: капитан добивает вражескую базу, иг�
   const cap = unit(s, 0, 'captain'), hq = unit(s, 1, 'hq');
   s.units = s.units.filter(u => u !== unit(s, 1, 'captain')); // без защитника, иначе капитан не переживёт
   [cap.x, cap.y] = [hq.x - 5, hq.y];
+  hq.hp = 400; // уже побитая база: по зданиям пехота бьёт слабо (STRUCT_ARMOR)
   applyCmd(s, 0, { c: 'attack', ids: [cap.id], id: hq.id });
   run(s, 120);
   assert.equal(s.winner, 0);
@@ -167,6 +168,7 @@ test('Орда: ярость копится от урона и запускае�
   const cap = unit(s, 0, 'captain'), hq = unit(s, 1, 'hq');
   s.units = s.units.filter(u => u !== unit(s, 1, 'captain'));
   [cap.x, cap.y] = [hq.x - 5, hq.y];
+  s.players[0].rage = RAGE_MAX * 0.7;
   applyCmd(s, 0, { c: 'attack', ids: [cap.id], id: hq.id });
   for (let i = 0; i < 20 * 60 && s.players[0].waagh <= 0; i++) step(s);
   assert.ok(s.players[0].waagh > 0, 'ВААГХ начался');

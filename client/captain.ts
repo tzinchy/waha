@@ -1,3 +1,4 @@
+
 // Превью капитана в редакторе: силуэт архетипа из дизайн-системы, окрашенный цветами игрока; иногда делает замах.
 import type { CaptainCfg } from '../shared/sim.ts';
 import { captainSvg, ready2d } from './game2d.ts';
