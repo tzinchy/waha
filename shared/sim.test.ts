@@ -373,7 +373,7 @@ test('победные очки тают у того, кто держит мен
   s.points.forEach((p, i) => { if (!p.relic) p.owner = i === 0 ? 1 : i % 2; }); // у игрока 1 больше точек и центр
   const vp0 = s.vp[0];
   run(s, 10);
-  assert.ok(s.vp[0] < vp0 - 20, 'очки игрока 0 тают'); assert.equal(s.vp[1], 500);
+  assert.ok(s.vp[0] < vp0 - 10, 'очки игрока 0 тают'); // VP_RATE 0.5 × перевес ≥ 2 точек × 10 с assert.equal(s.vp[1], 500);
   s.vp[0] = 1; run(s, 1);
   assert.equal(s.players[0].alive, false); assert.equal(s.winner, 1);
   const f = newState(2), far = unit(f, 1, 'hq');
