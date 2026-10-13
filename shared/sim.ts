@@ -6,10 +6,10 @@ export const DT = 1 / 20;
 
 export type Weapon = 'sword' | 'hammer';
 export type CaptainCfg = { armor: number; trim: number; weapon: Weapon; banner: boolean };
-export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'legend';
-export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'key1', 'key2', 'key3', 'key4', 'gate', 'legend'];
+export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'legend' | 'wall' | 'wallgate' | 'bunker' | 'mine';
+export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'key1', 'key2', 'key3', 'key4', 'gate', 'legend', 'wall', 'wallgate', 'bunker', 'mine'];
 export const isStruct = (k: Kind) => k !== 'captain' && k !== 'builder' && k !== 'guard' && k !== 'legend';
-export type Buildable = 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate';
+export type Buildable = 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'wall' | 'wallgate' | 'bunker' | 'mine';
 
 // hp: у отрядов хп ОДНОЙ модели (общий пул = hp * n), у остальных общий. dmg: урон одной модели.
 type Stat = { hp: number; n: number; dmg: number; range: number; cd: number; speed: number; sight: number; radius: number; cost: number; time: number };
@@ -29,6 +29,18 @@ export const STATS: Record<Kind, Stat> = {
   key4: { hp: 1500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3, cost: 450, time: 35 },
   gate: { hp: 2500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3.6, cost: 500, time: 40 },    // Врата призыва, тир V
   legend: { hp: 3000, n: 1, dmg: 50, range: 5, cd: 1, speed: 8, sight: 16, radius: 1.4, cost: 0, time: 0 },
+  // укрепления (пресет Fortifications)
+  wall: { hp: 1500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.6, cost: 30, time: 4 },      // сегмент стены
+  wallgate: { hp: 2400, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.6, cost: 120, time: 10 }, // ворота: свои проходят
+  bunker: { hp: 3000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.2, cost: 250, time: 18 },  // крипта: пехота рядом −50% урона
+  mine: { hp: 60, n: 1, dmg: 180, range: 2, cd: 1, speed: 0, sight: 0, radius: 0.6, cost: 40, time: 3 },      // мина: невидима, 180 урона по 6 м
+};
+export const TURRET_CAP = 12;
+export const WALL_STEP = 2.4;
+/** Прокачка реликвария (пресет PointUpgrades): индекс = текущий уровень. Критическую точку в центре не укрепить. */
+export const POST_UP: Record<number, { cost: number; energy: number; tier: number; name: string }> = {
+  1: { cost: 120, energy: 0, tier: 2, name: 'Укреплённый столп' },
+  2: { cost: 100, energy: 80, tier: 2, name: 'Столп-бастион' },
 };
 
 // ---------- тиры I–V, исследования, легенды (пресеты TechTiers, KeyBuildings, SummonGate) ----------
@@ -66,13 +78,12 @@ export const RELIC_RATE = 1 / 20; // реликвий в секунду с од�
  */
 export type Upgrade = { cost: number; energy: number; relics: number; time: number; tier: number; name: string };
 export const UPGRADES: Partial<Record<Kind, Upgrade>> = {
-  post: { cost: 100, energy: 40, relics: 0, time: 12, tier: 2, name: 'Укрепить реликварий' },
   turret: { cost: 90, energy: 40, relics: 0, time: 10, tier: 2, name: 'Тяжёлая турель' },
   guard: { cost: 80, energy: 50, relics: 0, time: 8, tier: 2, name: 'Тяжёлое оружие' },
   captain: { cost: 0, energy: 0, relics: 2, time: 5, tier: 1, name: 'Реликвийный доспех' },
 };
-const LVL2 = { dmg: { post: 2.3, turret: 1.8, guard: 1.6, captain: 1.5 } as Partial<Record<Kind, number>>, armor: { post: 0.5, turret: 0.6, guard: 0.8, captain: 0.7 } as Partial<Record<Kind, number>>, range: { post: 3, turret: 3 } as Partial<Record<Kind, number>> };
-export const BUILD_TIER: Record<Buildable, number> = { barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1, key1: 1, key2: 2, key3: 3, key4: 4, gate: 5 };
+const LVL2 = { dmg: { post: 1, turret: 1.8, guard: 1.6, captain: 1.5 } as Partial<Record<Kind, number>>, armor: { post: 1, turret: 0.6, guard: 0.8, captain: 0.7 } as Partial<Record<Kind, number>>, range: { post: 0, turret: 3 } as Partial<Record<Kind, number>> };
+export const BUILD_TIER: Record<Buildable, number> = { barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1, key1: 1, key2: 2, key3: 3, key4: 4, gate: 5, wall: 1, wallgate: 1, bunker: 2, mine: 1 };
 export const maxHp = (k: Kind) => STATS[k].hp * STATS[k].n;
 /** Сколько моделей показывать: хп пула / хп одной модели, округлено вверх. */
 export const members = (k: Kind, hp: number) => (hp <= 0 ? 0 : Math.min(STATS[k].n, Math.ceil(hp / STATS[k].hp - 1e-6)));
@@ -127,7 +138,8 @@ export type Cmd =
   | { c: 'reinforce'; ids: number[] }
   | { c: 'upgrade'; id: number }
   | { c: 'research'; id: number; r: number }
-  | { c: 'summon'; id: number; v: number };
+  | { c: 'summon'; id: number; v: number }
+  | { c: 'wall'; ids: number[]; x1: number; y1: number; x2: number; y2: number };
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -187,7 +199,8 @@ function factionDmg(s: State, u: Unit, p: Player) {
 /** Получаемый урон: Орден −13% (у своих реликвариев и штаба ещё −20%, Свет веры), Орда +15%. */
 function armorMul(s: State, t: Unit) {
   const f = fac(s, t.owner), p = s.players[t.owner];
-  if (isStruct(t.kind)) return has(p, 4) ? 0.8 : 1;
+  if (isStruct(t.kind)) return (has(p, 4) ? 0.8 : 1) * (t.kind === 'post' && t.lvl >= 2 ? 0.5 : 1) * (t.kind === 'wall' ? 0.6 : 1);
+  if (s.units.some(b => b.kind === 'bunker' && b.owner === t.owner && b.build >= 1 && b.hp > 0 && dist(b, t) < STATS.bunker.radius + 3)) return 0.5; // крипта-бункер
   const res = (t.kind === 'guard' && has(p, 0) ? 0.9 : 1) * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
   return res * factionArmor(f, s, t);
 }
@@ -261,6 +274,18 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     g.q = v + 1; g.prog = 0;
     return;
   }
+  if (cmd.c === 'upgrade' && s.units.some(v => v.id === cmd.id && v.kind === 'post' && v.owner === owner)) { // прокачка точки I→II→III
+    const u = s.units.find(v => v.id === cmd.id)!, up = POST_UP[u.lvl];
+    if (u.build < 1) return 'Строительство не завершено';
+    if (!up) return 'Точка уже бастион';
+    if (u.upg >= 0) return 'Уже улучшается';
+    if (dist(u, s.points[0]) < 2) return 'Критическую точку не укрепить — за неё сражаются';
+    if (p.tier < up.tier) return `Нужен тир ${up.tier}`;
+    const e = pay(p, up.cost, up.energy);
+    if (e) return e;
+    u.upg = 0;
+    return;
+  }
   if (cmd.c === 'upgrade') {
     const u = s.units.find(v => v.id === cmd.id && v.owner === owner && v.hp > 0);
     const up = u && UPGRADES[u.kind];
@@ -288,6 +313,25 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (t) for (const u of mine) if (u.kind === 'builder') u.order = { t: 'build', id: t.id };
     return;
   }
+  if (cmd.c === 'wall') { // протяжка стены: сегменты каждые WALL_STEP вдоль линии, не больше 16
+    const bs = mine.filter(u => u.kind === 'builder');
+    if (!bs.length) return 'Нужны строители';
+    if (![cmd.x1, cmd.y1, cmd.x2, cmd.y2].every(Number.isFinite)) return;
+    const a = { x: clamp(cmd.x1, 2, MAP.w - 2), y: clamp(cmd.y1, 2, MAP.h - 2) }, b = { x: clamp(cmd.x2, 2, MAP.w - 2), y: clamp(cmd.y2, 2, MAP.h - 2) };
+    const n = Math.min(16, Math.floor(dist(a, b) / WALL_STEP) + 1);
+    let first: Unit | undefined, built = 0;
+    for (let i = 0; i < n; i++) {
+      const x = a.x + ((b.x - a.x) * i) / Math.max(1, n - 1), y = a.y + ((b.y - a.y) * i) / Math.max(1, n - 1);
+      if (s.units.some(u => isStruct(u.kind) && u.hp > 0 && dist(u, { x, y }) < (u.kind === 'wall' ? 1 : STATS[u.kind].radius + STATS.wall.radius))) continue;
+      if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) continue;
+      if (pay(p, STATS.wall.cost)) break;
+      const site = spawn(s, owner, 'wall', x, y);
+      site.build = 0.05; site.hp = STATS.wall.hp * 0.05; first ??= site; built++;
+    }
+    if (!first) return 'Здесь нельзя вести стену';
+    for (const b2 of bs) b2.order = { t: 'build', id: first.id };
+    return;
+  }
   if (cmd.c === 'build') {
     const bs = mine.filter(u => u.kind === 'builder');
     if (!bs.length) return 'Нужны строители';
@@ -307,6 +351,8 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
       const v = VENTS.map(([vx, vy]) => ({ x: vx, y: vy })).filter(q => dist(q, { x, y }) < 6).sort((a, b) => dist(a, { x, y }) - dist(b, { x, y }))[0];
       if (!v) return 'Насос ставится на жилу';
       ({ x, y } = v);
+    } else if (cmd.kind === 'mine' || cmd.kind === 'wallgate' || cmd.kind === 'bunker' || cmd.kind === 'wall') { // укрепления: своя или нейтральная земля
+      if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) return 'Слишком близко к чужому штабу';
     } else if (cmd.kind === 'turret' && p.faction === 'orks') { // Орда ставит турели где угодно, кроме 20 м у чужого штаба
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) return 'Слишком близко к чужому штабу';
     } else if (cmd.kind === 'turret' || cmd.kind === 'foundry' || /^key|^gate/.test(cmd.kind)) {
@@ -316,7 +362,8 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
       const hq = hqOf(s, owner), d = hq ? dist(hq, { x, y }) : 99;
       if (d < 8 || d > 32) return 'Казармы строятся рядом со штабом';
     }
-    if (s.units.some(u => isStruct(u.kind) && u.hp > 0 && dist(u, { x, y }) < STATS[u.kind].radius + c.radius + 1)) return 'Место занято';
+    if (cmd.kind === 'turret' && count(s, owner, 'turret') >= (p.faction === 'orks' ? 30 : TURRET_CAP)) return 'Лимит турелей';
+    if (s.units.some(u => isStruct(u.kind) && u.hp > 0 && dist(u, { x, y }) < STATS[u.kind].radius + c.radius + (cmd.kind === 'mine' ? 0 : 1))) return 'Место занято';
     if (s.players.some((q, i) => i !== owner && q.faction === 'ashen' && nearOwn(s, i, x, y, 14))) return 'Земля осквернена Порчей';
     pay(p, c.cost, ENERGY_COST[cmd.kind] ?? 0);
     const site = spawn(s, owner, cmd.kind, x, y);
@@ -339,7 +386,7 @@ export function step(s: State, dt = DT): void {
   const income = s.players.map(() => 1), energy = s.players.map(() => 0), relics = s.players.map(() => 0);
   for (const pt of s.points) if (pt.owner >= 0) {
     if (pt.relic) relics[pt.owner] += RELIC_RATE;
-    else income[pt.owner] += 1 + (postAt(s, pt)?.owner === pt.owner ? 2 : 0);
+    else { const po = postAt(s, pt); income[pt.owner] += 1 + (po?.owner === pt.owner ? (po.lvl >= 2 ? 3 : 2) : 0); }
   }
   for (const u of s.units) if (u.build >= 1 && u.hp > 0) energy[u.owner] += (ENERGY_INCOME[u.kind] ?? 0) * (u.kind === 'pump' && hasR(s, u.owner, 6) ? 1.25 : 1);
   s.players.forEach((p, i) => {
@@ -364,6 +411,7 @@ export function step(s: State, dt = DT): void {
     }
     if (u.hp <= 0) continue;
     if (u.upg >= 0 && u.kind === 'hq') { if ((u.upg += dt) >= TIER_TIME) { u.upg = -1; s.players[u.owner].tier++; } }
+    else if (u.upg >= 0 && u.kind === 'post') { if ((u.upg += dt) >= 12) { u.upg = -1; u.lvl++; } }
     else if (u.upg >= 0) { // идёт апгрейд
       const up = UPGRADES[u.kind]!;
       if ((u.upg += dt) >= up.time) { u.upg = -1; u.lvl = 2; }
@@ -371,6 +419,13 @@ export function step(s: State, dt = DT): void {
     if (u.build >= 1) produce(s, u, dt);
     act(s, u, dt, byId);
     reinforce(s, u, dt);
+  }
+  for (const m of s.units) { // мины: срабатывают от врага рядом, бьют по площади и исчезают
+    if (m.kind !== 'mine' || m.build < 1 || m.hp <= 0) continue;
+    if (!s.units.some(e => e.owner !== m.owner && !isStruct(e.kind) && e.hp > 0 && dist(e, m) < STATS.mine.range)) continue;
+    for (const e of s.units) if (e.owner !== m.owner && e.hp > 0 && dist(e, m) < 6) { e.hp -= STATS.mine.dmg; e.hit = 0; }
+    m.hp = 0;
+    if (s.shots.length < 200) s.shots.push([m.x, m.y, m.x, m.y - 0.1]);
   }
   separate(s);
   capture(s, dt);
@@ -429,7 +484,11 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
   const o = u.order;
   if (o?.t === 'build') {
     const site = byId.get(o.id);
-    if (!site || site.hp <= 0 || site.build >= 1) { u.order = null; return; }
+    if (!site || site.hp <= 0 || site.build >= 1) { // стена: строитель переходит к следующему недостроенному сегменту рядом
+      const next = s.units.filter(v => v.owner === u.owner && v.kind === 'wall' && v.build < 1 && v.hp > 0 && dist(v, u) < 12).sort((a, b) => dist(a, u) - dist(b, u))[0];
+      u.order = next ? { t: 'build', id: next.id } : null;
+      return;
+    }
     if (dist(u, site) - STATS[site.kind].radius > 2) { go(u, site.x, site.y, dt); return; }
     const c = STATS[site.kind];
     const slow = (fac(s, u.owner) === 'clockwork' ? 0.75 : 1) * (hasR(s, u.owner, 3) ? 1.2 : 1); // Династии −25%, Свитки каменщиков +20%
@@ -458,11 +517,11 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
   if (target) {
     const d = dist(u, target) - STATS[target.kind].radius;
     u.face = Math.atan2(target.y - u.y, target.x - u.x);
-    if (d <= st.range * rangeMul(s, u) + (u.lvl > 1 ? LVL2.range[u.kind] ?? 0 : 0) + ((u.kind === 'post' || u.kind === 'turret') && hasR(s, u.owner, 8) ? 3 : 0)) {
+    if (d <= (u.kind === 'post' && u.lvl >= 3 ? 12 : st.range) * rangeMul(s, u) + (u.lvl > 1 ? LVL2.range[u.kind] ?? 0 : 0) + ((u.kind === 'post' || u.kind === 'turret') && hasR(s, u.owner, 8) ? 3 : 0)) {
       if (u.cd === 0) {
         u.cd = st.cd;
         const mult = u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1, armor = target.lvl > 1 ? LVL2.armor[target.kind] ?? 1 : 1;
-        const dealt = st.dmg * (u.kind === 'guard' ? members('guard', u.hp) : 1) * mult * armor * dmgMul(s, u) * armorMul(s, target);
+        const dealt = (u.kind === 'post' && u.lvl >= 3 ? 14 : st.dmg) * (u.kind === 'guard' ? members('guard', u.hp) : 1) * mult * armor * dmgMul(s, u) * armorMul(s, target);
         target.hp -= dealt;
         if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) v.hp -= dealt * 0.5; // огненная буря
         const pa = s.players[u.owner];
@@ -488,6 +547,7 @@ function separate(s: State) { // ponytail: O(n²) по парам, на сотн
       if (d < min && d > 1e-3) { const p = ((min - d) * 0.5) / d; a.x -= dx * p; a.y -= dy * p; b.x += dx * p; b.y += dy * p; }
     }
     for (const h of structs) {
+      if (h.kind === 'mine' || (h.kind === 'wallgate' && h.owner === a.owner)) continue;
       const dx = a.x - h.x, dy = a.y - h.y, d = Math.hypot(dx, dy), min = STATS[h.kind].radius + STATS[a.kind].radius * 0.6;
       if (d < min && d > 1e-3) { a.x = h.x + (dx / d) * min; a.y = h.y + (dy / d) * min; }
     }
@@ -544,7 +604,7 @@ export function snapshot(s: State): Snap {
   return {
     tick: s.tick,
     // [id, owner, kind, x*10, y*10, hp, face*100, очередь, стройка %, пополняется, уровень, апгрейд %, найм текущего %]
-    u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), Math.max(0, Math.round(u.hp)), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : UPGRADES[u.kind]!.time)) * 100), prodPct(u)]),
+    u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), Math.max(0, Math.round(u.hp)), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : u.kind === 'post' ? 12 : UPGRADES[u.kind]!.time)) * 100), prodPct(u)]),
     p: s.points.map(p => [p.owner, Math.round(p.prog * 100), p.by]),
     pl: s.players.map(p => [Math.floor(p.req), p.alive ? 1 : 0, p.tier, Math.floor(p.energy), Math.floor(p.relics), Math.floor(p.rage), Math.ceil(p.waagh), p.remains, p.research]),
     sh: s.shots.map(v => v.map(n => Math.round(n * 10))),

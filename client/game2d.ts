@@ -1,6 +1,6 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
-import { CAP, ENERGY_COST, LEGEND_COST, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { FACTIONS, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -12,8 +12,9 @@ export const SLOT_COLORS = [0x4fa392, 0xe0675c, 0xe0a53a, 0xb9c3c6];
 
 // какой силуэт из пресетов у какого юнита, его ширина в мире и сколько бойцов в отряде
 // ширина силуэта в мире (единиц симуляции); сами силуэты — по фракции игрока (shared/factions.ts)
-const WIDTH: Record<Kind, number> = { captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, legend: 4.4 };
+const WIDTH: Record<Kind, number> = { captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, legend: 4.4, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
 const NEUTRAL: Partial<Record<Kind, [string, string]>> = {
+  wall: ['Defenses/wall.svg', 'Defenses/wall.svg'], wallgate: ['Defenses/gate.svg', 'Defenses/gate.svg'], bunker: ['Defenses/bunker.svg', 'Defenses/bunker.svg'], mine: ['Defenses/mine.svg', 'Defenses/mine.svg'],
   key1: ['Buildings/scriptorium.svg', 'Buildings/scriptorium.svg'], key2: ['Buildings/forge.svg', 'Buildings/forge.svg'], key3: ['Buildings/observatory.svg', 'Buildings/observatory.svg'],
   key4: ['Buildings/reliqhall.svg', 'Buildings/reliqhall.svg'], gate: ['Buildings/gate.svg', 'Buildings/gate.svg'], post: ['Defenses/point-1.svg', 'Defenses/point-2.svg'], foundry: ['Buildings/foundry.svg', 'Buildings/foundry.svg'], pump: ['Buildings/pump.svg', 'Buildings/pump.svg'] };
 /** Путь к силуэту юнита: по фракции, уровню и (у капитана) оружию. */
@@ -22,6 +23,7 @@ export function artFor(kind: Kind, faction: FactionId, lvl = 1, weapon: 'sword' 
   if (kind === 'legend') return FACTIONS[faction].legendArt[variant] ?? FACTIONS[faction].legendArt[0];
   if (kind === 'captain') return a.captain[weapon === 'sword' ? 0 : 1];
   if (kind === 'turret') return a.turret[lvl > 1 ? 1 : 0];
+  if (kind === 'post') return lvl >= 3 ? 'Defenses/point-3.svg' : lvl === 2 ? 'Defenses/point-2.svg' : 'Defenses/point-1.svg';
   if (NEUTRAL[kind]) return NEUTRAL[kind]![lvl > 1 ? 1 : 0];
   return a[kind as 'builder' | 'guard' | 'hq' | 'barracks'];
 }
@@ -109,6 +111,7 @@ export class Game {
   private pointOwner: number[] = [];
   private shots: { el: SVGLineElement; until: number }[] = [];
   private ghost = document.createElement('div');
+  private wallLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   private place: Buildable | null = null;
   private drag: { x0: number; y0: number; x1: number; y1: number } | null = null;
   private mouse: { x: number; y: number } | null = null;
@@ -139,6 +142,9 @@ export class Game {
     this.fx.classList.add('w2d-fx');
     this.fx.setAttribute('width', String(MAP.w * S)); this.fx.setAttribute('height', String(MAP.h * S));
     this.ghost.className = 'w2d-ghost hidden';
+    this.wallLine.classList.add('w2d-wallline');
+    this.wallLine.setAttribute('visibility', 'hidden');
+    this.fx.append(this.wallLine);
     this.world.append(this.ground, this.fx, this.ghost);
     root.prepend(this.world);
     this.buildMap();
@@ -216,8 +222,9 @@ export class Game {
   onSnap(s: Snap) {
     const seen = new Set<number>(), first = this.snapN++ === 0, now = performance.now();
     for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog] of s.u) {
-      seen.add(id);
       const kind = KINDS[ki];
+      if (kind === 'mine' && owner !== this.slot) continue; // чужие мины невидимы
+      seen.add(id);
       let v = this.views.get(id);
       if (!v) {
         this.views.set(id, (v = this.mk(id, owner, kind, x / 10, y / 10, q)));
@@ -374,10 +381,17 @@ export class Game {
         }
         if (st.kind === 'barracks') html = btn('train', F.guard, free ? 0 : trainCost(this.fac(), 'guard'), 'T') + q;
         else if (st.kind === 'post') html = '<span class="info">Реликварий: +2 влияния/с, держит точку</span>';
+        if (st.kind === 'post') { // прокачка точки I → II → III (PointUpgrades)
+          const up = POST_UP[st.lvl], R = ['', 'I', 'II', 'III'];
+          html = `<span class="info">Столп · уровень ${R[st.lvl]}</span>`;
+          if (st.upg >= 0) html += `<span class="info">Укрепление: ${st.upg}%</span>`;
+          else if (up && this.tier < up.tier) html += `<span class="info">${up.name}: нужен тир II</span>`;
+          else if (up) html += btn('upgrade', up.name, up.cost, 'U', up.energy);
+        }
         html += this.upgradeBtn([st], btn);
       }
     } else {
-      if (sel.some(v => v.kind === 'builder')) html += btn('barracks', 'Казарма', STATS.barracks.cost, 'B') + btn('post', 'Реликварий', STATS.post.cost, 'P') + btn('turret', 'Турель', STATS.turret.cost, 'Y', ENERGY_COST.turret) + btn('foundry', 'Литейня', STATS.foundry.cost, 'F') + btn('pump', 'Насос', STATS.pump.cost, 'N') + this.keyBtn(btn);
+      if (sel.some(v => v.kind === 'builder')) html += btn('barracks', 'Казарма', STATS.barracks.cost, 'B') + btn('post', 'Реликварий', STATS.post.cost, 'P') + btn('turret', 'Турель', STATS.turret.cost, 'Y', ENERGY_COST.turret) + btn('foundry', 'Литейня', STATS.foundry.cost, 'F') + btn('pump', 'Насос', STATS.pump.cost, 'N') + btn('wall', 'Стена', STATS.wall.cost, 'W') + btn('wallgate', 'Ворота', STATS.wallgate.cost, 'G') + (this.tier >= 2 ? btn('bunker', 'Бункер', STATS.bunker.cost, 'X') : '<span class="info locked">Бункер · тир II</span>') + btn('mine', 'Мина', STATS.mine.cost, 'V') + this.keyBtn(btn);
       html += this.upgradeBtn(sel.filter(v => v.kind === 'guard'), btn) + this.upgradeBtn(sel.filter(v => v.kind === 'captain'), btn);
       const hurt = sel.filter(v => v.kind === 'guard' && v.hp < maxHp('guard'));
       if (hurt.length) html += btn('reinforce', 'Пополнить', hurt.reduce((n, v) => n + Math.ceil((maxHp('guard') - v.hp) / STATS.guard.hp) * REINFORCE_COST, 0), 'R');
@@ -409,8 +423,8 @@ export class Game {
     else if (/^res[0-3]$/.test(act)) { const k = sel.find(v => /^key/.test(v.kind)); if (k) this.cmd({ c: 'research', id: k.id, r: Number(act[3]) }); }
     else if (/^sum[0-2]$/.test(act)) { const g = sel.find(v => v.kind === 'gate'); if (g) this.cmd({ c: 'summon', id: g.id, v: Number(act[3]) }); }
     else if (/^key[1-4]$|^gate$/.test(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
-    else if (act === 'barracks' || act === 'post' || act === 'turret' || act === 'foundry' || act === 'pump') { if (sel.some(v => v.kind === 'builder')) this.startPlace(act); }
-    else if (act === 'upgrade') { for (const v of sel) if (UPGRADES[v.kind] && v.lvl < 2 && v.upg < 0) this.cmd({ c: 'upgrade', id: v.id }); }
+    else if (['barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
+    else if (act === 'upgrade') { for (const v of sel) if ((UPGRADES[v.kind] && v.lvl < 2 || v.kind === 'post') && v.upg < 0) this.cmd({ c: 'upgrade', id: v.id }); }
     else if (act === 'reinforce') this.cmd({ c: 'reinforce', ids: sel.filter(v => v.kind === 'guard').map(v => v.id) });
   }
 
@@ -421,7 +435,7 @@ export class Game {
     this.root.style.cursor = 'copy';
     this.renderCmd();
   }
-  private stopPlace() { this.place = null; this.ghost.classList.add('hidden'); this.root.style.cursor = ''; this.cmdHtml = ''; this.renderCmd(); }
+  private stopPlace() { this.wallStart = null; this.wallLine?.setAttribute('visibility', 'hidden'); this.place = null; this.ghost.classList.add('hidden'); this.root.style.cursor = ''; this.cmdHtml = ''; this.renderCmd(); }
 
   // ---------- ввод ----------
   private cmd(c: Cmd) { if (!this.ended) { this.send(c); audio.order(); } }
@@ -477,6 +491,10 @@ export class Game {
       else if (k === 'y') this.doAct('turret');
       else if (k === 'f') this.doAct('foundry');
       else if (k === 'n') this.doAct('pump');
+      else if (k === 'w') this.doAct('wall');
+      else if (k === 'g') this.doAct('wallgate');
+      else if (k === 'x') this.doAct('bunker');
+      else if (k === 'v') this.doAct('mine');
       else if (k === 'k') { const m = this.cmdHtml.match(/data-act="(key[1-4]|gate)"/); if (m) this.doAct(m[1]); }
       else if (/^[1-4]$/.test(k)) { const m = this.cmdHtml.match(new RegExp(`data-act="((?:res|sum)${Number(k) - 1})"`)); if (m) this.doAct(m[1]); }
       else if (k === 'u') this.doAct('upgrade');
@@ -506,7 +524,17 @@ export class Game {
   private mobile = (v: View) => v.owner === this.slot && !isStruct(v.kind) && !v.dead;
   private ownStruct = (v: View) => v.owner === this.slot && isStruct(v.kind);
 
+  private wallStart: { x: number; y: number } | null = null;
+
   private click(sx: number, sy: number, add: boolean) {
+    if (this.place === 'wall') { // стена: первый клик — начало, второй — конец
+      const p = this.toWorld(sx, sy), ids = this.selected().filter(v => v.kind === 'builder').map(v => v.id);
+      if (!this.wallStart) { this.wallStart = p; return; }
+      if (ids.length) this.cmd({ c: 'wall', ids, x1: this.wallStart.x, y1: this.wallStart.y, x2: p.x, y2: p.y });
+      this.wallStart = null; this.wallLine.setAttribute('visibility', 'hidden');
+      if (!add) this.stopPlace();
+      return;
+    }
     if (this.place) {
       const sp = this.placePoint(sx, sy), ids = this.selected().filter(v => v.kind === 'builder').map(v => v.id);
       if (sp && ids.length) this.cmd({ c: 'build', ids, kind: this.place, x: sp.x, y: sp.y });
@@ -552,6 +580,7 @@ export class Game {
       if (!v) return { ...g, ok: false };
       return { x: v[0], y: v[1], ok: !vs.some(u => u.kind === 'pump' && Math.hypot(u.x - v[0], u.y - v[1]) < 2) };
     }
+    if (['mine', 'wallgate', 'bunker'].includes(this.place ?? '')) return { ...g, ok: !vs.some(v => isStruct(v.kind) && v.kind !== 'mine' && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1) };
     if (this.place === 'turret' || this.place === 'foundry' || /^key|^gate/.test(this.place ?? '')) {
       const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16);
       const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1);
@@ -599,7 +628,13 @@ export class Game {
     const r = this.root.getBoundingClientRect();
     this.world.style.transform = `translate(${r.width / 2 - c.x * S * c.zoom}px, ${r.height / 2 - c.y * S * c.zoom}px) scale(${c.zoom})`;
 
-    if (this.place && this.mouse) {
+    if (this.place === 'wall' && this.mouse && this.wallStart) { // пунктир протяжки и итоговая цена
+      const p = this.toWorld(this.mouse.x, this.mouse.y), n = Math.min(16, Math.floor(Math.hypot(p.x - this.wallStart.x, p.y - this.wallStart.y) / WALL_STEP) + 1);
+      for (const [k, v] of [['x1', this.wallStart.x], ['y1', this.wallStart.y], ['x2', p.x], ['y2', p.y]] as const) this.wallLine.setAttribute(k, String(v * S));
+      this.wallLine.setAttribute('visibility', 'visible');
+      this.ghost.classList.add('hidden');
+      $('hud-sel').textContent = `${n} сегм. · ◆ ${n * STATS.wall.cost}`;
+    } else if (this.place && this.mouse) {
       const g = this.placePoint(this.mouse.x, this.mouse.y);
       this.ghost.classList.remove('hidden');
       this.ghost.classList.toggle('bad', !g.ok);

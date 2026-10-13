@@ -202,3 +202,42 @@ test('тиры I→V: ключевые здания, исследования, �
   run(s, 21);
   assert.ok(unit(s, 0, 'legend'), 'легенда на поле');
 });
+
+test('укрепления: стена строится по сегментам и не пускает, мина бьёт по площади', () => {
+  const s = newState(2);
+  const b = unit(s, 0, 'builder');
+  s.players[0].req = 2000;
+  assert.equal(applyCmd(s, 0, { c: 'wall', ids: [b.id], x1: 30, y1: 20, x2: 30, y2: 32 }), undefined);
+  const walls = s.units.filter(u => u.kind === 'wall');
+  assert.ok(walls.length >= 5, 'сегменты заложены');
+  run(s, 45);
+  assert.ok(walls.every(w => w.build === 1), 'строитель обошёл все сегменты');
+  const cap = unit(s, 0, 'captain');
+  [cap.x, cap.y] = [26, 26];
+  applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 36, y: 26 });
+  run(s, 3);
+  assert.ok(cap.x < 30, 'стена не пропускает');
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'mine', x: 40, y: 40 }), undefined);
+  run(s, 15);
+  const enemy = unit(s, 1, 'captain'), hp = enemy.hp;
+  [enemy.x, enemy.y] = [40, 41];
+  run(s, 0.2);
+  assert.ok(enemy.hp <= hp - 170, 'мина сработала');
+  assert.ok(!s.units.some(u => u.kind === 'mine'), 'мина исчезла');
+});
+
+test('прокачка точки: столп → укреплённый → бастион, центр не укрепить', () => {
+  const s = newState(2);
+  const p = s.players[0], b = unit(s, 0, 'builder');
+  p.req = 5000; p.energy = 5000; p.tier = 2;
+  applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: POINTS[1][0], y: POINTS[1][1] });
+  run(s, 25);
+  const post = unit(s, 0, 'post');
+  assert.equal(applyCmd(s, 0, { c: 'upgrade', id: post.id }), undefined);
+  run(s, 13);
+  assert.equal(post.lvl, 2);
+  assert.equal(applyCmd(s, 0, { c: 'upgrade', id: post.id }), undefined);
+  run(s, 13);
+  assert.equal(post.lvl, 3);
+  assert.match(applyCmd(s, 0, { c: 'upgrade', id: post.id }) ?? '', /бастион/);
+});
