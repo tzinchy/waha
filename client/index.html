@@ -97,6 +97,21 @@
   .w2d-ground{position:absolute;left:0;top:0;background:var(--surface-100);
     box-shadow:0 0 0 2px var(--gilt-700),0 0 0 6px var(--surface-000),0 0 0 7px var(--gilt-700)}
   .w2d-fx{position:absolute;left:0;top:0;pointer-events:none;z-index:100000;overflow:visible}
+  .w2d-muzzle{fill:var(--art-glow);animation:w2d-fade .16s ease-out both}
+  .w2d-slash{fill:none;stroke:var(--art-bone,#f3e6c4);stroke-width:7;stroke-linecap:round;filter:drop-shadow(0 0 6px var(--art-glow));animation:w2d-swipe .34s ease-out both}
+  .w2d-claw{fill:none;stroke:#fff6dd;stroke-width:2.5;stroke-linecap:round;filter:drop-shadow(0 0 4px var(--art-glow));animation:w2d-swipe .3s ease-out both}
+  .w2d-thrust{stroke:#fff6dd;stroke-width:3;stroke-linecap:round;animation:w2d-swipe .25s ease-out both}
+  .w2d-dust{fill:none;stroke:var(--art-ash,#8a8070);stroke-width:2;transform-box:fill-box;transform-origin:center;animation:w2d-ring .34s ease-out both}
+  .w2d-spark{fill:var(--art-fire);animation:w2d-fade .3s ease-out both}
+  .w2d-beam{stroke:var(--art-glow);stroke-width:4;stroke-linecap:round;filter:drop-shadow(0 0 8px var(--art-glow));animation:w2d-flicker .42s steps(6) both}
+  .w2d-hitring,.w2d-blast{fill:none;stroke:var(--art-glow);stroke-width:2.5;transform-box:fill-box;transform-origin:center;animation:w2d-ring .4s ease-out both}
+  .w2d-fire{fill:none;stroke:var(--art-fire);stroke-width:6;stroke-linecap:round;stroke-dasharray:18 400;filter:drop-shadow(0 0 8px var(--art-fire));animation:w2d-ball .34s linear both}
+  .w2d-blast{stroke:var(--art-fire);animation-delay:.2s}
+  @keyframes w2d-swipe{from{stroke-dasharray:0 200;opacity:1}60%{stroke-dasharray:200 0;opacity:1}to{stroke-dasharray:200 0;opacity:0}}
+  @keyframes w2d-fade{to{opacity:0}}
+  @keyframes w2d-ring{from{transform:scale(.3);opacity:1}to{transform:scale(1.6);opacity:0}}
+  @keyframes w2d-flicker{0%,100%{opacity:.2}20%,60%{opacity:1}40%,80%{opacity:.5}}
+  @keyframes w2d-ball{from{stroke-dashoffset:0}to{stroke-dashoffset:-260}}
   .w2d-tracer{stroke:var(--art-fire);stroke-width:2.5;stroke-linecap:round;filter:drop-shadow(0 0 4px var(--art-fire))}
   .w2d-ent{position:absolute;left:0;top:0;width:0;height:0}
   .w2d-ent .art,.w2d-body{position:absolute;left:0;top:0}

@@ -69,6 +69,20 @@ export const researchCost = (i: number) => ({ cost: 100 * (Math.floor(i / 4) + 1
 export const LEGEND_COST = [{ relics: 3, energy: 400 }, { relics: 4, energy: 300 }, { relics: 5, energy: 500 }];
 export const SUMMON_TIME = 20;
 
+/** Тип атаки = форма следа (пресет AttackVFX): 0 пуля, 1 рубящий, 2 когти, 3 луч, 4 огонь, 5 укол. */
+export const FX = { shot: 0, chop: 1, claws: 2, beam: 3, fire: 4, thrust: 5 } as const;
+const GUARD_FX: Record<FactionId, number> = { order: FX.shot, undead: FX.thrust, prism: FX.beam, clockwork: FX.shot, orks: FX.chop, ashen: FX.claws };
+/** Рукопашные: капитаны, легенды-бойцы, пехота Орды, Нежити и Синклита. */
+export const isMelee = (k: Kind, f: FactionId) => k === 'captain' || (k === 'guard' && GUARD_FX[f] !== FX.shot && GUARD_FX[f] !== FX.beam);
+export function attackFx(k: Kind, f: FactionId, variant = 0) {
+  if (k === 'guard') return GUARD_FX[f];
+  if (k === 'captain') return f === 'ashen' || f === 'orks' ? FX.claws : FX.chop;
+  if (k === 'legend') return variant === 2 ? FX.fire : variant === 1 ? FX.chop : FX.beam;
+  return FX.shot;
+}
+/** Рукопашная пехота: дальность в упор, бьёт сильнее и реже, бегает быстрее. */
+const MELEE_GUARD = { range: 1.4, dmg: 6.5, cd: 1.3, speed: 8.6 };
+
 // ---------- капитан: опыт, уровни 1–10 и дерево способностей (CaptainLevelUp, CaptainAbilities) ----------
 export const XP_KILL: Partial<Record<Kind, number>> = { builder: 5, guard: 20, captain: 40, legend: 200 };
 export const XP_STRUCT = 25, XP_CAPTURE = 25, MAX_LVL = 10;
@@ -205,7 +219,7 @@ const nearHq = (hx: number, hy: number, d: number): [number, number] => {
   return [hx + Math.cos(a) * d + (Math.random() - 0.5) * 3, hy + Math.sin(a) * d + (Math.random() - 0.5) * 3];
 };
 
-function spawn(s: State, owner: number, kind: Kind, x: number, y: number): Unit {
+export function spawn(s: State, owner: number, kind: Kind, x: number, y: number): Unit {
   const u: Unit = { id: s.nextId++, owner, kind, x, y, hp: maxHp(kind), face: Math.atan2(MAP.h / 2 - y, MAP.w / 2 - x), cd: 0, order: null, q: 0, prog: 0, build: 1, dead: 0, reinf: false, rt: 0, hit: 9, lvl: 1, upg: -1, sm: 1, by: -1, rush: 0, stand: 0 };
   s.units.push(u);
   return u;
@@ -227,7 +241,7 @@ const fac = (s: State, owner: number) => s.players[owner].faction;
 const nearOwn = (s: State, owner: number, x: number, y: number, r: number, kinds?: Kind[]) =>
   s.units.some(u => u.owner === owner && u.hp > 0 && u.build >= 1 && isStruct(u.kind) && (!kinds || kinds.includes(u.kind)) && dist(u, { x, y }) < r + STATS[u.kind].radius);
 /** Множитель скорости: Орден медленнее, Орда в ВААГХ быстрее. */
-const speedMul = (s: State, u: Unit) => { const p = s.players[u.owner]; return (p.faction === 'order' ? 0.9 : p.faction === 'orks' && p.waagh > 0 ? 1.3 : 1) * (has(p, 7) ? 1.1 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 2 : 1); };
+const speedMul = (s: State, u: Unit) => { const p = s.players[u.owner]; return (u.kind === 'guard' && isMelee('guard', p.faction) ? MELEE_GUARD.speed / STATS.guard.speed : 1) * (p.faction === 'order' ? 0.9 : p.faction === 'orks' && p.waagh > 0 ? 1.3 : 1) * (has(p, 7) ? 1.1 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 2 : 1); };
 /** Урон атакующего: ВААГХ +30%, Синклит вне Порчи −10%, ближний бой Консенсуса −40%. */
 function dmgMul(s: State, u: Unit) {
   const p = s.players[u.owner];
@@ -588,17 +602,18 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
   if (target) {
     const d = dist(u, target) - STATS[target.kind].radius;
     u.face = Math.atan2(target.y - u.y, target.x - u.x);
-    if (d <= (u.kind === 'post' && u.lvl >= 3 ? 12 : st.range) * rangeMul(s, u) + (u.lvl > 1 ? LVL2.range[u.kind] ?? 0 : 0) + ((u.kind === 'post' || u.kind === 'turret') && hasR(s, u.owner, 8) ? 3 : 0)) {
+    const melee = u.kind === 'guard' && isMelee('guard', fac(s, u.owner));
+    if (d <= (u.kind === 'post' && u.lvl >= 3 ? 12 : melee ? MELEE_GUARD.range : st.range) * rangeMul(s, u) + (u.lvl > 1 ? LVL2.range[u.kind] ?? 0 : 0) + ((u.kind === 'post' || u.kind === 'turret') && hasR(s, u.owner, 8) ? 3 : 0)) {
       if (u.cd === 0) {
-        u.cd = st.cd;
+        u.cd = melee ? MELEE_GUARD.cd : st.cd;
         const mult = u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1, armor = target.lvl > 1 ? LVL2.armor[target.kind] ?? 1 : 1;
-        const dealt = (u.kind === 'post' && u.lvl >= 3 ? 14 : st.dmg) * (u.kind === 'guard' ? members('guard', u.hp) : 1) * mult * armor * dmgMul(s, u) * armorMul(s, target);
+        const dealt = (u.kind === 'post' && u.lvl >= 3 ? 14 : melee ? MELEE_GUARD.dmg : st.dmg) * (u.kind === 'guard' ? members('guard', u.hp) : 1) * mult * armor * dmgMul(s, u) * armorMul(s, target);
         target.hp -= dealt; target.by = u.owner;
         if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) { v.hp -= dealt * 0.5; v.by = u.owner; } // огненная буря
         const pa = s.players[u.owner];
         if (pa.faction === 'orks' && pa.waagh <= 0) { pa.rage += dealt * 0.08 + (target.hp <= 0 ? 6 : 0); if (pa.rage >= RAGE_MAX) { pa.rage = 0; pa.waagh = WAAGH_TIME; } } // Ярость
         target.hit = 0;
-        if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y]);
+        if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y, attackFx(u.kind, fac(s, u.owner), u.q)]);
       }
     } else if (st.speed) go(u, target.x, target.y, dt);
     return;

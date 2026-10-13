@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
+import { spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -267,4 +267,18 @@ test('капитан: опыт за убийства и точки, уровни
   assert.equal(applyCmd(s, 0, { c: 'ability', a: 4 }), undefined);
   assert.ok(foe.hp <= hp - 150, 'Вихрь ранит');
   assert.match(applyCmd(s, 0, { c: 'ability', a: 4 }) ?? '', /Перезарядка/);
+});
+
+test('Рубаки Орды бьют в упор, Стражники Ордена стреляют издалека', () => {
+  const s = newState(2, ['orks', 'order']);
+  const hq0 = unit(s, 0, 'hq'), hq1 = unit(s, 1, 'hq');
+  const choppa = spawn(s, 0, 'guard', 50, 50), target = spawn(s, 1, 'guard', 57, 50);
+  void hq0; void hq1;
+  run(s, 0.2);
+  assert.ok(s.shots.length === 0 || s.shots.every(sh => sh[4] !== 1), 'с 7 м Рубаки ещё не бьют');
+  assert.ok(s.shots.some(sh => sh[4] === 0), 'Стражник уже стреляет');
+  s.shots.length = 0;
+  run(s, 2);
+  assert.ok(Math.hypot(choppa.x - target.x, choppa.y - target.y) < 5, 'Рубаки сблизились');
+  assert.ok(s.shots.some(sh => sh[4] === 1), 'рубящий удар');
 });

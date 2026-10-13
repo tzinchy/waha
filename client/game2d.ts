@@ -96,7 +96,7 @@ ${pts}
 type View = {
   id: number; owner: number; kind: Kind; el: HTMLElement; body: HTMLElement; svgs: SVGElement[]; bar: HTMLElement; fg: HTMLElement; sel: HTMLElement;
   x: number; y: number; tx: number; ty: number; f: number; hp: number; build: number; q: number; dead: boolean; lvl: number; upg: number;
-  atkUntil: number; artPath: string; prog: number; prod: number;
+  atkUntil: number; melee?: boolean; artPath: string; prog: number; prod: number;
 };
 
 export class Game {
@@ -109,7 +109,7 @@ export class Game {
   private keys = new Set<string>();
   private points: { ring: HTMLElement; fill: HTMLElement; el: HTMLElement }[] = [];
   private pointOwner: number[] = [];
-  private shots: { el: SVGLineElement; until: number }[] = [];
+  private shots: { el: SVGElement; until: number }[] = [];
   private ghost = document.createElement('div');
   private wallLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   private place: Buildable | null = null;
@@ -277,7 +277,7 @@ export class Game {
       p.fill.style.setProperty('--team', by >= 0 ? hex(SLOT_COLORS[by]) : 'transparent');
       p.fill.style.setProperty('--p', String(prog / 100));
     });
-    for (const [x1, y1, x2, y2] of s.sh) this.shot(x1 / 10, y1 / 10, x2 / 10, y2 / 10, now);
+    for (const [x1, y1, x2, y2, fx = 0] of s.sh) this.shot(x1 / 10, y1 / 10, x2 / 10, y2 / 10, now, Math.round(fx / 10));
     let heard = 0;
     for (const [x1, y1] of s.sh) { const a = this.audioAt(x1 / 10, y1 / 10); if (a && heard++ < 4) audio.shot(a.pan); }
     audio.heat(Math.min(0.4, s.sh.length * 0.02));
@@ -285,19 +285,24 @@ export class Game {
     if (s.w !== null && !this.ended) { this.ended = true; this.onEnd(s.w); }
   }
 
-  /** Выстрел: трассер огнём art-fire и вспышка; стрелку — анимация атаки. */
-  private shot(x1: number, y1: number, x2: number, y2: number, now: number) {
+  /** Атака (пресет AttackVFX): у каждого оружия своя форма следа — пуля, рубящая дуга, три когтя, луч, огонь, укол. */
+  private shot(x1: number, y1: number, x2: number, y2: number, now: number, fx = 0) {
     let best: View | undefined, bd = 2.2;
     for (const v of this.views.values()) { const d = Math.hypot(v.tx - x1, v.ty - y1); if (d < bd && !v.dead) { bd = d; best = v; } }
-    if (best) best.atkUntil = now + 700;
+    const melee = fx === 1 || fx === 2 || fx === 5;
+    if (best) { best.atkUntil = now + (melee ? 1300 : 700); best.melee = melee; }
     if (this.shots.length > 120) return;
-    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    const h = best && !isStruct(best.kind) ? 1.2 : 2.2;
-    l.setAttribute('x1', String(x1 * S)); l.setAttribute('y1', String((y1 - h) * S));
-    l.setAttribute('x2', String(x2 * S)); l.setAttribute('y2', String((y2 - 1) * S));
-    l.classList.add('w2d-tracer');
-    this.fx.append(l);
-    this.shots.push({ el: l, until: now + 160 });
+    const ns = 'http://www.w3.org/2000/svg', g = document.createElementNS(ns, 'g');
+    const h = best && !isStruct(best.kind) ? 1.2 : 2.2, X1 = x1 * S, Y1 = (y1 - h) * S, X2 = x2 * S, Y2 = (y2 - 1) * S;
+    const dir = Math.sign(X2 - X1) || 1;
+    if (fx === 0) g.innerHTML = `<line class="w2d-tracer" x1="${X1}" y1="${Y1}" x2="${X2}" y2="${Y2}"/><circle class="w2d-muzzle" cx="${X1}" cy="${Y1}" r="5"/>`;
+    else if (fx === 1) g.innerHTML = `<path class="w2d-slash" d="M${X2 - 14 * dir} ${Y2 - 30} Q${X2 + 22 * dir} ${Y2 - 14} ${X2 + 6 * dir} ${Y2 + 18}"/><ellipse class="w2d-dust" cx="${X2}" cy="${Y2 + 20}" rx="18" ry="6"/>`;
+    else if (fx === 2) g.innerHTML = [-8, 0, 8].map(o => `<path class="w2d-claw" d="M${X2 - 16 * dir + o} ${Y2 - 26} Q${X2 + 10 * dir + o} ${Y2 - 8} ${X2 + o} ${Y2 + 16}"/>`).join('') + `<circle class="w2d-spark" cx="${X2}" cy="${Y2}" r="4"/>`;
+    else if (fx === 3) g.innerHTML = `<line class="w2d-beam" x1="${X1}" y1="${Y1}" x2="${X2}" y2="${Y2}"/><circle class="w2d-hitring" cx="${X2}" cy="${Y2}" r="8"/>`;
+    else if (fx === 4) g.innerHTML = `<path class="w2d-fire" d="M${X1} ${Y1} Q${(X1 + X2) / 2} ${Math.min(Y1, Y2) - 50} ${X2} ${Y2}"/><circle class="w2d-blast" cx="${X2}" cy="${Y2}" r="14"/>`;
+    else g.innerHTML = [-5, 5].map(o => `<line class="w2d-thrust" x1="${X2 - 26 * dir}" y1="${Y2 + o}" x2="${X2 + 6 * dir}" y2="${Y2 + o}"/>`).join('') + `<circle class="w2d-spark" cx="${X2 + 4 * dir}" cy="${Y2}" r="3"/>`;
+    this.fx.append(g);
+    this.shots.push({ el: g, until: now + (fx === 0 ? 160 : fx === 3 ? 420 : 340) });
   }
 
   private shake(px: number) {
@@ -736,7 +741,7 @@ export class Game {
         v.body.classList.toggle('flip', Math.cos(v.f) < -0.1); // силуэты смотрят вправо
         const building = !moving && v.kind === 'builder' && sites.some(s => s.owner === v.owner && Math.hypot(s.x - v.x, s.y - v.y) < STATS[s.kind].radius + 3.5);
         const n = members(v.kind, v.hp);
-        const anim = v.dead ? 'death' : building ? 'work' : now < v.atkUntil ? (v.kind === 'guard' ? 'recoil' : 'attack') : moving ? 'walk' : 'idle';
+        const anim = v.dead ? 'death' : building ? 'work' : now < v.atkUntil ? (v.kind === 'guard' && !v.melee ? 'recoil' : 'attack') : moving ? 'walk' : 'idle';
         v.svgs.forEach((sv, i) => {
           const alive = i < n;
           setAnim(sv, alive ? anim : 'death');
