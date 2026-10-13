@@ -1,6 +1,6 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
-import { CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { FACTIONS, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -124,6 +124,11 @@ export class Game {
   private relics = 0;
   private lastRemains = 0;
   private research = 0;
+  private cap = { lvl: 1, xp: 0, pts: 0, abil: 0, cd: [] as number[] };
+  private learnHtml = '';
+  private mini = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  private miniCam = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  private miniPing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   private snapN = 0;
   private lastAlert = 0;
   private cmdHtml = '';
@@ -148,6 +153,7 @@ export class Game {
     this.world.append(this.ground, this.fx, this.ghost);
     root.prepend(this.world);
     this.buildMap();
+    this.buildMini();
     this.bind();
     this.raf = requestAnimationFrame(this.frame);
     audio.setBattle(true);
@@ -233,7 +239,7 @@ export class Game {
       } else if (owner === this.slot) {
         if (v.build < 1 && bp >= 100) audio.built();
         if (kind === 'captain' && v.hp > 0 && hp <= 0) audio.alarm();
-        else if (hp < v.hp && now - this.lastAlert > 8000) { this.lastAlert = now; audio.alarm(); }
+        else if (hp < v.hp && now - this.lastAlert > 8000) { this.lastAlert = now; audio.alarm(); this.pingMini(x / 10, y / 10); }
       }
       v.tx = x / 10; v.ty = y / 10; v.f = face / 100; v.hp = hp; v.q = q; v.build = bp / 100; v.dead = hp <= 0;
       const lvlArt = artFor(kind, this.players[owner].faction ?? 'order', lvl, this.players[owner].captain.weapon, kind === 'legend' ? q : 0);
@@ -298,11 +304,66 @@ export class Game {
     this.world.animate([{ translate: `${px}px 0` }, { translate: `${-px}px ${px / 2}px` }, { translate: '0 0' }], { duration: 260, composite: 'add' });
   }
 
+  // ---------- мини-карта (пресет Minimap): квадраты — свои, треугольники — враги, ромбы — точки ----------
+  private buildMini() {
+    const svg = $('mini-svg') as unknown as SVGSVGElement;
+    svg.innerHTML = `<rect class="ground" width="100" height="100"/><path class="river" d="M0 50 C25 44 40 60 50 50 S75 42 100 50" style="stroke-width:3;opacity:.5"/>`
+      + VENTS.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.5" fill="var(--amber-500)" opacity=".6"/>`).join('');
+    this.miniCam.classList.add('cam'); this.miniPing.classList.add('ping', 'lc-ping'); this.miniPing.setAttribute('r', '4'); this.miniPing.style.display = 'none';
+    svg.append(this.mini, this.miniCam, this.miniPing);
+    const go = (e: PointerEvent) => { const r = svg.getBoundingClientRect(); this.cam.x = ((e.clientX - r.left) / r.width) * MAP.w; this.cam.y = ((e.clientY - r.top) / r.height) * MAP.h; };
+    svg.addEventListener('pointerdown', e => { e.stopPropagation(); go(e); svg.setPointerCapture(e.pointerId); }, { signal: this.ac.signal });
+    svg.addEventListener('pointermove', e => { if (e.buttons & 1) go(e); }, { signal: this.ac.signal });
+  }
+
+  private drawMini(s: Snap) {
+    const k = 100 / MAP.w, own = (o: number) => (o === this.slot ? 'ally' : 'enemy');
+    let h = s.p.map(([o], i) => { const [x, y] = [...POINTS, ...RELICS][i] ?? [0, 0]; return `<path class="${o < 0 ? 'pt' : o === this.slot ? 'pt-ally' : 'pt-enemy'}" d="M${x * k} ${y * k - 3}l3 3-3 3-3-3z"/>`; }).join('');
+    for (const [, o, ki, x, y, hp] of s.u) {
+      const kind = KINDS[ki], X = (x / 10) * k, Y = (y / 10) * k;
+      if (hp <= 0 || (kind === 'mine' && o !== this.slot)) continue;
+      if (kind === 'hq') h += o === this.slot ? `<rect class="base-ally" x="${X - 4}" y="${Y - 4}" width="8" height="8"/>` : `<path class="base-enemy" d="M${X} ${Y - 5}l5 9h-10z"/>`;
+      else if (isStruct(kind)) h += `<rect class="${own(o)}" x="${X - 1.2}" y="${Y - 1.2}" width="2.4" height="2.4" opacity=".7"/>`;
+      else h += o === this.slot ? `<rect class="ally" x="${X - 1}" y="${Y - 1}" width="2" height="2"/>` : `<path class="enemy" d="M${X} ${Y - 1.4}l1.4 2.6h-2.8z"/>`;
+    }
+    this.mini.innerHTML = h;
+  }
+
+  private pingMini(x: number, y: number) {
+    const k = 100 / MAP.w;
+    this.miniPing.setAttribute('cx', String(x * k)); this.miniPing.setAttribute('cy', String(y * k));
+    this.miniPing.style.display = ''; clearTimeout(this.pingT); this.pingT = window.setTimeout(() => (this.miniPing.style.display = 'none'), 3600);
+  }
+  private pingT = 0;
+
+  // ---------- капитан: опыт, уровень, дерево способностей ----------
+  private capHud(me: number[]) {
+    const c = this.cap;
+    const [lvl, xp, pts, abil] = [me[9] ?? 1, me[10] ?? 0, me[11] ?? 0, me[12] ?? 0];
+    if (lvl > c.lvl && this.snapN > 2) { audio.built(); const v = [...this.views.values()].find(u => u.owner === this.slot && u.kind === 'captain'); v?.el.animate([{ filter: 'drop-shadow(0 0 0 var(--gilt-300))' }, { filter: 'drop-shadow(0 0 22px var(--gilt-300))' }, { filter: 'none' }], { duration: 900 }); }
+    Object.assign(c, { lvl, xp, pts, abil, cd: me.slice(13) });
+    $('cap-lvl').textContent = String(lvl);
+    $('cap-xp').style.setProperty('--xp', lvl >= MAX_LVL ? '100%' : `${(xp / xpNeed(lvl)) * 100}%`);
+    $('cap-xpt').textContent = lvl >= MAX_LVL ? 'ур. 10 · предел' : `ур. ${lvl} → ${lvl + 1} · ${xp} / ${xpNeed(lvl)}`;
+    const fake = { abil, pts, clvl: lvl, tier: this.tier } as Parameters<typeof canLearn>[0];
+    const open = ABILITIES.map((a, i) => ({ ...a, i })).filter(a => !canLearn(fake, a.i));
+    const html = pts > 0 && open.length ? `<p class="lc-levelup__rank">Ранг ${lvl}</p><p class="lc-levelup__sub">Выберите дар · очков: ${pts}</p><div class="lc-choices">`
+      + open.map((a, n) => `<button class="lc-choice" data-learn="${a.i}"><kbd>Alt+${n + 1}</kbd><strong>${a.name}</strong><span>${a.info}${a.cd ? ` · <em>перезарядка ${a.cd} с</em>` : ' · <em>пассивная</em>'}</span></button>`).join('') + '</div>' : '';
+    if (html !== this.learnHtml) { this.learnHtml = html; $('hud-levelup').innerHTML = html; $('hud-levelup').classList.toggle('hidden', !html); }
+  }
+
+  private learn(n: number) {
+    const b = $('hud-levelup').querySelectorAll<HTMLElement>('[data-learn]')[n];
+    if (b) this.cmd({ c: 'learn', a: Number(b.dataset.learn) });
+  }
+
   // ---------- HUD ----------
   private hud(s: Snap) {
     const me = s.pl[this.slot];
     this.req = me[0]; this.energy = me[3] ?? 0; this.relics = me[4] ?? 0;
     this.lastRemains = me[7] ?? 0; this.research = me[8] ?? 0;
+    this.capHud(me);
+    this.drawMini(s);
     $('hud-energy').textContent = String(this.energy); $('hud-relics').textContent = String(this.relics);
     const f = this.fac(), extra = $('hud-extra');
     extra.innerHTML = f === 'orks' ? (me[6] ? `<b class="waagh">ВААГХ ${me[6]} с</b>` : `<span class="rage"><i style="--v:${(me[5] / RAGE_MAX) * 100}%"></i></span>Ярость`)
@@ -346,7 +407,7 @@ export class Game {
       if (this.fac() === 'clockwork') { en += cost; cost = 0; } // Династии платят энергией
       const ok = req >= cost && this.energy >= en && this.relics >= rel;
       const price = [cost ? `◆ ${cost}` : '', en ? `ϟ ${en}` : '', rel ? `⌂ ${rel}` : ''].filter(Boolean).join(' ') || 'даром';
-      return `<button class="lc-btn lc-btn--sm" data-act="${act}" ${ok ? '' : 'disabled'}>${label} <i>${hot}</i> <b>${price}</b></button>`;
+      return `<button class="lc-btn lc-btn--sm" data-act="${act}" data-hot="${hot.toLowerCase()}" ${ok ? '' : 'disabled'}>${label} <i>${hot}</i> <b>${price}</b></button>`;
     };
     let html = '';
     const st = sel.length === 1 && isStruct(sel[0].kind) ? sel[0] : null;
@@ -392,6 +453,14 @@ export class Game {
       }
     } else {
       if (sel.some(v => v.kind === 'builder')) html += btn('barracks', 'Казарма', STATS.barracks.cost, 'B') + btn('post', 'Реликварий', STATS.post.cost, 'P') + btn('turret', 'Турель', STATS.turret.cost, 'Y', ENERGY_COST.turret) + btn('foundry', 'Литейня', STATS.foundry.cost, 'F') + btn('pump', 'Насос', STATS.pump.cost, 'N') + btn('wall', 'Стена', STATS.wall.cost, 'W') + btn('wallgate', 'Ворота', STATS.wallgate.cost, 'G') + (this.tier >= 2 ? btn('bunker', 'Бункер', STATS.bunker.cost, 'X') : '<span class="info locked">Бункер · тир II</span>') + btn('mine', 'Мина', STATS.mine.cost, 'V') + this.keyBtn(btn);
+      if (sel.some(v => v.kind === 'captain')) { // активные способности в порядке дерева, горячие клавиши 1–6
+        let n = 0;
+        ABILITIES.forEach((a, i) => {
+          if (!a.cd || !(this.cap.abil & (1 << i))) return;
+          const cd = this.cap.cd[i] ?? 0, hot = String(++n);
+          html += `<button class="lc-btn lc-btn--sm${i === 5 ? ' ult' : ''}" data-act="ab${i}" data-hot="${hot}" title="${a.info}" ${cd > 0 ? 'disabled' : ''}>${a.name} <i>${hot}</i> <b>${cd > 0 ? cd + ' с' : 'готово'}</b></button>`;
+        });
+      }
       html += this.upgradeBtn(sel.filter(v => v.kind === 'guard'), btn) + this.upgradeBtn(sel.filter(v => v.kind === 'captain'), btn);
       const hurt = sel.filter(v => v.kind === 'guard' && v.hp < maxHp('guard'));
       if (hurt.length) html += btn('reinforce', 'Пополнить', hurt.reduce((n, v) => n + Math.ceil((maxHp('guard') - v.hp) / STATS.guard.hp) * REINFORCE_COST, 0), 'R');
@@ -419,6 +488,7 @@ export class Game {
   private doAct(act: string) {
     const sel = this.selected();
     if (act === 'train') { const st = sel.find(v => isStruct(v.kind)); if (st) this.cmd({ c: 'train', id: st.id }); }
+    else if (/^ab\d$/.test(act)) this.cmd({ c: 'ability', a: Number(act.slice(2)) });
     else if (act === 'tier') { const hq = sel.find(v => v.kind === 'hq'); if (hq) this.cmd({ c: 'upgrade', id: hq.id }); }
     else if (/^res[0-3]$/.test(act)) { const k = sel.find(v => /^key/.test(v.kind)); if (k) this.cmd({ c: 'research', id: k.id, r: Number(act[3]) }); }
     else if (/^sum[0-2]$/.test(act)) { const g = sel.find(v => v.kind === 'gate'); if (g) this.cmd({ c: 'summon', id: g.id, v: Number(act[3]) }); }
@@ -483,6 +553,7 @@ export class Game {
     addEventListener('keydown', e => {
       if (e.target instanceof HTMLInputElement) return;
       const k = e.key.toLowerCase();
+      if (e.altKey && /^Digit[1-9]$/.test(e.code)) { e.preventDefault(); this.learn(Number(e.code[5]) - 1); return; } // Alt+N — дар уровня (на mac e.key с Alt другой)
       this.keys.add(k);
       if (k === 'a') { this.amove = true; this.place = null; this.ghost.classList.add('hidden'); cv.style.cursor = 'crosshair'; }
       else if (k === 't') this.doAct('train');
@@ -496,7 +567,7 @@ export class Game {
       else if (k === 'x') this.doAct('bunker');
       else if (k === 'v') this.doAct('mine');
       else if (k === 'k') { const m = this.cmdHtml.match(/data-act="(key[1-4]|gate)"/); if (m) this.doAct(m[1]); }
-      else if (/^[1-4]$/.test(k)) { const m = this.cmdHtml.match(new RegExp(`data-act="((?:res|sum)${Number(k) - 1})"`)); if (m) this.doAct(m[1]); }
+      else if (/^[1-9]$/.test(k)) { const b = document.querySelector<HTMLButtonElement>(`#hud-cmd [data-hot="${k}"]`); if (b && !b.disabled) this.doAct(b.dataset.act!); }
       else if (k === 'u') this.doAct('upgrade');
       else if (k === 'r') this.doAct('reinforce');
       else if (k === 's' && this.sel.size) this.cmd({ c: 'stop', ids: [...this.sel] });
@@ -506,6 +577,7 @@ export class Game {
       this.renderCmd();
     }, sig);
     addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase()), sig);
+    $('hud-levelup').addEventListener('click', e => { const a = (e.target as HTMLElement).closest<HTMLElement>('[data-learn]')?.dataset.learn; if (a) this.cmd({ c: 'learn', a: Number(a) }); }, sig);
     $('hud-cmd').addEventListener('click', e => { const a = (e.target as HTMLElement).closest('button')?.dataset.act; if (a) this.doAct(a); }, sig);
   }
 
@@ -626,6 +698,7 @@ export class Game {
     c.x = Math.max(0, Math.min(MAP.w, c.x + fx * sp));
     c.y = Math.max(0, Math.min(MAP.h, c.y + fy * sp));
     const r = this.root.getBoundingClientRect();
+    { const k = 100 / MAP.w, w = (r.width / (S * c.zoom)) * k, h = (r.height / (S * c.zoom)) * k; this.miniCam.setAttribute('x', String(c.x * k - w / 2)); this.miniCam.setAttribute('y', String(c.y * k - h / 2)); this.miniCam.setAttribute('width', String(w)); this.miniCam.setAttribute('height', String(h)); }
     this.world.style.transform = `translate(${r.width / 2 - c.x * S * c.zoom}px, ${r.height / 2 - c.y * S * c.zoom}px) scale(${c.zoom})`;
 
     if (this.place === 'wall' && this.mouse && this.wallStart) { // пунктир протяжки и итоговая цена

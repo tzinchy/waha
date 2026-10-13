@@ -241,3 +241,30 @@ test('прокачка точки: столп → укреплённый → б�
   assert.equal(post.lvl, 3);
   assert.match(applyCmd(s, 0, { c: 'upgrade', id: post.id }) ?? '', /бастион/);
 });
+
+test('капитан: опыт за убийства и точки, уровни, дерево способностей и Вихрь', () => {
+  const s = newState(2);
+  const p = s.players[0], cap = unit(s, 0, 'captain');
+  assert.equal(p.clvl, 1); assert.equal(p.pts, 1);
+  assert.match(applyCmd(s, 0, { c: 'learn', a: 4 }) ?? '', /предыдущая|уровень/);
+  assert.equal(applyCmd(s, 0, { c: 'learn', a: 3 }), undefined);
+  assert.match(applyCmd(s, 0, { c: 'learn', a: 0 }) ?? '', /очков/);
+  const e = unit(s, 1, 'builder');
+  [e.x, e.y] = [cap.x + 1, cap.y];
+  run(s, 10);
+  assert.ok(!s.units.includes(e), 'строитель врага убит');
+  assert.equal(p.xp, 5);
+  [cap.x, cap.y] = POINTS[3];
+  run(s, 6);
+  assert.equal(s.points[3].owner, 0);
+  assert.equal(p.xp, 30, 'захват точки +25');
+  p.xp = 95; const ec = unit(s, 1, 'captain'); ec.by = 0; ec.hp = 0; run(s, 0.1);
+  assert.equal(p.clvl, 2); assert.equal(p.xp, 35); assert.equal(p.pts, 1, 'новый уровень — очко');
+  p.clvl = 4; p.tier = 2;
+  assert.equal(applyCmd(s, 0, { c: 'learn', a: 4 }), undefined);
+  const foe = unit(s, 1, 'hq'), hp = foe.hp;
+  [cap.x, cap.y] = [foe.x + 5, foe.y];
+  assert.equal(applyCmd(s, 0, { c: 'ability', a: 4 }), undefined);
+  assert.ok(foe.hp <= hp - 150, 'Вихрь ранит');
+  assert.match(applyCmd(s, 0, { c: 'ability', a: 4 }) ?? '', /Перезарядка/);
+});

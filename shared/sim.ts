@@ -68,6 +68,45 @@ export const RESEARCH_INFO = [
 export const researchCost = (i: number) => ({ cost: 100 * (Math.floor(i / 4) + 1), energy: 50 * (Math.floor(i / 4) + 1), time: 20 });
 export const LEGEND_COST = [{ relics: 3, energy: 400 }, { relics: 4, energy: 300 }, { relics: 5, energy: 500 }];
 export const SUMMON_TIME = 20;
+
+// ---------- капитан: опыт, уровни 1–10 и дерево способностей (CaptainLevelUp, CaptainAbilities) ----------
+export const XP_KILL: Partial<Record<Kind, number>> = { builder: 5, guard: 20, captain: 40, legend: 200 };
+export const XP_STRUCT = 25, XP_CAPTURE = 25, MAX_LVL = 10;
+export const xpNeed = (lvl: number) => 100 * lvl;
+/** 3 ветки × 3 тира. Индекс = ветка * 3 + тир. cd = 0 — пассивная. */
+export const ABILITIES = [
+  { name: 'Литания стойкости', info: 'аура: союзники в 12 м получают −15% урона', cd: 0 },
+  { name: 'Свет лампы', info: 'лечит союзников в 10 м на 25%', cd: 30 },
+  { name: 'Мученичество', info: 'при гибели капитана союзники в 12 м полностью исцеляются', cd: 0 },
+  { name: 'Рывок', info: 'капитан ×2 скорость и ×1.5 урон на 5 с', cd: 20 },
+  { name: 'Вихрь', info: '150 урона всем врагам в 6 м', cd: 25 },
+  { name: 'Падение шпиля', info: 'абсолютная: 500 урона по 12 м вокруг капитана', cd: 180 },
+  { name: 'Знамя роты', info: 'аура: пехота в 12 м +15% урона', cd: 0 },
+  { name: 'Перекличка', info: 'отряды в 15 м восстанавливают 15% здоровья', cd: 40 },
+  { name: 'Последний рубеж', info: 'союзники в 12 м не умирают 6 с', cd: 90 },
+];
+/** Тир узла дерева открывается уровнем капитана И тех-тиром. */
+const ABIL_GATE = [{ lvl: 1, tier: 1 }, { lvl: 4, tier: 2 }, { lvl: 7, tier: 3 }];
+export function canLearn(p: Player, a: number) {
+  const t = a % 3, g = ABIL_GATE[t];
+  if (p.abil & (1 << a)) return 'Уже изучено';
+  if (p.pts <= 0) return 'Нет очков';
+  if (p.clvl < g.lvl || p.tier < g.tier) return `Нужен уровень ${g.lvl} и тир ${g.tier}`;
+  if (t > 0 && !(p.abil & (1 << (a - 1)))) return 'Сначала предыдущая способность ветки';
+}
+const capOf = (s: State, owner: number) => s.units.find(u => u.owner === owner && u.kind === 'captain');
+function gainXp(s: State, owner: number, xp: number) {
+  const p = s.players[owner];
+  if (!p || p.clvl >= MAX_LVL) return;
+  p.xp += xp;
+  while (p.clvl < MAX_LVL && p.xp >= xpNeed(p.clvl)) { p.xp -= xpNeed(p.clvl); p.clvl++; p.pts++; }
+}
+const nearCapWith = (s: State, u: Unit, a: number, r: number) => {
+  const p = s.players[u.owner];
+  if (!(p.abil & (1 << a))) return false;
+  const c = capOf(s, u.owner);
+  return !!c && c.hp > 0 && dist(c, u) < r;
+};
 /** Три ресурса пресета: Влияние (req, с точек), Энергия (с Литейни и насосов), Реликвии (с реликтовых точек). */
 export const ENERGY_COST: Partial<Record<Kind, number>> = { turret: 30 };
 export const ENERGY_INCOME: Partial<Record<Kind, number>> = { foundry: 2, pump: 4 };
@@ -112,6 +151,8 @@ export type Unit = {
   q: number; prog: number;      // очередь найма и прогресс текущего (hq, barracks)
   build: number;                // 0..1, готовность постройки (у юнитов всегда 1)
   dead: number;                 // таймер возрождения капитана
+  by: number;                   // кто ударил последним (опыт за убийство)
+  rush: number; stand: number;  // Рывок и Последний рубеж: оставшиеся секунды
   reinf: boolean; rt: number;   // идёт пополнение отряда
   hit: number;                  // секунд с последнего урона (пополнять под огнём нельзя)
   lvl: number; upg: number;     // уровень и прогресс апгрейда в секундах (-1: нет)
@@ -122,6 +163,7 @@ export type Player = {
   req: number; energy: number; relics: number; alive: boolean; tier: number;
   faction: FactionId; rage: number; waagh: number; remains: number; // ярость и ВААГХ Орды, останки Нежити
   research: number;                  // битовая маска изученного (RESEARCH)
+  xp: number; clvl: number; pts: number; abil: number; acd: number[]; // капитан: опыт, уровень, очки, способности и их перезарядка
 };
 export type State = {
   tick: number; units: Unit[]; points: Point[]; players: Player[]; nextId: number;
@@ -139,7 +181,9 @@ export type Cmd =
   | { c: 'upgrade'; id: number }
   | { c: 'research'; id: number; r: number }
   | { c: 'summon'; id: number; v: number }
-  | { c: 'wall'; ids: number[]; x1: number; y1: number; x2: number; y2: number };
+  | { c: 'wall'; ids: number[]; x1: number; y1: number; x2: number; y2: number }
+  | { c: 'learn'; a: number }
+  | { c: 'ability'; a: number };
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -147,7 +191,7 @@ const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.
 export function newState(n: number, factions: FactionId[] = []): State {
   const s: State = { tick: 0, units: [], points: [...POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), ...RELICS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1, relic: true }))], players: [], nextId: 1, winner: null, shots: [], rewind: [] };
   for (let i = 0; i < n; i++) {
-    s.players.push({ req: START_REQ, energy: 0, relics: 0, alive: true, tier: 1, faction: factions[i] ?? 'order', rage: 0, waagh: 0, remains: 0, research: 0 });
+    s.players.push({ req: START_REQ, energy: 0, relics: 0, alive: true, tier: 1, faction: factions[i] ?? 'order', rage: 0, waagh: 0, remains: 0, research: 0, xp: 0, clvl: 1, pts: 1, abil: 0, acd: ABILITIES.map(() => 0) });
     const [hx, hy] = HQ_POS[i];
     spawn(s, i, 'hq', hx, hy);
     spawn(s, i, 'captain', ...nearHq(hx, hy, 8));
@@ -162,7 +206,7 @@ const nearHq = (hx: number, hy: number, d: number): [number, number] => {
 };
 
 function spawn(s: State, owner: number, kind: Kind, x: number, y: number): Unit {
-  const u: Unit = { id: s.nextId++, owner, kind, x, y, hp: maxHp(kind), face: Math.atan2(MAP.h / 2 - y, MAP.w / 2 - x), cd: 0, order: null, q: 0, prog: 0, build: 1, dead: 0, reinf: false, rt: 0, hit: 9, lvl: 1, upg: -1, sm: 1 };
+  const u: Unit = { id: s.nextId++, owner, kind, x, y, hp: maxHp(kind), face: Math.atan2(MAP.h / 2 - y, MAP.w / 2 - x), cd: 0, order: null, q: 0, prog: 0, build: 1, dead: 0, reinf: false, rt: 0, hit: 9, lvl: 1, upg: -1, sm: 1, by: -1, rush: 0, stand: 0 };
   s.units.push(u);
   return u;
 }
@@ -183,11 +227,11 @@ const fac = (s: State, owner: number) => s.players[owner].faction;
 const nearOwn = (s: State, owner: number, x: number, y: number, r: number, kinds?: Kind[]) =>
   s.units.some(u => u.owner === owner && u.hp > 0 && u.build >= 1 && isStruct(u.kind) && (!kinds || kinds.includes(u.kind)) && dist(u, { x, y }) < r + STATS[u.kind].radius);
 /** Множитель скорости: Орден медленнее, Орда в ВААГХ быстрее. */
-const speedMul = (s: State, u: Unit) => { const p = s.players[u.owner]; return (p.faction === 'order' ? 0.9 : p.faction === 'orks' && p.waagh > 0 ? 1.3 : 1) * (has(p, 7) ? 1.1 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1); };
+const speedMul = (s: State, u: Unit) => { const p = s.players[u.owner]; return (p.faction === 'order' ? 0.9 : p.faction === 'orks' && p.waagh > 0 ? 1.3 : 1) * (has(p, 7) ? 1.1 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 2 : 1); };
 /** Урон атакующего: ВААГХ +30%, Синклит вне Порчи −10%, ближний бой Консенсуса −40%. */
 function dmgMul(s: State, u: Unit) {
   const p = s.players[u.owner];
-  const r = (u.kind === 'guard' ? (has(p, 2) ? 1.1 : 1) * (has(p, 9) ? 1.1 : 1) : 1) * (u.kind === 'turret' && has(p, 5) ? 1.25 : 1) * (u.kind === 'captain' && has(p, 10) ? 1.2 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1);
+  const r = (u.kind === 'guard' ? (has(p, 2) ? 1.1 : 1) * (has(p, 9) ? 1.1 : 1) : 1) * (u.kind === 'turret' && has(p, 5) ? 1.25 : 1) * (u.kind === 'captain' && has(p, 10) ? 1.2 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 1.5 : 1) * (u.kind === 'guard' && nearCapWith(s, u, 6, 12) ? 1.15 : 1);
   return r * factionDmg(s, u, p);
 }
 function factionDmg(s: State, u: Unit, p: Player) {
@@ -201,7 +245,7 @@ function armorMul(s: State, t: Unit) {
   const f = fac(s, t.owner), p = s.players[t.owner];
   if (isStruct(t.kind)) return (has(p, 4) ? 0.8 : 1) * (t.kind === 'post' && t.lvl >= 2 ? 0.5 : 1) * (t.kind === 'wall' ? 0.6 : 1);
   if (s.units.some(b => b.kind === 'bunker' && b.owner === t.owner && b.build >= 1 && b.hp > 0 && dist(b, t) < STATS.bunker.radius + 3)) return 0.5; // крипта-бункер
-  const res = (t.kind === 'guard' && has(p, 0) ? 0.9 : 1) * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
+  const res = (nearCapWith(s, t, 0, 12) ? 0.85 : 1) * (t.kind === 'guard' && has(p, 0) ? 0.9 : 1) * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
   return res * factionArmor(f, s, t);
 }
 function factionArmor(f: FactionId, s: State, t: Unit) {
@@ -250,6 +294,31 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     const e = pay(p, t.cost, t.energy, t.relics);
     if (e) return e;
     hq.upg = 0;
+    return;
+  }
+  if (cmd.c === 'learn') {
+    const a = Number(cmd.a);
+    if (!Number.isInteger(a) || a < 0 || a >= ABILITIES.length) return;
+    const e = canLearn(p, a);
+    if (e) return e;
+    p.abil |= 1 << a; p.pts--;
+    return;
+  }
+  if (cmd.c === 'ability') {
+    const a = Number(cmd.a), c = capOf(s, owner);
+    if (!Number.isInteger(a) || !ABILITIES[a]?.cd || !(p.abil & (1 << a))) return;
+    if (!c || c.hp <= 0) return 'Капитан пал';
+    if (p.acd[a] > 0) return `Перезарядка ${Math.ceil(p.acd[a])} с`;
+    p.acd[a] = ABILITIES[a].cd;
+    const allies = (r: number) => s.units.filter(v => v.owner === owner && !isStruct(v.kind) && v.hp > 0 && dist(v, c) < r);
+    const hitFoes = (r: number, dmg: number) => { for (const v of s.units) if (v.owner !== owner && v.hp > 0 && dist(v, c) < r) { v.hp -= dmg; v.hit = 0; v.by = owner; } };
+    if (a === 1) for (const v of allies(10)) v.hp = Math.min(maxHp(v.kind), v.hp + maxHp(v.kind) * 0.25);
+    if (a === 3) c.rush = 5;
+    if (a === 4) hitFoes(6, 150);
+    if (a === 5) hitFoes(12, 500);
+    if (a === 7) for (const v of allies(15)) v.hp = Math.min(maxHp(v.kind), v.hp + maxHp(v.kind) * 0.15);
+    if (a === 8) for (const v of allies(12)) v.stand = 6;
+    if (s.shots.length < 200) s.shots.push([c.x, c.y, c.x, c.y - 0.1]);
     return;
   }
   if (cmd.c === 'research') {
@@ -399,14 +468,16 @@ export function step(s: State, dt = DT): void {
   for (const r of s.rewind) r.t -= dt; // Перезавод: отряд встаёт на месте гибели
   for (const r of s.rewind.filter(r => r.t <= 0)) if (s.players[r.owner].alive) spawn(s, r.owner, 'guard', r.x, r.y);
   s.rewind = s.rewind.filter(r => r.t > 0);
+  for (const p of s.players) for (let i = 0; i < p.acd.length; i++) p.acd[i] = Math.max(0, p.acd[i] - dt);
   const byId = new Map(s.units.map(u => [u.id, u]));
   for (const u of s.units) {
     if (!s.players[u.owner].alive) continue;
     u.hit += dt;
+    u.rush = Math.max(0, u.rush - dt); u.stand = Math.max(0, u.stand - dt);
     if (u.kind === 'captain' && u.hp <= 0) {
       u.dead += dt;
       const hq = hqOf(s, u.owner);
-      if (u.dead >= CAPTAIN_RESPAWN && hq) { u.hp = maxHp('captain'); u.dead = 0; u.order = null; [u.x, u.y] = nearHq(hq.x, hq.y, 8); }
+      if (u.dead >= CAPTAIN_RESPAWN + 2 * s.players[u.owner].clvl && hq) { u.hp = maxHp('captain'); u.dead = 0; u.order = null; [u.x, u.y] = nearHq(hq.x, hq.y, 8); }
       continue;
     }
     if (u.hp <= 0) continue;
@@ -423,7 +494,7 @@ export function step(s: State, dt = DT): void {
   for (const m of s.units) { // мины: срабатывают от врага рядом, бьют по площади и исчезают
     if (m.kind !== 'mine' || m.build < 1 || m.hp <= 0) continue;
     if (!s.units.some(e => e.owner !== m.owner && !isStruct(e.kind) && e.hp > 0 && dist(e, m) < STATS.mine.range)) continue;
-    for (const e of s.units) if (e.owner !== m.owner && e.hp > 0 && dist(e, m) < 6) { e.hp -= STATS.mine.dmg; e.hit = 0; }
+    for (const e of s.units) if (e.owner !== m.owner && e.hp > 0 && dist(e, m) < 6) { e.hp -= STATS.mine.dmg; e.hit = 0; e.by = m.owner; }
     m.hp = 0;
     if (s.shots.length < 200) s.shots.push([m.x, m.y, m.x, m.y - 0.1]);
   }
@@ -522,8 +593,8 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
         u.cd = st.cd;
         const mult = u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1, armor = target.lvl > 1 ? LVL2.armor[target.kind] ?? 1 : 1;
         const dealt = (u.kind === 'post' && u.lvl >= 3 ? 14 : st.dmg) * (u.kind === 'guard' ? members('guard', u.hp) : 1) * mult * armor * dmgMul(s, u) * armorMul(s, target);
-        target.hp -= dealt;
-        if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) v.hp -= dealt * 0.5; // огненная буря
+        target.hp -= dealt; target.by = u.owner;
+        if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) { v.hp -= dealt * 0.5; v.by = u.owner; } // огненная буря
         const pa = s.players[u.owner];
         if (pa.faction === 'orks' && pa.waagh <= 0) { pa.rage += dealt * 0.08 + (target.hp <= 0 ? 6 : 0); if (pa.rage >= RAGE_MAX) { pa.rage = 0; pa.waagh = WAAGH_TIME; } } // Ярость
         target.hit = 0;
@@ -565,7 +636,7 @@ function capture(s: State, dt: number) {
     if (o >= 0 && o !== p.owner) {
       if (p.by !== o) { p.by = o; p.prog = 0; }
       p.prog += dt / 4;
-      if (p.prog >= 1) { p.owner = o; p.prog = 0; p.by = -1; }
+      if (p.prog >= 1) { p.owner = o; p.prog = 0; p.by = -1; gainXp(s, o, XP_CAPTURE); }
     } else if (p.prog > 0) {
       p.prog = Math.max(0, p.prog - dt / 8);
       if (p.prog === 0) p.by = -1;
@@ -574,6 +645,14 @@ function capture(s: State, dt: number) {
 }
 
 function cleanup(s: State) {
+  for (const u of s.units) if (u.hp <= 0 && u.stand > 0) u.hp = 1; // Последний рубеж
+  for (const u of s.units) { // опыт капитану за убийство
+    if (u.hp > 0 || u.by < 0 || u.by === u.owner) continue; // by сбрасывается — награда один раз, и для павшего капитана тоже
+    gainXp(s, u.by, isStruct(u.kind) ? (u.kind === 'wall' || u.kind === 'mine' ? 0 : XP_STRUCT) : XP_KILL[u.kind] ?? 0);
+    u.by = -1;
+    if (u.kind === 'captain' && s.players[u.owner].abil & (1 << 2)) // Мученичество
+      for (const v of s.units) if (v.owner === u.owner && v !== u && !isStruct(v.kind) && v.hp > 0 && dist(v, u) < 12) v.hp = maxHp(v.kind);
+  }
   for (const u of s.units) {
     if (u.hp > 0 || isStruct(u.kind) || (u.kind === 'captain' && u.dead > 0)) continue;
     s.players.forEach((p, i) => { // Жатва и Скорбь: смерти рядом с постройками Нежити
@@ -606,7 +685,7 @@ export function snapshot(s: State): Snap {
     // [id, owner, kind, x*10, y*10, hp, face*100, очередь, стройка %, пополняется, уровень, апгрейд %, найм текущего %]
     u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), Math.max(0, Math.round(u.hp)), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : u.kind === 'post' ? 12 : UPGRADES[u.kind]!.time)) * 100), prodPct(u)]),
     p: s.points.map(p => [p.owner, Math.round(p.prog * 100), p.by]),
-    pl: s.players.map(p => [Math.floor(p.req), p.alive ? 1 : 0, p.tier, Math.floor(p.energy), Math.floor(p.relics), Math.floor(p.rage), Math.ceil(p.waagh), p.remains, p.research]),
+    pl: s.players.map(p => [Math.floor(p.req), p.alive ? 1 : 0, p.tier, Math.floor(p.energy), Math.floor(p.relics), Math.floor(p.rage), Math.ceil(p.waagh), p.remains, p.research, p.clvl, Math.floor(p.xp), p.pts, p.abil, ...p.acd.map(Math.ceil)]), // 9..13 капитан, 14+ перезарядки способностей
     sh: s.shots.map(v => v.map(n => Math.round(n * 10))),
     w: s.winner,
   };

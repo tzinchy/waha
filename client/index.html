@@ -55,6 +55,15 @@
   .w2d-wallline{stroke:var(--verdigris-300);stroke-width:6;stroke-dasharray:14 10;opacity:.8}
   #hud-bottom:has(#hud-cmd button) #hud-hint{display:none}
   #hud-cmd .locked{opacity:.5}
+  #hud-cap{position:absolute;left:var(--space-4);top:84px;width:280px;padding:var(--space-3) var(--space-4);gap:var(--space-4)}
+  #hud-cap .lc-xp__fill{animation:none}
+  #hud-levelup{position:absolute;right:var(--space-4);top:120px;width:min(560px,60vw);text-align:center;padding:var(--space-5)}
+  #hud-levelup .lc-choices{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  #hud-levelup .lc-choice{cursor:pointer;background:var(--surface-200);border:0;padding:var(--space-3);font:inherit;color:inherit;box-shadow:inset 0 0 0 1px var(--gilt-700)}
+  #hud-mini{position:absolute;left:var(--space-4);bottom:64px;padding:6px}
+  #hud-mini svg{width:200px;height:200px;cursor:pointer}
+  #hud-bottom{left:240px!important;right:var(--space-4);transform:none!important;width:auto!important}
+  #hud-cmd .ult{box-shadow:inset 0 0 0 2px var(--amber-500)}
   #toast{position:fixed;left:50%;bottom:var(--space-6);transform:translateX(-50%);z-index:50;min-width:320px}
   #mute{position:fixed;left:var(--space-4);bottom:var(--space-4);z-index:60}
 
@@ -180,13 +189,16 @@
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 5.5V12c0 4.6-3.3 8-8 9.5C7.3 20 4 16.6 4 12V5.5Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9l4 3 4-3v3l-4 3-4-3Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-squads">0</span><span class="lc-res__label">Легион</span></div>
       <div class="lc-res__item"><span class="lc-res__label" id="hud-extra"></span></div>
     </div>
+    <section id="hud-cap" class="lc-frame lc-caphud"><div class="lc-capbadge"><span id="cap-lvl">1</span></div><div><div class="lc-caphud__name">Капитан</div><div class="lc-xp" id="cap-xp" style="--xp:0%"><div class="lc-xp__fill"></div></div><div class="lc-caphud__xp" id="cap-xpt"></div></div></section>
+    <section id="hud-levelup" class="lc-frame lc-levelup hidden"></section>
+    <section id="hud-mini" class="lc-frame lc-minimap"><svg id="mini-svg" viewBox="0 0 100 100" aria-label="Мини-карта"></svg></section>
     <section id="hud-queue" class="lc-frame hidden"></section>
     <section id="hud-players" class="lc-frame"></section>
     <div id="hud-dead" class="lc-alert lc-alert--danger hidden" role="alert"><span class="lc-alert__glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 23 21H1Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 9h2v6h-2zM11 17h2v2h-2z" fill="currentColor"/></svg></span><span class="lc-alert__text">Капитан пал</span><span class="lc-alert__meta">возродится в штабе</span></div>
     <section id="hud-bottom" class="lc-frame">
       <div id="hud-cmd"></div>
       <span id="hud-sel"></span>
-      <span id="hud-hint">ЛКМ выбор/рамка · ПКМ приказ · A атака-движение · S стоп · Пробел капитан · H штаб · T B P Y F N K W G X V R U, 1–4 — команды · стрелки, Q/E, колесо — камера · M звук</span>
+      <span id="hud-hint">ЛКМ выбор/рамка · ПКМ приказ · A атака-движение · S стоп · Пробел капитан · H штаб · T B P Y F N K W G X V R U, 1–6 — команды и способности, Alt+1–3 — дар уровня · стрелки, Q/E, колесо — камера · M звук</span>
     </section>
     <div id="result" class="hidden"><section class="lc-frame lc-frame--lg"><h3 id="result-title"></h3><button class="lc-btn" id="result-back">В лобби</button></section></div>
   </div>
