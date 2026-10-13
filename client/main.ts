@@ -2,10 +2,10 @@
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import type { CaptainCfg } from '../shared/sim.ts';
 import { CaptainPreview } from './captain.ts';
-import { Game } from './game.ts';
-import { allReady } from './models.ts';
+import { Game, artFor, ready2d } from './game2d.ts';
+import { FACTIONS, FACTION_IDS, type FactionId } from '../shared/factions.ts';
 import { audio } from './audio.ts';
-import { isAscii, setTheme } from './theme.ts';
+import { nextTheme, setTheme, themeName } from './theme.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
@@ -20,7 +20,7 @@ const ARMOR = [0x2f6bd1, 0xb02a2a, 0x2e8b57, 0x6a3fa0, 0x4a4a4a, 0x1e90a0, 0x8b5
 const TRIM = [0xf3d36b, 0xe0e0e0, 0x22c1c3, 0xff7a1a, 0xd04a6a, 0x222222];
 let cfg: CaptainCfg = { armor: ARMOR[0], trim: TRIM[0], weapon: 'sword', banner: true };
 try { cfg = { ...cfg, ...JSON.parse(store.get('waha.captain') ?? '{}') }; } catch { /* битые данные: берём умолчания */ }
-const preview = new CaptainPreview($<HTMLCanvasElement>('preview'));
+const preview = new CaptainPreview($('preview'));
 
 function applyCfg() {
   store.set('waha.captain', JSON.stringify(cfg));
@@ -29,9 +29,9 @@ function applyCfg() {
   $<HTMLInputElement>('trimIn').value = hex(cfg.trim);
   document.querySelectorAll('#armorSw .sw').forEach(s => s.classList.toggle('on', (s as HTMLElement).dataset.c === String(cfg.armor)));
   document.querySelectorAll('#trimSw .sw').forEach(s => s.classList.toggle('on', (s as HTMLElement).dataset.c === String(cfg.trim)));
-  document.querySelectorAll('#weapon button').forEach(b => b.classList.toggle('on', (b as HTMLElement).dataset.w === cfg.weapon));
+  document.querySelectorAll('#weapon button').forEach(b => { const on = (b as HTMLElement).dataset.w === cfg.weapon; b.classList.toggle('lc-btn--ghost', !on); });
   $('banner').textContent = cfg.banner ? 'Есть' : 'Нет';
-  $('banner').classList.toggle('on', cfg.banner);
+  $('banner').setAttribute('aria-pressed', String(cfg.banner));
   tx({ t: 'captain', captain: cfg });
 }
 function swatches(id: string, list: number[], key: 'armor' | 'trim') {
@@ -64,7 +64,7 @@ let toastTimer = 0;
 const tx = (m: C2S) => { if (ws?.readyState === 1) ws.send(JSON.stringify(m)); };
 function toast(msg: string) {
   const t = $('toast');
-  t.textContent = msg; t.classList.remove('hidden');
+  $('toast-text').textContent = msg; t.classList.remove('hidden');
   clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => t.classList.add('hidden'), 3500);
 }
@@ -100,7 +100,7 @@ function startGame(slot: number, players: LobbyPlayer[]) {
   game?.destroy();
   $('result').classList.add('hidden');
   show('game');
-  allReady.then(() => { game = new Game($('view'), slot, players, cmd => tx({ t: 'cmd', cmd }), winner => {
+  ready2d.then(() => { game = new Game($('view'), slot, players, cmd => tx({ t: 'cmd', cmd }), winner => {
     $('result-title').textContent = winner === slot ? 'Победа' : winner < 0 ? 'Ничья' : `Победил ${esc(players[winner].name)}`;
     $('result').classList.remove('hidden');
     if (winner === slot) audio.win(); else audio.lose();
@@ -121,20 +121,32 @@ $('join').onclick = () => {
   connect(() => tx({ t: 'join', code, ...player() }));
 };
 
+/** Выбор фракции: карточки с силуэтом капитана, тема интерфейса и превью меняются вместе с выбором. */
+function renderFactions(mine: FactionId) {
+  $('factions').innerHTML = FACTION_IDS.map(f => `<button class="lc-btn lc-btn--sm ${f === mine ? '' : 'lc-btn--ghost'}" data-f="${f}">${svgFor(f)}${FACTIONS[f].name}</button>`).join('');
+  $('factions').querySelectorAll<HTMLElement>('[data-f]').forEach(b => { b.onclick = () => tx({ t: 'faction', f: b.dataset.f as FactionId }); });
+  if (faction !== mine) { faction = mine; setTheme(FACTIONS[mine].theme); preview.setFaction(mine); paintTheme(); }
+}
+const svgFor = (f: FactionId) => (svgText.get(artFor('captain', f)) ?? '').replace('<svg ', '<svg class="lc-art lc-anim-idle" ');
+const svgText = new Map<string, string>();
+ready2d.then(() => Promise.all(FACTION_IDS.map(f => artFor('captain', f)).map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgText.set(p, t)))));
+let faction: FactionId | null = null;
+
 function renderLobby() {
   if (!lobby) return;
   show('lobby');
   const me = lobby.players.find(p => p.id === lobby!.you)!, host = lobby.host === lobby.you;
+  renderFactions(me.faction);
   $('lcode').textContent = lobby.code;
   $('plist').innerHTML = lobby.players.map(p => `<li>
     <span class="dot" style="background:${hex(p.captain.armor)}"></span>
-    <span class="name">${esc(p.name)}</span>
+    <span class="name">${esc(p.name)}<br><small class="tag">${FACTIONS[p.faction]?.name ?? ''}</small></span>
     ${p.id === lobby!.host ? '<span class="tag">хост</span>' : ''}
     <span class="tag ${p.ready ? 'ready' : ''}">${p.bot ? 'бот' : p.ready ? 'готов' : 'не готов'}</span>
     ${host && p.id !== lobby!.you ? `<button data-kick="${p.id}">✕</button>` : ''}</li>`).join('');
   $('plist').querySelectorAll<HTMLElement>('[data-kick]').forEach(b => { b.onclick = () => tx({ t: 'kick', id: b.dataset.kick! }); });
   $('ready').textContent = me.ready ? 'Не готов' : 'Готов';
-  $('ready').classList.toggle('on', me.ready);
+  $('ready').classList.toggle('lc-btn--ghost', !me.ready);
   $('addbot').classList.toggle('hidden', !host);
   $('start').classList.toggle('hidden', !host);
 }
@@ -156,8 +168,8 @@ addEventListener('keydown', e => { if (e.key.toLowerCase() === 'm' && !(e.target
 paintMute();
 
 const themeBtn = $('theme');
-const paintTheme = () => { themeBtn.textContent = isAscii() ? 'Стиль: ASCII' : 'Стиль: Art Deco'; };
-themeBtn.onclick = () => { setTheme(isAscii() ? 'deco' : 'ascii'); paintTheme(); };
+const paintTheme = () => { themeBtn.textContent = `Тема: ${themeName()}`; };
+themeBtn.onclick = () => { nextTheme(); paintTheme(); };
 paintTheme();
 
 applyCfg();

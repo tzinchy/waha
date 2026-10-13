@@ -1,0 +1,37 @@
+<!-- @dsCard group="Арт-дирекшн 3D" height=400 subtitle="не ресурсы: как выглядят поверхности 3D-моделей — блеск, матовость, свечение" -->
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Surfaces</title>
+<style>
+  html, body { margin: 0; }
+  body { background: var(--surface-100); color: var(--ink); font-family: var(--font-body); padding: 24px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .cap { font: 500 11px/14px var(--font-label); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-muted); margin: 0 0 8px; }
+  .note { font: 400 13px/18px var(--font-body); color: var(--ink-muted); margin: 12px 0 0; max-width: 720px; }
+</style>
+</head>
+<body>
+<div class="lc-mat">
+<div class="lc-mat__item"><span class="lc-mat__ball" style="--c1:var(--art-brass);--hi:var(--art-brass-lit);--lo:var(--art-void);--hs:8%;--hf:34%"></span>
+  <span class="lc-mat__name">Латунь</span><span class="lc-mat__pbr"><b>#b8913e</b><br>metal <b>1.0</b> · rough <b>0.38</b><br>emissive <b>—</b></span></div>
+<div class="lc-mat__item"><span class="lc-mat__ball" style="--c1:var(--art-brass-lit);--hi:var(--art-bone);--lo:var(--art-brass);--hs:10%;--hf:24%"></span>
+  <span class="lc-mat__name">Латунь полир.</span><span class="lc-mat__pbr"><b>#e3c77d</b><br>metal <b>1.0</b> · rough <b>0.18</b><br>emissive <b>—</b></span></div>
+<div class="lc-mat__item"><span class="lc-mat__ball" style="--c1:var(--art-iron);--hi:var(--art-ash);--lo:var(--art-void);--hs:4%;--hf:40%"></span>
+  <span class="lc-mat__name">Чернёное железо</span><span class="lc-mat__pbr"><b>#3a3024</b><br>metal <b>0.9</b> · rough <b>0.70</b><br>emissive <b>—</b></span></div>
+<div class="lc-mat__item"><span class="lc-mat__ball" style="--c1:var(--art-void);--hi:var(--art-iron);--lo:var(--art-void);--hs:2%;--hf:50%"></span>
+  <span class="lc-mat__name">Сажа</span><span class="lc-mat__pbr"><b>#0e0b09</b><br>metal <b>0.0</b> · rough <b>0.95</b><br>emissive <b>—</b></span></div>
+<div class="lc-mat__item"><span class="lc-mat__ball" style="--c1:var(--art-bone);--hi:var(--art-bone);--lo:var(--art-ash);--hs:2%;--hf:45%"></span>
+  <span class="lc-mat__name">Кость</span><span class="lc-mat__pbr"><b>#e8dcc2</b><br>metal <b>0.0</b> · rough <b>0.60</b><br>emissive <b>—</b></span></div>
+<div class="lc-mat__item"><span class="lc-mat__ball" style="--c1:var(--art-blood);--hi:var(--art-blood-lit);--lo:var(--art-void);--hs:2%;--hf:50%"></span>
+  <span class="lc-mat__name">Кровавое сукно</span><span class="lc-mat__pbr"><b>#8f1d1d</b><br>metal <b>0.0</b> · rough <b>0.85</b><br>emissive <b>—</b></span></div>
+<div class="lc-mat__item"><span class="lc-mat__ball" style="--c1:var(--art-blood-lit);--hi:var(--art-bone);--lo:var(--art-blood);--hs:6%;--hf:30%"></span>
+  <span class="lc-mat__name">Кровавая эмаль</span><span class="lc-mat__pbr"><b>#d4574b</b><br>metal <b>0.3</b> · rough <b>0.40</b><br>emissive <b>—</b></span></div>
+<div class="lc-mat__item"><span class="lc-mat__ball lc-mat__ball--emit" style="--c1:var(--art-glow);--hi:var(--art-bone);--lo:var(--art-glow);--hs:20%;--hf:60%"></span>
+  <span class="lc-mat__name">Свет лампы</span><span class="lc-mat__pbr"><b>#8fe0cc</b><br>metal <b>0.0</b> · rough <b>—</b><br>emissive <b>×6</b></span></div>
+<div class="lc-mat__item"><span class="lc-mat__ball lc-mat__ball--emit" style="--c1:var(--art-fire);--hi:var(--art-bone);--lo:var(--art-fire);--hs:20%;--hf:60%"></span>
+  <span class="lc-mat__name">Огонь горна</span><span class="lc-mat__pbr"><b>#f0a540</b><br>metal <b>0.0</b> · rough <b>—</b><br>emissive <b>×10</b></span></div>
+<div class="lc-mat__item"><span class="lc-mat__ball" style="--c1:var(--art-ash);--hi:var(--art-ash);--lo:var(--art-void);--hs:2%;--hf:60%"></span>
+  <span class="lc-mat__name">Пепел и дым</span><span class="lc-mat__pbr"><b>#6b6259</b><br>metal <b>0.0</b> · rough <b>1.00</b><br>emissive <b>α 0.6</b></span></div>
+</div>
+</body>
+</html>

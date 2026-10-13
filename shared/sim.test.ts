@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, type Kind, type State } from './sim.ts';
+import { applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -64,7 +64,7 @@ test('пост: строитель ставит на ничьей точке, п
 test('апгрейды: тир 2 у штаба открывает укрепление поста; турель ставится у своих построек', () => {
   const s = newState(2);
   const hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
-  s.players[0].req = 2000;
+  s.players[0].req = 2000; s.players[0].energy = 500;
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: 60, y: 60 }) ?? '', /рядом/);
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: hq.x + 7, y: hq.y }), undefined);
   run(s, 15);
@@ -106,4 +106,32 @@ test('бой: капитан добивает вражескую базу, иг�
   applyCmd(s, 0, { c: 'attack', ids: [cap.id], id: hq.id });
   run(s, 120);
   assert.equal(s.winner, 0);
+});
+
+test('энергия: литейня и насос на жиле дают энергию; турель стоит энергию', () => {
+  const s = newState(2);
+  const b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq');
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: hq.x + 7, y: hq.y }) ?? '', /энергии/);
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: hq.x + 8, y: hq.y + 3 }), undefined);
+  run(s, 20);
+  assert.equal(unit(s, 0, 'foundry').build, 1);
+  const e = s.players[0].energy;
+  run(s, 5);
+  assert.ok(s.players[0].energy > e + 9, 'литейня даёт 2/с');
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'pump', x: 50, y: 50 }) ?? '', /жилу/);
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'pump', x: VENTS[0][0] + 2, y: VENTS[0][1] }), undefined);
+});
+
+test('реликвии: реликтовая точка даёт реликвии, капитан берёт реликвийный доспех', () => {
+  const s = newState(2);
+  const cap = unit(s, 0, 'captain'), ri = POINTS.length;
+  [cap.x, cap.y] = RELICS[0] as [number, number];
+  run(s, 6);
+  assert.equal(s.points[ri].owner, 0);
+  assert.match(applyCmd(s, 0, { c: 'upgrade', id: cap.id }) ?? '', /реликвий/);
+  run(s, 40);
+  assert.ok(s.players[0].relics >= 2);
+  assert.equal(applyCmd(s, 0, { c: 'upgrade', id: cap.id }), undefined);
+  run(s, 6);
+  assert.equal(cap.lvl, 2);
 });

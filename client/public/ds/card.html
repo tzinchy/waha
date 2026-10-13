@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><title>Карточка пресета</title>
+<style>html,body{margin:0;background:#111}iframe{border:0;width:100%;height:100vh}</style>
+<iframe id="f"></iframe>
+<script>
+// Просмотр карточки дизайн-системы: /ds/card.html?c=LivingSquads — превью с tokens.css и bundle.css, как на странице системы.
+const c = new URLSearchParams(location.search).get('c') || 'Cover';
+fetch(`/ds/cards/${c}/preview.html`).then(r => r.text()).then(t => {
+  const head = '<link rel="stylesheet" href="/ds/tokens.css"><link rel="stylesheet" href="/ds/bundle.css"><base href="/ds/cards/' + c + '/">';
+  document.getElementById('f').srcdoc = t.replace(/<head>/i, '<head>' + head);
+});
+</script>

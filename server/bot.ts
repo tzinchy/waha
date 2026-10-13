@@ -26,7 +26,10 @@ export function botThink(s: State, me: number): void {
     if (free) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'post', x: free.x, y: free.y });
   }
   if (builders.length + hq.q < 2) applyCmd(s, me, { c: 'train', id: hq.id });
-  if (barracks.some(b => b.build >= 1) && s.players[me].tier < 2 && hq.upg < 0 && req >= 260) applyCmd(s, me, { c: 'upgrade', id: hq.id });
+  if (barracks.some(b => b.build >= 1) && !of('foundry').length && !site && idle.length && req >= 140) { // энергия: литейня у штаба
+    applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'foundry', x: hq.x + Math.cos(dir + 1.4) * 10, y: hq.y + Math.sin(dir + 1.4) * 10 });
+  }
+  if (barracks.some(b => b.build >= 1) && s.players[me].tier < 2 && hq.upg < 0 && req >= 260 && s.players[me].energy >= 80) applyCmd(s, me, { c: 'upgrade', id: hq.id });
   if (!of('turret').length && !site && idle.length && req >= 180) {
     applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'turret', x: hq.x + Math.cos(dir) * 9, y: hq.y + Math.sin(dir) * 9 });
   }

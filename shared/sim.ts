@@ -4,10 +4,10 @@ export const DT = 1 / 20;
 
 export type Weapon = 'sword' | 'hammer';
 export type CaptainCfg = { armor: number; trim: number; weapon: Weapon; banner: boolean };
-export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' | 'turret';
-export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret'];
-export const isStruct = (k: Kind) => k === 'hq' || k === 'barracks' || k === 'post' || k === 'turret';
-export type Buildable = 'barracks' | 'post' | 'turret';
+export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump';
+export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump'];
+export const isStruct = (k: Kind) => k !== 'captain' && k !== 'builder' && k !== 'guard';
+export type Buildable = 'barracks' | 'post' | 'turret' | 'foundry' | 'pump';
 
 // hp: у отрядов хп ОДНОЙ модели (общий пул = hp * n), у остальных общий. dmg: урон одной модели.
 type Stat = { hp: number; n: number; dmg: number; range: number; cd: number; speed: number; sight: number; radius: number; cost: number; time: number };
@@ -19,19 +19,27 @@ export const STATS: Record<Kind, Stat> = {
   barracks: { hp: 700, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3.2, cost: 150, time: 20 },
   post: { hp: 400, n: 1, dmg: 6, range: 10, cd: 1.5, speed: 0, sight: 10, radius: 1.4, cost: 50, time: 8 },
   turret: { hp: 500, n: 1, dmg: 12, range: 13, cd: 1.2, speed: 0, sight: 13, radius: 1.3, cost: 80, time: 10 },
+  foundry: { hp: 600, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.6, cost: 120, time: 15 }, // Литейня: энергия
+  pump: { hp: 400, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.6, cost: 100, time: 12 },     // Глубинный насос на жиле
 };
+/** Три ресурса пресета: Влияние (req, с точек), Энергия (с Литейни и насосов), Реликвии (с реликтовых точек). */
+export const ENERGY_COST: Partial<Record<Kind, number>> = { turret: 30 };
+export const ENERGY_INCOME: Partial<Record<Kind, number>> = { foundry: 2, pump: 4 };
+export const RELIC_RATE = 1 / 20; // реликвий в секунду с одной реликтовой точки
 /**
  * Апгрейды (команда 'upgrade'). lvl 1 -> 2. Штаб: тир 2 открывает остальные апгрейды.
  * Пост 2 уровня: урон x2.3, дальность +3, получает вдвое меньше урона. Отряд 2 уровня: урон x1.6, получает на 20% меньше.
  */
-export const UPGRADES: Partial<Record<Kind, { cost: number; time: number; tier: number; name: string }>> = {
-  hq: { cost: 200, time: 30, tier: 1, name: 'Тир 2' },
-  post: { cost: 100, time: 12, tier: 2, name: 'Укрепить пост' },
-  turret: { cost: 90, time: 10, tier: 2, name: 'Тяжёлая турель' },
-  guard: { cost: 80, time: 8, tier: 2, name: 'Тяжёлое оружие' },
+export type Upgrade = { cost: number; energy: number; relics: number; time: number; tier: number; name: string };
+export const UPGRADES: Partial<Record<Kind, Upgrade>> = {
+  hq: { cost: 200, energy: 80, relics: 0, time: 30, tier: 1, name: 'Тир II' },
+  post: { cost: 100, energy: 40, relics: 0, time: 12, tier: 2, name: 'Укрепить реликварий' },
+  turret: { cost: 90, energy: 40, relics: 0, time: 10, tier: 2, name: 'Тяжёлая турель' },
+  guard: { cost: 80, energy: 50, relics: 0, time: 8, tier: 2, name: 'Тяжёлое оружие' },
+  captain: { cost: 0, energy: 0, relics: 2, time: 5, tier: 1, name: 'Реликвийный доспех' },
 };
-const LVL2 = { dmg: { post: 2.3, turret: 1.8, guard: 1.6 } as Partial<Record<Kind, number>>, armor: { post: 0.5, turret: 0.6, guard: 0.8 } as Partial<Record<Kind, number>>, range: { post: 3, turret: 3 } as Partial<Record<Kind, number>> };
-export const BUILD_TIER: Record<Buildable, number> = { barracks: 1, post: 1, turret: 1 };
+const LVL2 = { dmg: { post: 2.3, turret: 1.8, guard: 1.6, captain: 1.5 } as Partial<Record<Kind, number>>, armor: { post: 0.5, turret: 0.6, guard: 0.8, captain: 0.7 } as Partial<Record<Kind, number>>, range: { post: 3, turret: 3 } as Partial<Record<Kind, number>> };
+export const BUILD_TIER: Record<Buildable, number> = { barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1 };
 export const maxHp = (k: Kind) => STATS[k].hp * STATS[k].n;
 /** Сколько моделей показывать: хп пула / хп одной модели, округлено вверх. */
 export const members = (k: Kind, hp: number) => (hp <= 0 ? 0 : Math.min(STATS[k].n, Math.ceil(hp / STATS[k].hp - 1e-6)));
@@ -45,6 +53,8 @@ export const START_REQ = 300;
 export const HQ_POS = [[12, 12], [88, 88], [88, 12], [12, 88]];
 export const POINTS = [[50, 50], [50, 18], [50, 82], [18, 50], [82, 50]];
 export const POINT_R = 6;
+export const RELICS = [[30, 30], [70, 70]]; // реликтовые точки: захват стоянием, дают реликвии
+export const VENTS = [[30, 58], [70, 42], [40, 8], [60, 92]]; // жилы под глубинные насосы
 export const MAX_PLAYERS = HQ_POS.length;
 
 export type Order =
@@ -62,8 +72,8 @@ export type Unit = {
   hit: number;                  // секунд с последнего урона (пополнять под огнём нельзя)
   lvl: number; upg: number;     // уровень и прогресс апгрейда в секундах (-1: нет)
 };
-export type Point = { x: number; y: number; owner: number; prog: number; by: number };
-export type Player = { req: number; alive: boolean; tier: number };
+export type Point = { x: number; y: number; owner: number; prog: number; by: number; relic?: boolean };
+export type Player = { req: number; energy: number; relics: number; alive: boolean; tier: number };
 export type State = {
   tick: number; units: Unit[]; points: Point[]; players: Player[]; nextId: number;
   winner: number | null; shots: number[][];
@@ -82,9 +92,9 @@ const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
 export function newState(n: number): State {
-  const s: State = { tick: 0, units: [], points: POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), players: [], nextId: 1, winner: null, shots: [] };
+  const s: State = { tick: 0, units: [], points: [...POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), ...RELICS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1, relic: true }))], players: [], nextId: 1, winner: null, shots: [] };
   for (let i = 0; i < n; i++) {
-    s.players.push({ req: START_REQ, alive: true, tier: 1 });
+    s.players.push({ req: START_REQ, energy: 0, relics: 0, alive: true, tier: 1 });
     const [hx, hy] = HQ_POS[i];
     spawn(s, i, 'hq', hx, hy);
     spawn(s, i, 'captain', ...nearHq(hx, hy, 8));
@@ -134,8 +144,10 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (u.build < 1) return 'Строительство не завершено';
     if (u.lvl >= 2 || u.upg >= 0) return 'Уже улучшено';
     if (p.tier < up.tier) return `Нужен тир ${up.tier}`;
-    if (p.req < up.cost) return 'Не хватает requisition';
-    p.req -= up.cost; u.upg = 0;
+    if (p.req < up.cost) return 'Не хватает влияния';
+    if (p.energy < up.energy) return 'Не хватает энергии';
+    if (p.relics < up.relics) return 'Не хватает реликвий';
+    p.req -= up.cost; p.energy -= up.energy; p.relics -= up.relics; u.upg = 0;
     return;
   }
   if (!Array.isArray(cmd.ids)) return;
@@ -159,22 +171,27 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (!(cmd.kind in BUILD_TIER) || !Number.isFinite(cmd.x) || !Number.isFinite(cmd.y)) return;
     if (p.tier < BUILD_TIER[cmd.kind]) return `Нужен тир ${BUILD_TIER[cmd.kind]}`;
     const c = STATS[cmd.kind];
-    if (p.req < c.cost) return 'Не хватает requisition';
+    if (p.req < c.cost) return 'Не хватает влияния';
+    if (p.energy < (ENERGY_COST[cmd.kind] ?? 0)) return 'Не хватает энергии';
     let x = clamp(cmd.x, 4, MAP.w - 4), y = clamp(cmd.y, 4, MAP.h - 4);
     if (cmd.kind === 'post') {
-      const pt = s.points.filter(q => dist(q, { x, y }) < 9).sort((a, b) => dist(a, { x, y }) - dist(b, { x, y }))[0];
+      const pt = s.points.filter(q => !q.relic && dist(q, { x, y }) < 9).sort((a, b) => dist(a, { x, y }) - dist(b, { x, y }))[0];
       if (!pt) return 'Пост строится у стратегической точки';
       if (pt.owner >= 0 && pt.owner !== owner) return 'Точка занята врагом';
       ({ x, y } = pt);
       if (s.units.some(u => u.kind === 'post' && u.hp > 0 && dist(u, pt) < 2)) return 'На точке уже есть пост';
-    } else if (cmd.kind === 'turret') {
+    } else if (cmd.kind === 'pump') {
+      const v = VENTS.map(([vx, vy]) => ({ x: vx, y: vy })).filter(q => dist(q, { x, y }) < 6).sort((a, b) => dist(a, { x, y }) - dist(b, { x, y }))[0];
+      if (!v) return 'Насос ставится на жилу';
+      ({ x, y } = v);
+    } else if (cmd.kind === 'turret' || cmd.kind === 'foundry') {
       if (!s.units.some(u => u.owner === owner && isStruct(u.kind) && u.kind !== 'turret' && u.hp > 0 && dist(u, { x, y }) < 16)) return 'Турель ставится рядом с вашим штабом, казармами или постом';
     } else {
       const hq = hqOf(s, owner), d = hq ? dist(hq, { x, y }) : 99;
       if (d < 8 || d > 32) return 'Казармы строятся рядом со штабом';
     }
     if (s.units.some(u => isStruct(u.kind) && u.hp > 0 && dist(u, { x, y }) < STATS[u.kind].radius + c.radius + 1)) return 'Место занято';
-    p.req -= c.cost;
+    p.req -= c.cost; p.energy -= ENERGY_COST[cmd.kind] ?? 0;
     const site = spawn(s, owner, cmd.kind, x, y);
     site.build = 0.05; site.hp = c.hp * 0.05;
     for (const b of bs) b.order = { t: 'build', id: site.id };
@@ -192,9 +209,13 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
 export function step(s: State, dt = DT): void {
   if (s.winner !== null) return;
   s.tick++;
-  const income = s.players.map(() => 1);
-  for (const pt of s.points) if (pt.owner >= 0) income[pt.owner] += 1 + (postAt(s, pt)?.owner === pt.owner ? 2 : 0);
-  s.players.forEach((p, i) => { if (p.alive) p.req += income[i] * dt; });
+  const income = s.players.map(() => 1), energy = s.players.map(() => 0), relics = s.players.map(() => 0);
+  for (const pt of s.points) if (pt.owner >= 0) {
+    if (pt.relic) relics[pt.owner] += RELIC_RATE;
+    else income[pt.owner] += 1 + (postAt(s, pt)?.owner === pt.owner ? 2 : 0);
+  }
+  for (const u of s.units) if (u.build >= 1 && u.hp > 0) energy[u.owner] += ENERGY_INCOME[u.kind] ?? 0;
+  s.players.forEach((p, i) => { if (p.alive) { p.req += income[i] * dt; p.energy += energy[i] * dt; p.relics += relics[i] * dt; } });
   const byId = new Map(s.units.map(u => [u.id, u]));
   for (const u of s.units) {
     if (!s.players[u.owner].alive) continue;
@@ -350,10 +371,10 @@ export type Snap = { tick: number; u: number[][]; p: number[][]; pl: number[][];
 export function snapshot(s: State): Snap {
   return {
     tick: s.tick,
-    // [id, owner, kind, x*10, y*10, hp, face*100, очередь, стройка %, пополняется, уровень, апгрейд %]
-    u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), Math.max(0, Math.round(u.hp)), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / UPGRADES[u.kind]!.time) * 100)]),
+    // [id, owner, kind, x*10, y*10, hp, face*100, очередь, стройка %, пополняется, уровень, апгрейд %, найм текущего %]
+    u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), Math.max(0, Math.round(u.hp)), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / UPGRADES[u.kind]!.time) * 100), producing(u.kind) && u.q > 0 ? Math.floor((u.prog / STATS[producing(u.kind)!].time) * 100) : 0]),
     p: s.points.map(p => [p.owner, Math.round(p.prog * 100), p.by]),
-    pl: s.players.map(p => [Math.floor(p.req), p.alive ? 1 : 0, p.tier]),
+    pl: s.players.map(p => [Math.floor(p.req), p.alive ? 1 : 0, p.tier, Math.floor(p.energy), Math.floor(p.relics)]),
     sh: s.shots.map(v => v.map(n => Math.round(n * 10))),
     w: s.winner,
   };

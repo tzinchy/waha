@@ -1,81 +1,54 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WAHA</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Limelight&family=Poiret+One&display=swap" rel="stylesheet">
+<title>WAHA — Латунный Собор</title>
+<!-- Дизайн-система «Латунный Собор»: ds/project → node tools/ds-tokens.mjs → public/ds -->
+<link rel="stylesheet" href="/ds/tokens.css">
+<link rel="stylesheet" href="/ds/bundle.css">
 <style>
-  /* Art Deco: чёрный и золото, ступенчатые силуэты, лучи-«солнце», двойные рамки, ромбы */
-  :root{--ink:#080a0f;--night:#0e121a;--panel:#121722;--field:#0a0d13;--gold:#d4af37;--gold-hi:#f3dc8c;--gold-dim:#5e4f22;--ivory:#f2ead3;--dim:#9a937f;--bad:#e0705f;--ok:#62d6a0;
-    --serif:"Poiret One",Georgia,serif;--sans:Jost,"Josefin Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--stair:polygon(0 100%,0 38%,3% 38%,3% 19%,6% 19%,6% 0,94% 0,94% 19%,97% 19%,97% 38%,100% 38%,100% 100%)}
+  /* Здесь только раскладка экранов. Цвета, шрифты, рамки, кнопки — из tokens.css и bundle.css. */
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--ink);color:var(--ivory);font:400 15px/1.45 var(--sans);overflow:hidden}
+  html,body{margin:0;height:100%;background:var(--surface-100);color:var(--ink);font:400 15px/22px var(--font-body);overflow:hidden}
   .hidden{display:none!important}
-  button,input{font:inherit;color:inherit}
   button{white-space:nowrap}
 
-  /* заголовки */
-  h1{margin:0;font:400 64px/1 Limelight,var(--serif);letter-spacing:.3em;padding-left:.3em;color:var(--gold);text-shadow:0 0 30px #d4af3755,0 2px 0 #5e4f22}
-  h2{display:flex;align-items:center;gap:10px;margin:0 0 14px;font:500 13px/1 var(--sans);letter-spacing:.28em;text-transform:uppercase;color:var(--gold)}
-  h2::before{content:"";width:7px;height:7px;background:var(--gold);transform:rotate(45deg);flex:none}
-  h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--gold-dim),transparent)}
-  .sub{color:var(--dim);margin:10px 0 0;text-align:center;letter-spacing:.14em;text-transform:uppercase;font-size:12px}
-  .rule{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;color:var(--gold)}
-  .rule::before,.rule::after{content:"";width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
-  .rule::after{transform:scaleX(-1)}
-  .rule i{width:9px;height:9px;border:1px solid var(--gold);transform:rotate(45deg);box-shadow:0 0 0 3px var(--ink),0 0 0 4px var(--gold-dim)}
-
-  /* кнопки и поля */
-  button{background:transparent;border:1px solid var(--gold-dim);padding:9px 16px;cursor:pointer;letter-spacing:.12em;text-transform:uppercase;font-size:12px;font-weight:500;color:var(--ivory);transition:.15s}
-  button:hover:not(:disabled){border-color:var(--gold);background:#d4af3718;color:var(--gold-hi)}
-  button:disabled{opacity:.35;cursor:default}
-  button.primary{border:0;color:#16110a;font-weight:600;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,#9c7a1f);clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px),0 10px);padding:11px 24px}
-  button.primary:hover:not(:disabled){background:linear-gradient(180deg,#fff0b8,var(--gold-hi) 55%,var(--gold));color:#16110a}
-  button.on{border-color:var(--gold);background:#d4af3722;color:var(--gold-hi)}
-  input[type=text]{width:100%;background:var(--field);border:0;border-bottom:1px solid var(--gold-dim);padding:10px 4px;letter-spacing:.06em}
-  input[type=text]::placeholder{color:#5f5b50}
-  input[type=text]:focus{outline:0;border-bottom-color:var(--gold);background:#d4af3710}
-  input[type=color]{width:30px;height:30px;padding:0;border:1px solid var(--gold-dim);background:none;cursor:pointer}
-
-  /* главный экран */
-  #home{position:relative;height:100%;overflow:auto;padding:36px 16px;display:flex;flex-direction:column;align-items:center;gap:28px;background:radial-gradient(ellipse 80% 50% at 50% 0%,#1d2230,var(--ink) 70%)}
-  #home::before{content:"";position:absolute;top:0;left:50%;width:1400px;height:700px;transform:translateX(-50%);pointer-events:none;
-    background:repeating-conic-gradient(from 90deg at 50% 0,#d4af3714 0 3deg,transparent 3deg 9deg);
-    -webkit-mask-image:radial-gradient(ellipse at 50% 0,#000,transparent 70%);mask-image:radial-gradient(ellipse at 50% 0,#000,transparent 70%)}
-  #home>*{position:relative}
+  #home{position:relative;height:100%;overflow:auto;padding:var(--space-8) var(--space-4);display:flex;flex-direction:column;align-items:center;gap:var(--space-6);
+    background:radial-gradient(ellipse 70% 45% at 50% 0%,var(--surface-200),var(--surface-100) 70%)}
   header{text-align:center}
-  .cols{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;width:100%;max-width:900px}
-  #editor{width:370px}
-  #menu,#lobby{width:440px}
-
-  /* панель: двойная золотая рамка + угловые скобки */
-  .panel{position:relative;background:var(--panel);padding:24px;border:1px solid var(--gold-dim);box-shadow:inset 0 0 0 5px var(--panel),inset 0 0 0 6px var(--gold-dim),0 10px 40px #000a}
-  .panel::before{--g:linear-gradient(var(--gold),var(--gold));content:"";position:absolute;inset:-2px;pointer-events:none;
-    background:var(--g) 0 0/26px 2px no-repeat,var(--g) 0 0/2px 26px no-repeat,var(--g) 100% 0/26px 2px no-repeat,var(--g) 100% 0/2px 26px no-repeat,
-      var(--g) 0 100%/26px 2px no-repeat,var(--g) 0 100%/2px 26px no-repeat,var(--g) 100% 100%/26px 2px no-repeat,var(--g) 100% 100%/2px 26px no-repeat}
-  #preview{width:100%;height:auto;aspect-ratio:320/380;background:radial-gradient(circle at 50% 75%,#2b2a22,#0b0d13 75%);border:1px solid var(--gold-dim)}
-  .row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
-  .row>label{width:72px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;font-size:12px}
-  .sws{display:flex;gap:11px;padding:3px 4px}
-  .sw{width:17px;height:17px;transform:rotate(45deg);border:1px solid #000a;cursor:pointer;transition:.12s}
-  .sw:hover{transform:rotate(45deg) scale(1.2)}
-  .sw.on{box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--gold)}
-  .seg{display:flex}.seg button+button{border-left:0}
-  .stack{display:flex;flex-direction:column;gap:14px}
-  .or{text-align:center;color:var(--dim);font-size:12px;letter-spacing:.2em;text-transform:uppercase}
-  .inline{display:flex;gap:10px;align-items:flex-end}
-  #plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-  #plist li{display:flex;align-items:center;gap:12px;background:var(--field);border-left:3px solid var(--gold);padding:9px 12px}
-  #plist .dot{width:14px;height:14px;transform:rotate(45deg);border:1px solid #fff5}
-  #plist .name{flex:1;letter-spacing:.06em}
-  #plist .tag{font-size:11px;color:var(--dim);letter-spacing:.14em;text-transform:uppercase}
-  #plist .ready{color:var(--ok)}
-  #plist button{padding:3px 9px}
-  .code{font:400 38px/1 Limelight,var(--serif);letter-spacing:.3em;color:var(--gold-hi);margin:0 0 12px;text-shadow:0 0 18px #d4af3744}
-  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2a1512;border:1px solid var(--bad);color:#ffb4a6;padding:11px 20px;z-index:50;letter-spacing:.06em;box-shadow:0 0 0 3px #2a1512,0 0 0 4px #7a3a30}
+  h1{margin:0;font:700 72px/1 var(--font-display);letter-spacing:.06em;color:var(--gilt-300);text-shadow:var(--glow-gilt)}
+  .sub{margin:var(--space-2) 0 0;font:400 13px/18px var(--font-label);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-muted)}
+  .cols{display:flex;gap:var(--space-6);flex-wrap:wrap;justify-content:center;width:100%;max-width:1000px}
+  #editor{width:380px} #menu,#lobby{width:460px}
+  #theme{position:absolute;top:var(--space-4);right:var(--space-4)}
+  #preview{width:100%;aspect-ratio:320/300;display:flex;align-items:flex-end;justify-content:center;padding-bottom:var(--space-4);background:radial-gradient(ellipse 60% 30% at 50% 92%,var(--surface-300),var(--surface-000) 70%)}
+  #preview svg{height:92%;width:auto;overflow:visible;filter:drop-shadow(0 10px 8px rgba(0,0,0,.6))}
+  .row{display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-4);flex-wrap:wrap}
+  .row>label{width:76px;font:500 12px/16px var(--font-label);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted)}
+  .sws{display:flex;gap:var(--space-2)}
+  .sw{width:20px;height:20px;cursor:pointer;clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px),0 4px)}
+  .sw.on{outline:2px solid var(--focus-ring);outline-offset:2px}
+  input[type=color]{width:30px;height:30px;padding:0;border:1px solid var(--gilt-700);background:var(--surface-000);cursor:pointer}
+  input[type=text]{width:100%;height:44px;padding:0 var(--space-3);background:var(--surface-000);border:1px solid var(--gilt-700);color:var(--ink);font:400 16px/20px var(--font-body)}
+  input[type=text]:focus{outline:2px solid var(--focus-ring);outline-offset:2px}
+  .stack{display:flex;flex-direction:column;gap:var(--space-4)}
+  .or{text-align:center;font:500 12px/16px var(--font-label);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-muted)}
+  .inline{display:flex;gap:var(--space-3)}
+  .code{margin:0 0 var(--space-3);font:700 44px/1 var(--font-display);letter-spacing:.3em;color:var(--gilt-300)}
+  #plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-2)}
+  #plist li{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--surface-300);border:1px solid var(--hairline)}
+  #plist .dot{width:14px;height:14px;transform:rotate(45deg)}
+  #plist .name{flex:1;font:500 15px/20px var(--font-label);letter-spacing:.06em}
+  #plist .tag{font:400 12px/16px var(--font-mono);color:var(--ink-muted)}
+  #plist .ready{color:var(--verdigris-300)}
+  .factions{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-2)}
+  .factions button{flex-direction:column;height:auto;padding:var(--space-2);white-space:normal;line-height:14px;font-size:11px}
+  .factions svg{height:64px;width:auto}
+  #lobby{width:560px}
+  .w2d-point.relic{border-color:var(--art-glow);border-style:dotted}
+  #toast{position:fixed;left:50%;bottom:var(--space-6);transform:translateX(-50%);z-index:50;min-width:320px}
+  #mute{position:fixed;left:var(--space-4);bottom:var(--space-4);z-index:60}
 
   /* игра */
   #game{position:fixed;inset:0}
@@ -83,122 +56,104 @@
   #view canvas{display:block;width:100%;height:100%}
   #hud{position:absolute;inset:0;pointer-events:none}
   #hud>*{pointer-events:auto}
-  .box{position:absolute;background:#080a0fe6;border:1px solid var(--gold-dim);box-shadow:inset 0 0 0 3px #080a0f,inset 0 0 0 4px var(--gold-dim);padding:12px 18px}
-  #hud-res{left:14px;top:14px;display:flex;gap:22px}
-  #hud-res div+div{border-left:1px solid var(--gold-dim);padding-left:22px}
-  #hud-res b{display:block;font:400 28px/1.05 Limelight,var(--serif);color:var(--gold-hi)}
-  #hud-res small{color:var(--dim);font-size:10px;letter-spacing:.2em;text-transform:uppercase}
-  #hud-players{right:14px;top:14px;display:flex;flex-direction:column;gap:6px;min-width:150px}
-  #hud-players div{display:flex;align-items:center;gap:10px;letter-spacing:.06em}
-  #hud-players i{width:11px;height:11px;transform:rotate(45deg);border:1px solid #fff5}
-  #hud-players .dead{opacity:.4;text-decoration:line-through}
-  #hud-dead{left:50%;top:92px;transform:translateX(-50%);color:#ffb4a6;border-color:var(--bad);letter-spacing:.08em}
-  /* нижняя панель: ступенчатый силуэт зиккурата */
-  #hud-bottom{position:absolute;left:50%;bottom:0;transform:translateX(-50%);display:flex;gap:22px;align-items:center;padding:30px 70px 14px;border:0;box-shadow:none;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 40%,#7a6220);clip-path:var(--stair);width:min(1080px,96vw)}
-  #hud-bottom::before{content:"";position:absolute;inset:2px;background:linear-gradient(180deg,#141a26,#080a0f);clip-path:var(--stair);z-index:0}
-  #hud-bottom>*{position:relative;z-index:1}
-  #hud-hint{color:var(--dim);font-size:11px;line-height:1.35;flex:1;min-width:200px}
-  #hud-cmd{display:flex;gap:10px;align-items:center;min-height:38px;flex-wrap:wrap}
-  #hud-cmd button{padding:8px 14px;display:flex;gap:8px;align-items:baseline;border-color:var(--gold)}
-  #hud-cmd button i{font-style:normal;font-size:10px;color:var(--dim);border:1px solid var(--gold-dim);padding:0 4px}
-  #hud-cmd button b{color:var(--gold-hi);font-weight:600}
-  #hud-cmd .info{color:var(--dim);font-size:12px;letter-spacing:.06em}
-  #hud-sel{color:var(--ok);min-width:90px;letter-spacing:.08em}
-  #selbox{position:fixed;border:1px solid var(--gold-hi);background:#d4af3722;pointer-events:none!important;z-index:5}
-  #result{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#000b,#000e);pointer-events:auto}
-  #result .box{position:relative;text-align:center;padding:36px 64px}
-  #result h3{margin:0 0 22px;font:400 46px/1 var(--serif);letter-spacing:.2em;color:var(--gold-hi);text-shadow:0 0 24px #d4af3766,1px 1px 0 var(--gold),-1px -1px 0 var(--gold)}
+  #hud-res{position:absolute;left:var(--space-4);top:var(--space-4)}
+  #hud-players{position:absolute;right:var(--space-4);top:var(--space-4);min-width:180px}
+  #hud-players div{display:flex;align-items:center;gap:var(--space-2);font:500 14px/22px var(--font-label);letter-spacing:.06em}
+  #hud-players i{width:10px;height:10px;transform:rotate(45deg)}
+  #hud-players .dead{opacity:var(--opacity-disabled);text-decoration:line-through}
+  #hud-dead{position:absolute;left:50%;top:96px;transform:translateX(-50%)}
+  #hud-bottom{position:absolute;left:50%;bottom:var(--space-3);transform:translateX(-50%);width:min(1200px,98vw);display:flex;gap:var(--space-4);align-items:center}
+  #hud-cmd{display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;min-height:44px}
+  #hud-cmd button i{font:400 11px/1 var(--font-mono);font-style:normal;opacity:.8}
+  #hud-cmd button b{font:500 13px/1 var(--font-label)}
+  #hud-cmd .info{font:400 13px/18px var(--font-body);color:var(--ink-muted)}
+  #hud-sel{font:500 13px/18px var(--font-label);letter-spacing:.08em;color:var(--verdigris-300);min-width:96px}
+  #hud-hint{flex:1;font:400 11px/15px var(--font-mono);color:var(--ink-muted)}
+  #selbox{position:fixed;border:1px solid var(--gilt-300);background:color-mix(in srgb,var(--gilt-500) 14%,transparent);pointer-events:none!important;z-index:5}
+  #result{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--scrim);pointer-events:auto}
+  #result .lc-frame{text-align:center;min-width:420px}
+  #result h3{margin:0 0 var(--space-6);font:700 52px/1 var(--font-display);color:var(--gilt-300);text-shadow:var(--glow-gilt)}
 
-  /* ===== ASCII dark fantasy: моноширинный шрифт, рамки из псевдографики, кровь, кость и пепел ===== */
-  #ascii-title{display:none;margin:0;text-align:center}
-  #theme{position:absolute;top:14px;right:16px;z-index:5}
-  #mute{position:fixed;left:14px;bottom:14px;z-index:60;font-size:11px;padding:6px 10px}
-  html.ascii{--ink:#070506;--night:#0d0808;--panel:#100909;--field:#080505;--gold:#c8352b;--gold-hi:#eadfc4;--gold-dim:#5a2a26;--ivory:#cfc4aa;--dim:#85766a;--ok:#9ccf72;--bad:#ff6b4a;
-    --serif:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--stair:none}
-  html.ascii body{letter-spacing:.01em;font-size:14px}
-  html.ascii h1{display:none}
-  html.ascii #ascii-title{display:block;font:700 clamp(9px,1.7vw,15px)/1.05 var(--sans);color:var(--gold);text-shadow:0 0 14px #c8352b99,0 0 2px #000;white-space:pre}
-  html.ascii #home{background:var(--ink)}
-  html.ascii #home::before{width:100%;height:100%;left:0;transform:none;mask-image:none;-webkit-mask-image:none;background:repeating-linear-gradient(0deg,#ffffff07 0 1px,transparent 1px 3px)}
-  html.ascii .rule i{width:auto;height:auto;border:0;box-shadow:none;transform:none}
-  html.ascii .rule i::before{content:"✠";font-size:16px}
-  html.ascii .rule::before,html.ascii .rule::after{content:"────────────────";width:auto;height:auto;background:none;color:var(--gold-dim);letter-spacing:0}
-  html.ascii .sub{letter-spacing:.06em}
-  html.ascii h2{letter-spacing:.14em}
-  html.ascii h2::before{content:"▓▒░";width:auto;height:auto;background:none;transform:none;color:var(--gold)}
-  html.ascii h2::after{content:"░▒▓";flex:none;width:auto;height:auto;background:none;color:var(--gold-dim)}
-  html.ascii .panel{border:3px double var(--gold);box-shadow:0 0 30px #c8352b22}
-  html.ascii .panel::before{display:none}
-  html.ascii #preview{border:1px solid var(--gold-dim);background:#050303}
-  html.ascii button{border:0;background:none;padding:6px 4px;letter-spacing:.06em}
-  html.ascii button::before{content:"[ ";color:var(--gold)}
-  html.ascii button::after{content:" ]";color:var(--gold)}
-  html.ascii button:hover:not(:disabled){background:var(--gold);color:#070506}
-  html.ascii button:hover:not(:disabled)::before,html.ascii button:hover:not(:disabled)::after{color:#070506}
-  html.ascii button.primary{clip-path:none;background:none;color:var(--gold-hi);font-weight:700;padding:6px 4px}
-  html.ascii button.primary:hover:not(:disabled){background:var(--gold);color:#070506}
-  html.ascii button.on{background:none;color:var(--gold-hi);text-decoration:underline}
-  html.ascii .seg button+button{border:0}
-  html.ascii input[type=text]{border:0;border-bottom:1px dashed var(--gold-dim)}
-  html.ascii .sw{transform:none;width:14px;height:14px;border:1px solid #000a}
-  html.ascii .sw:hover{transform:scale(1.2)}
-  html.ascii #plist li{border-left:0;border:1px dashed var(--gold-dim)}
-  html.ascii #plist .dot{transform:none;border-radius:0}
-  html.ascii .code{font:700 34px/1 var(--sans);color:var(--gold-hi);text-shadow:0 0 14px #c8352b99}
-  html.ascii #toast{box-shadow:none;border:2px double var(--bad);background:#1a0a08}
-  html.ascii .box{border:3px double var(--gold);box-shadow:none;background:#070506ee}
-  html.ascii #hud-res b{font:700 24px/1.05 var(--sans)}
-  html.ascii #hud-players i{transform:none;border-radius:0}
-  html.ascii #hud-bottom{clip-path:none;background:#070506ee;border:3px double var(--gold);border-bottom:0;padding:12px 22px;width:min(1180px,98vw)}
-  html.ascii #hud-bottom::before{display:none}
-  html.ascii #hud-cmd button{border:0}
-  html.ascii #hud-cmd button i{border-color:var(--gold-dim)}
-  html.ascii #result h3{font:700 40px/1 var(--sans);letter-spacing:.1em;text-shadow:0 0 20px #c8352b}
+  /* ===== 2D-мир на силуэтах пресета ===== */
+  .w2d{overflow:hidden;background:var(--surface-000)}
+  .w2d-world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+  .w2d-ground{position:absolute;left:0;top:0;background:var(--surface-100);
+    box-shadow:0 0 0 2px var(--gilt-700),0 0 0 6px var(--surface-000),0 0 0 7px var(--gilt-700)}
+  .w2d-fx{position:absolute;left:0;top:0;pointer-events:none;z-index:100000;overflow:visible}
+  .w2d-tracer{stroke:var(--art-fire);stroke-width:2.5;stroke-linecap:round;filter:drop-shadow(0 0 4px var(--art-fire))}
+  .w2d-ent{position:absolute;left:0;top:0;width:0;height:0}
+  .w2d-ent .art,.w2d-body{position:absolute;left:0;top:0}
+  .w2d-ent .art{transform-origin:0 0}
+  .w2d-ent .art svg{display:block;position:absolute;left:0;bottom:0;transform:translateX(-50%);overflow:visible;filter:drop-shadow(0 6px 4px rgba(0,0,0,.55))}
+  .w2d-body.flip{transform:scaleX(-1)}
+  .w2d-ent .turret{transform-box:fill-box;transform-origin:50% 75%;transition:transform .25s var(--ease-snap)}
+  .w2d-unit.enemy{--art-brass:var(--art-blood-lit);--art-brass-lit:#ee9a8e;--art-glow:var(--art-fire)} /* сторона читается металлом и светом, не обводкой */
+  .w2d-ring,.w2d-sel{position:absolute;left:0;top:0;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none}
+  .w2d-ring{border:2px solid var(--team);opacity:.7}
+  .w2d-range{position:absolute;left:0;top:0;transform:translate(-50%,-50%);border-radius:50%;border:2px dashed var(--gilt-500);opacity:0;pointer-events:none;transition:opacity .15s}
+  .w2d-unit.picked .w2d-range{opacity:.55}
+  .w2d-ghost{background-image:repeating-linear-gradient(0deg,currentColor 0 1px,transparent 1px 26px),repeating-linear-gradient(90deg,currentColor 0 1px,transparent 1px 26px)!important;color:color-mix(in srgb,var(--verdigris-300) 40%,transparent)}
+  .w2d-sel{border:2px solid var(--focus-ring);box-shadow:0 0 12px var(--focus-ring);opacity:0;transition:opacity .12s}
+  .w2d-sel.on{opacity:1}
+  .w2d-bar{position:absolute;left:0;top:-70px;transform:translateX(-50%);padding:0;gap:0;pointer-events:none}
+  .w2d-unit .w2d-bar{top:-62px}
+  .w2d-unit .art .fallen{opacity:.5}
+  .w2d-dying{transition:opacity 1.5s ease-in;opacity:0}
+  .w2d-razed .w2d-body{transition:transform 1.1s var(--ease-heavy),opacity 1.1s;transform:translateY(40px) scaleY(.2);opacity:0}
+  .w2d-point,.w2d-point-fill{position:absolute;border-radius:50%;transform:scaleY(.55);pointer-events:none}
+  .w2d-point{border:2px dashed var(--team,var(--art-bone));opacity:.6}
+  .w2d-point.owned{border-style:solid;box-shadow:0 0 18px var(--team),inset 0 0 26px color-mix(in srgb,var(--team) 30%,transparent);opacity:.9}
+  .w2d-point-fill{background:conic-gradient(color-mix(in srgb,var(--team) 45%,transparent) calc(var(--p,0)*360deg),transparent 0)}
+  .w2d-ghost{position:absolute;left:0;top:0;translate:-50% -50%;border:2px solid var(--verdigris-300);background:color-mix(in srgb,var(--verdigris-500) 22%,transparent);border-radius:50%;z-index:99999;pointer-events:none}
+  .w2d-ghost.bad{border-color:var(--blood-300);background:color-mix(in srgb,var(--blood-600) 25%,transparent)}
+  .w2d-marker{width:28px;height:16px;border:2px solid var(--verdigris-300);border-radius:50%;translate:-50% -50%;animation:w2d-ping .6s ease-out forwards}
+  @keyframes w2d-ping{from{scale:.3;opacity:1}to{scale:1.4;opacity:0}}
+  #hud-queue{position:absolute;left:var(--space-4);top:86px;display:flex;gap:var(--space-2);align-items:center}
+  .w2d-qlabel{font:500 11px/1 var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);margin-right:var(--space-2)}
+  .w2d-qitem{position:relative;width:44px;height:52px;background:var(--surface-000);border:1px solid var(--gilt-700);display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+  .w2d-qitem svg{height:48px;width:auto}
+  .w2d-qitem.now{border-color:var(--gilt-500);box-shadow:var(--glow-gilt)}
+  .w2d-qbar{position:absolute;left:0;bottom:0;height:4px;width:var(--v);background:var(--verdigris-500)}
 </style>
 </head>
 <body>
 <main id="home">
-  <button id="theme" title="Сменить стиль"></button>
+  <button id="theme" class="lc-btn lc-btn--sm lc-btn--ghost" title="Тема фракции"></button>
   <header>
     <h1>WAHA</h1>
-    <pre id="ascii-title" aria-label="WAHA">██╗    ██╗ █████╗ ██╗  ██╗ █████╗
-██║    ██║██╔══██╗██║  ██║██╔══██╗
-██║ █╗ ██║███████║███████║███████║
-██║███╗██║██╔══██║██╔══██║██╔══██║
-╚███╔███╔╝██║  ██║██║  ██║██║  ██║
- ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝</pre>
-    <div class="rule"><i></i></div>
-    <p class="sub">Тактическая RTS в браузере · капитан · отряды · захват точек</p>
+    <p class="sub">Латунь на обсидиане · тактическая RTS в браузере</p>
   </header>
   <div class="cols">
-    <section class="panel" id="editor">
-      <h2>Капитан</h2>
-      <canvas id="preview" width="320" height="380"></canvas>
-      <div class="row"><label>Броня</label><div class="sws" id="armorSw"></div><input type="color" id="armorIn"></div>
-      <div class="row"><label>Отделка</label><div class="sws" id="trimSw"></div><input type="color" id="trimIn"></div>
-      <div class="row"><label>Оружие</label><div class="seg" id="weapon"><button data-w="sword">Меч</button><button data-w="hammer">Молот</button></div></div>
-      <div class="row"><label>Знамя</label><button id="banner"></button></div>
+    <section class="lc-frame lc-frame--lg" id="editor">
+      <h3 class="lc-frame__head"><span>Капитан</span></h3>
+      <div id="preview"></div>
+      <div class="row"><label>Броня</label><div class="sws" id="armorSw"></div><input type="color" id="armorIn" aria-label="Свой цвет брони"></div>
+      <div class="row"><label>Отделка</label><div class="sws" id="trimSw"></div><input type="color" id="trimIn" aria-label="Свой цвет отделки"></div>
+      <div class="row"><label>Оружие</label><div class="inline" id="weapon"><button class="lc-btn lc-btn--sm lc-btn--ghost" data-w="sword">Меч</button><button class="lc-btn lc-btn--sm lc-btn--ghost" data-w="hammer">Молот</button></div></div>
+      <div class="row"><label>Знамя</label><button class="lc-btn lc-btn--sm lc-btn--ghost" id="banner"></button></div>
     </section>
 
-    <section class="panel stack" id="menu">
-      <h2>Играть</h2>
+    <section class="lc-frame lc-frame--lg stack" id="menu">
+      <h3 class="lc-frame__head"><span>В бой</span></h3>
       <input type="text" id="name" maxlength="16" placeholder="Имя капитана">
-      <button class="primary" id="create">Создать лобби</button>
+      <button class="lc-btn" id="create">Созвать лобби</button>
       <div class="or">или войти по коду</div>
-      <div class="inline"><input type="text" id="code" maxlength="8" placeholder="КОД" style="text-transform:uppercase"><button id="join">Войти</button></div>
+      <div class="inline"><input type="text" id="code" maxlength="8" placeholder="КОД" style="text-transform:uppercase"><button class="lc-btn lc-btn--ghost" id="join">Войти</button></div>
     </section>
 
-    <section class="panel hidden" id="lobby">
-      <h2>Лобби</h2>
+    <section class="lc-frame lc-frame--lg hidden" id="lobby">
+      <h3 class="lc-frame__head"><span>Лобби</span></h3>
       <p class="code" id="lcode"></p>
-      <button id="copy">Скопировать ссылку-приглашение</button>
-      <h2 style="margin-top:22px">Игроки</h2>
+      <button class="lc-btn lc-btn--sm lc-btn--ghost" id="copy">Скопировать приглашение</button>
+      <h3 class="lc-frame__head" style="margin-top:var(--space-6)"><span>Фракция</span></h3>
+      <div id="factions" class="factions"></div>
+      <h3 class="lc-frame__head" style="margin-top:var(--space-6)"><span>Игроки</span></h3>
       <ul id="plist"></ul>
       <div class="row">
-        <button id="ready"></button>
-        <button id="addbot">+ Бот</button>
-        <button class="primary" id="start">Начать матч</button>
-        <button id="leave">Выйти</button>
+        <button class="lc-btn lc-btn--sm lc-btn--ghost" id="ready"></button>
+        <button class="lc-btn lc-btn--sm lc-btn--ghost" id="addbot">+ Бот</button>
+        <button class="lc-btn lc-btn--sm" id="start">Начать осаду</button>
+        <button class="lc-btn lc-btn--sm lc-btn--blood" id="leave">Отступить</button>
       </div>
     </section>
   </div>
@@ -207,25 +162,28 @@
 <main id="game" class="hidden">
   <div id="view"></div>
   <div id="hud">
-    <div id="hud-res" class="box">
-      <div><b id="hud-req">0</b><small>Requisition</small></div>
-      <div><b id="hud-tier">T1</b><small>Тир</small></div>
-      <div><b id="hud-builders">0</b><small>Строители</small></div>
-      <div><b id="hud-squads">0</b><small>Отряды</small></div>
+    <div id="hud-res" class="lc-res" role="status" aria-label="Ресурсы">
+      <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5 16.5 12 12 16.5 7.5 12Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-req">0</span><span class="lc-res__label">Влияние</span></div>
+      <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 1 4 14h6.5L8 23 20 9h-6.5Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-energy">0</span><span class="lc-res__label">Энергия</span></div>
+      <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 22V13h2v-3h2V7h3V4h4v3h3v3h2v3h2v9h-7v-6h-4v6Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-relics">0</span><span class="lc-res__label">Реликвии</span></div>
+      <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 22V13h2v-3h2V7h3V4h4v3h3v3h2v3h2v9h-7v-6h-4v6Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-tier" style="font-family:var(--font-display)">I</span><span class="lc-res__label">Тир</span></div>
+      <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21h20v-3h-3v-3h-3v-3h-2V3h-4v9H8v3H5v3H2Z" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="lc-res__value" id="hud-builders">0</span><span class="lc-res__label">Строители</span></div>
+      <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 5.5V12c0 4.6-3.3 8-8 9.5C7.3 20 4 16.6 4 12V5.5Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9l4 3 4-3v3l-4 3-4-3Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-squads">0</span><span class="lc-res__label">Легион</span></div>
     </div>
-    <div id="hud-players" class="box"></div>
-    <div id="hud-dead" class="box hidden">Капитан пал. Возродится в штабе.</div>
-    <div id="hud-bottom">
+    <section id="hud-queue" class="lc-frame hidden"></section>
+    <section id="hud-players" class="lc-frame"></section>
+    <div id="hud-dead" class="lc-alert lc-alert--danger hidden" role="alert"><span class="lc-alert__glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 23 21H1Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 9h2v6h-2zM11 17h2v2h-2z" fill="currentColor"/></svg></span><span class="lc-alert__text">Капитан пал</span><span class="lc-alert__meta">возродится в штабе</span></div>
+    <section id="hud-bottom" class="lc-frame">
       <div id="hud-cmd"></div>
       <span id="hud-sel"></span>
-      <span id="hud-hint">G текст/3D · M звук · ЛКМ выбор / рамка · ПКМ приказ · A+ЛКМ атака-движение · S стоп · Пробел капитан · H штаб · T/B/P/Y/R/U команды · стрелки, Q/E, колесо камера</span>
-    </div>
-    <div id="result" class="hidden"><div class="box"><h3 id="result-title"></h3><button class="primary" id="result-back">В лобби</button></div></div>
+      <span id="hud-hint">ЛКМ выбор/рамка · ПКМ приказ · A атака-движение · S стоп · Пробел капитан · H штаб · T/B/P/Y/R/U команды · стрелки, Q/E, колесо — камера · M звук</span>
+    </section>
+    <div id="result" class="hidden"><section class="lc-frame lc-frame--lg"><h3 id="result-title"></h3><button class="lc-btn" id="result-back">В лобби</button></section></div>
   </div>
   <div id="selbox" class="hidden"></div>
 </main>
-<button id="mute"></button>
-<div id="toast" class="hidden"></div>
+<div id="toast" class="lc-alert lc-alert--warn hidden" role="status"><span class="lc-alert__glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12M6 22h12M7 2c0 6 10 6 10 10S7 16 7 22M17 2c0 6-10 6-10 10s10 4 10 10" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><span class="lc-alert__text" id="toast-text"></span></div>
+<button id="mute" class="lc-btn lc-btn--sm lc-btn--ghost"></button>
 <script type="module" src="./main.ts"></script>
 </body>
 </html>

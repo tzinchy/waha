@@ -1,12 +1,14 @@
 import type { CaptainCfg, Cmd, Snap } from './sim.ts';
+import type { FactionId } from './factions.ts';
 
-export type LobbyPlayer = { id: string; name: string; captain: CaptainCfg; ready: boolean; bot: boolean };
+export type LobbyPlayer = { id: string; name: string; captain: CaptainCfg; ready: boolean; bot: boolean; faction: FactionId };
 
 export type C2S =
   | { t: 'create'; name: string; captain: CaptainCfg }
   | { t: 'join'; code: string; name: string; captain: CaptainCfg }
   | { t: 'captain'; captain: CaptainCfg }
   | { t: 'ready'; ready: boolean }
+  | { t: 'faction'; f: FactionId }
   | { t: 'bot' }
   | { t: 'kick'; id: string }
   | { t: 'start' }

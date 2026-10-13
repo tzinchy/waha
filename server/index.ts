@@ -7,6 +7,7 @@ import { createServer as createVite } from 'vite';
 import { applyCmd, newState, snapshot, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import { botThink } from './bot.ts';
+import { FACTION_IDS, isFaction } from '../shared/factions.ts';
 
 type Member = LobbyPlayer & { ws?: WebSocket; left?: boolean };
 type Match = { state: State; slots: Member[]; timer: NodeJS.Timeout };
@@ -22,7 +23,7 @@ const cleanCaptain = (c: Partial<CaptainCfg> | undefined): CaptainCfg => ({
   weapon: c?.weapon === 'hammer' ? 'hammer' : 'sword', banner: c?.banner !== false,
 });
 const cleanName = (n: unknown) => (typeof n === 'string' && n.trim() ? n.trim().slice(0, 16) : 'Капитан');
-const pub = ({ id, name, captain, ready, bot }: Member): LobbyPlayer => ({ id, name, captain, ready, bot });
+const pub = ({ id, name, captain, ready, bot, faction }: Member): LobbyPlayer => ({ id, name, captain, ready, bot, faction });
 
 function newCode() {
   for (;;) {
@@ -90,7 +91,7 @@ function onMessage(ws: WebSocket, raw: string) {
       if (l.match) return err('Матч уже идёт');
       if (l.members.length >= MAX_PLAYERS) return err('Лобби заполнено');
     }
-    const me: Member = { id: randomBytes(4).toString('hex'), name: cleanName(m.name), captain: cleanCaptain(m.captain), ready: false, bot: false, ws };
+    const me: Member = { id: randomBytes(4).toString('hex'), name: cleanName(m.name), captain: cleanCaptain(m.captain), ready: false, bot: false, faction: 'order', ws };
     if (!l) { l = { code: newCode(), host: me.id, members: [] }; lobbies.set(l.code, l); }
     l.members.push(me);
     memberOf.set(ws, { lobby: l, me });
@@ -107,10 +108,11 @@ function onMessage(ws: WebSocket, raw: string) {
   if (l.match) return;
   if (m.t === 'captain') me.captain = cleanCaptain(m.captain);
   else if (m.t === 'ready') me.ready = !!m.ready;
+  else if (m.t === 'faction') { if (isFaction(m.f)) me.faction = m.f; }
   else if (l.host !== me.id) return err('Только хост');
   else if (m.t === 'bot') {
     if (l.members.length >= MAX_PLAYERS) return err('Лобби заполнено');
-    l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({ armor: 0x8a2be2 + l.members.length * 0x300a0, trim: 0xe0e0e0, weapon: 'hammer' }), ready: true, bot: true });
+    l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({ armor: 0x8a2be2 + l.members.length * 0x300a0, trim: 0xe0e0e0, weapon: 'hammer' }), ready: true, bot: true, faction: FACTION_IDS[1 + Math.floor(Math.random() * (FACTION_IDS.length - 1))] });
   } else if (m.t === 'kick') {
     const k = l.members.find(p => p.id === m.id);
     if (k && k !== me) { l.members = l.members.filter(p => p !== k); if (k.ws) { memberOf.delete(k.ws); send(k.ws, { t: 'left' }); } }

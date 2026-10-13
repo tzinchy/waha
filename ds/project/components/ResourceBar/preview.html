@@ -1,0 +1,26 @@
+<!-- @dsCard group="HUD" height=120 subtitle="lc-res — верхняя полоса ресурсов" -->
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>ResourceBar</title>
+<style>
+  html, body { margin: 0; }
+  body { background: var(--surface-100); color: var(--ink); font-family: var(--font-body); padding: 24px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .col { display: grid; gap: 16px; }
+  .cap { font: 500 11px/14px var(--font-label); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-muted); margin: 0 0 8px; }
+</style>
+</head>
+<body>
+<div class="col">
+  <div class="lc-res" role="status" aria-label="Ресурсы">
+    <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5 16.5 12 12 16.5 7.5 12Z" fill="currentColor"/></svg><span class="lc-res__value">1 240<small>+12</small></span><span class="lc-res__label">Влияние</span></div>
+    <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 1 4 14h6.5L8 23 20 9h-6.5Z" fill="currentColor"/></svg><span class="lc-res__value">385<small>+4</small></span><span class="lc-res__label">Энергия</span></div>
+    <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 22V13h2v-3h2V7h3V4h4v3h3v3h2v3h2v9h-7v-6h-4v6Z" fill="currentColor"/></svg><span class="lc-res__value">3</span><span class="lc-res__label">Реликвии</span></div>
+    <div class="lc-res__item lc-res__item--warn"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 5.5V12c0 4.6-3.3 8-8 9.5C7.3 20 4 16.6 4 12V5.5Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9l4 3 4-3v3l-4 3-4-3Z" fill="currentColor"/></svg><span class="lc-res__value">48/50</span><span class="lc-res__label">Легион</span></div>
+  </div>
+  <div class="lc-res">
+    <div class="lc-res__item lc-res__item--cap"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 5.5V12c0 4.6-3.3 8-8 9.5C7.3 20 4 16.6 4 12V5.5Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9l4 3 4-3v3l-4 3-4-3Z" fill="currentColor"/></svg><span class="lc-res__value">60/60</span><span class="lc-res__label">Легион</span></div>
+  </div>
+</div>
+</body>
+</html>

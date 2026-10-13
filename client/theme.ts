@@ -1,12 +1,16 @@
-// Два стиля интерфейса: 'deco' (Art Deco) и 'ascii' (тёмное фэнтези в псевдографике). Выбор запоминается.
+// Тема интерфейса = тема фракции из дизайн-системы «Латунный Собор» (data-theme на <html>). Выбор запоминается.
 const KEY = 'waha.theme';
-export const isAscii = () => document.documentElement.classList.contains('ascii');
-
-export function setTheme(t: 'deco' | 'ascii') {
-  document.documentElement.classList.toggle('ascii', t === 'ascii');
-  try { localStorage.setItem(KEY, t); } catch { /* приватный режим */ }
+export const THEMES = [
+  { id: 'dark', name: 'Орден' }, { id: 'undead', name: 'Нежить' }, { id: 'prism', name: 'Консенсус' },
+  { id: 'clockwork', name: 'Династии' }, { id: 'orks', name: 'Орда' }, { id: 'ashen', name: 'Синклит' }, { id: 'light', name: 'Пергамент' },
+];
+export const theme = () => document.documentElement.dataset.theme ?? 'dark';
+export function setTheme(id: string) {
+  document.documentElement.dataset.theme = id;
+  try { localStorage.setItem(KEY, id); } catch { /* приватный режим */ }
 }
-
+export const nextTheme = () => setTheme(THEMES[(THEMES.findIndex(t => t.id === theme()) + 1) % THEMES.length].id);
+export const themeName = () => THEMES.find(t => t.id === theme())?.name ?? '';
 let saved: string | null = null;
 try { saved = localStorage.getItem(KEY); } catch { /* приватный режим */ }
-setTheme(saved === 'deco' ? 'deco' : 'ascii'); // по умолчанию ASCII dark fantasy
+setTheme(THEMES.some(t => t.id === saved) ? saved! : 'dark');
