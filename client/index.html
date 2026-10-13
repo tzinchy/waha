@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WAHA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Limelight&family=Poiret+One&display=swap" rel="stylesheet">
+<style>
+  /* Art Deco: чёрный и золото, ступенчатые силуэты, лучи-«солнце», двойные рамки, ромбы */
+  :root{--ink:#080a0f;--night:#0e121a;--panel:#121722;--field:#0a0d13;--gold:#d4af37;--gold-hi:#f3dc8c;--gold-dim:#5e4f22;--ivory:#f2ead3;--dim:#9a937f;--bad:#e0705f;--ok:#62d6a0;
+    --serif:"Poiret One",Georgia,serif;--sans:Jost,"Josefin Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--stair:polygon(0 100%,0 38%,3% 38%,3% 19%,6% 19%,6% 0,94% 0,94% 19%,97% 19%,97% 38%,100% 38%,100% 100%)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--ink);color:var(--ivory);font:400 15px/1.45 var(--sans);overflow:hidden}
+  .hidden{display:none!important}
+  button,input{font:inherit;color:inherit}
+  button{white-space:nowrap}
+
+  /* заголовки */
+  h1{margin:0;font:400 64px/1 Limelight,var(--serif);letter-spacing:.3em;padding-left:.3em;color:var(--gold);text-shadow:0 0 30px #d4af3755,0 2px 0 #5e4f22}
+  h2{display:flex;align-items:center;gap:10px;margin:0 0 14px;font:500 13px/1 var(--sans);letter-spacing:.28em;text-transform:uppercase;color:var(--gold)}
+  h2::before{content:"";width:7px;height:7px;background:var(--gold);transform:rotate(45deg);flex:none}
+  h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--gold-dim),transparent)}
+  .sub{color:var(--dim);margin:10px 0 0;text-align:center;letter-spacing:.14em;text-transform:uppercase;font-size:12px}
+  .rule{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;color:var(--gold)}
+  .rule::before,.rule::after{content:"";width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+  .rule::after{transform:scaleX(-1)}
+  .rule i{width:9px;height:9px;border:1px solid var(--gold);transform:rotate(45deg);box-shadow:0 0 0 3px var(--ink),0 0 0 4px var(--gold-dim)}
+
+  /* кнопки и поля */
+  button{background:transparent;border:1px solid var(--gold-dim);padding:9px 16px;cursor:pointer;letter-spacing:.12em;text-transform:uppercase;font-size:12px;font-weight:500;color:var(--ivory);transition:.15s}
+  button:hover:not(:disabled){border-color:var(--gold);background:#d4af3718;color:var(--gold-hi)}
+  button:disabled{opacity:.35;cursor:default}
+  button.primary{border:0;color:#16110a;font-weight:600;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,#9c7a1f);clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px),0 10px);padding:11px 24px}
+  button.primary:hover:not(:disabled){background:linear-gradient(180deg,#fff0b8,var(--gold-hi) 55%,var(--gold));color:#16110a}
+  button.on{border-color:var(--gold);background:#d4af3722;color:var(--gold-hi)}
+  input[type=text]{width:100%;background:var(--field);border:0;border-bottom:1px solid var(--gold-dim);padding:10px 4px;letter-spacing:.06em}
+  input[type=text]::placeholder{color:#5f5b50}
+  input[type=text]:focus{outline:0;border-bottom-color:var(--gold);background:#d4af3710}
+  input[type=color]{width:30px;height:30px;padding:0;border:1px solid var(--gold-dim);background:none;cursor:pointer}
+
+  /* главный экран */
+  #home{position:relative;height:100%;overflow:auto;padding:36px 16px;display:flex;flex-direction:column;align-items:center;gap:28px;background:radial-gradient(ellipse 80% 50% at 50% 0%,#1d2230,var(--ink) 70%)}
+  #home::before{content:"";position:absolute;top:0;left:50%;width:1400px;height:700px;transform:translateX(-50%);pointer-events:none;
+    background:repeating-conic-gradient(from 90deg at 50% 0,#d4af3714 0 3deg,transparent 3deg 9deg);
+    -webkit-mask-image:radial-gradient(ellipse at 50% 0,#000,transparent 70%);mask-image:radial-gradient(ellipse at 50% 0,#000,transparent 70%)}
+  #home>*{position:relative}
+  header{text-align:center}
+  .cols{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;width:100%;max-width:900px}
+  #editor{width:370px}
+  #menu,#lobby{width:440px}
+
+  /* панель: двойная золотая рамка + угловые скобки */
+  .panel{position:relative;background:var(--panel);padding:24px;border:1px solid var(--gold-dim);box-shadow:inset 0 0 0 5px var(--panel),inset 0 0 0 6px var(--gold-dim),0 10px 40px #000a}
+  .panel::before{--g:linear-gradient(var(--gold),var(--gold));content:"";position:absolute;inset:-2px;pointer-events:none;
+    background:var(--g) 0 0/26px 2px no-repeat,var(--g) 0 0/2px 26px no-repeat,var(--g) 100% 0/26px 2px no-repeat,var(--g) 100% 0/2px 26px no-repeat,
+      var(--g) 0 100%/26px 2px no-repeat,var(--g) 0 100%/2px 26px no-repeat,var(--g) 100% 100%/26px 2px no-repeat,var(--g) 100% 100%/2px 26px no-repeat}
+  #preview{width:100%;height:auto;aspect-ratio:320/380;background:radial-gradient(circle at 50% 75%,#2b2a22,#0b0d13 75%);border:1px solid var(--gold-dim)}
+  .row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+  .row>label{width:72px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;font-size:12px}
+  .sws{display:flex;gap:11px;padding:3px 4px}
+  .sw{width:17px;height:17px;transform:rotate(45deg);border:1px solid #000a;cursor:pointer;transition:.12s}
+  .sw:hover{transform:rotate(45deg) scale(1.2)}
+  .sw.on{box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--gold)}
+  .seg{display:flex}.seg button+button{border-left:0}
+  .stack{display:flex;flex-direction:column;gap:14px}
+  .or{text-align:center;color:var(--dim);font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+  .inline{display:flex;gap:10px;align-items:flex-end}
+  #plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  #plist li{display:flex;align-items:center;gap:12px;background:var(--field);border-left:3px solid var(--gold);padding:9px 12px}
+  #plist .dot{width:14px;height:14px;transform:rotate(45deg);border:1px solid #fff5}
+  #plist .name{flex:1;letter-spacing:.06em}
+  #plist .tag{font-size:11px;color:var(--dim);letter-spacing:.14em;text-transform:uppercase}
+  #plist .ready{color:var(--ok)}
+  #plist button{padding:3px 9px}
+  .code{font:400 38px/1 Limelight,var(--serif);letter-spacing:.3em;color:var(--gold-hi);margin:0 0 12px;text-shadow:0 0 18px #d4af3744}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2a1512;border:1px solid var(--bad);color:#ffb4a6;padding:11px 20px;z-index:50;letter-spacing:.06em;box-shadow:0 0 0 3px #2a1512,0 0 0 4px #7a3a30}
+
+  /* игра */
+  #game{position:fixed;inset:0}
+  #view{position:absolute;inset:0}
+  #view canvas{display:block;width:100%;height:100%}
+  #hud{position:absolute;inset:0;pointer-events:none}
+  #hud>*{pointer-events:auto}
+  .box{position:absolute;background:#080a0fe6;border:1px solid var(--gold-dim);box-shadow:inset 0 0 0 3px #080a0f,inset 0 0 0 4px var(--gold-dim);padding:12px 18px}
+  #hud-res{left:14px;top:14px;display:flex;gap:22px}
+  #hud-res div+div{border-left:1px solid var(--gold-dim);padding-left:22px}
+  #hud-res b{display:block;font:400 28px/1.05 Limelight,var(--serif);color:var(--gold-hi)}
+  #hud-res small{color:var(--dim);font-size:10px;letter-spacing:.2em;text-transform:uppercase}
+  #hud-players{right:14px;top:14px;display:flex;flex-direction:column;gap:6px;min-width:150px}
+  #hud-players div{display:flex;align-items:center;gap:10px;letter-spacing:.06em}
+  #hud-players i{width:11px;height:11px;transform:rotate(45deg);border:1px solid #fff5}
+  #hud-players .dead{opacity:.4;text-decoration:line-through}
+  #hud-dead{left:50%;top:92px;transform:translateX(-50%);color:#ffb4a6;border-color:var(--bad);letter-spacing:.08em}
+  /* нижняя панель: ступенчатый силуэт зиккурата */
+  #hud-bottom{position:absolute;left:50%;bottom:0;transform:translateX(-50%);display:flex;gap:22px;align-items:center;padding:30px 70px 14px;border:0;box-shadow:none;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 40%,#7a6220);clip-path:var(--stair);width:min(1080px,96vw)}
+  #hud-bottom::before{content:"";position:absolute;inset:2px;background:linear-gradient(180deg,#141a26,#080a0f);clip-path:var(--stair);z-index:0}
+  #hud-bottom>*{position:relative;z-index:1}
+  #hud-hint{color:var(--dim);font-size:11px;line-height:1.35;flex:1;min-width:200px}
+  #hud-cmd{display:flex;gap:10px;align-items:center;min-height:38px;flex-wrap:wrap}
+  #hud-cmd button{padding:8px 14px;display:flex;gap:8px;align-items:baseline;border-color:var(--gold)}
+  #hud-cmd button i{font-style:normal;font-size:10px;color:var(--dim);border:1px solid var(--gold-dim);padding:0 4px}
+  #hud-cmd button b{color:var(--gold-hi);font-weight:600}
+  #hud-cmd .info{color:var(--dim);font-size:12px;letter-spacing:.06em}
+  #hud-sel{color:var(--ok);min-width:90px;letter-spacing:.08em}
+  #selbox{position:fixed;border:1px solid var(--gold-hi);background:#d4af3722;pointer-events:none!important;z-index:5}
+  #result{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#000b,#000e);pointer-events:auto}
+  #result .box{position:relative;text-align:center;padding:36px 64px}
+  #result h3{margin:0 0 22px;font:400 46px/1 var(--serif);letter-spacing:.2em;color:var(--gold-hi);text-shadow:0 0 24px #d4af3766,1px 1px 0 var(--gold),-1px -1px 0 var(--gold)}
+
+  /* ===== ASCII dark fantasy: моноширинный шрифт, рамки из псевдографики, кровь, кость и пепел ===== */
+  #ascii-title{display:none;margin:0;text-align:center}
+  #theme{position:absolute;top:14px;right:16px;z-index:5}
+  #mute{position:fixed;left:14px;bottom:14px;z-index:60;font-size:11px;padding:6px 10px}
+  html.ascii{--ink:#070506;--night:#0d0808;--panel:#100909;--field:#080505;--gold:#c8352b;--gold-hi:#eadfc4;--gold-dim:#5a2a26;--ivory:#cfc4aa;--dim:#85766a;--ok:#9ccf72;--bad:#ff6b4a;
+    --serif:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--stair:none}
+  html.ascii body{letter-spacing:.01em;font-size:14px}
+  html.ascii h1{display:none}
+  html.ascii #ascii-title{display:block;font:700 clamp(9px,1.7vw,15px)/1.05 var(--sans);color:var(--gold);text-shadow:0 0 14px #c8352b99,0 0 2px #000;white-space:pre}
+  html.ascii #home{background:var(--ink)}
+  html.ascii #home::before{width:100%;height:100%;left:0;transform:none;mask-image:none;-webkit-mask-image:none;background:repeating-linear-gradient(0deg,#ffffff07 0 1px,transparent 1px 3px)}
+  html.ascii .rule i{width:auto;height:auto;border:0;box-shadow:none;transform:none}
+  html.ascii .rule i::before{content:"✠";font-size:16px}
+  html.ascii .rule::before,html.ascii .rule::after{content:"────────────────";width:auto;height:auto;background:none;color:var(--gold-dim);letter-spacing:0}
+  html.ascii .sub{letter-spacing:.06em}
+  html.ascii h2{letter-spacing:.14em}
+  html.ascii h2::before{content:"▓▒░";width:auto;height:auto;background:none;transform:none;color:var(--gold)}
+  html.ascii h2::after{content:"░▒▓";flex:none;width:auto;height:auto;background:none;color:var(--gold-dim)}
+  html.ascii .panel{border:3px double var(--gold);box-shadow:0 0 30px #c8352b22}
+  html.ascii .panel::before{display:none}
+  html.ascii #preview{border:1px solid var(--gold-dim);background:#050303}
+  html.ascii button{border:0;background:none;padding:6px 4px;letter-spacing:.06em}
+  html.ascii button::before{content:"[ ";color:var(--gold)}
+  html.ascii button::after{content:" ]";color:var(--gold)}
+  html.ascii button:hover:not(:disabled){background:var(--gold);color:#070506}
+  html.ascii button:hover:not(:disabled)::before,html.ascii button:hover:not(:disabled)::after{color:#070506}
+  html.ascii button.primary{clip-path:none;background:none;color:var(--gold-hi);font-weight:700;padding:6px 4px}
+  html.ascii button.primary:hover:not(:disabled){background:var(--gold);color:#070506}
+  html.ascii button.on{background:none;color:var(--gold-hi);text-decoration:underline}
+  html.ascii .seg button+button{border:0}
+  html.ascii input[type=text]{border:0;border-bottom:1px dashed var(--gold-dim)}
+  html.ascii .sw{transform:none;width:14px;height:14px;border:1px solid #000a}
+  html.ascii .sw:hover{transform:scale(1.2)}
+  html.ascii #plist li{border-left:0;border:1px dashed var(--gold-dim)}
+  html.ascii #plist .dot{transform:none;border-radius:0}
+  html.ascii .code{font:700 34px/1 var(--sans);color:var(--gold-hi);text-shadow:0 0 14px #c8352b99}
+  html.ascii #toast{box-shadow:none;border:2px double var(--bad);background:#1a0a08}
+  html.ascii .box{border:3px double var(--gold);box-shadow:none;background:#070506ee}
+  html.ascii #hud-res b{font:700 24px/1.05 var(--sans)}
+  html.ascii #hud-players i{transform:none;border-radius:0}
+  html.ascii #hud-bottom{clip-path:none;background:#070506ee;border:3px double var(--gold);border-bottom:0;padding:12px 22px;width:min(1180px,98vw)}
+  html.ascii #hud-bottom::before{display:none}
+  html.ascii #hud-cmd button{border:0}
+  html.ascii #hud-cmd button i{border-color:var(--gold-dim)}
+  html.ascii #result h3{font:700 40px/1 var(--sans);letter-spacing:.1em;text-shadow:0 0 20px #c8352b}
+</style>
+</head>
+<body>
+<main id="home">
+  <button id="theme" title="Сменить стиль"></button>
+  <header>
+    <h1>WAHA</h1>
+    <pre id="ascii-title" aria-label="WAHA">██╗    ██╗ █████╗ ██╗  ██╗ █████╗
+██║    ██║██╔══██╗██║  ██║██╔══██╗
+██║ █╗ ██║███████║███████║███████║
+██║███╗██║██╔══██║██╔══██║██╔══██║
+╚███╔███╔╝██║  ██║██║  ██║██║  ██║
+ ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝</pre>
+    <div class="rule"><i></i></div>
+    <p class="sub">Тактическая RTS в браузере · капитан · отряды · захват точек</p>
+  </header>
+  <div class="cols">
+    <section class="panel" id="editor">
+      <h2>Капитан</h2>
+      <canvas id="preview" width="320" height="380"></canvas>
+      <div class="row"><label>Броня</label><div class="sws" id="armorSw"></div><input type="color" id="armorIn"></div>
+      <div class="row"><label>Отделка</label><div class="sws" id="trimSw"></div><input type="color" id="trimIn"></div>
+      <div class="row"><label>Оружие</label><div class="seg" id="weapon"><button data-w="sword">Меч</button><button data-w="hammer">Молот</button></div></div>
+      <div class="row"><label>Знамя</label><button id="banner"></button></div>
+    </section>
+
+    <section class="panel stack" id="menu">
+      <h2>Играть</h2>
+      <input type="text" id="name" maxlength="16" placeholder="Имя капитана">
+      <button class="primary" id="create">Создать лобби</button>
+      <div class="or">или войти по коду</div>
+      <div class="inline"><input type="text" id="code" maxlength="8" placeholder="КОД" style="text-transform:uppercase"><button id="join">Войти</button></div>
+    </section>
+
+    <section class="panel hidden" id="lobby">
+      <h2>Лобби</h2>
+      <p class="code" id="lcode"></p>
+      <button id="copy">Скопировать ссылку-приглашение</button>
+      <h2 style="margin-top:22px">Игроки</h2>
+      <ul id="plist"></ul>
+      <div class="row">
+        <button id="ready"></button>
+        <button id="addbot">+ Бот</button>
+        <button class="primary" id="start">Начать матч</button>
+        <button id="leave">Выйти</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<main id="game" class="hidden">
+  <div id="view"></div>
+  <div id="hud">
+    <div id="hud-res" class="box">
+      <div><b id="hud-req">0</b><small>Requisition</small></div>
+      <div><b id="hud-tier">T1</b><small>Тир</small></div>
+      <div><b id="hud-builders">0</b><small>Строители</small></div>
+      <div><b id="hud-squads">0</b><small>Отряды</small></div>
+    </div>
+    <div id="hud-players" class="box"></div>
+    <div id="hud-dead" class="box hidden">Капитан пал. Возродится в штабе.</div>
+    <div id="hud-bottom">
+      <div id="hud-cmd"></div>
+      <span id="hud-sel"></span>
+      <span id="hud-hint">G текст/3D · M звук · ЛКМ выбор / рамка · ПКМ приказ · A+ЛКМ атака-движение · S стоп · Пробел капитан · H штаб · T/B/P/Y/R/U команды · стрелки, Q/E, колесо камера</span>
+    </div>
+    <div id="result" class="hidden"><div class="box"><h3 id="result-title"></h3><button class="primary" id="result-back">В лобби</button></div></div>
+  </div>
+  <div id="selbox" class="hidden"></div>
+</main>
+<button id="mute"></button>
+<div id="toast" class="hidden"></div>
+<script type="module" src="./main.ts"></script>
+</body>
+</html>

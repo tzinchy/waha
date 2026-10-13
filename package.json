@@ -1,0 +1,22 @@
+{
+  "name": "waha",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch server/index.ts",
+    "test": "node --import tsx --test shared/*.test.ts",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "three": "^0.186.1",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/three": "^0.186.0",
+    "@types/ws": "^8.5.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.0",
+    "vite": "^8.3.4"
+  }
+}
