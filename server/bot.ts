@@ -40,6 +40,11 @@ export function botThink(s: State, me: number): void {
     applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: key as 'key1', x: hq.x + Math.cos(dir - 1.2) * (8 + P.tier * 4), y: hq.y + Math.sin(dir - 1.2) * (8 + P.tier * 4) });
   }
   if (P.tier <= 3 && of(key).some(k => k.build >= 1) && hq.upg < 0) applyCmd(s, me, { c: 'upgrade', id: hq.id });
+  const F = s.players[me].faction; // особые постройки фракции
+  if (F === 'prism' && P.tier >= 2 && !of('aegis').length && !site && idle.length) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'aegis', x: hq.x + Math.cos(dir) * 7, y: hq.y + Math.sin(dir) * 7 });
+  if (F === 'orks' && of('rturret').length < 2 && !site && idle.length && req >= 160) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'rturret', x: hq.x + Math.cos(dir + 0.5) * 12, y: hq.y + Math.sin(dir + 0.5) * 12 });
+  if (F === 'clockwork') applyCmd(s, me, { c: 'ascend' });
+  if (of('deity').length && s.units.some(e => e.owner !== me && e.hp > 0 && of('deity').some(g => Math.hypot(g.x - e.x, g.y - e.y) < 10))) applyCmd(s, me, { c: 'timestop' });
   if (!of('turret').length && !site && idle.length && req >= 180) {
     applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'turret', x: hq.x + Math.cos(dir) * 9, y: hq.y + Math.sin(dir) * 9 });
   }
@@ -57,7 +62,7 @@ export function botThink(s: State, me: number): void {
   if (s.players[me].tier >= 2 && squads.length) applyCmd(s, me, { c: 'gear', ids: squads.map(u => u.id), g: 0 }); // гранаты
   const near = s.units.find(e => e.owner !== me && e.hp > 0 && !isStruct(e.kind) && squads.some(q => q.ch[0] > 0 && Math.hypot(q.x - e.x, q.y - e.y) < 16));
   if (near) applyCmd(s, me, { c: 'throw', ids: squads.map(u => u.id), g: 0, x: near.x, y: near.y });
-  const army = mine.filter(u => !isStruct(u.kind) && u.kind !== 'builder');
+  const army = mine.filter(u => !isStruct(u.kind) && u.kind !== 'builder' && !u.carry);
   if (!army.length) return;
   const enemyHq = s.units.filter(u => u.kind === 'hq' && u.owner !== me && s.players[u.owner].alive).sort((a, b) => d(a, hq) - d(b, hq))[0];
   const point = s.points.filter(p => p.owner !== me).sort((a, b) => d(a, hq) - d(b, hq))[0];

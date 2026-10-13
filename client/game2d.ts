@@ -36,16 +36,17 @@ const GEAR_ICON = [
   ico('<rect x="5" y="9" width="14" height="10" fill="currentColor"/><path d="M12 9V4M9 4h6" fill="none" stroke="currentColor" stroke-width="2"/>'),
   ico('<circle cx="8" cy="14" r="4" fill="currentColor"/><circle cx="15" cy="12" r="5" fill="currentColor" opacity=".7"/><circle cx="12" cy="8" r="3" fill="currentColor" opacity=".5"/>'),
 ];
-const KIND_NAME: Partial<Record<Kind, string>> = { hq: 'Штаб', barracks: 'Казарма', post: 'Реликварий', turret: 'Турель', foundry: 'Литейня', pump: 'Глубинный насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Крипта-бункер', mine: 'Мина' };
+const KIND_NAME: Partial<Record<Kind, string>> = { deity: 'Бог-Механизм', aegis: 'Купол-эгида', rturret: 'Ракетная бочка', fturret: 'Огнемётная печь', hq: 'Штаб', barracks: 'Казарма', post: 'Реликварий', turret: 'Турель', foundry: 'Литейня', pump: 'Глубинный насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Крипта-бункер', mine: 'Мина' };
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 export const SLOT_COLORS = [0x4fa392, 0xe0675c, 0xe0a53a, 0xb9c3c6];
 
 // какой силуэт из пресетов у какого юнита, его ширина в мире и сколько бойцов в отряде
 // ширина силуэта в мире (единиц симуляции); сами силуэты — по фракции игрока (shared/factions.ts)
-const WIDTH: Record<string, number> = { captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, legend: 4.4, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
+const WIDTH: Record<string, number> = { deity: 9, aegis: 3.2, rturret: 3.6, fturret: 3.6, captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, legend: 4.4, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
 /** Ширина силуэта на карте = рост в метрах (все силуэты дизайн-системы в одном поле 120×164): Стражник 2.4 м, титан — 26–34 м. */
 const widthOf = (kind: Kind, f: FactionId) => (kind === 'titan' ? ROSTER[f].titanM : ROLES[kind]?.meters && !WIDTH[kind] ? ROLES[kind]!.meters : WIDTH[kind] ?? 2.4);
 const NEUTRAL: Partial<Record<Kind, [string, string]>> = {
+  aegis: ['Defenses/shieldgen.svg', 'Defenses/shieldgen.svg'], rturret: ['Defenses/rocketbarrel.svg', 'Defenses/rocketbarrel.svg'], fturret: ['Turrets/orks-t2.svg', 'Turrets/orks-t2.svg'],
   wall: ['Defenses/wall.svg', 'Defenses/wall.svg'], wallgate: ['Defenses/gate.svg', 'Defenses/gate.svg'], bunker: ['Defenses/bunker.svg', 'Defenses/bunker.svg'], mine: ['Defenses/mine.svg', 'Defenses/mine.svg'],
   key1: ['Buildings/scriptorium.svg', 'Buildings/scriptorium.svg'], key2: ['Buildings/forge.svg', 'Buildings/forge.svg'], key3: ['Buildings/observatory.svg', 'Buildings/observatory.svg'],
   key4: ['Buildings/reliqhall.svg', 'Buildings/reliqhall.svg'], gate: ['Buildings/gate.svg', 'Buildings/gate.svg'], post: ['Defenses/point-1.svg', 'Defenses/point-2.svg'], foundry: ['Buildings/foundry.svg', 'Buildings/foundry.svg'], pump: ['Buildings/pump.svg', 'Buildings/pump.svg'] };
@@ -53,6 +54,7 @@ const NEUTRAL: Partial<Record<Kind, [string, string]>> = {
 export function artFor(kind: Kind, faction: FactionId, lvl = 1, weapon: 'sword' | 'hammer' = 'sword', variant = 0) {
   const a = FACTIONS[faction].art;
   if (kind === 'legend') return FACTIONS[faction].legendArt[variant] ?? FACTIONS[faction].legendArt[0];
+  if (kind === 'deity') return 'Factions/deity.svg';
   if (kind in ROSTER[faction] && typeof (ROSTER[faction] as Record<string, unknown>)[kind] === 'object') return ROSTER[faction][kind as 'sniper'].art;
   if (kind === 'captain') return a.captain[weapon === 'sword' ? 0 : 1];
   if (kind === 'turret') return a.turret[lvl > 1 ? 1 : 0];
@@ -68,7 +70,7 @@ const FORM: Partial<Record<Kind, [number, number][]>> = {
 
 const svgCache = new Map<string, string>();
 /** Загружает все силуэты один раз. */
-const ALL_ART = new Set([...Object.values(ROSTER).flatMap(r => Object.values(r).flatMap(v => (typeof v === 'object' ? [v.art] : []))), ...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
+const ALL_ART = new Set(['Factions/deity.svg', ...Object.values(ROSTER).flatMap(r => Object.values(r).flatMap(v => (typeof v === 'object' ? [v.art] : []))), ...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
 export const ready2d = Promise.all([...ALL_ART]
   .map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgCache.set(p, t)))).then(() => undefined);
 
@@ -112,7 +114,7 @@ function mapSvg() {
 type View = {
   id: number; owner: number; kind: Kind; el: HTMLElement; body: HTMLElement; svgs: SVGElement[]; bar: HTMLElement; fg: HTMLElement; sel: HTMLElement;
   x: number; y: number; tx: number; ty: number; f: number; hp: number; build: number; q: number; dead: boolean; lvl: number; upg: number;
-  atkUntil: number; melee?: boolean; aim?: number; gear: number; ch: number[]; gcd: number; artPath: string; prog: number; prod: number;
+  atkUntil: number; melee?: boolean; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; prog: number; prod: number;
 };
 
 export class Game {
@@ -134,6 +136,7 @@ export class Game {
   private amove = false;
   private moveMode = false;
   private throwG = -1;
+  private stopCd = 0;
   private mapTex: HTMLCanvasElement | null = null;
   private aimRing = document.createElement('div');
   private qk: Record<number, number[]> = {};
@@ -252,14 +255,15 @@ export class Game {
     if (kind === 'titan') { bar.style.bottom = widthOf(kind, pl.faction ?? 'order') * 1.36 * S + 'px'; el.classList.add('titan'); } // полоса над головой титана
     el.append(ring, sel, body, bar);
     this.place2(el, x, y);
-    return { id, owner, kind, el, body, svgs, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0, prod: 0, gear: 0, ch: [0, 0, 0], gcd: 0 };
+    return { id, owner, kind, el, body, svgs, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0, prod: 0, gear: 0, ch: [0, 0, 0], gcd: 0, sh: 0, frozen: 0, carry: 0, rise: 0, off: false };
   }
 
   onSnap(s: Snap) {
     const seen = new Set<number>(), first = this.snapN++ === 0, now = performance.now();
     this.qk = s.qk ?? {};
     this.drawSmoke(s.sm ?? []);
-    for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog, gear, c0, c1, c2, gcd] of s.u) {
+    this.stopCd = s.ps?.[this.slot]?.[0] ?? 0;
+    for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog, gear, c0, c1, c2, gcd, sh, frozen, carry, rise, off] of s.u) {
       const kind = KINDS[ki];
       if (kind === 'mine' && owner !== this.slot) continue; // чужие мины невидимы
       seen.add(id);
@@ -282,6 +286,8 @@ export class Game {
         v.body.replaceChildren(a); v.svgs = [a.querySelector('svg')!];
       }
       v.lvl = lvl; v.upg = upg; v.prog = prog ?? 0; v.prod = prog ?? 0; v.gear = gear ?? 0; v.ch = [c0 ?? 0, c1 ?? 0, c2 ?? 0]; v.gcd = gcd ?? 0;
+      if (v.kind !== kind) { v.kind = kind; v.artPath = artFor(kind, this.fac(owner)); const a = art(v.artPath, widthOf(kind, this.fac(owner)) * S); v.body.replaceChildren(a); v.svgs = [a.querySelector('svg')!]; if (kind === 'deity') { this.alert(owner === this.slot ? 'ok' : 'danger', 'Вознесение', 'Бог-Механизм пробудился', x / 10, y / 10); voice.announce(owner === this.slot ? 'Бог-Механизм пробудился.' : 'Враг вознёсся! Бог-Механизм на поле!'); this.shakeBy(14); } } // капитан ⇄ Бог-Механизм
+      v.sh = sh ?? 0; v.frozen = frozen ?? 0; v.carry = carry ?? 0; v.rise = (rise ?? 0) / 10; v.off = off === 1;
       if (kind === 'hq' && owner === this.slot && !this.centered) {
         this.centered = true;
         this.cam.x = v.tx + (MAP.w / 2 - v.tx) * 0.25; this.cam.y = v.ty + (MAP.h / 2 - v.ty) * 0.25;
@@ -335,6 +341,9 @@ export class Game {
     else if (fx === 4) g.innerHTML = `<path class="w2d-fire" d="M${X1} ${Y1} Q${(X1 + X2) / 2} ${Math.min(Y1, Y2) - 50} ${X2} ${Y2}"/><circle class="w2d-blast" cx="${X2}" cy="${Y2}" r="14"/>`;
     else if (fx === 5) g.innerHTML = [-5, 5].map(o => `<line class="w2d-thrust" x1="${X2 - 26 * dir}" y1="${Y2 + o}" x2="${X2 + 6 * dir}" y2="${Y2 + o}"/>`).join('') + `<circle class="w2d-spark" cx="${X2 + 4 * dir}" cy="${Y2}" r="3"/>`;
     else if (fx === 6) g.innerHTML = this.sparks(X2, Y2 - 10, 5, '#ffd38a', 10); // сварка: ремонт
+    else if (fx === 15) { const hx = X1 + (X2 - X1) * 0.85, hy = (y1 - 2) * S + ((y2 - 1) * S - (y1 - 2) * S) * 0.85; g.innerHTML = `<path class="w2d-hex" d="M${hx - 10} ${hy}l5 -9h10l5 9l-5 9h-10z"/>`; } // попадание по куполу: вспышка гексагона
+    else if (fx === 16) g.innerHTML = `<rect class="w2d-pillar" x="${X1 - S}" y="${Y1 - 14 * S}" width="${2 * S}" height="${15 * S}"/>` + this.sparks(X1, Y1, 10, '#ffe9a8', 2 * S); // Архангел поднимает бойца
+    else if (fx === 17) g.innerHTML = `<circle class="w2d-timestop" cx="${X1}" cy="${Y1}" r="${12 * S}"/><line class="w2d-clockhand" x1="${X1}" y1="${Y1}" x2="${X1}" y2="${Y1 - 10 * S}"/>`; // Остановка времени
     else if (fx === 7) g.innerHTML = `<path class="w2d-arc" d="M${X1} ${Y1} Q${(X1 + X2) / 2} ${Math.min(Y1, Y2) - 120} ${X2} ${Y2 + S}"/>`; // навесной бросок
     else if (fx === 8) g.innerHTML = `<circle class="w2d-boom" cx="${X1}" cy="${Y1 + S}" r="${4 * S}"/><circle class="w2d-boomcore" cx="${X1}" cy="${Y1 + S}" r="${1.6 * S}"/>` + this.sparks(X1, Y1 + S, 14, '#f0a540', 3 * S);
     else if (fx === 9) g.innerHTML = [0, 1, 2, 3, 4].map(i => `<circle class="w2d-puff" cx="${X1 + Math.cos(i * 1.3) * 2 * S}" cy="${Y1 + S + Math.sin(i * 1.3) * S}" r="${2.4 * S}" style="animation-delay:${i * 60}ms"/>`).join('');
@@ -348,7 +357,7 @@ export class Game {
     const target = fx === 7 || fx === 8 || fx === 9 ? undefined : this.nearest(x2, y2);
     if (target && fx !== 6) this.hitFlash(target, fx, X2 - X1);
     if (fx === 8 || fx === 12 || fx === 13) this.shakeBy(fx === 13 ? 14 : fx === 12 ? 6 : 5);
-    const life = ({ 0: 160, 3: 420, 7: 900, 8: 600, 9: 1400, 10: 260, 11: 380, 12: 900, 13: 700, 14: 220 } as Record<number, number | undefined>)[fx] ?? 340;
+    const life = ({ 15: 300, 16: 1200, 17: 1600, 0: 160, 3: 420, 7: 900, 8: 600, 9: 1400, 10: 260, 11: 380, 12: 900, 13: 700, 14: 220 } as Record<number, number | undefined>)[fx] ?? 340;
     this.shots.push({ el: g, until: now + life });
   }
 
@@ -574,6 +583,13 @@ export class Game {
       const v = vs.find(x => x.lvl < 2);
       c.push({ act: v ? 'upgrade' : '', name: up.name, hot: 'U', icon: ICON.tier, ...(v ? this.price(up.cost, up.energy, up.relics) : {}), done: !v, req: this.tier < up.tier ? `Нужен тир ${up.tier}` : undefined, prog: v && v.upg >= 0 ? v.upg : undefined, info: k === 'captain' ? 'Капитан: урон ×1.5, получаемый урон ×0.7.' : 'Отряд: урон ×1.6, броня.' });
     }
+    const capt = sel.find(v => v.kind === 'captain' && v.owner === this.slot);
+    if (capt && this.fac() === 'clockwork') c.push({ act: 'ascend', name: 'Вознесение', hot: 'Y', icon: ICON.tier, ...this.price(0, 600), ult: true, info: 'Капитан становится Богом-Механизмом: 9 м, летает, Остановка времени. Необратимо; гибель — капитан недоступен 5 минут.', req: this.cap.lvl < 10 || this.tier < 4 ? 'Нужен 10-й уровень капитана и тир IV' : undefined, prog: capt.rise > 0 ? Math.round(100 - capt.rise * 25) : undefined });
+    if (sel.some(v => v.kind === 'deity' && v.owner === this.slot)) c.push({ act: 'timestop', name: 'Остановка времени', hot: 'Y', icon: ABIL_ICON[4], ult: true, info: 'Враги в 12 м замирают на 3 с.', cd: this.stopCd, cdMax: 45 });
+    if (this.fac() === 'orks' && sel.some(v => v.kind === 'guard')) {
+      const carrying = sel.some(v => v.carry);
+      c.push({ act: 'drag', name: carrying ? 'Бросить турель' : 'Тащить турель', hot: 'Y', icon: ICON.build, info: 'Рубаки утаскивают свою турель за собой (скорость −40%). Турели Орды копят Ярость.' });
+    }
     if (sel.some(v => v.kind === 'captain')) {
       let n = 0;
       ABILITIES.forEach((a, i) => {
@@ -609,7 +625,9 @@ export class Game {
     const tabs: [string, ReturnType<typeof card>[]][] = [
       ['Экономика', [card('post', 'Реликварий', 'P', 'Ставится на захваченную точку: держит её и даёт +2 влияния/с.'), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своих построек.', undead ? 'Нежити не нужна' : undefined), card('pump', 'Насос', 'N', '+4 энергии/с. Только на жилу.', undead ? 'Нежити не нужен' : undefined)]],
       ['Армия', [card('barracks', 'Казарма', 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`)]],
-      ['Оборона', [card('turret', 'Турель', 'Y', 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'W', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.')]],
+      ['Оборона', [card('turret', 'Турель', 'Y', 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'W', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
+        ...(this.fac() === 'prism' ? [card('aegis', 'Купол-эгида', 'E', 'Купол 12 м: поглощает 1200 урона, восстанавливается за 30 с, пробитый 10 с не работает.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
+        ...(this.fac() === 'orks' ? [card('rturret', 'Ракетная бочка', 'R', 'Ракеты по площади. Копит Ярость.'), card('fturret', 'Огнемётная печь', 'Q', 'Жжёт в упор. Копит Ярость.')] : [])]],
       ['Святыни', (() => { const k = keyKind(); return k ? [card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : []; })()],
     ];
     const tab = tabs[this.buildTab] ?? tabs[0];
@@ -625,7 +643,7 @@ export class Game {
     if (sel.length > 1) return `<div class="w2d-group">${sel.slice(0, 18).map(v => `<button class="w2d-gp${v.owner !== this.slot ? ' foe' : ''}" data-pick="${v.id}">${miniArt(v.artPath)}<i style="--v:${Math.max(0, v.hp / maxHp(v.kind)) * 100}%"></i></button>`).join('')}${sel.length > 18 ? `<span class="w2d-more">+${sel.length - 18}</span>` : ''}</div>`;
     const v = sel[0], st = STATS[v.kind], foe = v.owner !== this.slot, max = maxHp(v.kind), hp = Math.max(0, Math.round(v.hp));
     const melee = isMelee(v.kind, this.fac(v.owner));
-    const cls = v.kind === 'captain' ? `Герой · ур. ${foe ? '?' : this.cap.lvl}` : v.kind === 'builder' ? 'Строитель' : v.kind === 'guard' ? `Пехота · ${melee ? 'ближний бой' : 'стрелки'}` : v.kind === 'legend' ? 'Легенда' : 'Постройка';
+    const cls = v.kind === 'captain' ? `Герой · ур. ${foe ? '?' : this.cap.lvl}` : v.kind === 'builder' ? 'Строитель' : v.kind === 'guard' ? `Пехота · ${melee ? 'ближний бой' : 'стрелки'}` : v.kind === 'legend' ? 'Легенда' : ({ deity: 'Бог · летает', titan: 'Титан', lveh: 'Лёгкая техника', mveh: 'Средняя техника', hveh: 'Тяжёлая техника', sniper: 'Снайпер', heavy: 'Тяжёлое оружие', support: 'Поддержка', elite: 'Тяжёлая элита', healer: 'Целитель' } as Partial<Record<Kind, string>>)[v.kind] ?? 'Постройка';
     const stats: [string, string][] = [];
     if (st.dmg) stats.push(['УРОН', v.kind === 'guard' ? `${melee ? 6.5 : st.dmg}×${members('guard', v.hp)}` : String(st.dmg)], ['ДАЛ.', melee ? 'в упор' : String(st.range)]);
     if (st.speed) stats.push(['СКОР.', String(st.speed)]);
@@ -679,6 +697,13 @@ export class Game {
 
   private doAct(act: string) {
     const sel = this.selected();
+    if (act === 'ascend') { this.cmd({ c: 'ascend' }); return; }
+    if (act === 'timestop') { this.cmd({ c: 'timestop' }); return; }
+    if (act === 'drag') {
+      const sq = sel.find(v => v.kind === 'guard');
+      const t = sq && [...this.views.values()].filter(v => v.owner === this.slot && /turret$/.test(v.kind) && v.build >= 1).sort((a, b) => Math.hypot(a.x - sq.x, a.y - sq.y) - Math.hypot(b.x - sq.x, b.y - sq.y))[0];
+      this.cmd({ c: 'drag', ids: [...this.sel], id: t?.id ?? 0 }); return;
+    }
     if (act.startsWith('train:')) { const st = sel.find(v => isStruct(v.kind)); if (st) this.cmd({ c: 'train', id: st.id, k: act.slice(6) as Kind }); return; }
     if (act.startsWith('gear:')) { this.cmd({ c: 'gear', ids: [...this.sel], g: Number(act.slice(5)) }); return; }
     if (act.startsWith('throw:')) { this.throwG = Number(act.slice(6)); this.root.style.cursor = 'crosshair'; return; }
@@ -697,7 +722,7 @@ export class Game {
     else if (/^res[0-3]$/.test(act)) { const k = sel.find(v => /^key/.test(v.kind)); if (k) this.cmd({ c: 'research', id: k.id, r: Number(act[3]) }); }
     else if (/^sum[0-2]$/.test(act)) { const g = sel.find(v => v.kind === 'gate'); if (g) this.cmd({ c: 'summon', id: g.id, v: Number(act[3]) }); }
     else if (/^key[1-4]$|^gate$/.test(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
-    else if (['barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
+    else if (['barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine', 'aegis', 'rturret', 'fturret'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
     else if (act === 'upgrade') { for (const v of sel) if ((UPGRADES[v.kind] && v.lvl < 2 || v.kind === 'post') && v.upg < 0) this.cmd({ c: 'upgrade', id: v.id }); }
     else if (act === 'reinforce') this.cmd({ c: 'reinforce', ids: sel.filter(v => v.kind === 'guard').map(v => v.id) });
   }
@@ -1039,6 +1064,16 @@ export class Game {
       v.bar.classList.toggle('hidden', !show);
       v.fg.style.setProperty('--v', (v.build < 1 ? v.build : ratio) * 100 + '%');
       v.fg.className = 'lc-vitals__bar' + (v.build < 1 ? ' lc-vitals__bar--shield' : ratio < 0.35 ? ' lc-vitals__bar--critical' : ratio < 0.6 ? ' lc-vitals__bar--worn' : '');
+      if (v.kind === 'aegis' && v.build >= 1) { // купол-эгида: полупрозрачная сфера 12 м, пропадает пробитой
+        if (!v.dome) { v.dome = document.createElement('div'); v.dome.className = 'w2d-dome'; this.ground.append(v.dome); }
+        Object.assign(v.dome.style, { left: (v.x - 12) * S + 'px', top: (v.y - 12) * S + 'px', width: 24 * S + 'px', height: 24 * S + 'px', opacity: v.off ? '0' : String(0.35 + (v.sh / 1200) * 0.65) });
+      }
+      if (v.sh > 0 && v.kind !== 'aegis') { // личный щит: синяя полоса над здоровьем
+        if (!v.shBar) { v.shBar = document.createElement('div'); v.shBar.className = 'lc-vitals__bar lc-vitals__bar--shield w2d-shbar'; v.bar.prepend(v.shBar); }
+        v.shBar.style.setProperty('--v', Math.min(100, (v.sh / 300) * 100) + '%'); v.bar.classList.remove('hidden');
+      } else v.shBar?.remove(), (v.shBar = undefined);
+      v.el.classList.toggle('frozen', v.frozen > 0);
+      v.el.classList.toggle('rising', v.rise > 0);
       v.sel.classList.toggle('on', this.sel.has(v.id));
       v.el.classList.toggle('picked', this.sel.has(v.id));
     }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
+import { hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -320,4 +320,50 @@ test('армия по ролям: найм по тиру, Легион, урон
   run(s, 1.5);
   assert.ok(foe.hp < fhp - 60 || !s.units.includes(foe), 'граната взорвалась');
   assert.equal(g.ch[0], 2);
+});
+
+test('особые механики: купол-эгида и дрон Консенсуса, Архангел Ордена, Бог-Механизм Династий, турели Орды', () => {
+  // Консенсус: купол поглощает урон, пробитый — 10 с отдыхает
+  const s = newState(2, ['prism', 'orks']);
+  const p = s.players[0], hq = unit(s, 0, 'hq'); p.tier = 2; p.req = 1e4; p.energy = 1e4;
+  const dome = spawn(s, 0, 'aegis', hq.x + 6, hq.y);
+  const g = spawn(s, 0, 'guard', hq.x + 8, hq.y), hp = g.hp;
+  hurt(s, g, 500, 1);
+  assert.equal(g.hp, hp, 'купол забрал урон'); assert.equal(dome.sh, 700);
+  hurt(s, g, 800, 1);
+  assert.ok(dome.off > 0, 'купол пробит'); assert.ok(g.hp < hp);
+  // дрон: щит отряду
+  const sup = spawn(s, 0, 'support', g.x + 2, g.y); void sup;
+  g.hit = 9; run(s, 15);
+  assert.ok(g.sh > 200, 'дрон дал щит');
+  // Орда: турели только своей фракции, Рубаки тащат турель
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [unit(s, 0, 'builder').id], kind: 'rturret', x: hq.x + 5, y: hq.y + 5 }) ?? '', /другой фракции/);
+  const ork = s.players[1], ohq = unit(s, 1, 'hq'); ork.req = 1e4;
+  const t = spawn(s, 1, 'rturret', ohq.x - 6, ohq.y - 6), choppa = spawn(s, 1, 'guard', ohq.x - 7, ohq.y - 6);
+  assert.equal(applyCmd(s, 1, { c: 'drag', ids: [choppa.id], id: t.id }), undefined);
+  applyCmd(s, 1, { c: 'move', ids: [choppa.id], x: ohq.x - 30, y: ohq.y - 6 });
+  run(s, 3);
+  assert.ok(Math.hypot(t.x - choppa.x, t.y - choppa.y) < 3, 'турель едет за Рубаками');
+  // Династии: Вознесение на 10-м уровне и тире IV, Остановка времени
+  const c = newState(2, ['clockwork', 'order']), cp = c.players[0];
+  cp.energy = 1e4; cp.tier = 4;
+  assert.match(applyCmd(c, 0, { c: 'ascend' }) ?? '', /уровень/);
+  cp.clvl = 10;
+  assert.equal(applyCmd(c, 0, { c: 'ascend' }), undefined);
+  run(c, 5);
+  const god = c.units.find(u => u.owner === 0 && u.kind === 'deity')!;
+  assert.ok(god, 'Бог-Механизм явился');
+  const foe = unit(c, 1, 'captain'); [foe.x, foe.y] = [god.x + 5, god.y];
+  assert.equal(applyCmd(c, 0, { c: 'timestop' }), undefined);
+  const fx = foe.x; applyCmd(c, 1, { c: 'move', ids: [foe.id], x: foe.x + 20, y: foe.y }); run(c, 2);
+  assert.equal(foe.x, fx, 'время остановлено');
+  god.hp = 0; run(c, 0.1);
+  const back = unit(c, 0, 'captain');
+  assert.ok(back && back.hp <= 0 && back.dead < 0, 'гибель бога: капитан недоступен надолго');
+  // Орден: Архангел поднимает павшего бойца
+  const o = newState(2, ['order', 'orks']), oh = unit(o, 0, 'hq');
+  const angel = spawn(o, 0, 'healer', oh.x + 6, oh.y), sq = spawn(o, 0, 'guard', oh.x + 7, oh.y);
+  void angel; sq.hp = STATS.guard.hp * 2; sq.hit = 0;
+  run(o, 62);
+  assert.ok(sq.hp >= STATS.guard.hp * 3, 'боец поднят');
 });
