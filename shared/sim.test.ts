@@ -284,3 +284,40 @@ test('Рубаки Орды бьют в упор, Стражники Орден�
   assert.ok(Math.hypot(choppa.x - target.x, choppa.y - target.y) < 5, 'Рубаки сблизились');
   assert.ok(s.shots.some(sh => sh[4] === 1), 'рубящий удар');
 });
+
+test('армия по ролям: найм по тиру, Легион, урон по броне, ремонт, гранаты, титан один', () => {
+  const s = newState(2);
+  const p = s.players[0], hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
+  p.req = 1e5; p.energy = 1e5; p.relics = 20;
+  const bar = spawn(s, 0, 'barracks', hq.x + 12, hq.y);
+  assert.match(applyCmd(s, 0, { c: 'train', id: bar.id, k: 'sniper' }) ?? '', /тир/);
+  p.tier = 4;
+  for (const k of ['sniper', 'heavy', 'support', 'elite', 'healer'] as const) assert.equal(applyCmd(s, 0, { c: 'train', id: bar.id, k }), undefined, k);
+  run(s, 70);
+  for (const k of ['sniper', 'heavy', 'support', 'elite', 'healer'] as const) assert.ok(s.units.some(u => u.owner === 0 && u.kind === k), k + ' нанят');
+  // Легион: титан занимает 20, второго не дадут
+  assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }), undefined);
+  assert.match(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }) ?? '', /один|Легион/);
+  // снайпер почти не царапает технику, тяжёлое оружие — сильно
+  const veh = spawn(s, 1, 'mveh', 80, 80), sn = unit(s, 0, 'sniper'), hv = unit(s, 0, 'heavy');
+  [sn.x, sn.y] = [80, 66]; const hp0 = veh.hp; sn.order = { t: 'attack', id: veh.id }; hv.x = -50;
+  run(s, 3.5); const bySniper = hp0 - veh.hp;
+  [hv.x, hv.y] = [80, 66]; sn.x = -50; sn.order = null; hv.order = { t: 'attack', id: veh.id };
+  const hp1 = veh.hp; run(s, 3.5); const byHeavy = hp1 - veh.hp;
+  assert.ok(byHeavy > bySniper * 5, `тяжёлое ${byHeavy} vs снайпер ${bySniper}`);
+  // ремонт: строитель чинит казармы за влияние
+  bar.hp = 200; const req = p.req;
+  assert.equal(applyCmd(s, 0, { c: 'assist', ids: [b.id], id: bar.id }), undefined);
+  run(s, 20);
+  assert.ok(bar.hp > 600, 'казармы отремонтированы'); assert.ok(p.req < req, 'ремонт стоит влияния');
+  // граната: купить у штаба, бросить
+  const g = unit(s, 0, 'guard') ?? spawn(s, 0, 'guard', hq.x + 5, hq.y + 5);
+  [g.x, g.y] = [hq.x + 5, hq.y + 5];
+  p.tier = 2;
+  assert.equal(applyCmd(s, 0, { c: 'gear', ids: [g.id], g: 0 }), undefined);
+  const foe = spawn(s, 1, 'guard', g.x + 10, g.y), fhp = foe.hp;
+  assert.equal(applyCmd(s, 0, { c: 'throw', ids: [g.id], g: 0, x: foe.x, y: foe.y }), undefined);
+  run(s, 1.5);
+  assert.ok(foe.hp < fhp - 60 || !s.units.includes(foe), 'граната взорвалась');
+  assert.equal(g.ch[0], 2);
+});

@@ -1,4 +1,4 @@
-import { ABILITIES, canLearn, applyCmd, isStruct, maxHp, STATS, type Kind, type State } from '../shared/sim.ts';
+import { ABILITIES, canLearn, applyCmd, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
 
 /** Бот играет по тем же правилам: казармы, второй строитель, посты на точках, гвардия с пополнением, атака на штаб. */
 export function botThink(s: State, me: number): void {
@@ -14,7 +14,7 @@ export function botThink(s: State, me: number): void {
   const of = (k: Kind) => mine.filter(u => u.kind === k);
   const builders = of('builder'), guards = of('guard'), barracks = of('barracks');
   const req = s.players[me].req;
-  const dir = Math.atan2(50 - hq.y, 50 - hq.x);
+  const dir = Math.atan2(MAP.h / 2 - hq.y, MAP.w / 2 - hq.x);
   const d = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
   if (!barracks.length && builders.length && req >= STATS.barracks.cost) {
@@ -30,7 +30,8 @@ export function botThink(s: State, me: number): void {
     const free = s.points.filter(p => p.owner === me && !s.units.some(u => u.kind === 'post' && u.hp > 0 && d(u, p) < 2)).sort((a, b) => d(a, hq) - d(b, hq))[0];
     if (free) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'post', x: free.x, y: free.y });
   }
-  if (builders.length + hq.q < 2) applyCmd(s, me, { c: 'train', id: hq.id });
+  if (builders.length + hq.que.filter(k => k === 'builder').length < 3) applyCmd(s, me, { c: 'train', id: hq.id, k: 'builder' });
+  if (s.players[me].tier >= 4) applyCmd(s, me, { c: 'train', id: hq.id, k: 'titan' });
   if (barracks.some(b => b.build >= 1) && !of('foundry').length && !site && idle.length && req >= 140) { // энергия: литейня у штаба
     applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'foundry', x: hq.x + Math.cos(dir + 1.4) * 10, y: hq.y + Math.sin(dir + 1.4) * 10 });
   }
@@ -43,15 +44,23 @@ export function botThink(s: State, me: number): void {
     applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'turret', x: hq.x + Math.cos(dir) * 9, y: hq.y + Math.sin(dir) * 9 });
   }
   if (s.players[me].tier > 1) for (const u of [...of('post'), ...of('turret'), ...guards]) if (u.lvl < 2 && u.upg < 0 && s.players[me].req >= 150) applyCmd(s, me, { c: 'upgrade', id: u.id });
-  for (const b of barracks) if (b.build >= 1 && b.q < 2) applyCmd(s, me, { c: 'train', id: b.id });
+  for (const b of [...barracks, ...of('key2')]) if (b.build >= 1 && b.que.length < 2) { // смешанный состав: всё, что открыто тиром
+    const opts = producible(b.kind).filter(k => ROLES[k]!.tier <= s.players[me].tier);
+    if (opts.length) applyCmd(s, me, { c: 'train', id: b.id, k: opts[Math.floor(Math.random() * opts.length)] });
+  }
+  const broken = mine.find(u => (isStruct(u.kind) || VEHICLES.has(u.kind)) && u.build >= 1 && u.hp < maxHp(u.kind) * 0.6);
+  if (broken && idle.length && !site) applyCmd(s, me, { c: 'assist', ids: [idle[0].id], id: broken.id }); // ремонт
 
   if (s.tick % 100 !== (me * 7) % 100) return; // приказы армии раз в 5 секунд
-  const hurt = guards.filter(g => g.hp < maxHp('guard'));
+  const squads = mine.filter(u => SQUADS.has(u.kind)), hurt = squads.filter(g => g.hp < maxHp(g.kind));
   if (hurt.length) applyCmd(s, me, { c: 'reinforce', ids: hurt.map(g => g.id) });
-  const army = [...guards, ...of('captain')];
+  if (s.players[me].tier >= 2 && squads.length) applyCmd(s, me, { c: 'gear', ids: squads.map(u => u.id), g: 0 }); // гранаты
+  const near = s.units.find(e => e.owner !== me && e.hp > 0 && !isStruct(e.kind) && squads.some(q => q.ch[0] > 0 && Math.hypot(q.x - e.x, q.y - e.y) < 16));
+  if (near) applyCmd(s, me, { c: 'throw', ids: squads.map(u => u.id), g: 0, x: near.x, y: near.y });
+  const army = mine.filter(u => !isStruct(u.kind) && u.kind !== 'builder');
   if (!army.length) return;
   const enemyHq = s.units.filter(u => u.kind === 'hq' && u.owner !== me && s.players[u.owner].alive).sort((a, b) => d(a, hq) - d(b, hq))[0];
   const point = s.points.filter(p => p.owner !== me).sort((a, b) => d(a, hq) - d(b, hq))[0];
-  const goal = guards.length >= 4 || !point ? enemyHq : point;
+  const goal = army.length >= 6 || !point ? enemyHq : point;
   if (goal) applyCmd(s, me, { c: 'amove', ids: army.map(u => u.id), x: goal.x, y: goal.y });
 }

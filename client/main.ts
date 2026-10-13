@@ -4,6 +4,7 @@ import type { CaptainCfg } from '../shared/sim.ts';
 import { CaptainPreview } from './captain.ts';
 import { Game, artFor, ready2d } from './game2d.ts';
 import { FACTIONS, FACTION_IDS, type FactionId } from '../shared/factions.ts';
+import { voice } from './voice.ts';
 import { audio } from './audio.ts';
 import { nextTheme, setTheme, themeName } from './theme.ts';
 
@@ -163,7 +164,7 @@ $('copy').onclick = () => {
 document.addEventListener('click', e => { if ((e.target as HTMLElement).closest('button')) audio.click(); });
 const muteBtn = $('mute');
 const paintMute = () => { muteBtn.textContent = audio.muted ? 'Звук: выкл (Shift+M)' : 'Звук: вкл (Shift+M)'; };
-const toggleMute = () => { audio.setMuted(!audio.muted); paintMute(); };
+const toggleMute = () => { audio.setMuted(!audio.muted); voice.enabled = !audio.muted; paintMute(); };
 muteBtn.onclick = toggleMute;
 addEventListener('keydown', e => { if (e.key.toLowerCase() === 'm' && e.shiftKey && !(e.target instanceof HTMLInputElement)) toggleMute(); }); // Shift+M: M — команда «Идти»
 paintMute();
