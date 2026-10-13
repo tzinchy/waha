@@ -3,7 +3,9 @@ import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { createServer as createVite } from 'vite';
+import { readFile } from 'node:fs/promises';
+import { extname, join, normalize } from 'node:path';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { applyCmd, newState, snapshot, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import { botThink } from './bot.ts';
@@ -125,8 +127,19 @@ function onMessage(ws: WebSocket, raw: string) {
 }
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const vite = await createVite({ root: root + 'client', server: { middlewareMode: true, hmr: { port: 24678 }, fs: { allow: [root] } }, appType: 'spa' });
-const http = createServer(vite.middlewares);
+const PROD = process.env.NODE_ENV === 'production';
+const TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.woff2': 'font/woff2', '.ico': 'image/x-icon' };
+/** Продакшен: отдаём собранный клиент (npm run build → dist), неизвестные пути — index.html. */
+async function serveStatic(req: IncomingMessage, res: ServerResponse) {
+  const dist = join(root, 'dist'), path = normalize(decodeURIComponent((req.url ?? '/').split('?')[0])).replace(/^(\.\.[/\\])+/, '');
+  const file = join(dist, path === '/' ? 'index.html' : path);
+  const body = file.startsWith(dist) ? await readFile(file).catch(() => null) : null;
+  if (body) { res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream', 'cache-control': path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache' }); return res.end(body); }
+  res.writeHead(200, { 'content-type': TYPES['.html'] }); res.end(await readFile(join(dist, 'index.html')));
+}
+const http = PROD
+  ? createServer((req, res) => void serveStatic(req, res))
+  : createServer((await (await import('vite')).createServer({ root: root + 'client', server: { middlewareMode: true, hmr: { port: 24678 }, fs: { allow: [root] } }, appType: 'spa' })).middlewares); // vite нужен только в разработке
 const wss = new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 });
 http.on('upgrade', (req, sock, head) => {
   if (req.url === '/ws') wss.handleUpgrade(req, sock, head, ws => wss.emit('connection', ws));
