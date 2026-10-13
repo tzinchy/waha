@@ -6,7 +6,7 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { applyCmd, newState, snapshot, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
+import { applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import { botThink } from './bot.ts';
 import { FACTION_IDS, isFaction } from '../shared/factions.ts';
@@ -66,9 +66,8 @@ function tick(l: Lobby) {
   step(m.state);
   const over = m.state.winner !== null;
   if (m.state.tick % 2 === 0 || over) { // симуляция 20 Гц, снимки 10 Гц; ponytail: полный JSON-снимок, дельты/бинарь если не хватит трафика
-    const msg: S2C = { t: 'snap', s: snapshot(m.state) };
-    for (const p of m.slots) send(p.ws, msg);
-    m.state.shots.length = 0;
+    m.slots.forEach((p, i) => { if (p.ws) send(p.ws, { t: 'snap', s: m.state.winner !== null ? snapshot(m.state) : snapshotFor(m.state, i) }); }); // туман войны: каждому своё
+    m.state.shots.length = 0; m.state.died.length = 0;
   }
   if (over) {
     clearInterval(m.timer);

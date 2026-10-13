@@ -58,6 +58,11 @@ export const AEGIS = { pool: 1200, r: 12, regen: 1200 / 30, broken: 10 };   // �
 export const DRONE_SHIELD = 300;                                              // личный щит отряда от щитового дрона
 export const DEITY = { energy: 600, lvl: 10, tier: 4, stop: 12, stopTime: 3, stopCd: 45, deathLock: 300, rise: 4 };
 export const ARCHANGEL_REVIVE = 60;
+/** Победные очки: держишь меньше точек, чем враг, — твои очки тают; критическая точка (центр) считается за две. */
+export const VP_START = 500;
+export const VP_RATE = 0.5; // очков в секунду за каждую точку перевеса противника (перевес в 3 точки ≈ 5.5 минуты до поражения)
+/** Туман войны: радиус обзора по умолчанию у построек и юнитов без своего обзора. */
+export const SIGHT_STRUCT = 12;
 
 // ---------- состав армии: откуда, с какого тира, сколько Легиона, броня и тип урона ----------
 export type Armor = 'inf' | 'hinf' | 'veh' | 'titan' | 'struct';
@@ -259,6 +264,8 @@ export type State = {
   tick: number; units: Unit[]; points: Point[]; players: Player[]; nextId: number;
   winner: number | null; shots: number[][];
   dev?: boolean; // разработка: разрешён чит
+  vp: number[];  // победные очки (пресет CapturePoint)
+  died: number[]; // кто погиб с прошлого снимка (чтобы отличать смерть от ухода в туман)
   rewind: { owner: number; x: number; y: number; t: number }[]; // Перезавод Династий: отряды, которые встанут
   blasts: { x: number; y: number; t: number; g: number; owner: number }[]; // летящие гранаты
   smoke: { x: number; y: number; t: number }[];
@@ -288,9 +295,10 @@ const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
 export function newState(n: number, factions: FactionId[] = []): State {
-  const s: State = { tick: 0, units: [], points: [...POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), ...RELICS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1, relic: true }))], players: [], nextId: 1, winner: null, shots: [], rewind: [], blasts: [], smoke: [] };
+  const s: State = { tick: 0, units: [], points: [...POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), ...RELICS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1, relic: true }))], players: [], nextId: 1, winner: null, shots: [], rewind: [], blasts: [], smoke: [], vp: [], died: [] };
   for (let i = 0; i < n; i++) {
     s.players.push({ req: START_REQ, energy: 0, relics: 0, alive: true, tier: 1, faction: factions[i] ?? 'order', rage: 0, waagh: 0, remains: 0, research: 0, xp: 0, clvl: 1, pts: 1, abil: 0, acd: ABILITIES.map(() => 0), stopCd: 0, revive: 0 });
+    s.vp.push(VP_START);
     const [hx, hy] = HQ_POS[i];
     spawn(s, i, 'hq', hx, hy);
     spawn(s, i, 'captain', ...nearHq(hx, hy, 8));
@@ -704,6 +712,7 @@ export function step(s: State, dt = DT): void {
   s.smoke = s.smoke.filter(c => c.t > 0);
   separate(s);
   capture(s, dt);
+  victoryPoints(s, dt);
   cleanup(s);
 }
 
@@ -864,6 +873,29 @@ function separate(s: State) { // ponytail: O(n²) по парам, на сотн
   }
 }
 
+function victoryPoints(s: State, dt: number) {
+  const held = s.players.map((_, i) => s.points.reduce((n, p, k) => n + (p.owner === i && !p.relic ? (k === 0 ? 2 : 1) : 0), 0));
+  s.players.forEach((p, i) => {
+    if (!p.alive) return;
+    const enemy = Math.max(0, ...held.filter((_, j) => j !== i && s.players[j].alive));
+    const drain = Math.max(0, enemy - held[i]) * VP_RATE * dt;
+    if ((s.vp[i] = Math.max(0, s.vp[i] - drain)) <= 0) { // очки кончились — армия бежит, штаб сдан
+      p.alive = false;
+      for (const u of s.units) if (u.owner === i) u.hp = Math.min(u.hp, 0);
+    }
+  });
+}
+
+/** Кто что видит: id юнитов в обзоре своих войск и построек (туман войны считается на сервере). */
+export function visibleTo(s: State, owner: number): Set<number> {
+  const eyes = s.units.filter(u => u.owner === owner && u.hp > 0).map(u => ({ x: u.x, y: u.y, r: Math.max(STATS[u.kind].sight, isStruct(u.kind) ? SIGHT_STRUCT : 10) + (hasR(s, owner, 11) ? 4 : 0) }));
+  const seen = new Set<number>();
+  for (const u of s.units) {
+    if (u.owner === owner || eyes.some(e => (e.x - u.x) ** 2 + (e.y - u.y) ** 2 < (e.r + STATS[u.kind].radius) ** 2)) seen.add(u.id);
+  }
+  return seen;
+}
+
 function capture(s: State, dt: number) {
   for (const p of s.points) {
     const post = postAt(s, p);
@@ -906,6 +938,7 @@ function cleanup(s: State) {
       if (cap || nearOwn(s, u.owner, u.x, u.y, 20, ['hq'])) s.rewind.push({ owner: u.owner, x: u.x, y: u.y, t: 12 * (s.points.some(p => p.owner === u.owner) ? 0.7 : 1) });
     }
   }
+  for (const u of s.units) if (u.hp <= 0 && u.kind !== 'captain') s.died.push(u.id);
   for (const u of s.units) if (u.kind === 'hq' && u.hp <= 0) s.players[u.owner].alive = false;
   s.units = s.units.filter(u => s.players[u.owner].alive && (u.hp > 0 || u.kind === 'captain'));
   for (const p of s.points) if (p.owner >= 0 && !s.players[p.owner].alive) p.owner = -1;
@@ -919,9 +952,15 @@ const prodPct = (u: Unit) => u.q <= 0 || u.kind === 'legend' ? 0
   : u.que[0] ? Math.floor((u.prog / STATS[u.que[0]].time) * 100) : 0;
 
 /** Компактный снимок для сети: целые числа вместо float, чтобы JSON был короче. */
-export type Snap = { tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; qk: Record<number, number[]>; sm: number[][]; ps: number[][] };
+export type Snap = { vp: number[]; d: number[]; tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; qk: Record<number, number[]>; sm: number[][]; ps: number[][] };
+/** Снимок для одного игрока: враги вне обзора вырезаны, выстрелы — только видимые концом или началом. */
+export function snapshotFor(s: State, owner: number): Snap {
+  const full = snapshot(s), seen = visibleTo(s, owner), near = (x: number, y: number) => s.units.some(u => u.owner === owner && u.hp > 0 && Math.hypot(u.x - x / 10, u.y - y / 10) < Math.max(STATS[u.kind].sight, 12));
+  return { ...full, u: full.u.filter(r => seen.has(r[0])), sh: full.sh.filter(v => near(v[0], v[1]) || near(v[2], v[3])), qk: Object.fromEntries(Object.entries(full.qk).filter(([id]) => s.units.some(u => u.id === Number(id) && u.owner === owner))) };
+}
 export function snapshot(s: State): Snap {
   return {
+    vp: s.vp.map(Math.ceil), d: [...s.died],
     tick: s.tick,
     // [id, owner, kind, x*10, y*10, hp, face*100, очередь, стройка %, пополняется, уровень, апгрейд %, найм текущего %]
     u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), Math.max(0, Math.round(u.hp)), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : u.kind === 'post' ? 12 : UPGRADES[u.kind]!.time)) * 100), prodPct(u), u.gear, ...u.ch, Math.ceil(u.gcd), Math.round(u.sh), Math.ceil(u.frozen * 10), u.carry, Math.ceil(u.rise * 10), u.off > 0 ? 1 : 0]), // 18 щит, 19 заморозка, 20 тащит/тащат, 21 вознесение, 22 купол пробит

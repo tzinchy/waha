@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
+import { snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -366,4 +366,20 @@ test('особые механики: купол-эгида и дрон Конс�
   void angel; sq.hp = STATS.guard.hp * 2; sq.hit = 0;
   run(o, 62);
   assert.ok(sq.hp >= STATS.guard.hp * 3, 'боец поднят');
+});
+
+test('победные очки тают у того, кто держит меньше точек; туман войны прячет далёких врагов', () => {
+  const s = newState(2);
+  s.points.forEach((p, i) => { if (!p.relic) p.owner = i === 0 ? 1 : i % 2; }); // у игрока 1 больше точек и центр
+  const vp0 = s.vp[0];
+  run(s, 10);
+  assert.ok(s.vp[0] < vp0 - 20, 'очки игрока 0 тают'); assert.equal(s.vp[1], 500);
+  s.vp[0] = 1; run(s, 1);
+  assert.equal(s.players[0].alive, false); assert.equal(s.winner, 1);
+  const f = newState(2), far = unit(f, 1, 'hq');
+  const snap = snapshotFor(f, 0);
+  assert.ok(!snap.u.some(r => r[0] === far.id), 'чужой штаб в тумане');
+  assert.ok(snap.u.some(r => r[0] === unit(f, 0, 'hq').id), 'свой штаб виден');
+  const scout = unit(f, 0, 'captain'); [scout.x, scout.y] = [far.x - 8, far.y];
+  assert.ok(snapshotFor(f, 0).u.some(r => r[0] === far.id), 'разведка открыла штаб');
 });

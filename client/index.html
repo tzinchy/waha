@@ -135,6 +135,10 @@
   .w2d-unit.frozen .w2d-body svg{animation-play-state:paused!important}
   .w2d-unit.rising .w2d-body{animation:w2d-rise 1s ease-in-out infinite;filter:drop-shadow(0 0 18px #8fe0cc) brightness(1.3)}
   @keyframes w2d-rise{50%{transform:translateY(-12px) scale(1.15)}}
+  #hud-score{position:absolute;left:50%;top:72px;transform:translateX(-50%);width:min(420px,40vw);pointer-events:none;filter:drop-shadow(0 2px 6px #000)}
+  .w2d-fog{position:absolute;left:0;top:0;z-index:8500;pointer-events:none}
+  .w2d-unit.ghost{filter:grayscale(.9) brightness(.6);opacity:.7}
+  .w2d-unit.ghost .w2d-bar,.w2d-unit.ghost .w2d-ring{display:none}
   .w2d-sparkline{stroke-width:2;stroke-linecap:square;animation:w2d-fade .28s steps(4) both}
   .w2d-arc{fill:none;stroke:var(--amber-300);stroke-width:3;stroke-dasharray:6 8;animation:w2d-dash .9s linear both}
   .w2d-boom{fill:rgba(240,120,40,.35);stroke:#f0a540;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:w2d-ring .6s steps(6) both}
@@ -261,6 +265,7 @@
     <section id="hud-mini" class="lc-frame lc-minimap"><svg id="mini-svg" viewBox="0 0 100 100" aria-label="Мини-карта"></svg></section>
     <section id="hud-queue" class="lc-frame hidden"></section>
     <section id="hud-players" class="lc-frame"></section>
+    <section id="hud-score" class="lc-score"></section>
     <div id="hud-dead" class="lc-alert lc-alert--danger hidden" role="alert"><span class="lc-alert__glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 23 21H1Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 9h2v6h-2zM11 17h2v2h-2z" fill="currentColor"/></svg></span><span class="lc-alert__text">Капитан пал</span><span class="lc-alert__meta">возродится в штабе</span></div>
     <div id="hud-bottom">
       <section id="hud-card" class="lc-frame hidden"></section>

@@ -137,6 +137,8 @@ export class Game {
   private moveMode = false;
   private throwG = -1;
   private stopCd = 0;
+  private fogCv = document.createElement('canvas');
+  private miniFog = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   private mapTex: HTMLCanvasElement | null = null;
   private aimRing = document.createElement('div');
   private qk: Record<number, number[]> = {};
@@ -177,8 +179,10 @@ export class Game {
     this.wallLine.classList.add('w2d-wallline');
     this.wallLine.setAttribute('visibility', 'hidden');
     this.fx.append(this.wallLine);
+    this.fogCv.width = this.fogCv.height = 320; this.fogCv.className = 'w2d-fog';
+    Object.assign(this.fogCv.style, { width: MAP.w * S + 'px', height: MAP.h * S + 'px' });
     this.aimRing.className = 'w2d-aim'; this.aimRing.style.display = 'none';
-    this.world.append(this.ground, this.fx, this.ghost, this.aimRing);
+    this.world.append(this.ground, this.fogCv, this.fx, this.ghost, this.aimRing);
     root.prepend(this.world);
     this.buildMap();
     this.buildMini();
@@ -261,6 +265,7 @@ export class Game {
   onSnap(s: Snap) {
     const seen = new Set<number>(), first = this.snapN++ === 0, now = performance.now();
     this.qk = s.qk ?? {};
+    this.renderScore(s);
     this.drawSmoke(s.sm ?? []);
     this.stopCd = s.ps?.[this.slot]?.[0] ?? 0;
     for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog, gear, c0, c1, c2, gcd, sh, frozen, carry, rise, off] of s.u) {
@@ -268,6 +273,7 @@ export class Game {
       if (kind === 'mine' && owner !== this.slot) continue; // чужие мины невидимы
       seen.add(id);
       let v = this.views.get(id);
+      v?.el.classList.remove('ghost');
       if (!v) {
         this.views.set(id, (v = this.mk(id, owner, kind, x / 10, y / 10, q)));
         if (kind === 'legend') v.el.classList.add('legend');
@@ -294,8 +300,14 @@ export class Game {
       }
     }
     let gone = 0;
-    for (const [id, v] of this.views) if (!seen.has(id)) { // гибель: падение и пепел, потом исчезает
-      this.views.delete(id); this.sel.delete(id);
+    const died = new Set(s.d ?? []);
+    for (const [id, v] of this.views) if (!seen.has(id)) {
+      if (v.owner !== this.slot && !died.has(id)) { // ушёл в туман войны, а не погиб
+        if (isStruct(v.kind) && !this.inSight(v.x, v.y)) { v.el.classList.add('ghost'); continue; } // здание — призрак последнего увиденного
+        this.views.delete(id); this.sel.delete(id); v.el.remove(); v.dome?.remove(); continue;
+      }
+      // гибель: падение и пепел, потом исчезает
+      this.views.delete(id); this.sel.delete(id); v.dome?.remove();
       v.bar.remove(); v.sel.remove();
       v.svgs.forEach(sv => setAnim(sv, 'death'));
       v.el.classList.add(isStruct(v.kind) ? 'w2d-razed' : 'w2d-dying');
@@ -373,7 +385,10 @@ export class Game {
     svg.innerHTML = `<image href="${thumb.toDataURL()}" width="100" height="100" style="image-rendering:pixelated"/>`
       + VENTS.map(([x, y]) => `<circle cx="${(x / MAP.w) * 100}" cy="${(y / MAP.h) * 100}" r="1.5" fill="var(--amber-500)" opacity=".8"/>`).join('');
     this.miniCam.classList.add('cam'); this.miniPing.classList.add('ping', 'lc-ping'); this.miniPing.setAttribute('r', '4'); this.miniPing.style.display = 'none';
-    svg.append(this.mini, this.miniCam, this.miniPing);
+    const ns = 'http://www.w3.org/2000/svg', defs = document.createElementNS(ns, 'defs'), mask = document.createElementNS(ns, 'mask'), veil = document.createElementNS(ns, 'rect');
+    mask.id = 'mini-fog'; mask.innerHTML = '<rect width="100" height="100" fill="#fff"/>'; mask.append(this.miniFog); defs.append(mask);
+    Object.entries({ width: '100', height: '100', mask: 'url(#mini-fog)', fill: 'rgba(6,5,9,.65)' }).forEach(([k, v]) => veil.setAttribute(k, v));
+    svg.append(defs, veil, this.mini, this.miniCam, this.miniPing);
     const go = (e: PointerEvent) => { const r = svg.getBoundingClientRect(); this.cam.x = ((e.clientX - r.left) / r.width) * MAP.w; this.cam.y = ((e.clientY - r.top) / r.height) * MAP.h; };
     svg.addEventListener('pointerdown', e => { e.stopPropagation(); go(e); svg.setPointerCapture(e.pointerId); }, { signal: this.ac.signal });
     svg.addEventListener('pointermove', e => { if (e.buttons & 1) go(e); }, { signal: this.ac.signal });
@@ -467,6 +482,7 @@ export class Game {
     $('hud-dead').classList.toggle('hidden', !dead);
     s.pl.forEach(([, alive], i) => document.getElementById('hp' + i)?.classList.toggle('dead', !alive));
     this.renderQueue();
+    this.drawFog();
     this.renderCmd();
   }
 
@@ -950,6 +966,41 @@ export class Game {
     this.place2(m, x, y);
     setTimeout(() => m.remove(), 600);
   }
+
+  /** Видит ли игрок точку: в обзоре своих войск и построек (тот же расчёт, что на сервере). */
+  private inSight(x: number, y: number) {
+    for (const v of this.views.values()) if (v.owner === this.slot && !v.dead && Math.hypot(v.x - x, v.y - y) < Math.max(STATS[v.kind].sight, isStruct(v.kind) ? 12 : 10)) return true;
+    return false;
+  }
+
+  /** Туман войны: тёмная вуаль вне обзора — на карте и на мини-карте. */
+  private drawFog() {
+    const c = this.fogCv, x = c.getContext('2d')!, k = c.width / MAP.w;
+    x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, c.width, c.height);
+    x.fillStyle = 'rgba(6,5,9,0.72)'; x.fillRect(0, 0, c.width, c.height);
+    x.globalCompositeOperation = 'destination-out';
+    const holes: string[] = [];
+    for (const v of this.views.values()) {
+      if (v.owner !== this.slot || v.dead) continue;
+      const r = Math.max(STATS[v.kind].sight, isStruct(v.kind) ? 12 : 10) + (this.research & (1 << 11) ? 4 : 0);
+      const g = x.createRadialGradient(v.x * k, v.y * k, r * k * 0.7, v.x * k, v.y * k, r * k);
+      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.beginPath(); x.arc(v.x * k, v.y * k, r * k, 0, Math.PI * 2); x.fill();
+      holes.push(`<circle cx="${(v.x / MAP.w) * 100}" cy="${(v.y / MAP.h) * 100}" r="${(r / MAP.w) * 100}" fill="#000"/>`);
+    }
+    this.miniFog.innerHTML = holes.join('');
+  }
+
+  /** Победные очки (CapturePoint): ромбы точек по буквам, перетягивание «мы — сильнейший враг» и счёт. */
+  private renderScore(s: Snap) {
+    const me = s.vp?.[this.slot] ?? 0, foe = Math.max(0, ...(s.vp ?? []).filter((_, i) => i !== this.slot && s.pl[i]?.[1]));
+    const L = ['Д', 'А', 'В', 'Б', 'Г', 'Е', 'Ж'];
+    const pts = s.p.slice(0, POINTS.length).map(([o], i) => `<span class="lc-score__pt${o === this.slot ? ' lc-score__pt--ally' : o >= 0 ? ' lc-score__pt--enemy' : ''}"><span>${L[i]}</span></span>`).join('');
+    const total = Math.max(1, me + foe);
+    const html = `<div class="lc-score__points">${pts}</div><div class="lc-score__tug"><i class="ally" style="width:${(me / total) * 100}%"></i><i class="enemy" style="width:${(foe / total) * 100}%"></i></div><div class="lc-score__nums"><span class="ally">${me}</span><span class="goal">победные очки · 0 — поражение</span><span class="enemy">${foe}</span></div>`;
+    if (html !== this.scoreHtml) { this.scoreHtml = html; $('hud-score').innerHTML = html; }
+  }
+  private scoreHtml = '';
 
   /** Облака дыма (SquadWargear): пиксельные клубы держатся, пока живут в симуляции. */
   private drawSmoke(sm: number[][]) {
