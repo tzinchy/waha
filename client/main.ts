@@ -93,7 +93,7 @@ function onMsg(m: S2C) {
   else if (m.t === 'start') startGame(m.slot, m.players);
   else if (m.t === 'snap') game?.onSnap(m.s);
   else if (m.t === 'left') { lobby = null; show('menu'); }
-  else if (m.t === 'error') { toast(m.msg); audio.error(); }
+  else if (m.t === 'error') { if (game) game.alert('warn', m.msg); else toast(m.msg); audio.error(); }
 }
 
 function startGame(slot: number, players: LobbyPlayer[]) {
@@ -162,10 +162,10 @@ $('copy').onclick = () => {
 
 document.addEventListener('click', e => { if ((e.target as HTMLElement).closest('button')) audio.click(); });
 const muteBtn = $('mute');
-const paintMute = () => { muteBtn.textContent = audio.muted ? 'Звук: выкл (M)' : 'Звук: вкл (M)'; };
+const paintMute = () => { muteBtn.textContent = audio.muted ? 'Звук: выкл (Shift+M)' : 'Звук: вкл (Shift+M)'; };
 const toggleMute = () => { audio.setMuted(!audio.muted); paintMute(); };
 muteBtn.onclick = toggleMute;
-addEventListener('keydown', e => { if (e.key.toLowerCase() === 'm' && !(e.target instanceof HTMLInputElement)) toggleMute(); });
+addEventListener('keydown', e => { if (e.key.toLowerCase() === 'm' && e.shiftKey && !(e.target instanceof HTMLInputElement)) toggleMute(); }); // Shift+M: M — команда «Идти»
 paintMute();
 
 const themeBtn = $('theme');

@@ -1,12 +1,35 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
-import { ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { isMelee, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { FACTIONS, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
 
 const S = 26; // пикселей мира на единицу симуляции
 const $ = (id: string) => document.getElementById(id)!;
+
+/** Ячейка сетки команд (пресет CommandGrid) и её подсказка (Tooltip). */
+type Cell = { act: string; name: string; hot: string; icon?: string; art?: string; cost?: number; en?: number; rel?: number; ok?: boolean; info?: string; req?: string; done?: boolean; prog?: number; cd?: number; cdMax?: number; active?: boolean; ult?: boolean; queue?: number };
+const ico = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+/** Иконки команд из пресета CommandGrid (одна форма — один смысл). */
+const ICON = {
+  move: ico('<path d="M5 5l7 7-7 7M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2"/>'),
+  stop: ico('<path d="M8 3h8l5 5v8l-5 5H8l-5-5V8Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11h8v2H8z" fill="currentColor"/>'),
+  attack: ico('<path d="M5 19 17.5 6.5M14 4h6v6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 14l6 6-2 2-6-6Z" fill="currentColor"/>'),
+  build: ico('<path d="M2 21h20v-3h-3v-3h-3v-3h-2V3h-4v9H8v3H5v3H2Z" fill="none" stroke="currentColor" stroke-width="2"/>'),
+  reinforce: ico('<path d="M12 2.5 20 5.5V12c0 4.6-3.3 8-8 9.5C7.3 20 4 16.6 4 12V5.5Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 8h2v8h-2zM8 11h8v2H8z" fill="currentColor"/>'),
+  tier: ico('<path d="M12 2 22 12 12 22 2 12Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7l4 5h-3v5h-2v-5H8Z" fill="currentColor"/>'),
+  research: ico('<path d="M6 3h12M6 21h12M7 3c0 6 10 6 10 9S7 15 7 21M17 3c0 6-10 6-10 9s10 3 10 9" fill="none" stroke="currentColor" stroke-width="2"/>'),
+};
+const ABIL_ICON: Record<number, string> = {
+  1: ico('<circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4M4 4l3 3M17 17l3 3M4 20l3-3M17 7l3-3" stroke="currentColor" stroke-width="2"/>'),
+  3: ico('<path d="M3 12h12M11 6l6 6-6 6M19 5v14" fill="none" stroke="currentColor" stroke-width="2.4"/>'),
+  4: ico('<path d="M12 3a9 9 0 1 1-9 9M12 7a5 5 0 1 1-5 5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12l-2-3h4Z" fill="currentColor"/>'),
+  5: ico('<path d="M12 1 15 10H9Z" fill="currentColor"/><path d="M12 10v8M5 21h14M7 17l5 4 5-4" fill="none" stroke="currentColor" stroke-width="2"/>'),
+  7: ico('<path d="M5 4v16M5 4h12l-3 4 3 4H5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 7h2v3H9z" fill="currentColor"/>'),
+  8: ico('<path d="M4 20h16M6 20V9l6-5 6 5v11" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 13h4v7h-4z" fill="currentColor"/>'),
+};
+const KIND_NAME: Partial<Record<Kind, string>> = { hq: 'Штаб', barracks: 'Казарма', post: 'Реликварий', turret: 'Турель', foundry: 'Литейня', pump: 'Глубинный насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Крипта-бункер', mine: 'Мина' };
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 export const SLOT_COLORS = [0x4fa392, 0xe0675c, 0xe0a53a, 0xb9c3c6];
 
@@ -116,6 +139,7 @@ export class Game {
   private drag: { x0: number; y0: number; x1: number; y1: number } | null = null;
   private mouse: { x: number; y: number } | null = null;
   private amove = false;
+  private moveMode = false;
   private centered = false;
   private ended = false;
   private req = 0;
@@ -126,6 +150,8 @@ export class Game {
   private research = 0;
   private cap = { lvl: 1, xp: 0, pts: 0, abil: 0, cd: [] as number[] };
   private learnHtml = '';
+  private lvlUpAt = 0;
+  private lvlUpOpen = false;
   private mini = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   private miniCam = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   private miniPing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -237,9 +263,9 @@ export class Game {
         if (kind === 'legend') v.el.classList.add('legend');
         if (!first && owner === this.slot && !isStruct(kind)) audio.trained();
       } else if (owner === this.slot) {
-        if (v.build < 1 && bp >= 100) audio.built();
-        if (kind === 'captain' && v.hp > 0 && hp <= 0) audio.alarm();
-        else if (hp < v.hp && now - this.lastAlert > 8000) { this.lastAlert = now; audio.alarm(); this.pingMini(x / 10, y / 10); }
+        if (v.build < 1 && bp >= 100) { audio.built(); this.alert('ok', 'Постройка готова', this.nameOf(v), v.tx, v.ty); }
+        if (kind === 'captain' && v.hp > 0 && hp <= 0) { audio.alarm(); this.alert('danger', 'Капитан пал', 'возродится в штабе', x / 10, y / 10); }
+        else if (hp < v.hp && now - this.lastAlert > 8000) { this.lastAlert = now; audio.alarm(); this.pingMini(x / 10, y / 10); this.alert('danger', 'Нас атакуют', this.nameOf(v), x / 10, y / 10); }
       }
       v.tx = x / 10; v.ty = y / 10; v.f = face / 100; v.hp = hp; v.q = q; v.build = bp / 100; v.dead = hp <= 0;
       const lvlArt = artFor(kind, this.players[owner].faction ?? 'order', lvl, this.players[owner].captain.weapon, kind === 'legend' ? q : 0);
@@ -345,7 +371,7 @@ export class Game {
   private capHud(me: number[]) {
     const c = this.cap;
     const [lvl, xp, pts, abil] = [me[9] ?? 1, me[10] ?? 0, me[11] ?? 0, me[12] ?? 0];
-    if (lvl > c.lvl && this.snapN > 2) { audio.built(); const v = [...this.views.values()].find(u => u.owner === this.slot && u.kind === 'captain'); v?.el.animate([{ filter: 'drop-shadow(0 0 0 var(--gilt-300))' }, { filter: 'drop-shadow(0 0 22px var(--gilt-300))' }, { filter: 'none' }], { duration: 900 }); }
+    if (lvl > c.lvl && this.snapN > 2) { audio.built(); this.alert('ok', `Ранг ${lvl}`, 'выберите дар'); const v = [...this.views.values()].find(u => u.owner === this.slot && u.kind === 'captain'); v?.el.animate([{ filter: 'drop-shadow(0 0 0 var(--gilt-300))' }, { filter: 'drop-shadow(0 0 22px var(--gilt-300))' }, { filter: 'none' }], { duration: 900 }); }
     Object.assign(c, { lvl, xp, pts, abil, cd: me.slice(13) });
     $('cap-lvl').textContent = String(lvl);
     $('cap-xp').style.setProperty('--xp', lvl >= MAX_LVL ? '100%' : `${(xp / xpNeed(lvl)) * 100}%`);
@@ -354,7 +380,10 @@ export class Game {
     const open = ABILITIES.map((a, i) => ({ ...a, i })).filter(a => !canLearn(fake, a.i));
     const html = pts > 0 && open.length ? `<p class="lc-levelup__rank">Ранг ${lvl}</p><p class="lc-levelup__sub">Выберите дар · очков: ${pts}</p><div class="lc-choices">`
       + open.map((a, n) => `<button class="lc-choice" data-learn="${a.i}"><kbd>Alt+${n + 1}</kbd><strong>${a.name}</strong><span>${a.info}${a.cd ? ` · <em>перезарядка ${a.cd} с</em>` : ' · <em>пассивная</em>'}</span></button>`).join('') + '</div>' : '';
-    if (html !== this.learnHtml) { this.learnHtml = html; $('hud-levelup').innerHTML = html; $('hud-levelup').classList.toggle('hidden', !html); }
+    if (html !== this.learnHtml) { this.learnHtml = html; $('hud-levelup').innerHTML = html; this.lvlUpAt = performance.now(); this.lvlUpOpen = !!html; }
+    if (this.lvlUpOpen && performance.now() - this.lvlUpAt > 15000) this.lvlUpOpen = false; // не выбрал за 15 с — сворачивается в ромб уровня
+    $('hud-levelup').classList.toggle('hidden', !this.lvlUpOpen);
+    $('hud-cap').classList.toggle('has-pts', pts > 0 && !this.lvlUpOpen);
   }
 
   private learn(n: number) {
@@ -362,10 +391,29 @@ export class Game {
     if (b) this.cmd({ c: 'learn', a: Number(b.dataset.learn) });
   }
 
+  /** Лента оповещений (пресет Alert): до 4 строк, тревога гаснет через 8 с, остальное через 5 с; клик по тревоге — камера к событию. */
+  alert(tone: 'danger' | 'warn' | 'ok' | '', text: string, meta = '', x?: number, y?: number) {
+    const box = $('hud-alerts'), el = document.createElement('div');
+    const glyph = tone === 'danger' ? '<path d="M12 2 23 21H1Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 9h2v6h-2zM11 17h2v2h-2z" fill="currentColor"/>'
+      : tone === 'warn' ? '<path d="M6 2h12M6 22h12M7 2c0 6 10 6 10 10S7 16 7 22M17 2c0 6-10 6-10 10s10 4 10 10" fill="none" stroke="currentColor" stroke-width="2"/>'
+      : tone === 'ok' ? '<path d="M12 2 22 12 12 22 2 12Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 12l3 3 5-6" fill="none" stroke="currentColor" stroke-width="2"/>'
+      : '<path d="M12 2 22 12 12 22 2 12Z" fill="currentColor"/>';
+    el.className = `lc-alert${tone ? ' lc-alert--' + tone : ''}`;
+    el.setAttribute('role', tone === 'danger' ? 'alert' : 'status');
+    el.innerHTML = `<span class="lc-alert__glyph"><svg viewBox="0 0 24 24" aria-hidden="true">${glyph}</svg></span><span class="lc-alert__text">${text.replace(/[<>&]/g, '')}</span>${meta ? `<span class="lc-alert__meta">${meta.replace(/[<>&]/g, '')}</span>` : ''}`;
+    if (x !== undefined && y !== undefined) { el.style.cursor = 'pointer'; el.onclick = () => { this.cam.x = x; this.cam.y = y; }; }
+    box.prepend(el);
+    while (box.children.length > 4) box.lastElementChild!.remove();
+    setTimeout(() => el.remove(), tone === 'danger' ? 8000 : 5000);
+  }
+
   // ---------- HUD ----------
   private hud(s: Snap) {
     const me = s.pl[this.slot];
     this.req = me[0]; this.energy = me[3] ?? 0; this.relics = me[4] ?? 0;
+    const learnt = (me[8] ?? 0) & ~this.research;
+    if (learnt && this.snapN > 2) RESEARCH.forEach((n, i) => { if (learnt & (1 << i)) this.alert('ok', 'Исследовано', n); });
+    if ((s.pl[this.slot][2] ?? 1) > this.tier && this.snapN > 2) this.alert('ok', `Тир ${['I', 'II', 'III', 'IV', 'V'][s.pl[this.slot][2] - 1]}`, 'новые постройки и войска');
     this.lastRemains = me[7] ?? 0; this.research = me[8] ?? 0;
     this.capHud(me);
     this.drawMini(s);
@@ -402,96 +450,195 @@ export class Game {
     if (q.innerHTML !== html) q.innerHTML = html;
   }
 
-  private fac(): FactionId { return this.players[this.slot].faction ?? 'order'; }
+  private fac(owner = this.slot): FactionId { return this.players[owner]?.faction ?? 'order'; }
 
   private selected() { return [...this.sel].map(id => this.views.get(id)).filter((v): v is View => !!v); }
 
-  private renderCmd() {
-    const sel = this.selected(), req = this.req;
-    const btn = (act: string, label: string, cost: number, hot: string, en = 0, rel = 0) => {
-      if (this.fac() === 'clockwork') { en += cost; cost = 0; } // Династии платят энергией
-      const ok = req >= cost && this.energy >= en && this.relics >= rel;
-      const price = [cost ? `◆ ${cost}` : '', en ? `ϟ ${en}` : '', rel ? `⌂ ${rel}` : ''].filter(Boolean).join(' ') || 'даром';
-      return `<button class="lc-btn lc-btn--sm" data-act="${act}" data-hot="${hot.toLowerCase()}" ${ok ? '' : 'disabled'}>${label} <i>${hot}</i> <b>${price}</b></button>`;
-    };
-    let html = '';
+  // ---------- нижний HUD по пресетам: UnitCard + CommandGrid 4×3 / BuildMenu + Tooltip ----------
+  private buildOpen = false;
+  private buildTab = 0;
+  private lastSelKey = '';
+  private cells: Cell[] = [];
+  private tipAct = '';
+
+  private price(cost: number, en = 0, rel = 0) {
+    if (this.fac() === 'clockwork') { en += cost; cost = 0; } // Династии платят энергией
+    return { cost, en, rel, ok: this.req >= cost && this.energy >= en && this.relics >= rel };
+  }
+
+  private nameOf(v: View) {
+    const F = FACTIONS[this.fac(v.owner)];
+    if (v.kind === 'captain') return this.players[v.owner]?.name ?? 'Капитан';
+    if (v.kind === 'builder') return F.builder;
+    if (v.kind === 'guard') return F.guard;
+    if (v.kind === 'legend') return F.legends[v.q] ?? 'Легенда';
+    if (/^key[1-4]$/.test(v.kind)) return F.keys[Number(v.kind[3]) - 1];
+    if (v.kind === 'gate') return F.gate;
+    return KIND_NAME[v.kind] ?? v.kind;
+  }
+
+  /** Команды выбранного: фиксированная раскладка — верхний ряд движение/стоп/атака, ниже постройка и способности. */
+  private buildCells(sel: View[]): Cell[] {
+    const F = FACTIONS[this.fac()], R = ['I', 'II', 'III', 'IV', 'V'], c: Cell[] = [];
     const st = sel.length === 1 && isStruct(sel[0].kind) ? sel[0] : null;
+    const own = (k: Kind) => [...this.views.values()].some(v => v.owner === this.slot && v.kind === k);
     if (st) {
-      const q = `<span class="info">в очереди: ${st.q}</span>`;
-      if (st.build < 1) html = `<span class="info">Возводится ${Math.round(st.build * 100)}%. Отправьте строителей (ПКМ)</span>`;
-      else {
-        const F = FACTIONS[this.fac()], free = this.fac() === 'undead' && (this.players && this.lastRemains >= 5);
-        const R = ['I', 'II', 'III', 'IV', 'V'];
-        if (st.kind === 'hq') {
-          html = btn('train', F.builder, trainCost(this.fac(), 'builder'), 'T') + q;
-          const t = TIER_UP[this.tier], keyOk = t && [...this.views.values()].some(v => v.owner === this.slot && v.kind === t.key && v.build >= 1);
-          if (!t) html += '<span class="info">Высший тир ★</span>';
-          else if (st.upg >= 0) html += `<span class="info">Переход на тир ${R[this.tier]}: ${st.upg}%</span>`;
-          else if (!keyOk) html += `<span class="info">Тир ${R[this.tier]}: нужно здание «${F.keys[this.tier - 1]}»</span>`;
-          else if (t.seal && !(this.research & (1 << 15))) html += '<span class="info">Тир V: изучите Печать Вознесения</span>';
-          else html += btn('tier', `Тир ${R[this.tier]}`, t.cost, 'U', t.energy, t.relics);
-        }
-        else if (/^key[1-4]$/.test(st.kind)) { // исследования ключевого здания
-          const k = Number(st.kind[3]);
-          for (let r = 0; r < 4; r++) {
-            const i = (k - 1) * 4 + r, c = researchCost(i);
-            if (this.research & (1 << i)) html += `<span class="info" title="${RESEARCH_INFO[i]}">✓ ${RESEARCH[i]}</span>`;
-            else if (st.q - 1 === i) html += `<span class="info">${RESEARCH[i]}: ${st.prod}%</span>`;
-            else html += btn('res' + r, RESEARCH[i], c.cost, String(r + 1), c.energy).replace('<button', `<button title="${RESEARCH_INFO[i]}"`);
-          }
-        }
-        else if (st.kind === 'gate') { // Врата: три легенды фракции
-          if (st.q > 0) html = `<span class="info">Призыв «${F.legends[st.q - 1]}» · ${st.prod}%</span>`;
-          else if ([...this.views.values()].some(v => v.owner === this.slot && v.kind === 'legend')) html = '<span class="info">Легенда на поле</span>';
-          else F.legends.forEach((n, v) => { html += btn('sum' + v, n, 0, String(v + 1), LEGEND_COST[v].energy, LEGEND_COST[v].relics).replace('<button', `<button title="${F.legendInfo[v]}"`); });
-        }
-        if (st.kind === 'barracks') html = btn('train', F.guard, free ? 0 : trainCost(this.fac(), 'guard'), 'T') + q;
-        else if (st.kind === 'post') html = '<span class="info">Реликварий: +2 влияния/с, держит точку</span>';
-        if (st.kind === 'post') { // прокачка точки I → II → III (PointUpgrades)
-          const up = POST_UP[st.lvl], R = ['', 'I', 'II', 'III'];
-          html = `<span class="info">Столп · уровень ${R[st.lvl]}</span>`;
-          if (st.upg >= 0) html += `<span class="info">Укрепление: ${st.upg}%</span>`;
-          else if (up && this.tier < up.tier) html += `<span class="info">${up.name}: нужен тир II</span>`;
-          else if (up) html += btn('upgrade', up.name, up.cost, 'U', up.energy);
-        }
-        html += this.upgradeBtn([st], btn);
+      if (st.build < 1) return [{ act: '', name: 'Возводится', hot: '', icon: ICON.build, prog: Math.round(st.build * 100), info: 'Отправьте строителей: выберите их и ПКМ по стройке.' }];
+      const free = this.fac() === 'undead' && this.lastRemains >= 5;
+      if (st.kind === 'hq' || st.kind === 'barracks') {
+        const what: Kind = st.kind === 'hq' ? 'builder' : 'guard';
+        c.push({ act: 'train', name: what === 'builder' ? F.builder : F.guard, hot: 'T', art: artFor(what, this.fac()), ...this.price(free && what === 'guard' ? 0 : trainCost(this.fac(), what)), info: what === 'builder' ? 'Строит, чинит и ускоряет стройку.' : (isMelee('guard', this.fac()) ? 'Линейная пехота ближнего боя.' : 'Линейная пехота, стрелки.') + (free ? ' <em>Даром: Жатва</em>' : ''), queue: st.q, prog: st.q ? st.prod : undefined });
       }
-    } else {
-      if (sel.some(v => v.kind === 'builder')) html += btn('barracks', 'Казарма', STATS.barracks.cost, 'B') + btn('post', 'Реликварий', STATS.post.cost, 'P') + btn('turret', 'Турель', STATS.turret.cost, 'Y', ENERGY_COST.turret) + btn('foundry', 'Литейня', STATS.foundry.cost, 'F') + btn('pump', 'Насос', STATS.pump.cost, 'N') + btn('wall', 'Стена', STATS.wall.cost, 'W') + btn('wallgate', 'Ворота', STATS.wallgate.cost, 'G') + (this.tier >= 2 ? btn('bunker', 'Бункер', STATS.bunker.cost, 'X') : '<span class="info locked">Бункер · тир II</span>') + btn('mine', 'Мина', STATS.mine.cost, 'V') + this.keyBtn(btn);
-      if (sel.some(v => v.kind === 'captain')) { // активные способности в порядке дерева, горячие клавиши 1–6
-        let n = 0;
-        ABILITIES.forEach((a, i) => {
-          if (!a.cd || !(this.cap.abil & (1 << i))) return;
-          const cd = this.cap.cd[i] ?? 0, hot = String(++n);
-          html += `<button class="lc-btn lc-btn--sm${i === 5 ? ' ult' : ''}" data-act="ab${i}" data-hot="${hot}" title="${a.info}" ${cd > 0 ? 'disabled' : ''}>${a.name} <i>${hot}</i> <b>${cd > 0 ? cd + ' с' : 'готово'}</b></button>`;
-        });
+      if (st.kind === 'hq') {
+        const t = TIER_UP[this.tier], keyOk = t && own(t.key) && [...this.views.values()].some(v => v.owner === this.slot && v.kind === t.key && v.build >= 1);
+        if (!t) c.push({ act: '', name: 'Высший тир', hot: '', icon: ICON.tier, info: 'Тир V достигнут.' });
+        else {
+          const req = !keyOk ? `Нужно здание «${F.keys[this.tier - 1]}»` : t.seal && !(this.research & (1 << 15)) ? 'Нужно исследование «Печать Вознесения»' : undefined;
+          c.push({ act: 'tier', name: `Тир ${R[this.tier]}`, hot: 'U', icon: ICON.tier, ...this.price(t.cost, t.energy, t.relics), req, prog: st.upg >= 0 ? st.upg : undefined, info: 'Улучшение штаба открывает новые постройки, исследования и войска.' });
+        }
       }
-      html += this.upgradeBtn(sel.filter(v => v.kind === 'guard'), btn) + this.upgradeBtn(sel.filter(v => v.kind === 'captain'), btn);
-      const hurt = sel.filter(v => v.kind === 'guard' && v.hp < maxHp('guard'));
-      if (hurt.length) html += btn('reinforce', 'Пополнить', hurt.reduce((n, v) => n + Math.ceil((maxHp('guard') - v.hp) / STATS.guard.hp) * REINFORCE_COST, 0), 'R');
-      if (this.place) html += '<span class="info">ЛКМ поставить · ПКМ или Esc отмена</span>';
+      if (/^key[1-4]$/.test(st.kind)) {
+        const k = Number(st.kind[3]);
+        for (let r = 0; r < 4; r++) {
+          const i = (k - 1) * 4 + r, done = !!(this.research & (1 << i)), busy = st.q > 0 && st.q - 1 !== i;
+          c.push({ act: done ? '' : 'res' + r, name: RESEARCH[i], hot: String(r + 1), icon: ICON.research, ...(done ? {} : this.price(researchCost(i).cost, researchCost(i).energy)), info: RESEARCH_INFO[i], done, req: busy ? 'Здание уже исследует' : undefined, prog: st.q - 1 === i ? st.prod : undefined });
+        }
+      }
+      if (st.kind === 'gate') {
+        const onField = own('legend');
+        F.legends.forEach((n, v) => c.push({ act: 'sum' + v, name: n, hot: String(v + 1), art: F.legendArt[v], ...this.price(0, LEGEND_COST[v].energy, LEGEND_COST[v].relics), info: F.legendInfo[v] + '. Призыв 20 с, виден всем.', req: onField ? 'Легенда уже на поле' : st.q > 0 && st.q - 1 !== v ? 'Врата заняты' : undefined, prog: st.q - 1 === v ? st.prod : undefined }));
+      }
+      if (st.kind === 'post') {
+        const up = POST_UP[st.lvl];
+        if (up) c.push({ act: 'upgrade', name: up.name, hot: 'U', icon: ICON.tier, ...this.price(up.cost, up.energy), req: this.tier < up.tier ? 'Нужен тир II' : undefined, prog: st.upg >= 0 ? st.upg : undefined, info: st.lvl === 1 ? '+12 влияния / 10 с, броня, захват дольше.' : 'Бастион: своя турель 12 м.' });
+      }
+      const up = UPGRADES[st.kind];
+      if (up) c.push({ act: st.lvl >= 2 ? '' : 'upgrade', name: up.name, hot: 'U', icon: ICON.tier, ...(st.lvl >= 2 ? {} : this.price(up.cost, up.energy, up.relics)), done: st.lvl >= 2, req: this.tier < up.tier ? `Нужен тир ${up.tier}` : undefined, prog: st.upg >= 0 ? st.upg : undefined, info: 'Больше урона, брони и дальности.' });
+      return c;
     }
-    if (html !== this.cmdHtml) { this.cmdHtml = html; $('hud-cmd').innerHTML = html; }
+    if (!sel.length) return c;
+    c.push({ act: 'move', name: 'Идти', hot: 'M', icon: ICON.move, info: 'Идти в точку, не отвлекаясь на врагов.', active: this.moveMode },
+      { act: 'stop', name: 'Стоп', hot: 'S', icon: ICON.stop, info: 'Остановиться и держать место.' },
+      { act: 'amove', name: 'Атака', hot: 'A', icon: ICON.attack, info: 'Идти и атаковать всех врагов по пути.', active: this.amove });
+    if (sel.some(v => v.kind === 'builder')) c.push({ act: 'buildmenu', name: 'Строить', hot: 'C', icon: ICON.build, info: 'Меню построек: экономика, армия, оборона, святыни.' });
+    else c.push({ act: '', name: '', hot: '', icon: '' });
+    const guards = sel.filter(v => v.kind === 'guard'), hurt = guards.filter(v => v.hp < maxHp('guard'));
+    if (guards.length) c.push({ act: 'reinforce', name: 'Пополнить', hot: 'R', icon: ICON.reinforce, ...this.price(hurt.reduce((n, v) => n + Math.ceil((maxHp('guard') - v.hp) / STATS.guard.hp) * REINFORCE_COST, 0)), req: hurt.length ? undefined : 'Отряды полные', info: 'Добрать бойцов в отряды. Нужно быть рядом со своей постройкой.' });
+    for (const k of ['guard', 'captain'] as Kind[]) {
+      const vs = sel.filter(v => v.kind === k), up = UPGRADES[k];
+      if (!vs.length || !up) continue;
+      const v = vs.find(x => x.lvl < 2);
+      c.push({ act: v ? 'upgrade' : '', name: up.name, hot: 'U', icon: ICON.tier, ...(v ? this.price(up.cost, up.energy, up.relics) : {}), done: !v, req: this.tier < up.tier ? `Нужен тир ${up.tier}` : undefined, prog: v && v.upg >= 0 ? v.upg : undefined, info: k === 'captain' ? 'Капитан: урон ×1.5, получаемый урон ×0.7.' : 'Отряд: урон ×1.6, броня.' });
+    }
+    if (sel.some(v => v.kind === 'captain')) {
+      let n = 0;
+      ABILITIES.forEach((a, i) => {
+        if (!a.cd || !(this.cap.abil & (1 << i))) return;
+        const cd = this.cap.cd[i] ?? 0;
+        c.push({ act: 'ab' + i, name: a.name, hot: String(++n), icon: ABIL_ICON[i] ?? ICON.attack, info: a.info, cd, cdMax: a.cd, ult: i === 5 });
+      });
+    }
+    return c;
   }
 
-  /** Ключевое здание текущего тира (или Врата на V), если его ещё нет. */
-  private keyBtn(btn: (a: string, l: string, c: number, h: string, en?: number, rel?: number) => string) {
-    const F = FACTIONS[this.fac()], own = (k: Kind) => [...this.views.values()].some(v => v.owner === this.slot && v.kind === k);
-    for (let t = 1; t <= Math.min(this.tier, 4); t++) { const k = ('key' + t) as Kind; if (!own(k)) return btn(k, F.keys[t - 1], STATS[k].cost, 'K'); }
-    if (this.tier >= 5 && !own('gate')) return btn('gate', F.gate, STATS.gate.cost, 'K');
-    return '';
+  private cellHtml(x: Cell) {
+    if (!x.act && !x.name) return '<span class="lc-cmd__cell lc-cmd__cell--empty"></span>';
+    const locked = !!x.req || x.ok === false || x.done, cooling = (x.cd ?? 0) > 0 || x.prog !== undefined;
+    const cls = ['lc-cmd__cell', x.active ? 'lc-cmd__cell--active' : '', locked && !cooling ? 'lc-cmd__cell--locked' : '', cooling ? 'lc-cmd__cell--cooldown' : '', x.ult ? 'ult' : '', x.done ? 'done' : ''].filter(Boolean).join(' ');
+    const shade = x.prog !== undefined ? 100 - x.prog : x.cd ? (x.cd / (x.cdMax ?? x.cd)) * 100 : 0;
+    const icon = x.art ? miniArt(x.art) : x.icon;
+    const cost = x.done ? '✓' : x.cost || x.en || x.rel ? [x.cost ? `◆${x.cost}` : '', x.en ? `ϟ${x.en}` : '', x.rel ? `⌂${x.rel}` : ''].filter(Boolean).join(' ') : '';
+    return `<button class="${cls}" data-act="${x.act}" data-hot="${x.hot.toLowerCase()}" ${x.active ? 'aria-pressed="true"' : ''} ${locked ? 'aria-disabled="true"' : ''} style="--cd:${shade}%">${icon}<span class="lc-cmd__key">${x.hot}</span>${cost ? `<span class="lc-cmd__cost">${cost}</span>` : ''}${cooling ? `<span class="lc-cmd__timer">${x.prog !== undefined ? x.prog + '%' : x.cd}</span>` : ''}${x.queue ? `<span class="lc-cmd__charges">${x.queue}</span>` : ''}</button>`;
   }
 
-  private upgradeBtn(vs: View[], btn: (a: string, l: string, c: number, h: string, en?: number, rel?: number) => string) {
-    const v = vs.find(x => x.lvl < 2), up = v && UPGRADES[v.kind];
-    if (!v || !up) return vs.length && UPGRADES[vs[0].kind] ? '<span class="info">Улучшено ★</span>' : '';
-    if (v.upg >= 0) return `<span class="info">${up.name}: ${v.upg}%</span>`;
-    if (this.tier < up.tier) return `<span class="info">${up.name}: нужен тир ${up.tier}</span>`;
-    return btn('upgrade', up.name, up.cost, 'U', up.energy, up.relics);
+  /** Меню строителя (пресет BuildMenu): вкладки Экономика → Армия → Оборона → Святыни, клавиши не меняются между вкладками. */
+  private buildMenuHtml(sel: View[]) {
+    const F = FACTIONS[this.fac()], bs = sel.filter(v => v.kind === 'builder');
+    const own = (k: Kind) => [...this.views.values()].some(v => v.owner === this.slot && v.kind === k);
+    const keyKind = (): Kind | null => { for (let t = 1; t <= Math.min(this.tier, 4); t++) if (!own(('key' + t) as Kind)) return ('key' + t) as Kind; return this.tier >= 5 && !own('gate') ? 'gate' : null; };
+    const card = (k: Buildable, name: string, hot: string, info: string, req?: string) => {
+      const p = this.price(STATS[k].cost, ENERGY_COST[k] ?? 0), lack = (n: number, have: number) => (n > have ? ' class="lack"' : '');
+      const cost = req ? `<span>${req}</span>` : [p.cost ? `<span${lack(p.cost, this.req)}>◆ ${p.cost}</span>` : '', p.en ? `<span${lack(p.en, this.energy)}>ϟ ${p.en}</span>` : '', `<span>⧗ ${STATS[k].time} с</span>`].join('');
+      return { k, html: `<button class="lc-bcard${req ? ' lc-bcard--locked' : ''}" data-act="${req ? '' : k}" data-tipname="${name}" data-tipinfo="${info}" ${req ? 'aria-disabled="true"' : ''} ${this.place === k ? 'aria-pressed="true"' : ''}>${miniArt(artFor(k as Kind, this.fac(), 1))}<span><span class="lc-bcard__name">${name}</span><span class="lc-bcard__cost">${cost}</span></span><kbd>${hot}</kbd></button>` };
+    };
+    const undead = this.fac() === 'undead';
+    const tabs: [string, ReturnType<typeof card>[]][] = [
+      ['Экономика', [card('post', 'Реликварий', 'P', 'Ставится на захваченную точку: держит её и даёт +2 влияния/с.'), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своих построек.', undead ? 'Нежити не нужна' : undefined), card('pump', 'Насос', 'N', '+4 энергии/с. Только на жилу.', undead ? 'Нежити не нужен' : undefined)]],
+      ['Армия', [card('barracks', 'Казарма', 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`)]],
+      ['Оборона', [card('turret', 'Турель', 'Y', 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'W', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.')]],
+      ['Святыни', (() => { const k = keyKind(); return k ? [card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : []; })()],
+    ];
+    const tab = tabs[this.buildTab] ?? tabs[0];
+    return `<div class="lc-buildhead">${miniArt(artFor('builder', this.fac()))}<div><div class="lc-buildhead__who">${F.builder} ×${bs.length}</div><div class="lc-buildhead__meta">скорость стройки ×${bs.length}</div></div><button class="lc-btn lc-btn--sm lc-btn--ghost" data-act="cmdgrid">Команды ▸</button></div>`
+      + `<div class="lc-tabs" role="tablist">${tabs.map(([n, cs], i) => `<button role="tab" data-tab="${i}" aria-selected="${i === this.buildTab}">${n}${cs.length ? '' : ' ·'}</button>`).join('')}</div>`
+      + `<div class="lc-build">${tab[1].map(x => x.html).join('') || '<p class="lc-buildhint">Ключевое здание текущего тира уже построено. Улучшите штаб.</p>'}</div>`
+      + `<p class="lc-buildhint">${this.place ? '<b>ЛКМ</b> поставить · <b>Shift</b> несколько · <b>ПКМ</b>/<b>Esc</b> отмена' : '<b>B P Y F N W G X V K</b> — сразу в установку из любой вкладки'}</p>`;
+  }
+
+  /** Карточка выбранного (пресет UnitCard); группа — сетка малых портретов. */
+  private cardHtml(sel: View[]) {
+    if (!sel.length) return '';
+    if (sel.length > 1) return `<div class="w2d-group">${sel.slice(0, 18).map(v => `<button class="w2d-gp${v.owner !== this.slot ? ' foe' : ''}" data-pick="${v.id}">${miniArt(v.artPath)}<i style="--v:${Math.max(0, v.hp / maxHp(v.kind)) * 100}%"></i></button>`).join('')}${sel.length > 18 ? `<span class="w2d-more">+${sel.length - 18}</span>` : ''}</div>`;
+    const v = sel[0], st = STATS[v.kind], foe = v.owner !== this.slot, max = maxHp(v.kind), hp = Math.max(0, Math.round(v.hp));
+    const melee = isMelee(v.kind, this.fac(v.owner));
+    const cls = v.kind === 'captain' ? `Герой · ур. ${foe ? '?' : this.cap.lvl}` : v.kind === 'builder' ? 'Строитель' : v.kind === 'guard' ? `Пехота · ${melee ? 'ближний бой' : 'стрелки'}` : v.kind === 'legend' ? 'Легенда' : 'Постройка';
+    const stats: [string, string][] = [];
+    if (st.dmg) stats.push(['УРОН', v.kind === 'guard' ? `${melee ? 6.5 : st.dmg}×${members('guard', v.hp)}` : String(st.dmg)], ['ДАЛ.', melee ? 'в упор' : String(st.range)]);
+    if (st.speed) stats.push(['СКОР.', String(st.speed)]);
+    if (v.kind === 'guard') stats.push(['БОЙЦЫ', `${members('guard', v.hp)}/${st.n}`]);
+    if (v.lvl > 1) stats.push(['УР.', `<b class="up">▲${v.lvl}</b>`]);
+    if (isStruct(v.kind) && v.build < 1) stats.push(['СТРОЙКА', `${Math.round(v.build * 100)}%`]);
+    return `<div class="lc-unit${foe ? ' foe' : ''}"><div class="lc-unit__portrait">${miniArt(v.artPath)}<span class="lc-unit__rank">${['I', 'II', 'III'][Math.min(2, v.lvl - 1)]}</span></div><div><h3 class="lc-unit__name">${this.nameOf(v).replace(/[<>&]/g, '')}</h3><p class="lc-unit__class">${cls}${foe ? ' · враг' : ''}</p><div class="lc-vitals"><div class="lc-vitals__bar" style="--v:${(hp / max) * 100}%"></div><div class="lc-vitals__nums"><span>Здоровье</span><span><b>${hp}/${max}</b></span></div></div><p class="lc-unit__stats">${stats.map(([a, b]) => `<span>${a} <b>${b}</b></span>`).join('')}</p></div></div>`;
+  }
+
+  private renderCmd() {
+    const sel = this.selected(), key = [...this.sel].join(',');
+    if (key !== this.lastSelKey) { this.lastSelKey = key; this.buildOpen = sel.length > 0 && sel.every(v => v.kind === 'builder'); }
+    const builders = sel.some(v => v.kind === 'builder') && !sel.some(v => isStruct(v.kind));
+    if (!builders) this.buildOpen = false;
+    this.cells = this.buildCells(sel);
+    let panel: string;
+    if (this.buildOpen) panel = this.buildMenuHtml(sel);
+    else {
+      const grid = this.cells.slice(0, 12);
+      while (grid.length < 12) grid.push({ act: '', name: '', hot: '', icon: '' });
+      panel = sel.length ? `<div class="lc-cmd" role="toolbar" aria-label="Команды">${grid.map(x => this.cellHtml(x)).join('')}</div>` : `<p class="lc-buildhint">ЛКМ — выбрать, рамка — группа · ПКМ — приказ · Пробел — капитан · H — штаб · колесо — масштаб</p>`;
+    }
+    const card = this.cardHtml(sel);
+    if (panel !== this.cmdHtml) { this.cmdHtml = panel; $('hud-cmd').innerHTML = panel; if (this.tipAct) this.showTip(this.tipAct); }
+    if (card !== this.cardHtmlLast) { this.cardHtmlLast = card; $('hud-card').innerHTML = card; $('hud-card').classList.toggle('hidden', !card); }
+  }
+  private cardHtmlLast = '';
+
+  /** Подсказка (пресет Tooltip): имя, клавиша, цена с нехваткой, описание, невыполненные требования. */
+  private showTip(act: string, el?: HTMLElement) {
+    const tip = $('hud-tip'), x = this.cells.find(c => c.act === act && act);
+    if (act && (!el || !el.isConnected)) el = $('hud-cmd').querySelector<HTMLElement>(`[data-act="${act}"]`) ?? el; // сетка перерисовалась
+    this.tipAct = act;
+    let html = '';
+    if (x) {
+      const lack = (n: number, have: number) => (n > have ? ' class="lack"' : '');
+      const cost = [x.cost ? `<span${lack(x.cost, this.req)}>◆ ${x.cost} влияния</span>` : '', x.en ? `<span${lack(x.en, this.energy)}>ϟ ${x.en} энергии</span>` : '', x.rel ? `<span${lack(x.rel, this.relics)}>⌂ ${x.rel} реликв.</span>` : '', x.cdMax ? `<span>⧗ ${x.cdMax} с</span>` : ''].filter(Boolean).join('');
+      html = `<p class="lc-tip__title"><strong>${x.name}</strong><kbd>${x.hot}</kbd></p>${cost ? `<p class="lc-tip__cost">${cost}</p>` : ''}<p class="lc-tip__body">${x.info ?? ''}</p>${x.req ? `<p class="lc-tip__req">${/^Нужн/.test(x.req) ? x.req : 'Нужно: ' + x.req}</p>` : ''}`;
+    } else if (el?.dataset.tipname) html = `<p class="lc-tip__title"><strong>${el.dataset.tipname}</strong><kbd>${el.querySelector('kbd')?.textContent ?? ''}</kbd></p><p class="lc-tip__body">${el.dataset.tipinfo ?? ''}</p>`;
+    tip.innerHTML = html;
+    tip.classList.toggle('hidden', !html);
+    if (el && html) { const r = el.getBoundingClientRect(), pr = $('hud-bottom').getBoundingClientRect(); tip.style.left = Math.min(innerWidth - 316, Math.max(8, r.left)) + 'px'; tip.style.bottom = innerHeight - pr.top + 8 + 'px'; }
+  }
+  private hideTip() { this.tipAct = ''; $('hud-tip').classList.add('hidden'); }
+
+  private nextKey(): Buildable | null {
+    const own = (k: Kind) => [...this.views.values()].some(v => v.owner === this.slot && v.kind === k);
+    for (let t = 1; t <= Math.min(this.tier, 4); t++) if (!own(('key' + t) as Kind)) return ('key' + t) as Buildable;
+    return this.tier >= 5 && !own('gate') ? 'gate' : null;
   }
 
   private doAct(act: string) {
     const sel = this.selected();
+    if (act === 'amove' || act === 'move') { if (!sel.some(v => !isStruct(v.kind) && v.owner === this.slot)) return; this.amove = act === 'amove'; this.moveMode = act === 'move'; this.place = null; this.ghost.classList.add('hidden'); this.root.style.cursor = 'crosshair'; return; }
+    if (act === 'stop') { if (this.sel.size) this.cmd({ c: 'stop', ids: [...this.sel] }); return; }
+    if (act === 'buildmenu') { if (sel.some(v => v.kind === 'builder')) this.buildOpen = true; return; }
+    if (act === 'cmdgrid') { this.buildOpen = false; return; }
     if (act === 'train') { const st = sel.find(v => isStruct(v.kind)); if (st) this.cmd({ c: 'train', id: st.id }); }
     else if (/^ab\d$/.test(act)) this.cmd({ c: 'ability', a: Number(act.slice(2)) });
     else if (act === 'tier') { const hq = sel.find(v => v.kind === 'hq'); if (hq) this.cmd({ c: 'upgrade', id: hq.id }); }
@@ -560,7 +707,11 @@ export class Game {
       const k = e.key.toLowerCase();
       if (e.altKey && /^Digit[1-9]$/.test(e.code)) { e.preventDefault(); this.learn(Number(e.code[5]) - 1); return; } // Alt+N — дар уровня (на mac e.key с Alt другой)
       this.keys.add(k);
-      if (k === 'a') { this.amove = true; this.place = null; this.ghost.classList.add('hidden'); cv.style.cursor = 'crosshair'; }
+      const hit = /^[a-z]$/.test(k) && !this.buildOpen ? this.cells.find(c => c.act && c.hot.toLowerCase() === k) : undefined;
+      if (hit) { this.doAct(hit.act); this.renderCmd(); return; } // клавиша ячейки сетки важнее общих
+      if (k === 'a') this.doAct('amove');
+      else if (k === 'm') this.doAct('move');
+      else if (k === 'c') this.doAct('buildmenu');
       else if (k === 't') this.doAct('train');
       else if (k === 'b') this.doAct('barracks');
       else if (k === 'p') this.doAct('post');
@@ -571,19 +722,36 @@ export class Game {
       else if (k === 'g') this.doAct('wallgate');
       else if (k === 'x') this.doAct('bunker');
       else if (k === 'v') this.doAct('mine');
-      else if (k === 'k') { const m = this.cmdHtml.match(/data-act="(key[1-4]|gate)"/); if (m) this.doAct(m[1]); }
-      else if (/^[1-9]$/.test(k)) { const b = document.querySelector<HTMLButtonElement>(`#hud-cmd [data-hot="${k}"]`); if (b && !b.disabled) this.doAct(b.dataset.act!); }
+      else if (k === 'k') { const n = this.nextKey(); if (n) this.doAct(n); }
+      else if (/^[1-9]$/.test(k)) { const x = this.cells.find(c => c.hot === k && c.act); if (x) this.doAct(x.act); }
       else if (k === 'u') this.doAct('upgrade');
       else if (k === 'r') this.doAct('reinforce');
-      else if (k === 's' && this.sel.size) this.cmd({ c: 'stop', ids: [...this.sel] });
+      else if (k === 's') this.doAct('stop');
       else if (k === ' ') { e.preventDefault(); this.selectOwn('captain'); }
       else if (k === 'h') this.selectOwn('hq');
-      else if (k === 'escape') { this.amove = false; this.sel.clear(); this.stopPlace(); cv.style.cursor = ''; }
+      else if (k === 'escape') { if (this.place) this.stopPlace(); else if (this.buildOpen) this.buildOpen = false; else if (this.amove || this.moveMode) { this.amove = this.moveMode = false; cv.style.cursor = ''; } else this.sel.clear(); this.lastSelKey = [...this.sel].join(','); }
       this.renderCmd();
     }, sig);
     addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase()), sig);
+    $('hud-cap').addEventListener('click', () => { if (this.learnHtml) { this.lvlUpOpen = true; this.lvlUpAt = performance.now(); $('hud-levelup').classList.remove('hidden'); $('hud-cap').classList.remove('has-pts'); } }, sig);
     $('hud-levelup').addEventListener('click', e => { const a = (e.target as HTMLElement).closest<HTMLElement>('[data-learn]')?.dataset.learn; if (a) this.cmd({ c: 'learn', a: Number(a) }); }, sig);
-    $('hud-cmd').addEventListener('click', e => { const a = (e.target as HTMLElement).closest('button')?.dataset.act; if (a) this.doAct(a); }, sig);
+    const hc = $('hud-cmd');
+    hc.addEventListener('click', e => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('button');
+      if (!b) return;
+      if (b.dataset.tab) { this.buildTab = Number(b.dataset.tab); this.renderCmd(); return; }
+      if (b.dataset.act) this.doAct(b.dataset.act); // запертая ячейка тоже шлёт команду — сервер ответит, чего не хватает
+      this.renderCmd();
+    }, sig);
+    let tipT = 0;
+    hc.addEventListener('pointerover', e => { // подсказка через 250 мс после наведения
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
+      clearTimeout(tipT);
+      if (!b) return this.hideTip();
+      tipT = window.setTimeout(() => this.showTip(b.dataset.act ?? '', b), 250);
+    }, sig);
+    hc.addEventListener('pointerleave', () => { clearTimeout(tipT); this.hideTip(); }, sig);
+    $('hud-card').addEventListener('click', e => { const id = (e.target as HTMLElement).closest<HTMLElement>('[data-pick]')?.dataset.pick; if (id) { this.sel.clear(); this.sel.add(Number(id)); this.renderCmd(); } }, sig);
   }
 
   private pick(sx: number, sy: number, want: (v: View) => boolean) {
@@ -618,10 +786,12 @@ export class Game {
       if (sp?.ok && !add) this.stopPlace();
       return;
     }
-    if (this.amove) {
-      this.amove = false; this.root.style.cursor = '';
+    if (this.amove || this.moveMode) {
+      const c = this.amove ? 'amove' : 'move';
+      this.amove = this.moveMode = false; this.root.style.cursor = '';
       const p = this.toWorld(sx, sy);
-      if (this.sel.size) this.cmd({ c: 'amove', ids: [...this.sel], x: p.x, y: p.y });
+      if (this.sel.size) this.cmd({ c, ids: [...this.sel], x: p.x, y: p.y });
+      this.renderCmd();
       return;
     }
     const v = this.pick(sx, sy, this.mobile) ?? this.pick(sx, sy, this.ownStruct);
