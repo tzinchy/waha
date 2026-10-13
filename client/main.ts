@@ -123,8 +123,9 @@ $('join').onclick = () => {
 
 /** Выбор фракции: карточки с силуэтом капитана, тема интерфейса и превью меняются вместе с выбором. */
 function renderFactions(mine: FactionId) {
-  $('factions').innerHTML = FACTION_IDS.map(f => `<button class="lc-btn lc-btn--sm ${f === mine ? '' : 'lc-btn--ghost'}" data-f="${f}">${svgFor(f)}${FACTIONS[f].name}</button>`).join('');
+  $('factions').innerHTML = FACTION_IDS.map(f => `<button class="lc-btn lc-btn--sm ${f === mine ? '' : 'lc-btn--ghost'}" data-f="${f}" title="${FACTIONS[f].mech}">${svgFor(f)}${FACTIONS[f].name}</button>`).join('');
   $('factions').querySelectorAll<HTMLElement>('[data-f]').forEach(b => { b.onclick = () => tx({ t: 'faction', f: b.dataset.f as FactionId }); });
+  $('faction-mech').textContent = FACTIONS[mine].mech;
   if (faction !== mine) { faction = mine; setTheme(FACTIONS[mine].theme); preview.setFaction(mine); paintTheme(); }
 }
 const svgFor = (f: FactionId) => (svgText.get(artFor('captain', f)) ?? '').replace('<svg ', '<svg class="lc-art lc-anim-idle" ');

@@ -50,7 +50,7 @@ function leave(ws: WebSocket) {
 }
 
 function startMatch(l: Lobby) {
-  const state = newState(l.members.length);
+  const state = newState(l.members.length, l.members.map(m => m.faction));
   const slots = [...l.members];
   const m: Match = { state, slots, timer: setInterval(() => tick(l), DT * 1000) };
   l.match = m;

@@ -47,6 +47,10 @@
   .factions svg{height:64px;width:auto}
   #lobby{width:560px}
   .w2d-point.relic{border-color:var(--art-glow);border-style:dotted}
+  #hud-extra{display:flex;align-items:center;gap:6px;color:var(--gilt-300)}
+  #hud-extra .rage{display:inline-block;width:70px;height:6px;background:var(--surface-000);border:1px solid var(--gilt-700)}
+  #hud-extra .rage i{display:block;height:100%;width:var(--v);background:var(--blood-300)}
+  #hud-extra .waagh{color:var(--blood-300);animation:lc-glow 1s infinite}
   #toast{position:fixed;left:50%;bottom:var(--space-6);transform:translateX(-50%);z-index:50;min-width:320px}
   #mute{position:fixed;left:var(--space-4);bottom:var(--space-4);z-index:60}
 
@@ -147,6 +151,7 @@
       <button class="lc-btn lc-btn--sm lc-btn--ghost" id="copy">Скопировать приглашение</button>
       <h3 class="lc-frame__head" style="margin-top:var(--space-6)"><span>Фракция</span></h3>
       <div id="factions" class="factions"></div>
+      <p id="faction-mech" style="margin:var(--space-2) 0 0;font:italic 400 14px/20px var(--font-body);color:var(--ink-muted)"></p>
       <h3 class="lc-frame__head" style="margin-top:var(--space-6)"><span>Игроки</span></h3>
       <ul id="plist"></ul>
       <div class="row">
@@ -169,6 +174,7 @@
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 22V13h2v-3h2V7h3V4h4v3h3v3h2v3h2v9h-7v-6h-4v6Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-tier" style="font-family:var(--font-display)">I</span><span class="lc-res__label">Тир</span></div>
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21h20v-3h-3v-3h-3v-3h-2V3h-4v9H8v3H5v3H2Z" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="lc-res__value" id="hud-builders">0</span><span class="lc-res__label">Строители</span></div>
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 5.5V12c0 4.6-3.3 8-8 9.5C7.3 20 4 16.6 4 12V5.5Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9l4 3 4-3v3l-4 3-4-3Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-squads">0</span><span class="lc-res__label">Легион</span></div>
+      <div class="lc-res__item"><span class="lc-res__label" id="hud-extra"></span></div>
     </div>
     <section id="hud-queue" class="lc-frame hidden"></section>
     <section id="hud-players" class="lc-frame"></section>

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
+import { RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -134,4 +134,38 @@ test('реликвии: реликтовая точка даёт реликви�
   assert.equal(applyCmd(s, 0, { c: 'upgrade', id: cap.id }), undefined);
   run(s, 6);
   assert.equal(cap.lvl, 2);
+});
+
+test('Династии: платят энергией, влияния нет', () => {
+  const s = newState(2, ['clockwork', 'order']);
+  const hq = unit(s, 0, 'hq');
+  assert.match(applyCmd(s, 0, { c: 'train', id: hq.id }) ?? '', /энергии/);
+  s.players[0].energy = 100;
+  assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id }), undefined);
+  assert.equal(s.players[0].energy, 100 - STATS.builder.cost);
+  const r = s.players[0].req;
+  run(s, 2);
+  assert.equal(s.players[0].req, r, 'влияние не копится');
+});
+
+test('Нежить: генераторы нельзя, отряд из останков бесплатно', () => {
+  const s = newState(2, ['undead', 'order']);
+  const b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq');
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: hq.x + 8, y: hq.y + 3 }) ?? '', /Скорбь/);
+  applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: hq.x + 10, y: hq.y + 10 });
+  run(s, 30);
+  s.players[0].remains = REMAINS_PER_SQUAD; s.players[0].req = 0;
+  assert.equal(applyCmd(s, 0, { c: 'train', id: unit(s, 0, 'barracks').id }), undefined);
+  assert.equal(s.players[0].remains, 0);
+});
+
+test('Орда: ярость копится от урона и запускает ВААГХ', () => {
+  const s = newState(2, ['orks', 'order']);
+  const cap = unit(s, 0, 'captain'), hq = unit(s, 1, 'hq');
+  s.units = s.units.filter(u => u !== unit(s, 1, 'captain'));
+  [cap.x, cap.y] = [hq.x - 5, hq.y];
+  applyCmd(s, 0, { c: 'attack', ids: [cap.id], id: hq.id });
+  for (let i = 0; i < 20 * 60 && s.players[0].waagh <= 0; i++) step(s);
+  assert.ok(s.players[0].waagh > 0, 'ВААГХ начался');
+  assert.ok(s.players[0].rage < RAGE_MAX);
 });

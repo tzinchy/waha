@@ -1,6 +1,6 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
-import { CAP, ENERGY_COST, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { CAP, ENERGY_COST, RAGE_MAX, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { FACTIONS, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -116,6 +116,7 @@ export class Game {
   private tier = 1;
   private energy = 0;
   private relics = 0;
+  private lastRemains = 0;
   private snapN = 0;
   private lastAlert = 0;
   private cmdHtml = '';
@@ -287,13 +288,19 @@ export class Game {
 
   // ---------- HUD ----------
   private hud(s: Snap) {
-    this.req = s.pl[this.slot][0]; this.energy = s.pl[this.slot][3] ?? 0; this.relics = s.pl[this.slot][4] ?? 0;
+    const me = s.pl[this.slot];
+    this.req = me[0]; this.energy = me[3] ?? 0; this.relics = me[4] ?? 0;
+    this.lastRemains = me[7] ?? 0;
     $('hud-energy').textContent = String(this.energy); $('hud-relics').textContent = String(this.relics);
+    const f = this.fac(), extra = $('hud-extra');
+    extra.innerHTML = f === 'orks' ? (me[6] ? `<b class="waagh">ВААГХ ${me[6]} с</b>` : `<span class="rage"><i style="--v:${(me[5] / RAGE_MAX) * 100}%"></i></span>Ярость`)
+      : f === 'undead' ? `<b>${me[7] ?? 0}</b> останков` : f === 'clockwork' ? 'Перезавод' : f === 'prism' ? 'Сеть наведения' : f === 'ashen' ? 'Порча' : 'Свет веры';
+    extra.title = FACTIONS[f].mech;
     this.tier = s.pl[this.slot][2] ?? 1;
     $('hud-tier').textContent = ['I', 'II', 'III', 'IV', 'V'][this.tier - 1] ?? String(this.tier);
     let builders = 0, guards = 0, dead = false;
     for (const u of s.u) if (u[1] === this.slot) { if (u[2] === 1) builders++; else if (u[2] === 2) guards++; else if (u[2] === 0 && u[5] <= 0) dead = true; }
-    $('hud-req').textContent = String(this.req);
+    $('hud-req').textContent = this.fac() === 'clockwork' ? '—' : String(this.req);
     $('hud-builders').textContent = `${builders}/${CAP.builder}`;
     $('hud-squads').textContent = `${guards}/${CAP.guard}`;
     $('hud-sel').textContent = this.sel.size ? `Выбрано: ${this.sel.size}` : '';
@@ -308,7 +315,7 @@ export class Game {
     const items: string[] = [];
     for (const v of this.views.values()) {
       if (v.owner !== this.slot || v.q <= 0) continue;
-      const what: Kind = v.kind === 'hq' ? 'builder' : 'guard', name = v.kind === 'hq' ? 'Каменщик' : 'Стражники';
+      const what: Kind = v.kind === 'hq' ? 'builder' : 'guard', name = v.kind === 'hq' ? FACTIONS[this.fac()].builder : FACTIONS[this.fac()].guard;
       for (let i = 0; i < v.q; i++) items.push(`<div class="w2d-qitem${i ? '' : ' now'}" title="${name}">${miniArt(artFor(what, this.players[this.slot].faction ?? 'order'))}${i ? '' : `<span class="w2d-qbar" style="--v:${v.prog}%"></span>`}</div>`);
     }
     const q = $('hud-queue');
@@ -317,13 +324,16 @@ export class Game {
     if (q.innerHTML !== html) q.innerHTML = html;
   }
 
+  private fac(): FactionId { return this.players[this.slot].faction ?? 'order'; }
+
   private selected() { return [...this.sel].map(id => this.views.get(id)).filter((v): v is View => !!v); }
 
   private renderCmd() {
     const sel = this.selected(), req = this.req;
     const btn = (act: string, label: string, cost: number, hot: string, en = 0, rel = 0) => {
+      if (this.fac() === 'clockwork') { en += cost; cost = 0; } // Династии платят энергией
       const ok = req >= cost && this.energy >= en && this.relics >= rel;
-      const price = [cost ? `◆ ${cost}` : '', en ? `ϟ ${en}` : '', rel ? `⌂ ${rel}` : ''].filter(Boolean).join(' ');
+      const price = [cost ? `◆ ${cost}` : '', en ? `ϟ ${en}` : '', rel ? `⌂ ${rel}` : ''].filter(Boolean).join(' ') || 'даром';
       return `<button class="lc-btn lc-btn--sm" data-act="${act}" ${ok ? '' : 'disabled'}>${label} <i>${hot}</i> <b>${price}</b></button>`;
     };
     let html = '';
@@ -332,8 +342,9 @@ export class Game {
       const q = `<span class="info">в очереди: ${st.q}</span>`;
       if (st.build < 1) html = `<span class="info">Возводится ${Math.round(st.build * 100)}%. Отправьте строителей (ПКМ)</span>`;
       else {
-        if (st.kind === 'hq') html = btn('train', 'Каменщик', STATS.builder.cost, 'T') + q;
-        else if (st.kind === 'barracks') html = btn('train', 'Стражники', STATS.guard.cost, 'T') + q;
+        const F = FACTIONS[this.fac()], free = this.fac() === 'undead' && (this.players && this.lastRemains >= 5);
+        if (st.kind === 'hq') html = btn('train', F.builder, trainCost(this.fac(), 'builder'), 'T') + q;
+        else if (st.kind === 'barracks') html = btn('train', F.guard, free ? 0 : trainCost(this.fac(), 'guard'), 'T') + q;
         else if (st.kind === 'post') html = '<span class="info">Реликварий: +2 влияния/с, держит точку</span>';
         html += this.upgradeBtn([st], btn);
       }
