@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
+import { RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -71,7 +71,10 @@ test('апгрейды: тир 2 у штаба открывает укрепле
   const t = unit(s, 0, 'turret');
   assert.equal(t.build, 1);
   assert.match(applyCmd(s, 0, { c: 'upgrade', id: t.id }) ?? '', /тир 2/);
-  applyCmd(s, 0, { c: 'upgrade', id: hq.id });
+  assert.match(applyCmd(s, 0, { c: 'upgrade', id: hq.id }) ?? '', /ключевое/);
+  applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'key1', x: hq.x + 6, y: hq.y + 9 });
+  run(s, 25);
+  assert.equal(applyCmd(s, 0, { c: 'upgrade', id: hq.id }), undefined);
   run(s, 31);
   assert.equal(s.players[0].tier, 2);
   assert.equal(applyCmd(s, 0, { c: 'upgrade', id: t.id }), undefined);
@@ -168,4 +171,34 @@ test('Орда: ярость копится от урона и запускае�
   for (let i = 0; i < 20 * 60 && s.players[0].waagh <= 0; i++) step(s);
   assert.ok(s.players[0].waagh > 0, 'ВААГХ начался');
   assert.ok(s.players[0].rage < RAGE_MAX);
+});
+
+test('тиры I→V: ключевые здания, исследования, Печать, Врата и призыв легенды', () => {
+  const s = newState(2);
+  const p = s.players[0], hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
+  p.req = 1e5; p.energy = 1e5; p.relics = 50;
+  const spots: Record<string, [number, number]> = { key1: [10, 0], key2: [0, 10], key3: [10, 10], key4: [18, 4], gate: [4, 19] };
+  for (let t = 1; t <= 4; t++) {
+    const key = TIER_UP[t].key as 'key1';
+    assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: key, x: hq.x + spots[key][0], y: hq.y + spots[key][1] }), undefined, key);
+    run(s, 45);
+    const k = unit(s, 0, key);
+    assert.equal(k.build, 1, key + ' построено');
+    if (t === 4) {
+      assert.match(applyCmd(s, 0, { c: 'upgrade', id: hq.id }) ?? '', /Печать/);
+      assert.equal(applyCmd(s, 0, { c: 'research', id: k.id, r: 3 }), undefined);
+      run(s, 21);
+      assert.ok(p.research & (1 << (RESEARCH.length - 1)), 'Печать изучена');
+    }
+    assert.equal(applyCmd(s, 0, { c: 'upgrade', id: hq.id }), undefined, 'тир ' + (t + 1));
+    run(s, 31);
+    assert.equal(p.tier, t + 1);
+  }
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'gate', x: hq.x + 4, y: hq.y + 19 }), undefined);
+  run(s, 60);
+  const g = unit(s, 0, 'gate');
+  assert.equal(applyCmd(s, 0, { c: 'summon', id: g.id, v: 0 }), undefined);
+  assert.match(applyCmd(s, 0, { c: 'summon', id: g.id, v: 1 }) ?? '', /заняты/);
+  run(s, 21);
+  assert.ok(unit(s, 0, 'legend'), 'легенда на поле');
 });

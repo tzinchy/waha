@@ -1,6 +1,6 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
-import { CAP, ENERGY_COST, RAGE_MAX, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { CAP, ENERGY_COST, LEGEND_COST, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { FACTIONS, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -12,11 +12,14 @@ export const SLOT_COLORS = [0x4fa392, 0xe0675c, 0xe0a53a, 0xb9c3c6];
 
 // какой силуэт из пресетов у какого юнита, его ширина в мире и сколько бойцов в отряде
 // ширина силуэта в мире (единиц симуляции); сами силуэты — по фракции игрока (shared/factions.ts)
-const WIDTH: Record<Kind, number> = { captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4 };
-const NEUTRAL: Partial<Record<Kind, [string, string]>> = { post: ['Defenses/point-1.svg', 'Defenses/point-2.svg'], foundry: ['Buildings/foundry.svg', 'Buildings/foundry.svg'], pump: ['Buildings/pump.svg', 'Buildings/pump.svg'] };
+const WIDTH: Record<Kind, number> = { captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, legend: 4.4 };
+const NEUTRAL: Partial<Record<Kind, [string, string]>> = {
+  key1: ['Buildings/scriptorium.svg', 'Buildings/scriptorium.svg'], key2: ['Buildings/forge.svg', 'Buildings/forge.svg'], key3: ['Buildings/observatory.svg', 'Buildings/observatory.svg'],
+  key4: ['Buildings/reliqhall.svg', 'Buildings/reliqhall.svg'], gate: ['Buildings/gate.svg', 'Buildings/gate.svg'], post: ['Defenses/point-1.svg', 'Defenses/point-2.svg'], foundry: ['Buildings/foundry.svg', 'Buildings/foundry.svg'], pump: ['Buildings/pump.svg', 'Buildings/pump.svg'] };
 /** Путь к силуэту юнита: по фракции, уровню и (у капитана) оружию. */
-export function artFor(kind: Kind, faction: FactionId, lvl = 1, weapon: 'sword' | 'hammer' = 'sword') {
+export function artFor(kind: Kind, faction: FactionId, lvl = 1, weapon: 'sword' | 'hammer' = 'sword', variant = 0) {
   const a = FACTIONS[faction].art;
+  if (kind === 'legend') return FACTIONS[faction].legendArt[variant] ?? FACTIONS[faction].legendArt[0];
   if (kind === 'captain') return a.captain[weapon === 'sword' ? 0 : 1];
   if (kind === 'turret') return a.turret[lvl > 1 ? 1 : 0];
   if (NEUTRAL[kind]) return NEUTRAL[kind]![lvl > 1 ? 1 : 0];
@@ -29,7 +32,7 @@ const FORM: Partial<Record<Kind, [number, number][]>> = {
 
 const svgCache = new Map<string, string>();
 /** Загружает все силуэты один раз. */
-const ALL_ART = new Set([...Object.values(FACTIONS).flatMap(f => [...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
+const ALL_ART = new Set([...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
 export const ready2d = Promise.all([...ALL_ART]
   .map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgCache.set(p, t)))).then(() => undefined);
 
@@ -91,7 +94,7 @@ ${pts}
 type View = {
   id: number; owner: number; kind: Kind; el: HTMLElement; body: HTMLElement; svgs: SVGElement[]; bar: HTMLElement; fg: HTMLElement; sel: HTMLElement;
   x: number; y: number; tx: number; ty: number; f: number; hp: number; build: number; q: number; dead: boolean; lvl: number; upg: number;
-  atkUntil: number; artPath: string; prog: number;
+  atkUntil: number; artPath: string; prog: number; prod: number;
 };
 
 export class Game {
@@ -117,6 +120,7 @@ export class Game {
   private energy = 0;
   private relics = 0;
   private lastRemains = 0;
+  private research = 0;
   private snapN = 0;
   private lastAlert = 0;
   private cmdHtml = '';
@@ -178,7 +182,7 @@ export class Game {
   }
 
   // ---------- юниты ----------
-  private mk(id: number, owner: number, kind: Kind, x: number, y: number): View {
+  private mk(id: number, owner: number, kind: Kind, x: number, y: number, variant = 0): View {
     const el = document.createElement('div');
     el.className = 'w2d-unit ' + (owner === this.slot ? 'ally' : 'enemy');
     el.style.setProperty('--team', owner === this.slot ? 'var(--verdigris-500)' : 'var(--blood-300)'); // союзник патина, враг кровь (пресет)
@@ -191,7 +195,7 @@ export class Game {
     const ring = document.createElement('div'); ring.className = 'w2d-ring';
     for (const e of [sel, ring]) Object.assign(e.style, { width: r * 2.4 * S + 'px', height: r * 1.3 * S + 'px' });
     const body = document.createElement('div'); body.className = 'w2d-body';
-    const pl = this.players[owner], artPath = artFor(kind, pl.faction ?? 'order', 1, pl.captain.weapon);
+    const pl = this.players[owner], artPath = artFor(kind, pl.faction ?? 'order', 1, pl.captain.weapon, variant);
     const svgs: SVGElement[] = [];
     for (const [ox, oy] of FORM[kind] ?? [[0, 0]]) {
       const a = art(artPath, WIDTH[kind] * S);
@@ -206,7 +210,7 @@ export class Game {
     bar.style.width = Math.max(40, WIDTH[kind] * S * (isStruct(kind) ? 0.7 : 1)) + 'px';
     el.append(ring, sel, body, bar);
     this.place2(el, x, y);
-    return { id, owner, kind, el, body, svgs, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0 };
+    return { id, owner, kind, el, body, svgs, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0, prod: 0 };
   }
 
   onSnap(s: Snap) {
@@ -216,7 +220,8 @@ export class Game {
       const kind = KINDS[ki];
       let v = this.views.get(id);
       if (!v) {
-        this.views.set(id, (v = this.mk(id, owner, kind, x / 10, y / 10)));
+        this.views.set(id, (v = this.mk(id, owner, kind, x / 10, y / 10, q)));
+        if (kind === 'legend') v.el.classList.add('legend');
         if (!first && owner === this.slot && !isStruct(kind)) audio.trained();
       } else if (owner === this.slot) {
         if (v.build < 1 && bp >= 100) audio.built();
@@ -224,13 +229,13 @@ export class Game {
         else if (hp < v.hp && now - this.lastAlert > 8000) { this.lastAlert = now; audio.alarm(); }
       }
       v.tx = x / 10; v.ty = y / 10; v.f = face / 100; v.hp = hp; v.q = q; v.build = bp / 100; v.dead = hp <= 0;
-      const lvlArt = artFor(kind, this.players[owner].faction ?? 'order', lvl, this.players[owner].captain.weapon);
+      const lvlArt = artFor(kind, this.players[owner].faction ?? 'order', lvl, this.players[owner].captain.weapon, kind === 'legend' ? q : 0);
       if (lvl !== v.lvl && lvlArt !== v.artPath) { // апгрейд: новый силуэт уровня 2
         v.artPath = lvlArt;
         const a = art(lvlArt, WIDTH[kind] * S * 1.1);
         v.body.replaceChildren(a); v.svgs = [a.querySelector('svg')!];
       }
-      v.lvl = lvl; v.upg = upg; v.prog = prog ?? 0;
+      v.lvl = lvl; v.upg = upg; v.prog = prog ?? 0; v.prod = prog ?? 0;
       if (kind === 'hq' && owner === this.slot && !this.centered) {
         this.centered = true;
         this.cam.x = v.tx + (MAP.w / 2 - v.tx) * 0.25; this.cam.y = v.ty + (MAP.h / 2 - v.ty) * 0.25;
@@ -290,7 +295,7 @@ export class Game {
   private hud(s: Snap) {
     const me = s.pl[this.slot];
     this.req = me[0]; this.energy = me[3] ?? 0; this.relics = me[4] ?? 0;
-    this.lastRemains = me[7] ?? 0;
+    this.lastRemains = me[7] ?? 0; this.research = me[8] ?? 0;
     $('hud-energy').textContent = String(this.energy); $('hud-relics').textContent = String(this.relics);
     const f = this.fac(), extra = $('hud-extra');
     extra.innerHTML = f === 'orks' ? (me[6] ? `<b class="waagh">ВААГХ ${me[6]} с</b>` : `<span class="rage"><i style="--v:${(me[5] / RAGE_MAX) * 100}%"></i></span>Ярость`)
@@ -314,7 +319,7 @@ export class Game {
   private renderQueue() {
     const items: string[] = [];
     for (const v of this.views.values()) {
-      if (v.owner !== this.slot || v.q <= 0) continue;
+      if (v.owner !== this.slot || v.q <= 0 || (v.kind !== 'hq' && v.kind !== 'barracks')) continue;
       const what: Kind = v.kind === 'hq' ? 'builder' : 'guard', name = v.kind === 'hq' ? FACTIONS[this.fac()].builder : FACTIONS[this.fac()].guard;
       for (let i = 0; i < v.q; i++) items.push(`<div class="w2d-qitem${i ? '' : ' now'}" title="${name}">${miniArt(artFor(what, this.players[this.slot].faction ?? 'order'))}${i ? '' : `<span class="w2d-qbar" style="--v:${v.prog}%"></span>`}</div>`);
     }
@@ -343,19 +348,50 @@ export class Game {
       if (st.build < 1) html = `<span class="info">Возводится ${Math.round(st.build * 100)}%. Отправьте строителей (ПКМ)</span>`;
       else {
         const F = FACTIONS[this.fac()], free = this.fac() === 'undead' && (this.players && this.lastRemains >= 5);
-        if (st.kind === 'hq') html = btn('train', F.builder, trainCost(this.fac(), 'builder'), 'T') + q;
-        else if (st.kind === 'barracks') html = btn('train', F.guard, free ? 0 : trainCost(this.fac(), 'guard'), 'T') + q;
+        const R = ['I', 'II', 'III', 'IV', 'V'];
+        if (st.kind === 'hq') {
+          html = btn('train', F.builder, trainCost(this.fac(), 'builder'), 'T') + q;
+          const t = TIER_UP[this.tier], keyOk = t && [...this.views.values()].some(v => v.owner === this.slot && v.kind === t.key && v.build >= 1);
+          if (!t) html += '<span class="info">Высший тир ★</span>';
+          else if (st.upg >= 0) html += `<span class="info">Переход на тир ${R[this.tier]}: ${st.upg}%</span>`;
+          else if (!keyOk) html += `<span class="info">Тир ${R[this.tier]}: нужно здание «${F.keys[this.tier - 1]}»</span>`;
+          else if (t.seal && !(this.research & (1 << 15))) html += '<span class="info">Тир V: изучите Печать Вознесения</span>';
+          else html += btn('tier', `Тир ${R[this.tier]}`, t.cost, 'U', t.energy, t.relics);
+        }
+        else if (/^key[1-4]$/.test(st.kind)) { // исследования ключевого здания
+          const k = Number(st.kind[3]);
+          for (let r = 0; r < 4; r++) {
+            const i = (k - 1) * 4 + r, c = researchCost(i);
+            if (this.research & (1 << i)) html += `<span class="info" title="${RESEARCH_INFO[i]}">✓ ${RESEARCH[i]}</span>`;
+            else if (st.q - 1 === i) html += `<span class="info">${RESEARCH[i]}: ${st.prod}%</span>`;
+            else html += btn('res' + r, RESEARCH[i], c.cost, String(r + 1), c.energy).replace('<button', `<button title="${RESEARCH_INFO[i]}"`);
+          }
+        }
+        else if (st.kind === 'gate') { // Врата: три легенды фракции
+          if (st.q > 0) html = `<span class="info">Призыв «${F.legends[st.q - 1]}» · ${st.prod}%</span>`;
+          else if ([...this.views.values()].some(v => v.owner === this.slot && v.kind === 'legend')) html = '<span class="info">Легенда на поле</span>';
+          else F.legends.forEach((n, v) => { html += btn('sum' + v, n, 0, String(v + 1), LEGEND_COST[v].energy, LEGEND_COST[v].relics).replace('<button', `<button title="${F.legendInfo[v]}"`); });
+        }
+        if (st.kind === 'barracks') html = btn('train', F.guard, free ? 0 : trainCost(this.fac(), 'guard'), 'T') + q;
         else if (st.kind === 'post') html = '<span class="info">Реликварий: +2 влияния/с, держит точку</span>';
         html += this.upgradeBtn([st], btn);
       }
     } else {
-      if (sel.some(v => v.kind === 'builder')) html += btn('barracks', 'Казарма', STATS.barracks.cost, 'B') + btn('post', 'Реликварий', STATS.post.cost, 'P') + btn('turret', 'Турель', STATS.turret.cost, 'Y', ENERGY_COST.turret) + btn('foundry', 'Литейня', STATS.foundry.cost, 'F') + btn('pump', 'Насос', STATS.pump.cost, 'N');
+      if (sel.some(v => v.kind === 'builder')) html += btn('barracks', 'Казарма', STATS.barracks.cost, 'B') + btn('post', 'Реликварий', STATS.post.cost, 'P') + btn('turret', 'Турель', STATS.turret.cost, 'Y', ENERGY_COST.turret) + btn('foundry', 'Литейня', STATS.foundry.cost, 'F') + btn('pump', 'Насос', STATS.pump.cost, 'N') + this.keyBtn(btn);
       html += this.upgradeBtn(sel.filter(v => v.kind === 'guard'), btn) + this.upgradeBtn(sel.filter(v => v.kind === 'captain'), btn);
       const hurt = sel.filter(v => v.kind === 'guard' && v.hp < maxHp('guard'));
       if (hurt.length) html += btn('reinforce', 'Пополнить', hurt.reduce((n, v) => n + Math.ceil((maxHp('guard') - v.hp) / STATS.guard.hp) * REINFORCE_COST, 0), 'R');
       if (this.place) html += '<span class="info">ЛКМ поставить · ПКМ или Esc отмена</span>';
     }
     if (html !== this.cmdHtml) { this.cmdHtml = html; $('hud-cmd').innerHTML = html; }
+  }
+
+  /** Ключевое здание текущего тира (или Врата на V), если его ещё нет. */
+  private keyBtn(btn: (a: string, l: string, c: number, h: string, en?: number, rel?: number) => string) {
+    const F = FACTIONS[this.fac()], own = (k: Kind) => [...this.views.values()].some(v => v.owner === this.slot && v.kind === k);
+    for (let t = 1; t <= Math.min(this.tier, 4); t++) { const k = ('key' + t) as Kind; if (!own(k)) return btn(k, F.keys[t - 1], STATS[k].cost, 'K'); }
+    if (this.tier >= 5 && !own('gate')) return btn('gate', F.gate, STATS.gate.cost, 'K');
+    return '';
   }
 
   private upgradeBtn(vs: View[], btn: (a: string, l: string, c: number, h: string, en?: number, rel?: number) => string) {
@@ -369,6 +405,10 @@ export class Game {
   private doAct(act: string) {
     const sel = this.selected();
     if (act === 'train') { const st = sel.find(v => isStruct(v.kind)); if (st) this.cmd({ c: 'train', id: st.id }); }
+    else if (act === 'tier') { const hq = sel.find(v => v.kind === 'hq'); if (hq) this.cmd({ c: 'upgrade', id: hq.id }); }
+    else if (/^res[0-3]$/.test(act)) { const k = sel.find(v => /^key/.test(v.kind)); if (k) this.cmd({ c: 'research', id: k.id, r: Number(act[3]) }); }
+    else if (/^sum[0-2]$/.test(act)) { const g = sel.find(v => v.kind === 'gate'); if (g) this.cmd({ c: 'summon', id: g.id, v: Number(act[3]) }); }
+    else if (/^key[1-4]$|^gate$/.test(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
     else if (act === 'barracks' || act === 'post' || act === 'turret' || act === 'foundry' || act === 'pump') { if (sel.some(v => v.kind === 'builder')) this.startPlace(act); }
     else if (act === 'upgrade') { for (const v of sel) if (UPGRADES[v.kind] && v.lvl < 2 && v.upg < 0) this.cmd({ c: 'upgrade', id: v.id }); }
     else if (act === 'reinforce') this.cmd({ c: 'reinforce', ids: sel.filter(v => v.kind === 'guard').map(v => v.id) });
@@ -437,6 +477,8 @@ export class Game {
       else if (k === 'y') this.doAct('turret');
       else if (k === 'f') this.doAct('foundry');
       else if (k === 'n') this.doAct('pump');
+      else if (k === 'k') { const m = this.cmdHtml.match(/data-act="(key[1-4]|gate)"/); if (m) this.doAct(m[1]); }
+      else if (/^[1-4]$/.test(k)) { const m = this.cmdHtml.match(new RegExp(`data-act="((?:res|sum)${Number(k) - 1})"`)); if (m) this.doAct(m[1]); }
       else if (k === 'u') this.doAct('upgrade');
       else if (k === 'r') this.doAct('reinforce');
       else if (k === 's' && this.sel.size) this.cmd({ c: 'stop', ids: [...this.sel] });
@@ -510,7 +552,7 @@ export class Game {
       if (!v) return { ...g, ok: false };
       return { x: v[0], y: v[1], ok: !vs.some(u => u.kind === 'pump' && Math.hypot(u.x - v[0], u.y - v[1]) < 2) };
     }
-    if (this.place === 'turret' || this.place === 'foundry') {
+    if (this.place === 'turret' || this.place === 'foundry' || /^key|^gate/.test(this.place ?? '')) {
       const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16);
       const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1);
       return { ...g, ok: near && free };
