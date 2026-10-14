@@ -187,6 +187,12 @@ const toggleMute = () => { audio.setMuted(!audio.muted); voice.enabled = !audio.
 muteBtn.onclick = toggleMute;
 addEventListener('keydown', e => { if (e.key.toLowerCase() === 'm' && e.shiftKey && !(e.target instanceof HTMLInputElement)) toggleMute(); }); // Shift+M: M — команда «Идти»
 paintMute();
+// полный экран: в нём курсор упирается в край монитора — прокрутка краем работает всегда
+const fsBtn = $('fullscreen');
+const toggleFs = () => { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.().catch(() => toast('Браузер не дал открыть полный экран — нажмите F11')); };
+fsBtn.onclick = toggleFs;
+document.addEventListener('fullscreenchange', () => { fsBtn.textContent = document.fullscreenElement ? 'Выйти из полного экрана (Shift+F)' : 'Полный экран (Shift+F)'; });
+addEventListener('keydown', e => { if (e.key.toLowerCase() === 'f' && e.shiftKey && !(e.target instanceof HTMLInputElement)) toggleFs(); });
 
 const themeBtn = $('theme');
 const paintTheme = () => { themeBtn.textContent = `Тема: ${themeName()}`; };

@@ -105,6 +105,8 @@ export const captainSvg = (a: Arch, f: FactionId = 'order') => svgCache.get(artF
 export const needsTint = (path: string, f: FactionId) => f !== 'order' && path.startsWith('Units/');
 /** Маленький силуэт для HUD: живой SVG, чтобы палитра art-* применилась. */
 const miniArt = (path: string) => (svgCache.get(path) ?? '').replace('<svg ', '<svg class="lc-art" ');
+/** Портрет: голова и плечи силуэта крупно (обрезка viewBox у фигур 120×164). */
+const portrait = (path: string) => miniArt(path).replace(/viewBox="0 -12 120 164"/, 'viewBox="14 -10 92 92"');
 
 /** Карта на языке пресета MapExample (классы lc-bigmap из bundle.css), в координатах мира. Пока декор: проходимость не меняет. */
 function mapSvg() {
@@ -121,7 +123,7 @@ function mapSvg() {
 type View = {
   id: number; owner: number; kind: Kind; el: HTMLElement; body: HTMLElement; svgs: SVGElement[]; bar: HTMLElement; fg: HTMLElement; sel: HTMLElement;
   x: number; y: number; tx: number; ty: number; f: number; hp: number; build: number; q: number; dead: boolean; lvl: number; upg: number;
-  atkUntil: number; melee?: boolean; atkFx?: number; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; prog: number; prod: number;
+  atkUntil: number; melee?: boolean; atkFx?: number; respawn?: number; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; prog: number; prod: number;
 };
 
 export class Game {
@@ -297,7 +299,7 @@ export class Game {
     this.drawSmoke(s.sm ?? []);
     this.stopCd = s.ps?.[this.slot]?.[0] ?? 0; this.unlock = s.ps?.[this.slot]?.[1] ?? 0;
     this.drawStrikes(s); this.megaWatch(s);
-    for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog, gear, c0, c1, c2, gcd, sh, frozen, carry, rise, off] of s.u) {
+    for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog, gear, c0, c1, c2, gcd, sh, frozen, carry, rise, off, respawn] of s.u) {
       const kind = KINDS[ki];
       if (kind === 'mine' && owner !== this.slot) continue; // чужие мины невидимы
       seen.add(id);
@@ -322,7 +324,7 @@ export class Game {
       }
       v.lvl = lvl; v.upg = upg; v.prog = prog ?? 0; v.prod = prog ?? 0; v.gear = gear ?? 0; v.ch = [c0 ?? 0, c1 ?? 0, c2 ?? 0]; v.gcd = gcd ?? 0;
       if (v.kind !== kind) { v.kind = kind; v.artPath = artFor(kind, this.fac(owner)); const a = art(v.artPath, widthOf(kind, this.fac(owner)) * S); v.body.replaceChildren(a); v.svgs = [a.querySelector('svg')!]; if (kind === 'deity') { this.alert(owner === this.slot ? 'ok' : 'danger', 'Вознесение', 'Бог-Механизм пробудился', x / 10, y / 10); voice.announce(owner === this.slot ? 'Бог-Механизм пробудился.' : 'Враг вознёсся! Бог-Механизм на поле!'); this.shakeBy(14); } } // капитан ⇄ Бог-Механизм
-      v.sh = sh ?? 0; v.frozen = frozen ?? 0; v.carry = carry ?? 0; v.rise = (rise ?? 0) / 10; v.off = off === 1;
+      v.sh = sh ?? 0; v.frozen = frozen ?? 0; v.carry = carry ?? 0; v.rise = (rise ?? 0) / 10; v.off = off === 1; v.respawn = respawn ?? 0;
       if (kind === 'hq' && owner === this.slot && !this.centered) {
         this.centered = true;
         this.cam.x = v.tx + (MAP.w / 2 - v.tx) * 0.25; this.cam.y = v.ty + (MAP.h / 2 - v.ty) * 0.25;
@@ -456,15 +458,15 @@ export class Game {
     const cap = own('captain') ?? own('deity'), port = $('cap-port');
     if (cap) {
       const key = cap.artPath + (cap.dead ? 'd' : '');
-      if (port.dataset.k !== key) { port.dataset.k = key; port.innerHTML = miniArt(cap.artPath) + '<i></i><span class="t hidden"></span>'; if (needsTint(cap.artPath, this.fac())) (port.firstElementChild as HTMLElement).style.filter = ROSTER[this.fac()].tint; }
+      if (port.dataset.k !== key) { port.dataset.k = key; port.innerHTML = portrait(cap.artPath) + '<i></i><span class="t hidden"></span>'; if (needsTint(cap.artPath, this.fac())) (port.firstElementChild as HTMLElement).style.filter = ROSTER[this.fac()].tint; }
       port.classList.toggle('dead', cap.dead);
       (port.querySelector('i') as HTMLElement).style.setProperty('--v', Math.max(0, cap.hp / maxHp(cap.kind)) * 100 + '%');
-      const t = port.querySelector('.t') as HTMLElement; t.classList.toggle('hidden', !cap.dead); t.textContent = 'пал';
+      const t = port.querySelector('.t') as HTMLElement; t.classList.toggle('hidden', !cap.dead); t.textContent = cap.respawn ? `${cap.respawn} с` : 'пал';
     }
     const ti = own('titan'), box = $('hud-titan');
     box.classList.toggle('hidden', !ti);
     if (ti) {
-      if (box.dataset.id !== String(ti.id)) { box.dataset.id = String(ti.id); box.innerHTML = `<button class="w2d-port" id="titan-port" title="Титан: клик — выбрать и навести камеру">${miniArt(ti.artPath)}<i></i></button><div><b>${this.kindName('titan', this.fac())}</b><small id="titan-hp"></small></div>`; $('titan-port').onclick = () => this.focus(ti.id); }
+      if (box.dataset.id !== String(ti.id)) { box.dataset.id = String(ti.id); box.innerHTML = `<button class="w2d-port" id="titan-port" title="Титан: клик — выбрать и навести камеру">${portrait(ti.artPath)}<i></i></button><div><b>${this.kindName('titan', this.fac())}</b><small id="titan-hp"></small></div>`; $('titan-port').onclick = () => this.focus(ti.id); }
       (box.querySelector('i') as HTMLElement).style.setProperty('--v', Math.max(0, ti.hp / maxHp('titan')) * 100 + '%');
       $('titan-hp').textContent = `${Math.round(ti.hp)} / ${maxHp('titan')}`;
     }
@@ -551,7 +553,7 @@ export class Game {
     for (const v of this.views.values()) {
       const q = this.qk[v.id];
       if (v.owner !== this.slot || !q?.length) continue;
-      q.forEach((ki, i) => { const k = KINDS[ki]; items.push(`<div class="w2d-qitem${i ? '' : ' now'}" title="${this.kindName(k, f)}">${miniArt(artFor(k, f))}${i ? '' : `<span class="w2d-qbar" style="--v:${v.prog}%"></span>`}</div>`); });
+      q.forEach((ki, i) => { const k = KINDS[ki]; items.push(`<div class="w2d-qitem${i ? '' : ' now'}" data-b="${v.id}" data-i="${i}" title="${this.kindName(k, f)}: клик — отменить, ресурсы вернутся">${miniArt(artFor(k, f))}${i ? '' : `<span class="w2d-qbar" style="--v:${v.prog}%"></span>`}</div>`); });
     }
     const q = $('hud-queue');
     q.classList.toggle('hidden', !items.length);
@@ -913,6 +915,7 @@ export class Game {
     $('out-watch').addEventListener('click', () => this.watch(), sig);
     $('cap-port').addEventListener('click', e => { e.stopPropagation(); const v = [...this.views.values()].find(u => u.owner === this.slot && (u.kind === 'captain' || u.kind === 'deity')); if (v) this.focus(v.id); }, sig);
     $('hud-cap').addEventListener('click', () => { if (this.learnHtml) { this.lvlUpOpen = true; this.lvlUpAt = performance.now(); $('hud-levelup').classList.remove('hidden'); $('hud-cap').classList.remove('has-pts'); } }, sig);
+    $('hud-queue').addEventListener('click', e => { const t = (e.target as HTMLElement).closest<HTMLElement>('[data-b]'); if (t) this.cmd({ c: 'cancel', id: Number(t.dataset.b), i: Number(t.dataset.i) }); }, sig); // отмена найма
     $('hud-levelup').addEventListener('click', e => { const a = (e.target as HTMLElement).closest<HTMLElement>('[data-learn]')?.dataset.learn; if (a) this.cmd({ c: 'learn', a: Number(a) }); }, sig);
     const hc = $('hud-cmd');
     hc.addEventListener('click', e => {

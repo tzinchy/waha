@@ -279,6 +279,7 @@ export type Unit = {
   cd: number; order: Order | null;
   q: number; prog: number;      // счётчик: исследование/призыв; у найма — длина que
   que: Kind[];                  // очередь найма (штаб, казармы, кузня)
+  paid: number[][];             // что списано за каждое место очереди: [влияние, энергия, реликвии, останки] — возврат при отмене
   gear: number; ch: number[]; gcd: number; // снаряжение отряда: биты купленного, заряды, перезарядка броска
   sh: number; off: number;      // щит: личный (дрон) или пул купола-эгиды; off — купол пробит, секунд до включения
   frozen: number;               // Остановка времени: секунд неподвижности
@@ -321,6 +322,7 @@ export type Cmd =
   | { c: 'attack'; ids: number[]; id: number }
   | { c: 'stop'; ids: number[] }
   | { c: 'train'; id: number; k?: Kind }
+  | { c: 'cancel'; id: number; i: number }
   | { c: 'build'; ids: number[]; kind: Buildable; x: number; y: number }
   | { c: 'assist'; ids: number[]; id: number }
   | { c: 'reinforce'; ids: number[] }
@@ -362,7 +364,7 @@ const nearHq = (hx: number, hy: number, d: number): [number, number] => {
 };
 
 export function spawn(s: State, owner: number, kind: Kind, x: number, y: number): Unit {
-  const u: Unit = { id: s.nextId++, owner, kind, x, y, hp: maxHp(kind), face: Math.atan2(MAP.h / 2 - y, MAP.w / 2 - x), cd: 0, order: null, q: 0, prog: 0, que: [], gear: 0, ch: [0, 0, 0], gcd: 0, sh: kind === 'aegis' ? AEGIS.pool : 0, off: 0, frozen: 0, mark: 0, carry: 0, rise: 0, build: 1, dead: 0, reinf: false, rt: 0, hit: 9, lvl: 1, upg: -1, sm: 1, by: -1, rush: 0, stand: 0 };
+  const u: Unit = { id: s.nextId++, owner, kind, x, y, hp: maxHp(kind), face: Math.atan2(MAP.h / 2 - y, MAP.w / 2 - x), cd: 0, order: null, q: 0, prog: 0, que: [], paid: [], gear: 0, ch: [0, 0, 0], gcd: 0, sh: kind === 'aegis' ? AEGIS.pool : 0, off: 0, frozen: 0, mark: 0, carry: 0, rise: 0, build: 1, dead: 0, reinf: false, rt: 0, hit: 9, lvl: 1, upg: -1, sm: 1, by: -1, rush: 0, stand: 0 };
   s.units.push(u);
   return u;
 }
@@ -468,10 +470,21 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (what === 'builder' && count(s, owner, 'builder') + queued(s, owner, 'builder') >= CAP.builder) return 'Достигнут лимит строителей';
     if (r.pop && legion(s, owner) + r.pop > legionCap(p)) return 'Не хватает Легиона';
     if (r.one && (count(s, owner, what) + queued(s, owner, what)) > 0) return 'Титан у армии один';
-    if (what === 'guard' && p.faction === 'undead' && p.remains >= REMAINS_PER_SQUAD) { p.remains -= REMAINS_PER_SQUAD; b.que.push(what); return; } // Жатва
+    if (what === 'guard' && p.faction === 'undead' && p.remains >= REMAINS_PER_SQUAD) { p.remains -= REMAINS_PER_SQUAD; b.que.push(what); b.paid.push([0, 0, 0, REMAINS_PER_SQUAD]); return; } // Жатва
+    const c = resourceCost(p.faction, trainCost(p.faction, what), r.energy ?? 0, p.energy);
     const e = pay(p, trainCost(p.faction, what), r.energy ?? 0, r.relics ?? 0);
     if (e) return e;
-    b.que.push(what);
+    b.que.push(what); b.paid.push([c.req, c.energy, r.relics ?? 0, 0]);
+    return;
+  }
+  if (cmd.c === 'cancel') { // отмена места в очереди: ресурсы возвращаются полностью
+    const b = s.units.find(u => u.id === cmd.id && u.owner === owner && u.hp > 0);
+    const i = Number(cmd.i);
+    if (!b || !Number.isInteger(i) || i < 0 || i >= b.que.length) return;
+    const [req, en, rel, rem] = b.paid[i] ?? [0, 0, 0, 0];
+    p.req += req; p.energy += en; p.relics += rel; p.remains += rem;
+    b.que.splice(i, 1); b.paid.splice(i, 1); b.q = b.que.length;
+    if (i === 0) b.prog = 0;
     return;
   }
   if (cmd.c === 'upgrade' && s.units.some(v => v.id === cmd.id && v.kind === 'hq' && v.owner === owner)) { // переход тира
@@ -865,7 +878,7 @@ function produce(s: State, b: Unit, dt: number) {
   if (!what) return;
   b.prog += dt;
   if (b.prog >= STATS[what].time * (ROLES[what]?.from === 'barracks' && has(p, 1) ? 0.85 : 1)) {
-    b.prog = 0; b.que.shift(); b.q = b.que.length;
+    b.prog = 0; b.que.shift(); b.paid.shift(); b.q = b.que.length;
     spawn(s, b.owner, what, ...nearHq(b.x, b.y, STATS[b.kind].radius + 2.5 + STATS[what].radius));
   }
 }
@@ -1185,7 +1198,7 @@ export function snapshot(s: State): Snap {
     vp: s.vp.map(Math.ceil), d: [...s.died], mg: s.units.filter(u => MEGA.has(u.kind) && u.hp > 0).map(u => [u.id, Math.round(u.x * 10), Math.round(u.y * 10), KINDS.indexOf(u.kind), u.owner, Math.floor(u.build * 100)]), /* мегапостройки видят все */ ss: s.strikes.map(st => [Math.round(st.x * 10), Math.round(st.y * 10), Math.ceil(st.t), st.owner]),
     tick: s.tick,
     // [id, owner, kind, x*10, y*10, hp, face*100, очередь, стройка %, пополняется, уровень, апгрейд %, найм текущего %]
-    u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), (u.hp > 0 ? Math.max(1, Math.round(u.hp)) : 0), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : u.kind === 'post' ? 12 : UPGRADES[u.kind]!.time)) * 100), prodPct(u), u.gear, ...u.ch, Math.ceil(u.gcd), Math.round(u.sh), Math.ceil(u.frozen * 10), u.carry, Math.ceil(u.rise * 10), u.off > 0 ? 1 : 0]), // 18 щит, 19 заморозка, 20 тащит/тащат, 21 вознесение, 22 купол пробит
+    u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), (u.hp > 0 ? Math.max(1, Math.round(u.hp)) : 0), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : u.kind === 'post' ? 12 : UPGRADES[u.kind]!.time)) * 100), prodPct(u), u.gear, ...u.ch, Math.ceil(u.gcd), Math.round(u.sh), Math.ceil(u.frozen * 10), u.carry, Math.ceil(u.rise * 10), u.off > 0 ? 1 : 0, u.kind === 'captain' && u.hp <= 0 ? Math.max(0, Math.ceil(CAPTAIN_RESPAWN + 2 * (s.players[u.owner]?.clvl ?? 1) - u.dead)) : 0]), // 23 — секунд до возрождения капитана // 18 щит, 19 заморозка, 20 тащит/тащат, 21 вознесение, 22 купол пробит
     ps: s.players.map(p => [Math.ceil(p.stopCd), p.unlock]), // 13 снаряжение, 14–16 заряды, 17 перезарядка броска
     qk: Object.fromEntries(s.units.filter(u => u.que.length).map(u => [u.id, u.que.map(k => KINDS.indexOf(k))])),
     sm: [...s.smoke.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), Math.ceil(c.t)]), ...s.plagues.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), Math.ceil(c.t), c.fire ? 2 : 1])],

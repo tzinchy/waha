@@ -586,3 +586,17 @@ test('Адская мортира: зажигательный снаряд ос�
   const hp = b.hp; m.hp = 0; run(s, 2);
   assert.ok(b.hp < hp, 'пожар жжёт постройку');
 });
+
+test('отмена найма из очереди возвращает ресурсы полностью', () => {
+  const s = newState(2), p = s.players[0], hq = unit(s, 0, 'hq');
+  Object.assign(p, { req: 1000, energy: 500 });
+  const b = spawn(s, 0, 'barracks', hq.x + 12, hq.y);
+  assert.equal(applyCmd(s, 0, { c: 'train', id: b.id, k: 'guard' }), undefined);
+  assert.equal(applyCmd(s, 0, { c: 'train', id: b.id, k: 'guard' }), undefined);
+  assert.ok(p.req < 1000);
+  run(s, 2);
+  applyCmd(s, 0, { c: 'cancel', id: b.id, i: 1 }); applyCmd(s, 0, { c: 'cancel', id: b.id, i: 0 });
+  assert.equal(b.que.length, 0);
+  assert.equal(b.prog, 0);
+  assert.ok(p.req >= 1000, 'влияние вернулось (плюс доход за 2 с)');
+});
