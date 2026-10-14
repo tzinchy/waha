@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WAHA — Каталог моделей и анимаций</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0e1215;color:#e8e3d7;font:14px system-ui}header{position:sticky;top:0;background:#171d21;border-bottom:1px solid #574b35;padding:16px 24px;z-index:2}h1{font:28px Georgia;margin:0 0 12px;color:#d4b978}.filters{display:flex;gap:10px;flex-wrap:wrap}select,input{padding:9px 12px;background:#252c31;color:#fff;border:1px solid #655b4a;border-radius:5px}main{padding:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.unit{background:#1b2226;border:1px solid #42443e;padding:14px;border-radius:8px}.unit h2{font:18px Georgia;margin:0 0 4px}.unit small{color:#b4ada0}.preview{margin:12px auto;width:160px;height:160px;background:radial-gradient(ellipse,#303d40,#101719);display:grid;place-items:center;border:1px solid #343d40}.preview canvas{width:160px;height:160px;image-rendering:pixelated}.unit select{width:100%}.unit a{display:inline-block;margin-top:9px;color:#d4b978}#summary{color:#b5b1a7;margin:10px 0 0}.placeholder{color:#b5b1a7;font-size:12px;padding:12px;text-align:center}
+</style></head><body><header><h1>WAHA / Анимации и юниты</h1><div class="filters">
+<input id="search" placeholder="Поиск юнита или здания" aria-label="Поиск">
+<select id="faction" aria-label="Фракция"><option value="">Все фракции</option></select>
+<select id="motion" aria-label="Анимация"><option value="">Все доступные анимации</option></select>
+<select id="direction" aria-label="Направление"><option value="0">Север</option><option value="1">Северо-восток</option><option value="2">Восток</option><option value="3">Юго-восток</option><option value="4">Юг</option><option value="5">Юго-запад</option><option value="6">Запад</option><option value="7">Северо-запад</option></select>
+</div><p id="summary">Загрузка каталога…</p></header><main id="catalog"></main>
+<script type="module">
+const base='/models/factions/';
+const $=id=>document.getElementById(id);
+const catalog=$('catalog'),active=[];
+const name={legion:'Космодесант',heretics:'Хаос',scrap:'Орки',necrons:'Некроны',drukhari:'Тёмные Эльдар',daemons:'Демоны'};
+const loaded=new Map();
+function sheet(src){if(!loaded.has(src)){const img=new Image();img.src=src;loaded.set(src,img);}return loaded.get(src);}
+let files=[];
+try{const data=await fetch(base+'manifest.json').then(r=>{if(!r.ok)throw Error(r.status);return r.json()});files=data.files||[];
+for(const id of [...new Set(files.map(x=>x.faction))]){const o=document.createElement('option');o.value=id;o.textContent=name[id]||id;$('faction').append(o)}
+for(const a of [...new Set(files.flatMap(x=>x.animations||[]))].sort()){const o=document.createElement('option');o.value=a;o.textContent=a;$('motion').append(o)}
+}catch(e){$('summary').textContent='Не удалось загрузить manifest.json: '+e}
+function render(){
+active.length=0;catalog.replaceChildren();
+const query=$('search').value.trim().toLowerCase(),fac=$('faction').value,mo=$('motion').value;
+const selected=files.filter(x=>(!fac||x.faction===fac)&&(!mo||(x.animations||[]).includes(mo))&&(!query||(x.faction+' '+x.role+' '+(name[x.faction]||'')).toLowerCase().includes(query)));
+$('summary').textContent=selected.length+' моделей · направление и анимации можно менять · экспорт GLB доступен по ссылкам';
+for(const f of selected){
+const card=document.createElement('article');card.className='unit';
+const title=document.createElement('h2');title.textContent=f.role;card.append(title);
+const subtitle=document.createElement('small');subtitle.textContent=name[f.faction]||f.faction;card.append(subtitle);
+const preview=document.createElement('div');preview.className='preview';card.append(preview);
+const canvas=document.createElement('canvas');canvas.width=128;canvas.height=128;preview.append(canvas);
+const anims=f.animations||[];if(anims.length){
+const select=document.createElement('select');select.setAttribute('aria-label','Анимация '+f.role);
+for(const a of anims){const o=document.createElement('option');o.value=a;o.textContent=a;select.append(o)}
+if(mo&&anims.includes(mo))select.value=mo;
+card.append(select);
+active.push({canvas,select,f});
+}else{const p=document.createElement('div');p.className='placeholder';p.textContent='Здание · статичная модель GLB';preview.append(p)}
+const link=document.createElement('a');link.href=base+f.file;link.textContent='GLB ↗';link.download='';card.append(link);catalog.append(card);
+}}
+for(const id of ['search','faction','motion'])$(id).addEventListener(id==='search'?'input':'change',render);
+render();
+function tick(t){const direction=Number($('direction').value);
+for(const {canvas,select,f} of active){
+const img=sheet(base+f.faction+'/'+f.role+'/sprites/'+select.value+'.png');
+const ctx=canvas.getContext('2d');ctx.clearRect(0,0,128,128);
+if(img.complete&&img.naturalWidth){const frame=Math.floor(t/180)%8;ctx.drawImage(img,frame*128,direction*128,128,128,0,0,128,128)}
+}
+requestAnimationFrame(tick)}requestAnimationFrame(tick);
+</script></body></html>
