@@ -18,7 +18,7 @@ for(const path of paths){
       const animations=(gltf.animations??[]).map(a=>a.name);clips+=animations.length;
       const pngs=paths.filter(p=>p.startsWith(`${faction}/${role}/sprites/`)&&p.endsWith('.png')).map(p=>basename(p,'.png'));
       models.push({faction,role,file:path,bytes:data.length,animations:pngs,glbAnimations:animations});
-      records.push({file:path,bytes:data.length,glbAnimations:animations,technical:'pass',art:'prototype',runtime:BUILDINGS.slice(0,4).includes(role)||['captain','guard','builder'].includes(role)});
+      records.push({file:path,bytes:data.length,glbAnimations:animations,technical:'pass',art:'prototype',runtime:false,runtimeBuildingGeometryFromCode:BUILDINGS.slice(0,4).includes(role)});
       continue;
     }
     const png=PNG.sync.read(data);
@@ -47,7 +47,7 @@ for(const path of paths){
       if (!accepted) throw Error('Authored atlas lacks accepted provenance/visual QA');
       approved++;
     }
-    records.push({file:path,bytes:data.length,width:png.width,height:png.height,frames:cells.length,transparentPixels:transparent,partialAlphaPixels:partial,cells,technical:'pass',art:accepted?'accepted-authored':'prototype',runtime:['captain','guard','builder'].includes(role)});
+    records.push({file:path,bytes:data.length,width:png.width,height:png.height,frames:cells.length,transparentPixels:transparent,partialAlphaPixels:partial,cells,technical:'pass',art:accepted?'accepted-authored':'prototype',runtime:['captain','guard','builder'].includes(role)&&['idle','run','attack','shoot','work','throw_grenade','death'].includes(basename(path,'.png'))});
   }catch(e){errors.push({file:path,issue:String(e)});}
 }
 const missing=[];
@@ -55,7 +55,7 @@ for(const f of FACTIONS)for(const r of [...UNITS,...BUILDINGS]){
   if(!paths.includes(`${f}/${r}/model.glb`))missing.push(`${f}/${r}/model.glb`);
   if(UNITS.includes(r))for(const a of motions(r))for(const ext of ['png','json']){const file=`${f}/${r}/sprites/${a}.${ext}`;try{await readFile(join(root,file));}catch{missing.push(file);}}
 }
-const report={version:1,scope:'Technical inventory only. Procedural atlas art remains unapproved.',summary:{models:models.length,glbAnimationClips:clips,spriteAtlases:paths.filter(p=>p.endsWith('.png')).length,bytes:totalBytes,errors:errors.length,warnings:warnings.length,missing:missing.length,productionArtApproved:approved},factions:FACTIONS.map(f=>({faction:f,models:models.filter(m=>m.faction===f).length,spriteAtlases:records.filter(r=>r.file.startsWith(f+'/')&&r.file.endsWith('.png')).length,productionArtApproved:records.filter(r=>r.file.startsWith(f+'/')&&r.art==='accepted-authored').length})),missing,errors,warnings,files:records};
+const report={version:1,licenses:{legacyModels:{file:'client/public/models/LICENSE.txt',text:await readFile('client/public/models/LICENSE.txt','utf8')},ground:{file:'client/public/tex/LICENSE.txt',text:await readFile('client/public/tex/LICENSE.txt','utf8')},proceduralModels:{source:'client/faction-models.ts',status:'Repository-generated prototypes; no third-party character pack recorded'},generatedSource:{file:'client/public/art-src/legion/captain/walk-candidate.json',artisticAcceptance:'rejected; not imported into runtime'}},scope:'Technical inventory only. Procedural atlas art remains unapproved.',summary:{models:models.length,glbAnimationClips:clips,spriteAtlases:paths.filter(p=>p.endsWith('.png')).length,bytes:totalBytes,errors:errors.length,warnings:warnings.length,missing:missing.length,productionArtApproved:approved},factions:FACTIONS.map(f=>({faction:f,models:models.filter(m=>m.faction===f).length,spriteAtlases:records.filter(r=>r.file.startsWith(f+'/')&&r.file.endsWith('.png')).length,productionArtApproved:records.filter(r=>r.file.startsWith(f+'/')&&r.art==='accepted-authored').length})),missing,errors,warnings,files:records};
 if(process.argv.includes('--write')){
   await mkdir('assets',{recursive:true});await writeFile('assets/art-audit.json',JSON.stringify(report,null,2)+'\n');
   let meshyFiles=[];try{meshyFiles=(await readdir('client/public/models/meshy',{recursive:true})).filter(p=>p.endsWith('.glb')).sort();}catch(e){if(e.code!=='ENOENT')throw e;}

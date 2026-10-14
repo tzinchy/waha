@@ -1,3 +1,4 @@
+import { GRENADE_WINDUP, GRENADE_FLIGHT } from '../shared/sim.ts';
 import * as THREE from 'three';
 import { BattleEffect, CAPTURE_SITES, type CaptureKind } from './expansion-assets.ts';
 import { BATTLE_MAPS } from './battle-maps.ts';
@@ -19,7 +20,7 @@ const scene = new THREE.Scene(); scene.background = new THREE.Color(0x222a2d); s
 const renderer = new THREE.WebGLRenderer({ canvas: $<HTMLCanvasElement>('scene'), antialias: false, alpha: false });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 const camera = new THREE.OrthographicCamera(-18, 18, 12, -12, 0.1, 150);
 const lighting = (target: THREE.Scene) => {
   target.add(new THREE.HemisphereLight(0xccd7dd, 0x352b23, 1.8));
@@ -345,7 +346,7 @@ async function spriteAtlas(faction: FactionId, role: UnitRole, requestedMotion: 
   const blob = await new Promise<Blob>((resolve, reject) => atlas.toBlob(b => b ? resolve(b) : reject(new Error('Atlas encoding failed')), 'image/png'));
   const anchor = new THREE.Vector3(0, 0, 0).project(c);
   r.dispose(); r.forceContextLoss();
-  return { blob, metadata: { faction, role, animation: selectedMotion, image: `${selectedMotion}.png`, cellWidth: 128, cellHeight: 128, columns: 8, rows: 8, duration, loop, directionsDegrees: [0, 45, 90, 135, 180, 225, 270, 315], rootForward: '+Z', camera: { elevationDegrees: 35, azimuthDegrees: 45, targetHeight: 1.1, orthographicHeight: span*2 }, anchor: { x: Math.round((anchor.x + 1) * 64), y: Math.round((1 - anchor.y) * 64) }, frames: Array.from({ length: 8 }, (_, direction) => Array.from({ length: 8 }, (_, frame) => ({ x: frame * 128, y: direction * 128, w: 128, h: 128, time: duration * frame / (loop ? 8 : 7) }))) } };
+  return { blob, metadata: { faction, role, animation: selectedMotion, events: selectedMotion === 'throw_grenade' ? [{ name: 'release', time: GRENADE_WINDUP }, { name: 'impact', time: GRENADE_WINDUP + GRENADE_FLIGHT }] : [], image: `${selectedMotion}.png`, cellWidth: 128, cellHeight: 128, columns: 8, rows: 8, duration, loop, directionsDegrees: [0, 45, 90, 135, 180, 225, 270, 315], rootForward: '+Z', camera: { elevationDegrees: 35, azimuthDegrees: 45, targetHeight: 1.1, orthographicHeight: span*2 }, anchor: { x: Math.round((anchor.x + 1) * 64), y: Math.round((1 - anchor.y) * 64) }, frames: Array.from({ length: 8 }, (_, direction) => Array.from({ length: 8 }, (_, frame) => ({ x: frame * 128, y: direction * 128, w: 128, h: 128, time: duration * frame / (loop ? 8 : 7) }))) } };
 }
 $('exportSprites').onclick = async () => {
   const role = $<HTMLSelectElement>('role').value as UnitRole;

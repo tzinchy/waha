@@ -1,3 +1,4 @@
+import { GRENADE_WINDUP, GRENADE_FLIGHT } from '../shared/sim.ts';
 // 3D-клиент матча: рисует снимки сервера, собирает ввод в команды. Игровых правил здесь нет.
 import * as THREE from 'three';
 import { CAP, KINDS, UPGRADES, MAP, POINTS, POINT_R, REINFORCE_COST, STATS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
@@ -78,7 +79,7 @@ const FORM: Partial<Record<Kind, [number, number][]>> = {
 };
 
 export class Game {
-  private renderer = new THREE.WebGLRenderer({ antialias: true });
+  private renderer = new THREE.WebGLRenderer({ antialias: false });
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(45, 1, 0.5, 400);
   private views = new Map<number, View>();
@@ -87,7 +88,7 @@ export class Game {
   private keys = new Set<string>();
   private points: { sun: THREE.Mesh; ring: THREE.Mesh; disc: THREE.Mesh; flag: THREE.Mesh }[] = [];
   private shots: { a: THREE.Vector3; b: THREE.Vector3; until: number }[] = [];
-  private corpses: { root: THREE.Group; body: THREE.Group; actors: AnyActor[]; until: number; struct: boolean }[] = [];
+  private corpses: { root: THREE.Group; body: THREE.Group; actors: AnyActor[]; sprite?: SpriteActor; facing: number; until: number; struct: boolean }[] = [];
   private beam: THREE.LineSegments;
   private pass: AsciiPass;
   private composer: EffectComposer;
@@ -105,7 +106,14 @@ export class Game {
   private snapN = 0;
   private lastAlert = 0;
   private grenadeTargeting = false;
-  private lastBlastKey = '';
+  private heardThrows = new Set<number>();
+  private heardBlasts = new Set<number>();
+  private grenadeViews = new Map<number, { mesh: THREE.Mesh; data: number[]; received: number }>();
+  private blastViews: { mesh: THREE.Mesh; start: number; radius: number }[] = [];
+  private grenadeGeometry = new THREE.IcosahedronGeometry(0.18, 1);
+  private grenadeMaterial = new THREE.MeshBasicMaterial({ color: 0xd8d279 });
+  private blastGeometry = new THREE.RingGeometry(0.65, 1, 32);
+  private effectStyle?: HTMLStyleElement;
   private alertMarkers: { el: HTMLButtonElement; x: number; z: number; until: number }[] = [];
   private pointOwner: number[] = [];
   private cmdHtml = '';
@@ -125,15 +133,16 @@ export class Game {
   constructor(
     private root: HTMLElement, private slot: number, private players: LobbyPlayer[],
     private send: (c: Cmd) => void, private onEnd: (winner: number) => void,
+    private graphics: 'basic' | 'cinematic' = 'basic',
   ) {
     const r = this.renderer;
-    r.setPixelRatio(Math.min(devicePixelRatio, 2));
-    r.shadowMap.enabled = true;
+    r.setPixelRatio(this.graphics === 'cinematic' ? Math.min(devicePixelRatio, 2) : 1);
+    r.shadowMap.enabled = this.graphics === 'cinematic';
     r.toneMapping = THREE.ACESFilmicToneMapping;
     root.prepend(r.domElement);
     const style = document.createElement('style');
     style.textContent = '.waha-alert{position:absolute;z-index:30;border:2px solid #ff704e;border-radius:50%;background:#ff503022;color:#ffe2cc;box-shadow:0 0 16px #ff5030;min-width:44px;min-height:44px;cursor:pointer;animation:waha-ping 1s ease-in-out infinite alternate}@keyframes waha-ping{to{transform:scale(1.3);box-shadow:0 0 28px #ff5030}}';
-    root.append(style);
+    root.append(style); this.effectStyle = style;
     this.camera.layers.enableAll();
     this.pass = new AsciiPass(r, 7, 12);
     this.composer = new EffectComposer(r);
@@ -166,6 +175,10 @@ export class Game {
     audio.setBattle(false);
     for (const a of this.alertMarkers) a.el.remove();
     for (const v of this.views.values()) v.sprite?.dispose();
+    for (const c of this.corpses) c.sprite?.dispose();
+    for (const g of this.grenadeViews.values()) this.scene.remove(g.mesh);
+    for (const b of this.blastViews) { this.scene.remove(b.mesh); (b.mesh.material as THREE.Material).dispose(); }
+    this.grenadeGeometry.dispose(); this.grenadeMaterial.dispose(); this.blastGeometry.dispose(); this.effectStyle?.remove();
     cancelAnimationFrame(this.raf);
     this.ac.abort();
     this.renderer.dispose();
@@ -351,7 +364,7 @@ export class Game {
       v.bar.visible = v.sel.visible = v.ring.visible = false;
       for (const a of v.actors) a.die();
       v.sprite?.setAction('death', true);
-      this.corpses.push({ root: v.root, body: v.body, actors: v.actors, until: now + (isStruct(v.kind) ? 900 : 1800), struct: isStruct(v.kind) });
+      this.corpses.push({ root: v.root, body: v.body, actors: v.actors, sprite: v.sprite, facing: v.f, until: now + (isStruct(v.kind) ? 900 : 1800), struct: isStruct(v.kind) });
       const a = this.audioAt(v.x, v.z);
       if (a && !first && gone++ < 2) isStruct(v.kind) ? audio.boom(a.pan) : audio.death(a.pan);
     }
@@ -383,14 +396,27 @@ export class Game {
     audio.heat(Math.min(0.4, s.sh.length * 0.02));
     const until = performance.now() + 130;
     for (const [x1, y1, x2, y2] of s.sh) this.shots.push({ a: new THREE.Vector3(x1 / 10, 1.4, y1 / 10), b: new THREE.Vector3(x2 / 10, 1.4, y2 / 10), until });
-    const newest = (s.blasts ?? []).find(b => b[2] < 10);
-    if (newest) {
-      const key = newest.join(':');
-      if (key !== this.lastBlastKey) {
-        this.lastBlastKey = key;
-        if (newest[3] <= 50) audio.grenadeImpact(this.audioAt(newest[0] / 10, newest[1] / 10)?.pan ?? 0);
-        else audio.boom(this.audioAt(newest[0] / 10, newest[1] / 10)?.pan ?? 0);
+    const present = new Set<number>();
+    for (const data of s.grenades ?? []) {
+      const [id, caster, , sx, sy] = data; present.add(id);
+      if (!this.heardThrows.has(id)) {
+        this.heardThrows.add(id); this.views.get(caster)?.sprite?.grenade(data[7] / 100);
+        audio.grenadeThrow(this.audioAt(sx / 10, sy / 10)?.pan ?? 0);
       }
+      let view = this.grenadeViews.get(id);
+      if (!view) { const mesh = new THREE.Mesh(this.grenadeGeometry, this.grenadeMaterial); this.scene.add(mesh); this.grenadeViews.set(id, view = { mesh, data, received: now }); }
+      view.data = data; view.received = now;
+    }
+    for (const [id, view] of this.grenadeViews) if (!present.has(id)) { this.scene.remove(view.mesh); this.grenadeViews.delete(id); }
+    for (const [x, y, age, radius, id] of s.blasts ?? []) {
+      if (!id || this.heardBlasts.has(id)) continue;
+      this.heardBlasts.add(id);
+      if (age > 100) continue;
+      const pan = this.audioAt(x / 10, y / 10)?.pan ?? 0;
+      if (radius <= 50) audio.grenadeImpact(pan); else audio.boom(pan);
+      const mesh = new THREE.Mesh(this.blastGeometry, new THREE.MeshBasicMaterial({ color: radius <= 50 ? 0xffa641 : 0xffebd0, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false }));
+      mesh.rotation.x = -Math.PI / 2; mesh.position.set(x / 10, groundH(x / 10, y / 10) + 0.2, y / 10);
+      this.scene.add(mesh); this.blastViews.push({ mesh, start: now - age * 10, radius: radius / 10 });
     }
     this.hud(s);
     if (s.w !== null && !this.ended) { this.ended = true; this.onEnd(s.w); }
@@ -513,7 +539,7 @@ export class Game {
       if (e.target instanceof HTMLInputElement) return;
       const k = e.key.toLowerCase();
       this.keys.add(k);
-      if (k === 'h' && this.selected().some(v => v.kind === 'captain' || v.kind === 'guard')) {
+      if (k === 'j' && this.selected().some(v => v.kind === 'captain' || v.kind === 'guard')) {
         this.grenadeTargeting = true; cv.style.cursor = 'crosshair';
       }
       else if (k === 'a') { this.amove = true; this.place = null; this.ghost.visible = false; cv.style.cursor = 'crosshair'; }
@@ -527,7 +553,7 @@ export class Game {
       else if (k === 's' && this.sel.size) this.cmd({ c: 'stop', ids: [...this.sel] });
       else if (k === ' ') { e.preventDefault(); this.selectOwn('captain'); }
       else if (k === 'h') this.selectOwn('hq');
-      else if (k === 'escape') { this.amove = false; this.sel.clear(); this.stopPlace(); cv.style.cursor = ''; }
+      else if (k === 'escape') { this.grenadeTargeting = false; this.amove = false; this.sel.clear(); this.stopPlace(); cv.style.cursor = ''; }
       this.renderCmd();
     }, sig);
     addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase()), sig);
@@ -536,9 +562,12 @@ export class Game {
 
   private resize() {
     const w = this.root.clientWidth || innerWidth, h = this.root.clientHeight || innerHeight;
-    this.renderer.setSize(w, h);
-    this.composer?.setSize(w, h);
-    this.pass.setSize(w, h);
+    const scale = this.graphics === 'basic' ? Math.max(1, Math.ceil(Math.max(w / 960, h / 720))) : 1;
+    const rw = Math.ceil(w / scale), rh = Math.ceil(h / scale);
+    this.renderer.setSize(rw, rh, false);
+    this.renderer.domElement.style.imageRendering = this.graphics === 'basic' ? 'pixelated' : 'auto';
+    this.composer?.setSize(rw, rh);
+    this.pass.setSize(rw, rh);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
   }
@@ -573,7 +602,7 @@ export class Game {
       this.grenadeTargeting = false; this.renderer.domElement.style.cursor = '';
       const p = this.groundAt(sx, sy);
       const unit = this.selected().find(v => v.kind === 'captain' || v.kind === 'guard');
-      if (p && unit) { this.cmd({ c: 'grenade', id: unit.id, x: p.x, y: p.z }); unit.sprite?.grenade(); audio.grenadeThrow(this.audioAt(unit.x, unit.z)?.pan ?? 0); }
+      if (p && unit) { this.cmd({ c: 'grenade', id: unit.id, x: p.x, y: p.z });  }
       return;
     }
     if (this.place) { // установка постройки; при неверном месте остаёмся в режиме, сервер подскажет причину
@@ -644,7 +673,7 @@ export class Game {
   // ---------- кадр ----------
   private frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
-    const dt = Math.min(0.05, (now - this.t0) / 1000);
+    const elapsed = Math.max(0, (now - this.t0) / 1000), dt = Math.min(0.05, elapsed);
     this.alertMarkers = this.alertMarkers.filter(a => {
       if (now >= a.until) { a.el.remove(); return false; }
       const p = new THREE.Vector3(a.x, 2, a.z).project(this.camera);
@@ -682,13 +711,28 @@ export class Game {
       }
     }
 
+    for (const { mesh, data, received } of this.grenadeViews.values()) {
+      const age = data[7] / 100 + (now - received) / 1000;
+      const t = Math.max(0, Math.min(1, (age - GRENADE_WINDUP) / GRENADE_FLIGHT));
+      const x = (data[3] + (data[5] - data[3]) * t) / 10, z = (data[4] + (data[6] - data[4]) * t) / 10;
+      mesh.visible = age >= GRENADE_WINDUP;
+      mesh.position.set(x, groundH(x, z) + 1.2 * (1 - t) + 4 * t * (1 - t) * 3, z);
+      mesh.rotation.x += dt * 10;
+    }
+    this.blastViews = this.blastViews.filter(b => {
+      const t = (now - b.start) / 800;
+      if (t >= 1) { this.scene.remove(b.mesh); (b.mesh.material as THREE.Material).dispose(); return false; }
+      b.mesh.scale.setScalar(Math.max(0.01, b.radius * t));
+      (b.mesh.material as THREE.MeshBasicMaterial).opacity = 1 - t; return true;
+    });
     const a = 1 - Math.exp(-dt * 14);
     const sites = [...this.views.values()].filter(v => isStruct(v.kind) && v.build < 1);
     for (const c of this.corpses) { // павшие лежат и исчезают, разрушенные постройки оседают
       for (const x of c.actors) x.update(dt);
+      c.sprite?.update(elapsed, 'idle', c.facing, this.cam.yaw, false);
       if (c.struct) { c.body.scale.y = Math.max(0.01, c.body.scale.y - dt * 1.2); c.body.position.y -= dt * 0.6; }
     }
-    this.corpses = this.corpses.filter(c => { if (c.until > now) return true; this.scene.remove(c.root); return false; });
+    this.corpses = this.corpses.filter(c => { if (c.until > now) return true; c.sprite?.dispose(); this.scene.remove(c.root); return false; });
     for (const v of this.views.values()) {
       v.x += (v.tx - v.x) * a; v.z += (v.tz - v.z) * a;
       v.f += (((v.tf - v.f + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * a;
@@ -706,7 +750,7 @@ export class Game {
         const moving = Math.hypot(v.tx - v.x, v.tz - v.z) > 0.12;
         const building = !moving && v.kind === 'builder' && sites.some(s => s.owner === v.owner && Math.hypot(s.x - v.x, s.z - v.z) < STATS[s.kind].radius + 3.5);
         const n = members(v.kind, v.hp);
-        v.sprite?.update(dt, moving ? 'run' : 'idle', v.f, c.yaw, !v.dead);
+        v.sprite?.update(elapsed, building ? 'work' : moving ? 'run' : 'idle', v.f, c.yaw, !v.dead, n);
         v.actors.forEach((a, i) => {
           if (i < n && !a.alive) a.revive(); // пополнение или возрождение капитана
           if (i >= n) a.die();
@@ -738,6 +782,7 @@ export class Game {
       gl.autoClear = true;
       this.camera.layers.enableAll();
       this.scene.background = background; this.scene.fog = fog;
-    } else { this.grade.uniforms.time.value = now * 0.001; this.composer.render(); }
+    } else if (this.graphics === 'basic') gl.render(this.scene, this.camera);
+    else { this.grade.uniforms.time.value = now * 0.001; this.composer.render(); }
   };
 }

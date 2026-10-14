@@ -16,6 +16,9 @@ const missingOnly = process.env.EXPORT_SCOPE !== 'all';
 const dest = 'client/public/models/factions';
 const filter = process.env.EXPORT_FILTER;
 const selectedActions = process.env.EXPORT_ACTIONS?.split(',');
+const modelsOnly = process.env.EXPORT_MODELS_ONLY === '1';
+if (selectedActions && selectedActions.some(a=>!UNITS.some(r=>motions(r).includes(a)))) throw Error('Unknown export action');
+if (filter && selectedActions && selectedActions.some(a=>!UNITS.includes(filter.split('/')[1])||!motions(filter.split('/')[1]).includes(a))) throw Error('Unsupported action for export filter');
 if (filter && !FACTIONS.some(f=>[...UNITS,...BUILDINGS].some(r=>filter===f+'/'+r))) throw Error('Unknown export filter: '+filter);
 const exists = async path => {
   try {
@@ -32,9 +35,9 @@ const reviewed = async path => {
 const targets = [];
 for (const faction of FACTIONS) for (const role of [...UNITS,...BUILDINGS]) {
   if (filter && filter!==faction+'/'+role) continue;
-  const model = !missingOnly || !(await exists(`${faction}/${role}/model.glb`));
+  const model = (modelsOnly || !selectedActions) && (!missingOnly || !(await exists(`${faction}/${role}/model.glb`)));
   const actions = [];
-  if (UNITS.includes(role)) for (const action of motions(role)) {
+  if (!modelsOnly && UNITS.includes(role)) for (const action of motions(role)) {
     if (selectedActions && !selectedActions.includes(action)) continue;
     if (await reviewed(`${faction}/${role}/sprites/${action}.provenance.json`)) continue;
     if (!missingOnly || !(await exists(`${faction}/${role}/sprites/${action}.png`)) || !(await exists(`${faction}/${role}/sprites/${action}.json`))) actions.push(action);

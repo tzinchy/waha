@@ -4,9 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WAHA</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Limelight&family=Poiret+One&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg">
 <style>
   /* Art Deco: чёрный и золото, ступенчатые силуэты, лучи-«солнце», двойные рамки, ромбы */
   :root{--ink:#080a0f;--night:#0e121a;--panel:#121722;--field:#0a0d13;--gold:#d4af37;--gold-hi:#f3dc8c;--gold-dim:#5e4f22;--ivory:#f2ead3;--dim:#9a937f;--bad:#e0705f;--ok:#62d6a0;
@@ -14,7 +12,8 @@
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--ink);color:var(--ivory);font:400 15px/1.45 var(--sans);overflow:hidden}
   .hidden{display:none!important}
-  button,input{font:inherit;color:inherit}
+  button,input,select{font:inherit;color:inherit}
+  select{background:var(--field);border:1px solid var(--gold-dim);padding:9px}
   button{white-space:nowrap}
 
   /* заголовки */
@@ -191,6 +190,8 @@
 
     <section class="panel stack" id="menu">
       <h2>Играть</h2>
+      <label for="graphicsQuality">Графика</label>
+      <select id="graphicsQuality"><option value="basic">Производительность</option><option value="cinematic">Тени и эффекты</option></select>
       <input type="text" id="name" maxlength="16" placeholder="Имя капитана">
       <button class="primary" id="create">Создать лобби</button>
       <div class="or">или войти по коду</div>
@@ -227,7 +228,7 @@
     <div id="hud-bottom">
       <div id="hud-cmd"></div>
       <span id="hud-sel"></span>
-      <span id="hud-hint">G текст/3D · M звук · ЛКМ выбор / рамка · ПКМ приказ · A+ЛКМ атака-движение · S стоп · Пробел капитан · H штаб · T/B/P/Y/R/U команды · стрелки, Q/E, колесо камера</span>
+      <span id="hud-hint">G текст/3D · M звук · ЛКМ выбор / рамка · ПКМ приказ · A+ЛКМ атака-движение · S стоп · Пробел капитан · H штаб · J граната · T/B/P/Y/R/U команды · стрелки, Q/E, колесо камера</span>
     </div>
     <div id="result" class="hidden"><div class="box"><h3 id="result-title"></h3><button class="primary" id="result-back">В лобби</button></div></div>
   </div>

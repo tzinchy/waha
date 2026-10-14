@@ -1,21 +1,39 @@
 {
   "version": 1,
+  "licenses": {
+    "legacyModels": {
+      "file": "client/public/models/LICENSE.txt",
+      "text": "3D models: KayKit by Kay Lousberg (kaylousberg.com), CC0 1.0 (public domain, no attribution required).\n- Dungeon Pack 1.0: characters (knight, barbarian, rogue, mage), weapons\n  https://opengameart.org/content/kaykit-dungeon-pack-10\n- Medieval Builder Pack 1.0: castle, barracks, watchtower, trees, rocks, forest, mountain, hill\n  https://opengameart.org/content/kaykit-medieval-builder-pack-10\n"
+    },
+    "ground": {
+      "file": "client/public/tex/LICENSE.txt",
+      "text": "Ground textures: forrest_ground_01 by Poly Haven (polyhaven.com), CC0.\n"
+    },
+    "proceduralModels": {
+      "source": "client/faction-models.ts",
+      "status": "Repository-generated prototypes; no third-party character pack recorded"
+    },
+    "generatedSource": {
+      "file": "client/public/art-src/legion/captain/walk-candidate.json",
+      "artisticAcceptance": "rejected; not imported into runtime"
+    }
+  },
   "scope": "Technical inventory only. Procedural atlas art remains unapproved.",
   "summary": {
     "models": 92,
-    "glbAnimationClips": 260,
-    "spriteAtlases": 260,
-    "bytes": 46424839,
+    "glbAnimationClips": 272,
+    "spriteAtlases": 261,
+    "bytes": 46919338,
     "errors": 0,
     "warnings": 0,
-    "missing": 342,
+    "missing": 340,
     "productionArtApproved": 0
   },
   "factions": [
     {
       "faction": "legion",
       "models": 23,
-      "spriteAtlases": 65,
+      "spriteAtlases": 66,
       "productionArtApproved": 0
     },
     {
@@ -50,8 +68,6 @@
     }
   ],
   "missing": [
-    "legion/captain/sprites/throw_grenade.png",
-    "legion/captain/sprites/throw_grenade.json",
     "legion/elite/sprites/attack_slash.png",
     "legion/elite/sprites/attack_slash.json",
     "legion/elite/sprites/throw_grenade.png",
@@ -402,7 +418,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/artillery/model.glb",
@@ -416,7 +433,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/artillery/sprites/death.png",
@@ -1774,7 +1792,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "heretics/builder/model.glb",
@@ -1788,7 +1807,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/builder/sprites/death.png",
@@ -2868,7 +2888,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "heretics/builder/sprites/work.png",
@@ -3152,7 +3172,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/captain/sprites/attack.png",
@@ -4502,7 +4523,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "heretics/elite/model.glb",
@@ -4516,7 +4537,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/elite/sprites/death.png",
@@ -5874,7 +5896,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/flamer/model.glb",
@@ -5888,7 +5911,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/flamer/sprites/death.png",
@@ -7246,7 +7270,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/generator/model.glb",
@@ -7254,7 +7279,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/guard/model.glb",
@@ -7268,7 +7294,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/guard/sprites/death.png",
@@ -8618,7 +8645,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "heretics/heavy/model.glb",
@@ -8632,7 +8659,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/heavy/sprites/death.png",
@@ -9990,7 +10018,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "heretics/medic/model.glb",
@@ -10004,7 +10033,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/medic/sprites/death.png",
@@ -11362,7 +11392,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "heretics/relic/model.glb",
@@ -11370,7 +11401,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/sniper/model.glb",
@@ -11384,7 +11416,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/sniper/sprites/death.png",
@@ -12748,7 +12781,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/tank/sprites/death.png",
@@ -14112,7 +14146,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/titan/sprites/death.png",
@@ -15476,7 +15511,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/transport/sprites/death.png",
@@ -16834,7 +16870,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "heretics/walker/model.glb",
@@ -16848,7 +16885,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "heretics/walker/sprites/death.png",
@@ -18206,7 +18244,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/armory/model.glb",
@@ -18214,7 +18253,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/artillery/model.glb",
@@ -18228,7 +18268,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/artillery/sprites/death.png",
@@ -19586,7 +19627,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "legion/builder/model.glb",
@@ -19600,7 +19642,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/builder/sprites/death.png",
@@ -20680,7 +20723,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "legion/builder/sprites/work.png",
@@ -20954,17 +20997,30 @@
     },
     {
       "file": "legion/captain/model.glb",
-      "bytes": 288320,
+      "bytes": 588900,
       "glbAnimations": [
         "idle",
+        "idle_scan",
+        "idle_inspect",
+        "idle_taunt",
         "walk",
         "run",
         "attack",
+        "attack_slash",
+        "attack_thrust",
+        "attack_overhead",
+        "attack_combo",
+        "execute",
+        "throw_grenade",
+        "fly",
+        "dash_flight",
+        "teleport",
         "death"
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/captain/sprites/attack.png",
@@ -22047,6 +22103,276 @@
       "runtime": true
     },
     {
+      "file": "legion/captain/sprites/throw_grenade.png",
+      "bytes": 193919,
+      "width": 1024,
+      "height": 1024,
+      "frames": 64,
+      "transparentPixels": 976799,
+      "partialAlphaPixels": 0,
+      "cells": [
+        {
+          "visiblePixels": 1178,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1179,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1216,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1281,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1280,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1256,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1242,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1233,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1215,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1197,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1242,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1308,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1234,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1301,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1295,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1305,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1137,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1140,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1232,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1139,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1125,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1180,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1198,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1134,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 831,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 867,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1002,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 781,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1121,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1034,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 908,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 787,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1201,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1162,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1138,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1205,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1309,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1226,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1223,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1201,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1091,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1125,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1164,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1205,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1216,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1142,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1170,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1199,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1102,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1079,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1059,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1118,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1167,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1168,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1167,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 1144,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 812,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 947,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 998,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 856,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 995,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 974,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 863,
+          "edgePixels": 0
+        },
+        {
+          "visiblePixels": 773,
+          "edgePixels": 0
+        }
+      ],
+      "technical": "pass",
+      "art": "prototype",
+      "runtime": true
+    },
+    {
       "file": "legion/captain/sprites/walk.png",
       "bytes": 153421,
       "width": 1024,
@@ -22314,7 +22640,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "legion/elite/model.glb",
@@ -22328,7 +22654,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/elite/sprites/death.png",
@@ -23686,7 +24013,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/flamer/model.glb",
@@ -23700,7 +24028,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/flamer/sprites/death.png",
@@ -25058,7 +25387,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/generator/model.glb",
@@ -25066,7 +25396,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/guard/model.glb",
@@ -25080,7 +25411,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/guard/sprites/death.png",
@@ -26430,7 +26762,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "legion/heavy/model.glb",
@@ -26444,7 +26776,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/heavy/sprites/death.png",
@@ -27802,7 +28135,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "legion/medic/model.glb",
@@ -27816,7 +28150,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/medic/sprites/death.png",
@@ -29174,7 +29509,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "legion/relic/model.glb",
@@ -29182,7 +29518,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/sniper/model.glb",
@@ -29196,7 +29533,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/sniper/sprites/death.png",
@@ -30560,7 +30898,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/tank/sprites/death.png",
@@ -31924,7 +32263,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/titan/sprites/death.png",
@@ -33288,7 +33628,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/transport/sprites/death.png",
@@ -34646,7 +34987,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "legion/walker/model.glb",
@@ -34660,7 +35002,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "legion/walker/sprites/death.png",
@@ -36018,7 +36361,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/armory/model.glb",
@@ -36026,7 +36370,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/artillery/model.glb",
@@ -36040,7 +36385,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/artillery/sprites/death.png",
@@ -37398,7 +37744,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "necrons/builder/model.glb",
@@ -37412,7 +37759,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/builder/sprites/death.png",
@@ -38492,7 +38840,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "necrons/builder/sprites/work.png",
@@ -38776,7 +39124,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/captain/sprites/attack.png",
@@ -40126,7 +40475,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "necrons/elite/model.glb",
@@ -40140,7 +40489,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/elite/sprites/death.png",
@@ -41498,7 +41848,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/flamer/model.glb",
@@ -41512,7 +41863,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/flamer/sprites/death.png",
@@ -42870,7 +43222,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/generator/model.glb",
@@ -42878,7 +43231,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/guard/model.glb",
@@ -42892,7 +43246,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/guard/sprites/death.png",
@@ -44242,7 +44597,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "necrons/heavy/model.glb",
@@ -44256,7 +44611,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/heavy/sprites/death.png",
@@ -45614,7 +45970,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "necrons/medic/model.glb",
@@ -45628,7 +45985,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/medic/sprites/death.png",
@@ -46986,7 +47344,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "necrons/relic/model.glb",
@@ -46994,7 +47353,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/sniper/model.glb",
@@ -47008,7 +47368,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/sniper/sprites/death.png",
@@ -48372,7 +48733,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/tank/sprites/death.png",
@@ -49736,7 +50098,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/titan/sprites/death.png",
@@ -51100,7 +51463,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/transport/sprites/death.png",
@@ -52458,7 +52822,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "necrons/walker/model.glb",
@@ -52472,7 +52837,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "necrons/walker/sprites/death.png",
@@ -53830,7 +54196,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/armory/model.glb",
@@ -53838,7 +54205,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/artillery/model.glb",
@@ -53852,7 +54220,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/artillery/sprites/death.png",
@@ -55210,7 +55579,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "scrap/builder/model.glb",
@@ -55224,7 +55594,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/builder/sprites/death.png",
@@ -56304,7 +56675,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "scrap/builder/sprites/work.png",
@@ -56588,7 +56959,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/captain/sprites/attack.png",
@@ -57938,7 +58310,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "scrap/elite/model.glb",
@@ -57952,7 +58324,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/elite/sprites/death.png",
@@ -59310,7 +59683,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/flamer/model.glb",
@@ -59324,7 +59698,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/flamer/sprites/death.png",
@@ -60682,7 +61057,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/generator/model.glb",
@@ -60690,7 +61066,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/guard/model.glb",
@@ -60704,7 +61081,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/guard/sprites/death.png",
@@ -62054,7 +62432,7 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false
     },
     {
       "file": "scrap/heavy/model.glb",
@@ -62068,7 +62446,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/heavy/sprites/death.png",
@@ -63426,7 +63805,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "scrap/medic/model.glb",
@@ -63440,7 +63820,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/medic/sprites/death.png",
@@ -64798,7 +65179,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "scrap/relic/model.glb",
@@ -64806,7 +65188,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/sniper/model.glb",
@@ -64820,7 +65203,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/sniper/sprites/death.png",
@@ -66184,7 +66568,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/tank/sprites/death.png",
@@ -67548,7 +67933,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/titan/sprites/death.png",
@@ -68912,7 +69298,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/transport/sprites/death.png",
@@ -70270,7 +70657,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": true
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": true
     },
     {
       "file": "scrap/walker/model.glb",
@@ -70284,7 +70672,8 @@
       ],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     },
     {
       "file": "scrap/walker/sprites/death.png",
@@ -71642,7 +72031,8 @@
       "glbAnimations": [],
       "technical": "pass",
       "art": "prototype",
-      "runtime": false
+      "runtime": false,
+      "runtimeBuildingGeometryFromCode": false
     }
   ]
 }

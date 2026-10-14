@@ -20,6 +20,9 @@ const ARMOR = [0x2f6bd1, 0xb02a2a, 0x2e8b57, 0x6a3fa0, 0x4a4a4a, 0x1e90a0, 0x8b5
 const TRIM = [0xf3d36b, 0xe0e0e0, 0x22c1c3, 0xff7a1a, 0xd04a6a, 0x222222];
 let cfg: CaptainCfg = { armor: ARMOR[0], trim: TRIM[0], weapon: 'sword', banner: true };
 try { cfg = { ...cfg, ...JSON.parse(store.get('waha.captain') ?? '{}') }; } catch { /* битые данные: берём умолчания */ }
+const graphicsQuality = $<HTMLSelectElement>('graphicsQuality');
+graphicsQuality.value = store.get('waha.graphics') === 'cinematic' ? 'cinematic' : 'basic';
+graphicsQuality.onchange = () => store.set('waha.graphics', graphicsQuality.value);
 const preview = new CaptainPreview($<HTMLCanvasElement>('preview'));
 const factionChoice = $<HTMLSelectElement>('factionChoice');
 factionChoice.value = cfg.faction ?? 'legion';
@@ -108,7 +111,7 @@ function startGame(slot: number, players: LobbyPlayer[]) {
     $('result-title').textContent = winner === slot ? 'Победа' : winner < 0 ? 'Ничья' : `Победил ${esc(players[winner].name)}`;
     $('result').classList.remove('hidden');
     if (winner === slot) audio.win(); else audio.lose();
-  }); });
+  }, graphicsQuality.value === 'cinematic' ? 'cinematic' : 'basic'); });
 }
 $('result-back').onclick = () => {
   game?.destroy(); game = null;

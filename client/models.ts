@@ -162,15 +162,17 @@ const meshy = new Map<string, Rig>();
 const MESHY_UNITS = ['captain', 'guard', 'builder', 'hq', 'barracks', 'post'];
 const MESHY_ANIMS = ['idle', 'run', 'walk', 'attack', 'shoot', 'death', 'work'];
 
+const optionalMeshy = fetch('/models/meshy-manifest.json').then(r => r.json()).then(m => new Set<string>(m.files)).catch(() => new Set<string>());
+
 async function loadMeshy(name: string) {
   const base = `/models/meshy/${name}/`, loader = new GLTFLoader();
-  const head = await fetch(base + 'model.glb', { method: 'HEAD' });
-  if (!head.ok || !(head.headers.get('content-type') ?? '').includes('model')) return; // нет модели: остаётся KayKit
+  const available = await optionalMeshy;
+  if (!available.has(name + '/model.glb')) return; // optional models are indexed, not probed with 404s
   const g = await loader.loadAsync(base + 'model.glb');
   g.scene.traverse(o => { if ((o as THREE.Mesh).isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   const box = new THREE.Box3().setFromObject(g.scene), size = box.getSize(new THREE.Vector3());
   const clips: Record<string, THREE.AnimationClip> = {};
-  await Promise.all(MESHY_ANIMS.map(a => loader.loadAsync(base + a + '.glb').then(x => { if (x.animations[0]) clips[a] = x.animations[0]; }, () => undefined)));
+  await Promise.all(MESHY_ANIMS.filter(a => available.has(name + '/' + a + '.glb')).map(a => loader.loadAsync(base + a + '.glb').then(x => { if (x.animations[0]) clips[a] = x.animations[0]; }, () => undefined)));
   meshy.set(name, { scene: g.scene, clips, height: size.y, width: Math.max(size.x, size.z) });
 }
 export const meshyReady = Promise.all(MESHY_UNITS.map(n => loadMeshy(n).catch(() => undefined))).then(() => undefined);

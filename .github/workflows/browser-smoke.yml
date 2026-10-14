@@ -4,8 +4,14 @@ on:
   push:
     branches: [codex/faction-asset-lab]
     paths:
-      - scripts/smoke-game.mjs
+      - 'client/**'
+      - 'shared/**'
+      - 'server/**'
+      - 'scripts/**'
+      - package.json
+      - package-lock.json
       - .github/workflows/browser-smoke.yml
+  pull_request:
 jobs:
   smoke:
     runs-on: ubuntu-latest
@@ -17,13 +23,15 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npm install --no-save --package-lock=false playwright@1.56.1
       - run: npx playwright install --with-deps chromium
-      - name: Test actual multiplayer browser loop
-        run: node scripts/smoke-game.mjs
+      - run: npm run check
+      - run: npm test
+      - run: npm run assets:validate
+      - name: Test six real multiplayer browser loops
+        run: npm run smoke
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: browser-game-screenshot
-          path: smoke-game.png
-          if-no-files-found: ignore
+          name: six-faction-browser-qa
+          path: artifacts/browser/
+          if-no-files-found: error

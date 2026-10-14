@@ -1,3 +1,4 @@
+import { GRENADE_WINDUP, GRENADE_FLIGHT } from '../shared/sim.ts';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
@@ -33,7 +34,7 @@ export const ROLE_MOTIONS: Record<UnitRole, Motion[]> = {
   titan: ['idle','walk','run','shoot','death'],
 
 };
-const DURATIONS: Record<Motion, number> = { idle: 2, idle_scan: 2.4, idle_inspect: 2.2, idle_taunt: 1.7, walk: 1, run: 0.65, attack: 0.7, attack_slash: 0.75, attack_thrust: 0.58, attack_overhead: 0.95, attack_combo: 1.25, execute: 1.6, throw_grenade: 1.1, fly: 1.2, dash_flight: 0.55, teleport: 0.8, shoot: 0.45, work: 1.1, death: 1.1 };
+const DURATIONS: Record<Motion, number> = { idle: 2, idle_scan: 2.4, idle_inspect: 2.2, idle_taunt: 1.7, walk: 1, run: 0.65, attack: 0.7, attack_slash: 0.75, attack_thrust: 0.58, attack_overhead: 0.95, attack_combo: 1.25, execute: 1.6, throw_grenade: GRENADE_WINDUP + GRENADE_FLIGHT, fly: 1.2, dash_flight: 0.55, teleport: 0.8, shoot: 0.45, work: 1.1, death: 1.1 };
 const geometries = new Map<string, THREE.BufferGeometry>();
 const materialCache = new Map<FactionId, Record<string, THREE.MeshStandardMaterial>>();
 const surfacePixels = new Uint8Array(64 * 64 * 4);
@@ -256,7 +257,7 @@ export class FactionActor {
   pose(mode: Motion, time: number) {
     const j = this.joints;
     if(VEHICLE_ROLES.has(this.role)) {
-      const p=mode==='death'?Math.min(1,time/1.1):(time%DURATIONS[mode])/DURATIONS[mode], w=Math.sin(p*Math.PI*2);
+      const p=['idle','walk','run','work','fly'].includes(mode)?(time%DURATIONS[mode])/DURATIONS[mode]:Math.min(1,time/DURATIONS[mode]), w=Math.sin(p*Math.PI*2);
       j.hull.position.set(0,0.75,0); j.hull.rotation.set(0,0,0); j.turret.rotation.y=mode==='idle'?w*0.1:0; j.gun.position.z=0.3; j.gun.rotation.x=this.role==='artillery'?-0.35:0;
       j.left.rotation.x=j.right.rotation.x=0;
       if(mode==='walk'||mode==='run'){j.hull.position.y+=Math.abs(w)*0.035;if(this.role==='walker'||this.role==='titan'){j.left.rotation.x=w*0.3;j.right.rotation.x=-w*0.3;}}
@@ -264,7 +265,8 @@ export class FactionActor {
       if(mode==='death'){j.hull.rotation.z=p*0.3;j.hull.position.y-=p*0.45;j.turret.rotation.y=p*0.7;}return;
     }
     j.pelvis.position.z=0;
-    const duration = DURATIONS[mode], p = mode === 'death' ? Math.min(1, time / duration) : (time % duration) / duration;
+    const duration = DURATIONS[mode], looping = ['idle','idle_scan','idle_inspect','idle_taunt','walk','run','work','fly'].includes(mode);
+    const p = looping ? (time % duration) / duration : Math.min(1, time / duration);
     const wave = Math.sin(p * Math.PI * 2);
     for (const g of Object.values(j)) g.rotation.set(0, 0, 0);
     j.pelvis.position.set(0, 0.93, 0);
@@ -284,13 +286,15 @@ export class FactionActor {
       j.armL.rotation.z = mode === 'idle_taunt' ? -0.6 * Math.sin(p * Math.PI) : 0.08;
     } else if (mode === 'throw_grenade') {
       // Wind-up, overhand release and follow-through.
-      const windup = Math.min(1, p * 2.5);
-      const release = Math.max(0, Math.min(1, (p - 0.45) * 3));
-      j.armR.rotation.x = -0.35 + windup * 2.1 - release * 3.5;
-      j.armR.rotation.z = -0.35 + release * 0.8;
-      j.torso.rotation.y = -0.45 * windup + release * 0.85;
-      j.torso.rotation.x = -0.15 * windup + 0.3 * release;
-      j.legL.rotation.x = -0.25 * windup;
+      const windup = Math.min(1, time / GRENADE_WINDUP);
+      const release = Math.max(0, Math.min(1, (time - GRENADE_WINDUP) / 0.25));
+      const recovery = Math.max(0, Math.min(1, (time - GRENADE_WINDUP - 0.25) / (GRENADE_FLIGHT - 0.25)));
+      const settle = 1 - recovery;
+      j.armR.rotation.x = (-0.35 + windup * 2.1 - release * 3.5) * settle;
+      j.armR.rotation.z = (-0.35 + release * 0.8) * settle;
+      j.torso.rotation.y = (-0.45 * windup + release * 0.85) * settle;
+      j.torso.rotation.x = (-0.15 * windup + 0.3 * release) * settle;
+      j.legL.rotation.x = -0.25 * windup * settle;
     } else if (mode === 'attack_slash' || mode === 'attack_thrust' || mode === 'attack_overhead' || mode === 'attack_combo' || mode === 'execute') {
       const strike = mode === 'attack_combo' ? Math.sin(p * Math.PI * 4) : Math.sin(p * Math.PI);
       j.armR.rotation.x = mode === 'attack_thrust' ? -1.2 + strike * 0.9 : mode === 'attack_overhead' ? -2.8 + strike * 2.4 : mode === 'execute' ? -2.9 + strike * 2.7 : -1.1 - strike * 1.5;

@@ -3,8 +3,8 @@
   "quality": "0 approved authored atlases; all other atlas art remains procedural prototype",
   "generator": "scripts/audit-assets.mjs (inventory from physical files)",
   "models": 92,
-  "animationClips": 260,
-  "spriteAtlases": 260,
+  "animationClips": 272,
+  "spriteAtlases": 261,
   "atlases": [
     {
       "file": "heretics/artillery/sprites/death.png",
@@ -320,6 +320,10 @@
     },
     {
       "file": "legion/captain/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/captain/sprites/throw_grenade.png",
       "art": "prototype"
     },
     {
@@ -1448,19 +1452,32 @@
       "faction": "legion",
       "role": "captain",
       "file": "legion/captain/model.glb",
-      "bytes": 288320,
+      "bytes": 588900,
       "animations": [
         "attack",
         "death",
         "idle",
         "run",
+        "throw_grenade",
         "walk"
       ],
       "glbAnimations": [
         "idle",
+        "idle_scan",
+        "idle_inspect",
+        "idle_taunt",
         "walk",
         "run",
         "attack",
+        "attack_slash",
+        "attack_thrust",
+        "attack_overhead",
+        "attack_combo",
+        "execute",
+        "throw_grenade",
+        "fly",
+        "dash_flight",
+        "teleport",
         "death"
       ]
     },

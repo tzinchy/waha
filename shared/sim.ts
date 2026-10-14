@@ -1,6 +1,8 @@
 // Вся игровая логика. Чистые функции без DOM и сети: сервер гонит step(), клиент только рисует snapshot().
 export const MAP = { w: 100, h: 100 };
 export const DT = 1 / 20;
+export const GRENADE_WINDUP = 0.35;
+export const GRENADE_FLIGHT = 0.75;
 
 export type Weapon = 'sword' | 'hammer';
 export type CaptainCfg = { armor: number; trim: number; weapon: Weapon; banner: boolean; faction?: 'legion' | 'heretics' | 'scrap' | 'necrons' | 'drukhari' | 'daemons' };
@@ -69,7 +71,9 @@ export type Player = { req: number; alive: boolean; tier: number };
 export type State = {
   tick: number; units: Unit[]; points: Point[]; players: Player[]; nextId: number;
   winner: number | null; shots: number[][];
-  blasts?: { x: number; y: number; age: number; radius: number }[];
+  blasts?: { x: number; y: number; age: number; radius: number; id?: number }[];
+  nextEffectId?: number;
+  grenades?: { id: number; caster: number; owner: number; sx: number; sy: number; x: number; y: number; age: number }[];
   nuclearCooldowns?: number[];
 };
 export type Cmd =
@@ -129,16 +133,8 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (!Number.isFinite(cmd.x) || !Number.isFinite(cmd.y) || cmd.x < 0 || cmd.x > MAP.w || cmd.y < 0 || cmd.y > MAP.h) return 'Недопустимая цель';
     if (Math.hypot(cmd.x - u.x, cmd.y - u.y) > 14) return 'Цель слишком далеко';
     if ((u.grenadeCd ?? 0) > 0) return 'Граната перезаряжается';
-    u.grenadeCd = 18;
-    for (const target of s.units) {
-      if (target.hp <= 0 || target.owner === owner) continue;
-      const d = Math.hypot(target.x - cmd.x, target.y - cmd.y);
-      if (d <= 4 + STATS[target.kind].radius) {
-        target.hp -= 110 * Math.max(0.2, 1 - d / (4 + STATS[target.kind].radius));
-        target.hit = 0;
-      }
-    }
-    (s.blasts ??= []).push({ x: cmd.x, y: cmd.y, age: 0, radius: 4 });
+    u.grenadeCd = 18; u.face = Math.atan2(cmd.y - u.y, cmd.x - u.x);
+    (s.grenades ??= []).push({ id: nextEffect(s), caster: u.id, owner, sx: u.x, sy: u.y, x: cmd.x, y: cmd.y, age: 0 });
     return;
   }
   if (cmd.c === 'equip') {
@@ -170,7 +166,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
       const falloff = Math.max(0.15, 1 - d / (radius + STATS[u.kind].radius));
       u.hp -= 650 * falloff; u.hit = 0;
     }
-    (s.blasts ??= []).push({ x: cmd.x, y: cmd.y, age: 0, radius });
+    (s.blasts ??= []).push({ x: cmd.x, y: cmd.y, age: 0, radius, id: nextEffect(s) });
     return;
   }
   if (cmd.c === 'train') {
@@ -246,6 +242,8 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
   });
 }
 
+const nextEffect = (s: State) => s.nextEffectId = (s.nextEffectId ?? 0) + 1;
+
 export function step(s: State, dt = DT): void {
   if (s.winner !== null) return;
   s.tick++;
@@ -254,6 +252,20 @@ export function step(s: State, dt = DT): void {
   if (s.blasts) {
     for (const b of s.blasts) b.age += dt;
     s.blasts = s.blasts.filter(b => b.age < 3);
+  }
+  if (s.grenades) {
+    s.grenades = s.grenades.filter(g => {
+      g.age += dt;
+      if (g.age + 1e-9 < GRENADE_WINDUP + GRENADE_FLIGHT) return true;
+      // Resolve against positions at impact, so moving out of the blast is meaningful.
+      for (const target of s.units) {
+        if (target.hp <= 0 || target.owner === g.owner) continue;
+        const radius = 4 + STATS[target.kind].radius, d = Math.hypot(target.x - g.x, target.y - g.y);
+        if (d <= radius) { target.hp -= 110 * Math.max(0.2, 1 - d / radius); target.hit = 0; }
+      }
+      (s.blasts ??= []).push({ x: g.x, y: g.y, age: 0, radius: 4, id: g.id });
+      return false;
+    });
   }
   const income = s.players.map(() => 1);
   for (const pt of s.points) if (pt.owner >= 0) income[pt.owner] += 1 + (postAt(s, pt)?.owner === pt.owner ? 2 : 0);
@@ -318,6 +330,7 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
   const st = STATS[u.kind];
   u.cd = Math.max(0, u.cd - dt);
   if (isStruct(u.kind) && u.build < 1) return; // стройка ещё не работает
+  if (s.grenades?.some(g => g.caster === u.id && g.age < GRENADE_WINDUP)) return;
   const o = u.order;
   if (o?.t === 'build') {
     const site = byId.get(o.id);
@@ -409,7 +422,7 @@ function cleanup(s: State) {
 }
 
 /** Компактный снимок для сети: целые числа вместо float, чтобы JSON был короче. */
-export type Snap = { tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; blasts?: number[][]; gear?: number[][]; nuclearCooldowns?: number[] };
+export type Snap = { tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; blasts?: number[][]; gear?: number[][]; nuclearCooldowns?: number[]; grenades?: number[][] };
 export function snapshot(s: State): Snap {
   return {
     tick: s.tick,
@@ -419,7 +432,9 @@ export function snapshot(s: State): Snap {
     pl: s.players.map(p => [Math.floor(p.req), p.alive ? 1 : 0, p.tier]),
     sh: s.shots.map(v => v.map(n => Math.round(n * 10))),
     w: s.winner,
-    blasts: (s.blasts ?? []).map(b => [Math.round(b.x * 10), Math.round(b.y * 10), Math.round(b.age * 100), Math.round(b.radius * 10)]),
+    blasts: (s.blasts ?? []).map(b => [Math.round(b.x * 10), Math.round(b.y * 10), Math.round(b.age * 100), Math.round(b.radius * 10), b.id ?? 0]),
+    // [event, caster, owner, origin x/y *10, target x/y *10, age *100]
+    grenades: (s.grenades ?? []).map(g => [g.id, g.caster, g.owner, Math.round(g.sx * 10), Math.round(g.sy * 10), Math.round(g.x * 10), Math.round(g.y * 10), Math.round(g.age * 100)]),
     gear: s.units.map(u => [u.id, u.gear?.weapon ?? 0, u.gear?.armor ?? 0, u.gear?.mobility ?? 0, u.gear?.relic ?? 0]),
     nuclearCooldowns: (s.nuclearCooldowns ?? []).map(v => Math.ceil(v)),
   };
