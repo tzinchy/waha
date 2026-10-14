@@ -1,7 +1,7 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import { ARCHS, HERO, type Arch } from '../shared/sim.ts';
-import { resourceCost, DOOM_SHOT, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -9,7 +9,6 @@ import { paintMap } from './mappaint.ts';
 import { voice } from './voice.ts';
 
 const S = 26; // пикселей мира на единицу симуляции
-const GRID = 2; // шаг сетки размещения построек, м
 const $ = (id: string) => document.getElementById(id)!;
 
 /** Ячейка сетки команд (пресет CommandGrid) и её подсказка (Tooltip). */
@@ -178,6 +177,8 @@ export class Game {
   private pointOwner: number[] = [];
   private shots: { el: SVGElement; until: number }[] = [];
   private ghost = document.createElement('div');
+  private wallGhost = document.createElement('div'); // клетки протяжки стены
+  private wallGhostHtml = '';
   private wallLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   private place: Buildable | null = null;
   private drag: { x0: number; y0: number; x1: number; y1: number } | null = null;
@@ -187,7 +188,7 @@ export class Game {
   private pan: { x: number; y: number } | null = null;
   private throwG = -1;
   private stopCd = 0;
-  private unlock = 0;
+  private unlock = 0; private doomPct = 0;
   private strikeEls = new Map<string, HTMLElement>();
   private megaSeen = new Set<number>();
   private megaMini = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -237,7 +238,7 @@ export class Game {
     this.fogCv.width = this.fogCv.height = 320; this.fogCv.className = 'w2d-fog';
     Object.assign(this.fogCv.style, { width: MAP.w * S + 'px', height: MAP.h * S + 'px' });
     this.aimRing.className = 'w2d-aim'; this.aimRing.style.display = 'none';
-    this.world.append(this.ground, this.fogCv, this.fx, this.ghost, this.aimRing);
+    this.world.append(this.ground, this.fogCv, this.fx, this.ghost, this.wallGhost, this.aimRing);
     root.prepend(this.world);
     this.buildMap();
     this.buildMini();
@@ -334,7 +335,7 @@ export class Game {
     this.qk = s.qk ?? {};
     if (this.slot >= 0) this.renderScore(s);
     this.drawSmoke(s.sm ?? []);
-    this.stopCd = s.ps?.[this.slot]?.[0] ?? 0; this.unlock = s.ps?.[this.slot]?.[1] ?? 0;
+    this.stopCd = s.ps?.[this.slot]?.[0] ?? 0; this.unlock = s.ps?.[this.slot]?.[1] ?? 0; this.doomPct = s.ps?.[this.slot]?.[2] ?? 0;
     this.drawStrikes(s); this.megaWatch(s);
     for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog, gear, c0, c1, c2, gcd, sh, frozen, carry, rise, off, respawn, archI] of s.u) {
       const kind = KINDS[ki];
@@ -472,7 +473,7 @@ export class Game {
 
   private drawMini(s: Snap) {
     const k = 100 / MAP.w, own = (o: number) => (o === this.slot ? 'ally' : 'enemy');
-    let h = s.p.map(([o], i) => { const [x, y] = [...POINTS, ...RELICS][i] ?? [0, 0]; return `<path class="${o < 0 ? 'pt' : o === this.slot ? 'pt-ally' : 'pt-enemy'}" d="M${x * k} ${y * k - 3}l3 3-3 3-3-3z"/>`; }).join('');
+    let h = s.p.map(([o], i) => { const [x, y] = [...POINTS, ...RELICS][i] ?? [0, 0]; const c = o < 0 ? 'pt' : o === this.slot ? 'pt-ally' : 'pt-enemy'; return i >= POINTS.length ? `<path class="${c} rel" d="M${x * k - 3} ${y * k + 3}v-4l3-3 3 3v4z"/>` : `<path class="${c}" d="M${x * k} ${y * k - 3}l3 3-3 3-3-3z"/>`; }).join(''); // реликварий — домик с золотой каймой
     for (const [, o, ki, x, y, hp] of s.u) {
       const kind = KINDS[ki], X = (x / 10) * k, Y = (y / 10) * k;
       if (hp <= 0 || (kind === 'mine' && o !== this.slot)) continue;
@@ -661,7 +662,7 @@ export class Game {
         mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: 'Артиллерия: 45 м, по площади, в упор не стреляет — нужна разведка и прикрытие.', titan: 'Титан: один на армию, давит пехоту шагами.' };
       producible(st.kind).forEach((k, i) => {
         const r = ROLES[k]!, n = this.qk[st.id]?.filter(q => q === KINDS.indexOf(k)).length ?? 0, now = this.qk[st.id]?.[0] === KINDS.indexOf(k);
-        const researching = /^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length;
+        const researching = (/^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length) || st.q > 100;
         c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k), r.energy ?? 0, r.relics ?? 0),
           info: `${ROLE_INFO[k] ?? ''} Легион: ${r.pop}.`, req: this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
       });
@@ -680,9 +681,11 @@ export class Game {
           c.push({ act: done ? '' : 'res' + r, name: RESEARCH[i], hot: String(r + 1), icon: ICON.research, ...(done ? {} : this.price(researchCost(i).cost, researchCost(i).energy)), info: RESEARCH_INFO[i], done, req: training ? 'Здание нанимает войска' : busy ? 'Здание уже исследует' : undefined, prog: !training && st.q - 1 === i ? st.prod : undefined });
         }
       }
-      if (st.kind === 'key4') UNLOCKS.forEach((U, u) => { const done = !!(this.unlock & (1 << u)), busy = st.q > 0 && st.q !== 101 + u;
-        c.push({ act: done ? '' : 'unlock:' + u, name: U.name, hot: String(5 + u), icon: ICON.research, ...(done ? {} : this.price(U.cost, U.energy, U.relics)), done, info: `Дорогое открытие: ${U.info}. ${U.time} с.`, req: this.tier < U.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][U.tier - 1]}` : busy ? 'Здание уже исследует' : undefined, prog: st.q === 101 + u ? st.prod : undefined }); });
-      if (st.kind === 'doom') c.push({ act: st.prod >= 100 ? 'strike' : '', name: DOOM_OF[this.fac()].name, hot: 'Y', icon: ABIL_ICON[5], ult: true, ...this.price(0, DOOM_SHOT), info: `Удар в любую точку карты: ${DOOM_OF[this.fac()].info}. Все получат предупреждение за 6 с.`, prog: st.prod < 100 ? st.prod : undefined });
+      if (st.kind === 'hq') { // открытия и сверхоружие — всё в штабе
+        UNLOCKS.forEach((U, u) => { const done = !!(this.unlock & (1 << u)), busy = st.q > 100 && st.q !== 101 + u;
+          c.push({ act: done ? '' : 'unlock:' + u, name: U.name, hot: String(1 + u), icon: ICON.research, ...(done ? {} : this.price(U.cost, U.energy, U.relics)), done, info: `Дорогое открытие: ${U.info}. ${U.time} с.`, req: this.tier < U.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][U.tier - 1]}` : busy ? 'Штаб уже исследует' : this.qk[st.id]?.length ? 'Штаб нанимает войска' : undefined, prog: st.q === 101 + u ? st.prod : undefined }); });
+        if (this.unlock & 2) c.push({ act: this.doomPct >= 100 ? 'strike' : '', name: DOOM_OF[this.fac()].name, hot: 'Y', icon: ABIL_ICON[5], ult: true, ...this.price(0, DOOM_SHOT), info: `Удар в любую точку карты: ${DOOM_OF[this.fac()].info}. Заряд 3 минуты; все получат предупреждение за 6 с.`, req: this.doomPct < 100 ? `Заряд ${this.doomPct}%` : undefined, prog: this.doomPct < 100 ? this.doomPct : undefined, active: this.throwG === 9 });
+      }
       if (st.kind === 'gate') {
         const onField = own('legend');
         F.legends.forEach((n, v) => c.push({ act: 'sum' + v, name: n, hot: String(v + 1), art: F.legendArt[v], ...this.price(0, LEGEND_COST[v].energy, LEGEND_COST[v].relics), info: F.legendInfo[v] + '. Призыв 20 с, виден всем.', req: onField ? 'Легенда уже на поле' : st.q > 0 && st.q - 1 !== v ? 'Врата заняты' : undefined, prog: st.q - 1 === v ? st.prod : undefined }));
@@ -754,7 +757,7 @@ export class Game {
     const card = (k: Buildable, name: string, hot: string, info: string, req?: string) => {
       const p = this.price(STATS[k].cost, ENERGY_COST[k] ?? 0), lack = (n: number, have: number) => (n > have ? ' class="lack"' : '');
       const cost = req ? `<span>${req}</span>` : [p.cost ? `<span${lack(p.cost, this.req)}>◆ ${p.cost}</span>` : '', p.en ? `<span${lack(p.en, this.energy)}>ϟ ${p.en}</span>` : '', `<span>⧗ ${STATS[k].time} с</span>`].join('');
-      return { k, html: `<button class="lc-bcard${req ? ' lc-bcard--locked' : ''}" data-act="${req ? '' : k}" data-tipname="${name}" data-tipinfo="${info}" ${req ? 'aria-disabled="true"' : ''} ${this.place === k ? 'aria-pressed="true"' : ''}>${miniArt(artFor(k as Kind, this.fac(), 1))}<span><span class="lc-bcard__name">${name}</span><span class="lc-bcard__cost">${cost}</span></span><kbd>${hot}</kbd></button>` };
+      return { k, html: `<button class="lc-bcard${req ? ' lc-bcard--locked' : ''}" data-act="${req ? '' : k}" data-tipname="${name}" data-tipinfo="${info}${req ? ` ${req}.` : ''}" ${req ? 'aria-disabled="true"' : ''} ${this.place === k ? 'aria-pressed="true"' : ''}>${miniArt(artFor(k as Kind, this.fac(), 1))}<span><span class="lc-bcard__name">${name}</span><span class="lc-bcard__cost">${cost}</span></span><kbd>${hot}</kbd></button>` };
     };
     const tabs: [string, ReturnType<typeof card>[]][] = [
       ['Экономика', [card('post', 'Реликварий', 'P', 'Ставится на захваченную точку: держит её и даёт +2 влияния/с.'), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своей точки или построек.'), card('pump', 'Насос', 'N', '+4 энергии/с. На жилу или у своей точки.')]],
@@ -763,10 +766,10 @@ export class Game {
         ...(this.fac() === 'orks' ? [card('rturret', 'Ракетная бочка', 'R', 'Ракеты по площади. Копит Ярость.'), card('fturret', 'Огнемётная печь', 'Q', 'Жжёт в упор. Копит Ярость.')] : []),
         ...(this.fac() === 'order' ? [card('battery', 'Орган-батарея', 'R', 'Стационарная артиллерия: 40 м, мёртвая зона 8 м, урон по площади.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'clockwork' ? [card('pylon', 'Гаусс-пилон', 'R', 'Дальний луч 30 м: пробивает технику и здания.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
-        ...((m => m ? [card(m as Buildable, KIND_NAME[m as Kind]!, 'M', ({ lighthouse: 'Открывает 70 м вокруг; союзники в 25 м получают на 15% меньше урона.', obelisk: 'Луч 220 на 40 м, пробивает технику и здания.', megagun: 'Снаряды 180 по площади 6 м, дальность 38 м.', plague: 'Враги в 30 м теряют 1% здоровья в секунду.' } as Record<string, string>)[m] + ' Строится 2 минуты — все игроки видят стройку.', this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в ключевом здании тира IV' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun' } as Record<string, string>)[this.fac()])),
+        ...((m => m ? [card(m as Buildable, KIND_NAME[m as Kind]!, 'M', ({ lighthouse: 'Открывает 70 м вокруг; союзники в 25 м получают на 15% меньше урона.', obelisk: 'Луч 220 на 40 м, пробивает технику и здания.', megagun: 'Снаряды 180 по площади 6 м, дальность 38 м.', plague: 'Враги в 30 м теряют 1% здоровья в секунду.' } as Record<string, string>)[m] + ' Строится 2 минуты — все игроки видят стройку.', this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в штабе' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun' } as Record<string, string>)[this.fac()])),
         ...(this.fac() === 'ashen' ? [card('pyre', 'Огненная яма', 'R', 'Жжёт всех врагов в 8 м: 18 урона в секунду.', this.tier < 2 ? 'Нужен тир II' : undefined)] : [])]],
-      ['Святыни', (() => { const doom = card('doom', DOOM_OF[this.fac()].name, '·', `Сверхоружие: ${DOOM_OF[this.fac()].info}. Заряд 3 минуты, удар в любую точку карты; все видят стройку и предупреждение за 6 с.`, this.tier < 5 ? 'Нужен тир V' : !(this.unlock & 2) ? 'Исследуйте «Сверхоружие» в ключевом здании тира IV' : undefined);
-        const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — только когда пали все штабы.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, doom, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra, doom]; })()],
+      ['Святыни', (() => {
+        const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — только когда пали все штабы.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra]; })()],
     ];
     const tab = tabs[this.buildTab] ?? tabs[0];
     return `<div class="lc-buildhead">${miniArt(artFor('builder', this.fac()))}<div><div class="lc-buildhead__who">${F.builder} ×${bs.length}</div><div class="lc-buildhead__meta">скорость стройки ×${bs.length}</div></div><button class="lc-btn lc-btn--sm lc-btn--ghost" data-act="cmdgrid">Команды ▸</button></div>`
@@ -836,7 +839,7 @@ export class Game {
   private doAct(act: string) {
     const sel = this.selected();
     if (act === 'ascend') { this.cmd({ c: 'ascend' }); return; }
-    if (act.startsWith('unlock:')) { const k = sel.find(v => v.kind === 'key4'); if (k) this.cmd({ c: 'unlock', id: k.id, u: Number(act.slice(7)) }); return; }
+    if (act.startsWith('unlock:')) { const k = sel.find(v => v.kind === 'hq'); if (k) this.cmd({ c: 'unlock', id: k.id, u: Number(act.slice(7)) }); return; }
     if (act === 'strike') { this.throwG = 9; this.root.style.cursor = 'crosshair'; return; } // прицел удара сверхоружием
     if (act === 'sacrifice') { this.cmd({ c: 'sacrifice', ids: [...this.sel] }); return; }
     if (act === 'timestop') { this.cmd({ c: 'timestop' }); return; }
@@ -863,15 +866,15 @@ export class Game {
     else if (/^res[0-3]$/.test(act)) { const k = sel.find(v => /^key/.test(v.kind)); if (k) this.cmd({ c: 'research', id: k.id, r: Number(act[3]) }); }
     else if (/^sum[0-2]$/.test(act)) { const g = sel.find(v => v.kind === 'gate'); if (g) this.cmd({ c: 'summon', id: g.id, v: Number(act[3]) }); }
     else if (/^key[1-4]$|^gate$/.test(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
-    else if (['motorpool', 'yard', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine', 'aegis', 'rturret', 'fturret', 'battery', 'pylon', 'pyre', 'bell'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
+    else if (['motorpool', 'yard', 'lighthouse', 'obelisk', 'megagun', 'plague', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine', 'aegis', 'rturret', 'fturret', 'battery', 'pylon', 'pyre', 'bell'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
     else if (act === 'upgrade') { for (const v of sel) if ((UPGRADES[v.kind] && v.lvl < 2 || v.kind === 'post') && v.upg < 0) this.cmd({ c: 'upgrade', id: v.id }); }
     else if (act === 'reinforce') this.cmd({ c: 'reinforce', ids: sel.filter(v => v.kind === 'guard').map(v => v.id) });
   }
 
   private startPlace(k: Buildable) {
     this.place = k; this.amove = false; this.root.classList.add('placing');
-    const r = k === 'post' ? POINT_R * 0.5 : STATS[k].radius + 0.6;
-    Object.assign(this.ghost.style, { width: r * 2 * S + 'px', height: r * 1.1 * S + 'px' });
+    const a = foot(k) * BCELL * S; // квадратный след по клеткам сетки
+    Object.assign(this.ghost.style, { width: a + 'px', height: a + 'px' });
     this.root.style.cursor = 'copy';
     this.renderCmd();
   }
@@ -1023,8 +1026,7 @@ export class Game {
     }
     if (this.throwG >= 0) { // бросок снаряжения в точку (GrenadeTargeting)
       const p = this.toWorld(sx, sy);
-      const doom = this.selected().find(v => v.kind === 'doom');
-      if (this.throwG === 9 && doom) this.cmd({ c: 'strike', id: doom.id, x: p.x, y: p.y }); else this.cmd({ c: 'throw', ids: [...this.sel], g: this.throwG, x: p.x, y: p.y });
+      if (this.throwG === 9) this.cmd({ c: 'strike', x: p.x, y: p.y }); else this.cmd({ c: 'throw', ids: [...this.sel], g: this.throwG, x: p.x, y: p.y });
       this.throwG = -1; this.root.style.cursor = ''; this.aimRing.style.display = 'none';
       this.renderCmd();
       return;
@@ -1058,8 +1060,8 @@ export class Game {
   }
 
   private placePoint(sx: number, sy: number): { x: number; y: number; ok: boolean } {
-    const w = this.toWorld(sx, sy), vs = [...this.views.values()];
-    const g = { x: Math.round(w.x / GRID) * GRID, y: Math.round(w.y / GRID) * GRID }; // постройки встают по клеткам сетки
+    const w = this.toWorld(sx, sy), vs = [...this.views.values()], structs = vs.filter(v => isStruct(v.kind) && !v.dead);
+    const g = snapB(this.place!, w.x, w.y); // постройки встают по клеткам сетки, как на сервере
     if (Math.hypot(POINTS[0][0] - g.x, POINTS[0][1] - g.y) < 12) return { ...g, ok: false }; // у критической точки не строят
     const nearOwnPt = (x: number, y: number) => [...POINTS, ...RELICS].some(([px, py], i) => i !== 0 && this.pointOwner[i] === this.slot && Math.hypot(px - x, py - y) < 14);
     if (this.place === 'post') {
@@ -1074,24 +1076,21 @@ export class Game {
       const p = v ? { x: v[0], y: v[1] } : g;
       const nearPt = nearOwnPt(p.x, p.y);
       const nearBase = this.place === 'foundry' && vs.some(u => u.owner === this.slot && isStruct(u.kind) && u.kind !== 'turret' && Math.hypot(u.x - p.x, u.y - p.y) < 16);
-      const free = !vs.some(u => isStruct(u.kind) && Math.hypot(u.x - p.x, u.y - p.y) < STATS[u.kind].radius + STATS[this.place!].radius + 1);
-      return { ...p, ok: (!!v || nearPt || nearBase) && free };
+      return { ...p, ok: (!!v || nearPt || nearBase) && footFree(structs, this.place, p.x, p.y) };
     }
-    if (['mine', 'wallgate', 'bunker'].includes(this.place ?? '')) return { ...g, ok: !vs.some(v => isStruct(v.kind) && v.kind !== 'mine' && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1) };
-    if (this.place === 'turret' || ['battery', 'pylon', 'pyre', 'bell', 'aegis', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') || /^key|^gate/.test(this.place ?? '')) {
-      const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16) || (['turret', 'battery', 'pylon', 'pyre', 'bell', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') && nearOwnPt(g.x, g.y));
-      const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1);
-      return { ...g, ok: near && free };
+    if (this.place === 'wall') return { ...g, ok: wallOk(structs, this.slot, g.x, g.y) };
+    if (['mine', 'wallgate', 'bunker'].includes(this.place ?? '')) return { ...g, ok: footFree(structs, this.place!, g.x, g.y) && !vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 20) };
+    if (this.place === 'turret' || ['battery', 'pylon', 'pyre', 'bell', 'aegis', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') || /^key|^gate/.test(this.place ?? '')) {
+      const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16) || (['turret', 'battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') && nearOwnPt(g.x, g.y));
+      return { ...g, ok: near && footFree(structs, this.place!, g.x, g.y) };
     }
     if (this.place === 'hq') { // ещё один штаб: у своей точки или построек, не ближе 50 м к чужому штабу
       const nearOwn = nearOwnPt(g.x, g.y) || vs.some(v => v.owner === this.slot && isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < 30);
       const foeHq = vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 50);
-      const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS.hq.radius + 1);
-      return { ...g, ok: nearOwn && !foeHq && free };
+      return { ...g, ok: nearOwn && !foeHq && footFree(structs, 'hq', g.x, g.y) };
     }
     const hq = vs.find(v => v.kind === 'hq' && v.owner === this.slot), d = hq ? Math.hypot(hq.x - g.x, hq.y - g.y) : 99;
-    const clear = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS.barracks.radius + 1);
-    return { ...g, ok: d >= 8 && d <= 32 && clear };
+    return { ...g, ok: d >= 8 && d <= 32 && footFree(structs, this.place!, g.x, g.y) };
   }
 
   private order(sx: number, sy: number) {
@@ -1166,7 +1165,7 @@ export class Game {
   }
   private scoreHtml = '';
 
-  /** Предупреждение об ударе сверхоружия: красный круг 16 м с отсчётом — у всех, сквозь туман. */
+  /** Предупреждение об ударе сверхоружия: красный круг зоны поражения с отсчётом — у всех, сквозь туман. */
   private drawStrikes(s: Snap) {
     const live = new Set<string>();
     for (const [x, y, t, o] of s.ss ?? []) {
@@ -1174,7 +1173,8 @@ export class Game {
       let el = this.strikeEls.get(key);
       if (!el) {
         el = document.createElement('div'); el.className = 'w2d-strike'; this.world.append(el); this.strikeEls.set(key, el);
-        Object.assign(el.style, { left: (x / 10 - 16) * S + 'px', top: (y / 10 - 16) * S + 'px', width: 32 * S + 'px', height: 32 * S + 'px' });
+        const R = DOOM_R[this.fac(o)] ?? 16; // круг — ровно зона поражения фракции
+        Object.assign(el.style, { left: (x / 10 - R) * S + 'px', top: (y / 10 - R) * S + 'px', width: 2 * R * S + 'px', height: 2 * R * S + 'px' });
         voice.announce(o === this.slot ? 'Удар сверхоружия выпущен.' : 'Внимание! Удар сверхоружия!'); this.alert('danger', DOOM_OF[this.fac(o)].name, 'удар через 6 с', x / 10, y / 10); this.pingMini(x / 10, y / 10);
       }
       el.dataset.t = String(t);
@@ -1261,14 +1261,17 @@ export class Game {
     this.world.style.transform = `translate(${r.width / 2 - c.x * S * c.zoom}px, ${r.height / 2 - c.y * S * c.zoom}px) scale(${c.zoom})`;
 
     if (this.throwG >= 0 && this.mouse) { // прицел броска: зона поражения у курсора, красная — вне дальности
-      const p = this.toWorld(this.mouse.x, this.mouse.y), G = this.throwG === 9 ? { r: 16, range: 1e9 } : GEAR[this.throwG], sq = this.selected().filter(v => v.gear & (1 << this.throwG));
+      const p = this.toWorld(this.mouse.x, this.mouse.y), G = this.throwG === 9 ? { r: DOOM_R[this.fac()] ?? 16, range: 1e9 } : GEAR[this.throwG], sq = this.selected().filter(v => v.gear & (1 << this.throwG));
       const d = this.throwG === 9 ? 0 : Math.min(...sq.map(v => Math.hypot(v.x - p.x, v.y - p.y)));
       Object.assign(this.aimRing.style, { display: '', left: (p.x - G.r) * S + 'px', top: (p.y - G.r) * S + 'px', width: G.r * 2 * S + 'px', height: G.r * 2 * S + 'px' });
       this.aimRing.classList.toggle('bad', d > G.range);
       $('hud-sel').textContent = d > G.range ? `вне дальности — ${Math.round(d)} м (подойдут и бросят)` : `${Math.round(d)} м · радиус ${G.r} м`;
     }
-    if (this.place === 'wall' && this.mouse && this.wallStart) { // пунктир протяжки и итоговая цена
-      const p = this.toWorld(this.mouse.x, this.mouse.y), n = Math.min(16, Math.floor(Math.hypot(p.x - this.wallStart.x, p.y - this.wallStart.y) / WALL_STEP) + 1);
+    let wg = '';
+    if (this.place === 'wall' && this.mouse && this.wallStart) { // протяжка: клетки сегментов (красные — занято) и итоговая цена
+      const p = this.toWorld(this.mouse.x, this.mouse.y), structs = [...this.views.values()].filter(v => isStruct(v.kind) && !v.dead);
+      const cells = wallCells(this.wallStart.x, this.wallStart.y, p.x, p.y).map(c => ({ ...c, ok: wallOk(structs, this.slot, c.x, c.y) })), n = cells.filter(c => c.ok).length;
+      wg = cells.map(c => `<div class="w2d-ghost${c.ok ? '' : ' bad'}" style="width:${BCELL * S}px;height:${BCELL * S}px;transform:translate(${c.x * S}px,${c.y * S}px)"></div>`).join('');
       for (const [k, v] of [['x1', this.wallStart.x], ['y1', this.wallStart.y], ['x2', p.x], ['y2', p.y]] as const) this.wallLine.setAttribute(k, String(v * S));
       this.wallLine.setAttribute('visibility', 'visible');
       this.ghost.classList.add('hidden');
@@ -1279,6 +1282,7 @@ export class Game {
       this.ghost.classList.toggle('bad', !g.ok);
       this.ghost.style.transform = `translate(${g.x * S}px, ${g.y * S}px)`;
     }
+    if (wg !== this.wallGhostHtml) this.wallGhost.innerHTML = this.wallGhostHtml = wg;
 
     const a = 1 - Math.exp(-dt * 14);
     const sites = [...this.views.values()].filter(v => isStruct(v.kind) && v.build < 1);

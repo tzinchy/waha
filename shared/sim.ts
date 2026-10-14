@@ -14,7 +14,7 @@ export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' 
 export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'key1', 'key2', 'key3', 'key4', 'gate', 'legend', 'wall', 'wallgate', 'bunker', 'mine', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'aegis', 'rturret', 'fturret', 'arty', 'battery', 'pylon', 'pyre', 'bell', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague', 'motorpool', 'yard']; // новые — только в конец: индексы идут в снимки
 const MOBILE = new Set<Kind>(['captain', 'builder', 'guard', 'legend', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'arty']);
 export const isStruct = (k: Kind) => !MOBILE.has(k);
-export type Buildable = 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'wall' | 'wallgate' | 'bunker' | 'mine' | 'aegis' | 'rturret' | 'fturret' | 'battery' | 'pylon' | 'pyre' | 'bell' | 'doom' | 'lighthouse' | 'obelisk' | 'megagun' | 'plague' | 'motorpool' | 'yard';
+export type Buildable = 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'wall' | 'wallgate' | 'bunker' | 'mine' | 'aegis' | 'rturret' | 'fturret' | 'battery' | 'pylon' | 'pyre' | 'bell' | 'lighthouse' | 'obelisk' | 'megagun' | 'plague' | 'motorpool' | 'yard';
 
 // hp: у отрядов хп ОДНОЙ модели (общий пул = hp * n), у остальных общий. dmg: урон одной модели.
 type Stat = { hp: number; n: number; dmg: number; range: number; cd: number; speed: number; sight: number; radius: number; cost: number; time: number };
@@ -72,9 +72,11 @@ export const STATS: Record<Kind, Stat> = {
 };
 /** Артиллерия не стреляет в упор (мёртвая зона), уникальные постройки: радиусы аур. */
 export const MIN_RANGE: Partial<Record<Kind, number>> = { arty: 10, battery: 8, megagun: 8 };
-/** Сверхоружие: заряд 3 минуты, предупреждение 6 с всем игрокам, 2500 урона по 16 м (своих тоже). */
-export const DOOM = { charge: 180, warn: 6, r: 16, energy: 1500, relics: 6 }; // r — радиус предупреждения; урон у каждой фракции свой (doomStrike)
-/** Открытия в ключевом здании тира IV: мегапостройки обороны и сверхоружие (дорого). */
+/** Сверхоружие штаба: заряд 3 минуты, предупреждение 6 с всем игрокам; бьёт только врагов, у каждой фракции свой удар (doomStrike). */
+export const DOOM = { charge: 180, warn: 6 };
+/** Радиус поражения сверхоружия по фракциям — по нему же рисуется предупреждение. */
+export const DOOM_R: Partial<Record<FactionId, number>> = { order: 12, clockwork: 20, orks: 25, ashen: 14 };
+/** Открытия в штабе: мегапостройки обороны (тир IV) и сверхоружие (тир V, дорого). */
 export const UNLOCKS = [
   { name: 'Мегапостройки', info: 'открывает мегапостройку обороны фракции', cost: 1500, energy: 1200, relics: 5, time: 90, tier: 4 },
   { name: 'Сверхоружие', info: 'открывает сверхоружие фракции', cost: 3000, energy: 3000, relics: 12, time: 120, tier: 5 },
@@ -82,7 +84,7 @@ export const UNLOCKS = [
 export const DOOM_SHOT = 800;
 /** Пожар от зажигательного снаряда: радиус, урон в секунду (и по зданиям), длительность. */
 export const FIRE = { r: 4, dps: 25, t: 6 };
-export const MEGA = new Set<Kind>(['lighthouse', 'obelisk', 'megagun', 'plague', 'doom']);
+export const MEGA = new Set<Kind>(['lighthouse', 'obelisk', 'megagun', 'plague']);
 export const LIGHTHOUSE = { r: 25, armor: 0.85 }, PLAGUE = { r: 30, pct: 0.01 };
 export const PYRE = { r: 8, dps: 18 }, BELL = { r: 14, dmg: 0.8, speed: 0.8 };
 export const AEGIS = { pool: 1200, r: 12, regen: 1200 / 30, broken: 10 };   // щит купола: 1200 урона, полностью за 30 с, после пробоя 10 с не работает
@@ -142,7 +144,34 @@ export const producible = (b: Kind) => (Object.keys(ROLES) as Kind[]).filter(k =
 export const TURRET_CAP = 12;
 /** Постройки держат удар: пехота и капитаны наносят им 40% урона (как в DoW — здания ломают техникой и тяжёлым оружием). */
 export const STRUCT_ARMOR = 0.4;
-export const WALL_STEP = 2.4;
+/** Сетка построек: клетки BCELL×BCELL м. Здание занимает квадрат foot×foot клеток (сторона ≈ диаметр), стена и мина — одну клетку. */
+export const BCELL = 2;
+export const foot = (k: Kind) => Math.max(1, Math.floor(STATS[k].radius));
+/** След постройки k с центром (x, y): клетки [x0, x0+n) × [y0, y0+n). */
+export const footRect = (k: Kind, x: number, y: number) => { const n = foot(k); return { x0: Math.round(x / BCELL - n / 2), y0: Math.round(y / BCELL - n / 2), n }; };
+/** Центр постройки, привязанный к сетке. */
+export const snapB = (k: Kind, x: number, y: number) => { const f = footRect(k, x, y); return { x: (f.x0 + f.n / 2) * BCELL, y: (f.y0 + f.n / 2) * BCELL }; };
+/** Свободна ли земля под след (центр уже на сетке): не скалы и не чужие следы; вплотную по клеткам можно. */
+export function footFree(structs: Iterable<{ kind: Kind; x: number; y: number }>, k: Kind, x: number, y: number) {
+  const a = footRect(k, x, y);
+  if (blocked(x, y, (a.n * BCELL) / 2)) return false;
+  for (const u of structs) {
+    const b = footRect(u.kind, u.x, u.y);
+    if (a.x0 < b.x0 + b.n && b.x0 < a.x0 + a.n && a.y0 < b.y0 + b.n && b.y0 < a.y0 + a.n) return false;
+  }
+  return true;
+}
+/** Клетки протяжки стены от (x1, y1) до (x2, y2): по клетке, только по сторонам (без диагональных дыр), не больше 16. */
+export function wallCells(x1: number, y1: number, x2: number, y2: number) {
+  const a = footRect('wall', x1, y1), b = footRect('wall', x2, y2), dx = Math.abs(b.x0 - a.x0), dy = Math.abs(b.y0 - a.y0);
+  let cx = a.x0, cy = a.y0;
+  const out = [{ x: (cx + 0.5) * BCELL, y: (cy + 0.5) * BCELL }];
+  for (let ix = 0, iy = 0; (ix < dx || iy < dy) && out.length < 16;) {
+    if ((0.5 + ix) / dx < (0.5 + iy) / dy) { cx += Math.sign(b.x0 - a.x0); ix++; } else { cy += Math.sign(b.y0 - a.y0); iy++; }
+    out.push({ x: (cx + 0.5) * BCELL, y: (cy + 0.5) * BCELL });
+  }
+  return out;
+}
 /** Прокачка реликвария (пресет PointUpgrades): индекс = текущий уровень. Критическую точку в центре не укрепить. */
 export const POST_UP: Record<number, { cost: number; energy: number; tier: number; name: string }> = {
   1: { cost: 120, energy: 0, tier: 2, name: 'Укреплённый столп' },
@@ -242,9 +271,9 @@ const nearCapWith = (s: State, u: Unit, a: number, r: number) => {
   return !!c && c.hp > 0 && dist(c, u) < r;
 };
 /** Три ресурса пресета: Влияние (req, с точек), Энергия (с Литейни и насосов), Реликвии (с реликтовых точек). */
-export const ENERGY_COST: Partial<Record<Kind, number>> = { motorpool: 150, yard: 800, turret: 30, aegis: 100, rturret: 20, battery: 150, pylon: 120, pyre: 60, bell: 60, doom: 3000, lighthouse: 800, obelisk: 1200, megagun: 800, plague: 800 };
+export const ENERGY_COST: Partial<Record<Kind, number>> = { motorpool: 150, yard: 800, turret: 30, aegis: 100, rturret: 20, battery: 150, pylon: 120, pyre: 60, bell: 60, lighthouse: 800, obelisk: 1200, megagun: 800, plague: 800 };
 export const ENERGY_INCOME: Partial<Record<Kind, number>> = { hq: 1, foundry: 2, pump: 4 };
-export const RELIC_RATE = 1 / 20; // реликвий в секунду с одной реликтовой точки
+export const RELIC_RATE = 1 / 30; // реликвий в секунду с одной реликтовой точки (2/мин; на обеих картах по 8 реликвариев)
 /**
  * Апгрейды (команда 'upgrade'). lvl 1 -> 2. Штаб: тир 2 открывает остальные апгрейды.
  * Пост 2 уровня: урон x2.3, дальность +3, получает вдвое меньше урона. Отряд 2 уровня: урон x1.6, получает на 20% меньше.
@@ -259,7 +288,7 @@ export const UPGRADES: Partial<Record<Kind, Upgrade>> = {
   lveh: { cost: 60, energy: 40, relics: 0, time: 8, tier: 3, name: 'Гранатомёт' }, // только Багги Орды: выстрел по площади 3 м
 };
 const LVL2 = { dmg: { post: 1, turret: 1.8, guard: 1.6, captain: 1.5 } as Partial<Record<Kind, number>>, armor: { post: 1, turret: 0.6, guard: 0.8, captain: 0.7, wall: 0.5, wallgate: 0.5 } as Partial<Record<Kind, number>>, range: { post: 0, turret: 3 } as Partial<Record<Kind, number>> };
-export const BUILD_TIER: Record<Buildable, number> = { hq: 2, barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1, key1: 1, key2: 2, key3: 3, key4: 4, gate: 5, motorpool: 3, yard: 4, wall: 1, wallgate: 1, bunker: 2, mine: 1, aegis: 2, rturret: 1, fturret: 1, battery: 2, pylon: 2, pyre: 2, bell: 2, doom: 5, lighthouse: 4, obelisk: 4, megagun: 4, plague: 4 };
+export const BUILD_TIER: Record<Buildable, number> = { hq: 2, barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1, key1: 1, key2: 2, key3: 3, key4: 4, gate: 5, motorpool: 3, yard: 4, wall: 1, wallgate: 1, bunker: 2, mine: 1, aegis: 2, rturret: 1, fturret: 1, battery: 2, pylon: 2, pyre: 2, bell: 2, lighthouse: 4, obelisk: 4, megagun: 4, plague: 4 };
 /** Постройки только своей фракции. */
 /** null — постройка снятых фракций (Консенсус, Нежить): вид остаётся в KINDS ради стабильных индексов, строить нельзя. */
 export const FACTION_ONLY: Partial<Record<Buildable, FactionId | null>> = { aegis: null, rturret: 'orks', fturret: 'orks', battery: 'order', bell: null, pylon: 'clockwork', pyre: 'ashen', lighthouse: 'order', obelisk: 'clockwork', megagun: 'orks', plague: null };
@@ -310,6 +339,7 @@ export type Player = {
   faction: FactionId; arch: Arch; rage: number; waagh: number; remains: number; // ярость и ВААГХ Орды; remains всегда 0 (место в снимке)
   research: number;                  // битовая маска изученного (RESEARCH)
   unlock: number;                    // открытия: 1 — мегапостройки, 2 — сверхоружие
+  doom: number;                      // заряд сверхоружия, секунд
   xp: number; clvl: number; pts: number; abil: number; acd: number[]; // капитан: опыт, уровень, очки, способности и их перезарядка
   stopCd: number; revive: number; // перезарядка Остановки времени, таймер воскрешения Архангела
 };
@@ -346,7 +376,7 @@ export type Cmd =
   | { c: 'timestop' }
   | { c: 'drag'; ids: number[]; id: number }
   | { c: 'sacrifice'; ids: number[] }
-  | { c: 'strike'; id: number; x: number; y: number }
+  | { c: 'strike'; x: number; y: number }
   | { c: 'unlock'; id: number; u: number }
   | { c: 'learn'; a: number }
   | { c: 'ability'; a: number };
@@ -357,7 +387,7 @@ const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.
 export function newState(n: number, factions: FactionId[] = [], archs: Arch[] = []): State {
   const s: State = { tick: 0, units: [], points: [...POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), ...RELICS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1, relic: true }))], players: [], nextId: 1, winner: null, shots: [], rewind: [], blasts: [], smoke: [], vp: [], died: [], strikes: [], plagues: [] };
   for (let i = 0; i < n; i++) {
-    s.players.push({ req: START_REQ, energy: START_ENERGY, relics: 0, alive: true, tier: 1, faction: factions[i] ?? 'order', arch: archs[i] ?? 'commander', rage: 0, waagh: 0, remains: 0, research: 0, unlock: 0, xp: 0, clvl: 1, pts: 1, abil: 0, acd: ABILITIES.map(() => 0), stopCd: 0, revive: 0 });
+    s.players.push({ req: START_REQ, energy: START_ENERGY, relics: 0, alive: true, tier: 1, faction: factions[i] ?? 'order', arch: archs[i] ?? 'commander', rage: 0, waagh: 0, remains: 0, research: 0, unlock: 0, xp: 0, clvl: 1, pts: 1, abil: 0, acd: ABILITIES.map(() => 0), stopCd: 0, revive: 0, doom: 0 });
     s.vp.push(VP_START);
     const [hx, hy] = HQ_POS[i];
     spawn(s, i, 'hq', hx, hy);
@@ -466,7 +496,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     const r = what && ROLES[what];
     if (!what || !r) return;
     if (b.build < 1) return 'Строительство не завершено';
-    if (/^key[1-4]$/.test(b.kind) && b.q > 0 && !b.que.length) return 'Здание уже исследует';
+    if ((/^key[1-4]$/.test(b.kind) && b.q > 0 && !b.que.length) || b.q > 100) return 'Здание уже исследует';
     if (b.que.length >= QUEUE_MAX) return 'Очередь заполнена';
     if (p.tier < r.tier) return `Нужен тир ${r.tier}`;
     if (what === 'builder' && count(s, owner, 'builder') + queued(s, owner, 'builder') >= CAP.builder) return 'Достигнут лимит строителей';
@@ -558,25 +588,25 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (s.shots.length < 200) s.shots.push([c.x, c.y, c.x, c.y - 0.1]);
     return;
   }
-  if (cmd.c === 'unlock') { // открытие в ключевом здании тира IV
-    const b = s.units.find(v => v.id === cmd.id && v.owner === owner && v.kind === 'key4' && v.hp > 0 && v.build >= 1);
+  if (cmd.c === 'unlock') { // открытие в штабе
+    const b = s.units.find(v => v.id === cmd.id && v.owner === owner && v.kind === 'hq' && v.hp > 0 && v.build >= 1);
     const u = Number(cmd.u), U = UNLOCKS[u];
     if (!b || !U) return;
     if (p.unlock & (1 << u)) return 'Уже открыто';
     if (p.tier < U.tier) return `Нужен тир ${U.tier}`;
-    if (b.q > 0) return 'Здание уже исследует';
+    if (b.que.length) return 'Здание нанимает войска';
+    if (s.units.some(v => v.owner === owner && v.kind === 'hq' && v.q > 100)) return 'Штаб уже исследует';
     const e = pay(p, U.cost, U.energy, U.relics);
     if (e) return e;
     b.q = 101 + u; b.prog = 0;
     return;
   }
-  if (cmd.c === 'strike') { // сверхоружие: удар в любую точку карты
-    const d = s.units.find(v => v.id === cmd.id && v.owner === owner && v.kind === 'doom' && v.hp > 0 && v.build >= 1);
-    if (!d || !Number.isFinite(cmd.x) || !Number.isFinite(cmd.y)) return;
-    if (d.prog < DOOM.charge) return `Заряд ${Math.floor((d.prog / DOOM.charge) * 100)}%`;
-    const e = pay(s.players[owner], 0, DOOM_SHOT); // каждый пуск ещё и стоит энергии
+  if (cmd.c === 'strike') { // сверхоружие штаба: удар в любую точку карты
+    if (!(p.unlock & 2) || !Number.isFinite(cmd.x) || !Number.isFinite(cmd.y)) return;
+    if (p.doom < DOOM.charge) return `Заряд ${Math.floor((p.doom / DOOM.charge) * 100)}%`;
+    const e = pay(p, 0, DOOM_SHOT); // каждый пуск ещё и стоит энергии
     if (e) return e;
-    d.prog = 0;
+    p.doom = 0;
     s.strikes.push({ x: clamp(cmd.x, 0, MAP.w), y: clamp(cmd.y, 0, MAP.h), t: DOOM.warn, owner });
     return;
   }
@@ -702,21 +732,17 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     for (const u of mine) if (u.kind === 'builder') u.order = { t: 'build', id: t.id };
     return;
   }
-  if (cmd.c === 'wall') { // протяжка стены: сегменты каждые WALL_STEP вдоль линии, не больше 16
+  if (cmd.c === 'wall') { // протяжка стены: по клетке сетки вдоль линии, занятые клетки пропускаем
     const bs = mine.filter(u => u.kind === 'builder');
     if (!bs.length) return 'Нужны строители';
     if (![cmd.x1, cmd.y1, cmd.x2, cmd.y2].every(Number.isFinite)) return;
-    const a = { x: clamp(cmd.x1, 2, MAP.w - 2), y: clamp(cmd.y1, 2, MAP.h - 2) }, b = { x: clamp(cmd.x2, 2, MAP.w - 2), y: clamp(cmd.y2, 2, MAP.h - 2) };
-    const n = Math.min(16, Math.floor(dist(a, b) / WALL_STEP) + 1);
-    let first: Unit | undefined, built = 0;
-    for (let i = 0; i < n; i++) {
-      const x = a.x + ((b.x - a.x) * i) / Math.max(1, n - 1), y = a.y + ((b.y - a.y) * i) / Math.max(1, n - 1);
-      if (s.units.some(u => isStruct(u.kind) && u.hp > 0 && dist(u, { x, y }) < (u.kind === 'wall' ? 1 : STATS[u.kind].radius + STATS.wall.radius))) continue;
-      if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) continue;
-      if (dist(s.points[0], { x, y }) < CRIT_NOBUILD) continue; // не у критической точки
+    let first: Unit | undefined;
+    const structs = s.units.filter(u => isStruct(u.kind) && u.hp > 0);
+    for (const { x, y } of wallCells(clamp(cmd.x1, 2, MAP.w - 2), clamp(cmd.y1, 2, MAP.h - 2), clamp(cmd.x2, 2, MAP.w - 2), clamp(cmd.y2, 2, MAP.h - 2))) {
+      if (!wallOk(structs, owner, x, y)) continue;
       if (pay(p, STATS.wall.cost)) break;
       const site = spawn(s, owner, 'wall', x, y);
-      site.build = 0.05; site.hp = STATS.wall.hp * 0.05; first ??= site; built++;
+      site.build = 0.05; site.hp = STATS.wall.hp * 0.05; first ??= site;
     }
     if (!first) return 'Здесь нельзя вести стену';
     for (const b2 of bs) b2.order = { t: 'build', id: first.id };
@@ -729,11 +755,11 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (p.tier < BUILD_TIER[cmd.kind]) return `Нужен тир ${BUILD_TIER[cmd.kind]}`;
     const c = STATS[cmd.kind];
     if (cmd.kind in FACTION_ONLY && FACTION_ONLY[cmd.kind] !== p.faction) return 'Постройка другой фракции';
-    if (MEGA.has(cmd.kind) && !(p.unlock & (cmd.kind === 'doom' ? 2 : 1))) return `Сначала исследуйте «${UNLOCKS[cmd.kind === 'doom' ? 1 : 0].name}» в ключевом здании тира IV`;
+    if (MEGA.has(cmd.kind) && !(p.unlock & 1)) return `Сначала исследуйте «${UNLOCKS[0].name}» в штабе`;
     { const probe = { ...p }; const e = pay(probe, c.cost, ENERGY_COST[cmd.kind] ?? 0); if (e) return e; } // проверка цены теми же правилами, что и оплата
-    let x = clamp(cmd.x, 4, MAP.w - 4), y = clamp(cmd.y, 4, MAP.h - 4);
+    let { x, y } = snapB(cmd.kind, clamp(cmd.x, 4, MAP.w - 4), clamp(cmd.y, 4, MAP.h - 4)); // встаёт по клеткам сетки
     if (dist(s.points[0], { x, y }) < CRIT_NOBUILD) return 'У критической точки строить нельзя — за неё сражаются';
-    if (blocked(x, y, STATS[cmd.kind].radius)) return 'На скалах строить нельзя';
+    if (blocked(x, y, (foot(cmd.kind) * BCELL) / 2)) return 'На скалах строить нельзя';
     if (cmd.kind === 'hq') { // ещё один штаб (у Династий — Монолит): у своей точки или построек, не у чужой базы, не больше трёх
       if (count(s, owner, 'hq') >= 3) return 'Штабов не больше трёх';
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 50)) return 'Слишком близко к чужому штабу';
@@ -755,7 +781,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     } else if (/turret$/.test(cmd.kind) && p.faction === 'orks') { // Орда ставит турели где угодно, кроме 20 м у чужого штаба
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) return 'Слишком близко к чужому штабу';
     } else if (cmd.kind === 'turret' || cmd.kind === 'aegis' || DEFENSE.has(cmd.kind) || /^key|^gate/.test(cmd.kind)) {
-      if ((/^key|^gate/.test(cmd.kind) || cmd.kind === 'doom' || cmd.kind === 'lighthouse' || cmd.kind === 'obelisk' || cmd.kind === 'megagun' || cmd.kind === 'plague') && s.units.some(u => u.owner === owner && u.kind === cmd.kind && u.hp > 0)) return 'Такое здание уже есть';
+      if ((/^key|^gate/.test(cmd.kind) || cmd.kind === 'lighthouse' || cmd.kind === 'obelisk' || cmd.kind === 'megagun' || cmd.kind === 'plague') && s.units.some(u => u.owner === owner && u.kind === cmd.kind && u.hp > 0)) return 'Такое здание уже есть';
       if (!s.units.some(u => u.owner === owner && isStruct(u.kind) && u.kind !== 'turret' && u.hp > 0 && dist(u, { x, y }) < 16) && !((cmd.kind === 'turret' || DEFENSE.has(cmd.kind)) && nearOwnPoint(s, owner, x, y)))
         return 'Турель ставится у своих построек или вокруг своей точки';
     } else if (cmd.kind !== 'hq') {
@@ -763,7 +789,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
       if (d < 8 || d > 32) return 'Казармы строятся рядом со штабом';
     }
     if (/turret$/.test(cmd.kind) && count(s, owner, 'turret') + count(s, owner, 'rturret') + count(s, owner, 'fturret') >= (p.faction === 'orks' ? 30 : TURRET_CAP)) return 'Лимит турелей';
-    if (s.units.some(u => isStruct(u.kind) && u.hp > 0 && dist(u, { x, y }) < STATS[u.kind].radius + c.radius + (cmd.kind === 'mine' ? 0 : 1))) return 'Место занято';
+    if (!footFree(s.units.filter(u => isStruct(u.kind) && u.hp > 0), cmd.kind, x, y)) return 'Место занято';
     if (s.players.some((q, i) => i !== owner && q.faction === 'ashen' && nearOwn(s, i, x, y, 14))) return 'Земля осквернена Порчей';
     pay(p, c.cost, ENERGY_COST[cmd.kind] ?? 0);
     const site = spawn(s, owner, cmd.kind, x, y);
@@ -799,7 +825,7 @@ export function step(s: State, dt = DT): void {
   for (const r of s.rewind) r.t -= dt; // Перезавод: отряд встаёт на месте гибели
   for (const r of s.rewind.filter(r => r.t <= 0)) if (s.players[r.owner].alive) spawn(s, r.owner, 'guard', r.x, r.y);
   s.rewind = s.rewind.filter(r => r.t > 0);
-  for (const p of s.players) { for (let i = 0; i < p.acd.length; i++) p.acd[i] = Math.max(0, p.acd[i] - dt); p.stopCd = Math.max(0, p.stopCd - dt); }
+  for (const p of s.players) { for (let i = 0; i < p.acd.length; i++) p.acd[i] = Math.max(0, p.acd[i] - dt); p.stopCd = Math.max(0, p.stopCd - dt); if (p.unlock & 2) p.doom = Math.min(DOOM.charge, p.doom + dt); }
   const byId = new Map(s.units.map(u => [u.id, u]));
   for (const u of s.units) {
     if (!s.players[u.owner].alive) continue;
@@ -868,13 +894,16 @@ export const GEN_R = 14;
 export const nearOwnPoint = (s: State, owner: number, x: number, y: number) => s.points.some((p, i) => i !== 0 && p.owner === owner && dist(p, { x, y }) < GEN_R); // критическая точка не в счёт
 /** У критической точки (центр) строить нельзя ничего: за неё только сражаются. */
 export const CRIT_NOBUILD = 12;
+/** Клетка стены годится: свободна от скал и построек, не у критической точки, не ближе 20 м к чужому штабу. Та же проверка в подсказке клиента. */
+export const wallOk = (structs: { kind: Kind; x: number; y: number; owner: number }[], owner: number, x: number, y: number) =>
+  footFree(structs, 'wall', x, y) && dist({ x: POINTS[0][0], y: POINTS[0][1] }, { x, y }) >= CRIT_NOBUILD && !structs.some(u => u.kind === 'hq' && u.owner !== owner && dist(u, { x, y }) < 20);
 /** Уникальные оборонительные постройки ставятся как турели: у своих построек или вокруг своей точки. */
-export const DEFENSE = new Set<Kind>(['battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague', 'doom']);
+export const DEFENSE = new Set<Kind>(['battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague']);
 const postAt = (s: State, pt: { x: number; y: number }) => s.units.find(u => u.kind === 'post' && u.build >= 1 && u.hp > 0 && dist(u, pt) < 2);
 
 function produce(s: State, b: Unit, dt: number) {
   const p = s.players[b.owner];
-  if (b.kind === 'key4' && b.q > 100) { const U = UNLOCKS[b.q - 101]; if ((b.prog += dt) >= U.time) { p.unlock |= 1 << (b.q - 101); b.q = 0; b.prog = 0; } return; }
+  if (b.q > 100) { const U = UNLOCKS[b.q - 101]; if ((b.prog += dt) >= U.time) { p.unlock |= 1 << (b.q - 101); b.q = 0; b.prog = 0; } return; }
   if (/^key[1-4]$/.test(b.kind) && b.q > 0 && !b.que.length) { // исследование
     if ((b.prog += dt) >= researchCost(b.q - 1).time) { p.research |= 1 << (b.q - 1); b.q = 0; b.prog = 0; }
     return;
@@ -884,7 +913,6 @@ function produce(s: State, b: Unit, dt: number) {
     return;
   }
   if (b.kind === 'key4' && has(p, 14)) p.relics += dt / 120; // Ковчег мощей
-  if (b.kind === 'doom') b.prog = Math.min(DOOM.charge, b.prog + dt); // заряд сверхоружия
   b.q = b.que.length;
   const what = b.que[0];
   if (!what) return;
@@ -907,23 +935,29 @@ function reinforce(s: State, u: Unit, dt: number) {
   u.hp = Math.min(maxHp(u.kind), u.hp + STATS[u.kind].hp);
 }
 
-// ---------- поиск пути: A* по сетке 4×4 м вокруг скал и стен (на открытой карте — прямо) ----------
-const CELL = 4;
+// ---------- поиск пути: A* по той же сетке, что и постройки, вокруг скал и следов построек (на открытой карте — прямо) ----------
+const CELL = BCELL;
 type Grid = { w: number; h: number; b: Uint8Array; any: boolean };
-let gridCache: { s: State; tick: number; g: Grid } | null = null;
-function grid(s: State): Grid {
-  if (gridCache && gridCache.s === s && gridCache.tick === s.tick) return gridCache.g;
-  const w = Math.ceil(MAP.w / CELL), h = Math.ceil(MAP.h / CELL), b = new Uint8Array(w * h);
-  let any = false;
-  for (let cy = 0; cy < h; cy++) for (let cx = 0; cx < w; cx++) if (blocked(cx * CELL + CELL / 2, cy * CELL + CELL / 2, 0.5)) { b[cy * w + cx] = 1; any = true; }
-  for (const u of s.units) if (u.kind === 'wall' && u.hp > 0) { const i = Math.floor(u.y / CELL) * w + Math.floor(u.x / CELL); if (i >= 0 && i < b.length) { b[i] = 1; any = true; } }
-  const g = { w, h, b, any };
-  gridCache = { s, tick: s.tick, g };
-  return g;
+let rocks: { blocks: typeof BLOCKS; b: Uint8Array } | null = null;
+let gridCache: { s: State; tick: number; g: Grid[] } | null = null;
+function grid(s: State, owner: number): Grid { // у каждого игрока своя: через свои ворота можно
+  if (!gridCache || gridCache.s !== s || gridCache.tick !== s.tick) gridCache = { s, tick: s.tick, g: [] };
+  if (gridCache.g[owner]) return gridCache.g[owner];
+  const w = Math.ceil(MAP.w / CELL), h = Math.ceil(MAP.h / CELL);
+  if (!rocks || rocks.blocks !== BLOCKS) { // скалы не меняются: считаем раз на карту
+    rocks = { blocks: BLOCKS, b: new Uint8Array(w * h) };
+    for (let cy = 0; cy < h; cy++) for (let cx = 0; cx < w; cx++) if (blocked(cx * CELL + CELL / 2, cy * CELL + CELL / 2, 0.5)) rocks.b[cy * w + cx] = 1;
+  }
+  const b = rocks.b.slice();
+  for (const u of s.units) if (isStruct(u.kind) && u.hp > 0 && u.kind !== 'mine' && u.kind !== 'aegis' && !u.carry && !(u.kind === 'wallgate' && u.owner === owner)) { // след постройки закрывает свои клетки
+    const f = footRect(u.kind, u.x, u.y);
+    for (let cy = Math.max(0, f.y0); cy < Math.min(h, f.y0 + f.n); cy++) for (let cx = Math.max(0, f.x0); cx < Math.min(w, f.x0 + f.n); cx++) b[cy * w + cx] = 1;
+  }
+  return (gridCache.g[owner] = { w, h, b, any: b.includes(1) });
 }
 const cellFree = (g: Grid, x: number, y: number) => { const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL); return cx >= 0 && cy >= 0 && cx < g.w && cy < g.h && !g.b[cy * g.w + cx]; };
 function lineClear(g: Grid, ax: number, ay: number, bx: number, by: number) {
-  const n = Math.ceil(Math.hypot(bx - ax, by - ay));
+  const n = Math.ceil(Math.hypot(bx - ax, by - ay) * 2); // шаг 0,5 м: не перескакиваем угол клетки
   for (let i = 1; i <= n; i++) if (!cellFree(g, ax + ((bx - ax) * i) / n, ay + ((by - ay) * i) / n)) return false;
   return true;
 }
@@ -931,13 +965,18 @@ function findPath(g: Grid, ax: number, ay: number, bx: number, by: number): { x:
   const W = g.w, start = Math.floor(ay / CELL) * W + Math.floor(ax / CELL);
   let goal = Math.floor(by / CELL) * W + Math.floor(bx / CELL);
   if (g.b[goal]) { let best = -1, bd = 1e9; for (let i = 0; i < g.b.length; i++) if (!g.b[i]) { const d = Math.hypot((i % W) - (goal % W), Math.floor(i / W) - Math.floor(goal / W)); if (d < bd) { bd = d; best = i; } } goal = best; }
-  const gs = new Float32Array(g.b.length).fill(Infinity), from = new Int32Array(g.b.length).fill(-1), open: number[] = [start];
+  const gs = new Float32Array(g.b.length).fill(Infinity), from = new Int32Array(g.b.length).fill(-1);
   const hh = (i: number) => Math.hypot((i % W) - (goal % W), Math.floor(i / W) - Math.floor(goal / W));
-  const fs = new Float32Array(g.b.length).fill(Infinity); gs[start] = 0; fs[start] = hh(start);
-  const closed = new Uint8Array(g.b.length);
-  while (open.length) { // ponytail: открытый список массивом, O(n²) на 2–4 тыс. клеток ок; куча, если карты вырастут
-    let k = 0; for (let i = 1; i < open.length; i++) if (fs[open[i]] < fs[open[k]]) k = i;
-    const c = open.splice(k, 1)[0];
+  const closed = new Uint8Array(g.b.length), open: [number, number][] = [[hh(start), start]]; gs[start] = 0;
+  const push = (e: [number, number]) => { open.push(e); for (let i = open.length - 1, p = (i - 1) >> 1; i && open[p][0] > open[i][0]; i = p, p = (i - 1) >> 1) [open[p], open[i]] = [open[i], open[p]]; };
+  const pop = () => { // двоичная куча по f; устаревшие записи отсекает closed
+    const top = open[0], last = open.pop()!;
+    if (open.length) { open[0] = last; for (let i = 0; ;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < open.length && open[l][0] < open[m][0]) m = l; if (r < open.length && open[r][0] < open[m][0]) m = r; if (m === i) break; [open[m], open[i]] = [open[i], open[m]]; i = m; } }
+    return top[1];
+  };
+  while (open.length) {
+    const c = pop();
+    if (closed[c]) continue;
     if (c === goal) break;
     closed[c] = 1;
     const cx = c % W, cy = Math.floor(c / W);
@@ -947,7 +986,7 @@ function findPath(g: Grid, ax: number, ay: number, bx: number, by: number): { x:
       if (nx < 0 || ny < 0 || nx >= W || ny >= g.h || g.b[n] || closed[n]) continue;
       if (dx && dy && (g.b[cy * W + nx] || g.b[ny * W + cx])) continue; // не срезаем угол скалы
       const t = gs[c] + (dx && dy ? 1.414 : 1);
-      if (t < gs[n]) { gs[n] = t; fs[n] = t + hh(n); from[n] = c; if (!open.includes(n)) open.push(n); }
+      if (t < gs[n]) { gs[n] = t; from[n] = c; push([t + hh(n) * 1.5, n]); } // взвешенная эвристика: путь чуть длиннее, перебор в разы меньше
     }
   }
   if (from[goal] < 0 && goal !== start) return null;
@@ -959,12 +998,16 @@ function findPath(g: Grid, ax: number, ay: number, bx: number, by: number): { x:
   return out;
 }
 
+let budget = { s: null as State | null, tick: -1, n: 0 };
 function go(s: State, u: Unit, x: number, y: number, dt: number) {
-  const g = grid(s);
+  const g = grid(s, u.owner);
   if (g.any && !flies(u.kind, fac(s, u.owner)) && !lineClear(g, u.x, u.y, x, y)) { // путь загорожен: идём по точкам A*
-    if (!u.path || Math.hypot(u.path.to.x - x, u.path.to.y - y) > 3 || s.tick - u.path.at > 60) u.path = { to: { x, y }, at: s.tick, pts: findPath(g, u.x, u.y, x, y) ?? [] };
-    while (u.path.pts.length && Math.hypot(u.path.pts[0].x - u.x, u.path.pts[0].y - u.y) < 1.5) u.path.pts.shift();
-    if (u.path.pts.length) ({ x, y } = u.path.pts[0]);
+    if (!u.path || Math.hypot(u.path.to.x - x, u.path.to.y - y) > 3 || s.tick - u.path.at > 60) {
+      if (budget.s !== s || budget.tick !== s.tick) budget = { s, tick: s.tick, n: 0 };
+      u.path = budget.n++ < 12 ? { to: { x, y }, at: s.tick, pts: findPath(g, u.x, u.y, x, y) ?? [] } : undefined; // ponytail: не больше 12 A* за тик, остальные ждут очереди (поле потоков, если толпы вырастут)
+    }
+    while (u.path?.pts.length && Math.hypot(u.path.pts[0].x - u.x, u.path.pts[0].y - u.y) < 1.5) u.path.pts.shift();
+    if (u.path?.pts.length) ({ x, y } = u.path.pts[0]);
   } else u.path = undefined;
   const dx = x - u.x, dy = y - u.y, d = Math.hypot(dx, dy);
   if (d < 1e-6) return;
@@ -1095,16 +1138,18 @@ function separate(s: State) { // ponytail: O(n²) по парам, на сотн
       const b = mob[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), min = (STATS[a.kind].radius + STATS[b.kind].radius) * 0.8;
       if (d < min && d > 1e-3) { const p = ((min - d) * 0.5) / d; a.x -= dx * p; a.y -= dy * p; b.x += dx * p; b.y += dy * p; }
     }
-    for (const h of structs) {
-      if (h.kind === 'mine' || h.kind === 'aegis' || (h.kind === 'wallgate' && h.owner === a.owner) || h.carry === a.id || flies(a.kind, fac(s, a.owner))) continue;
-      const dx = a.x - h.x, dy = a.y - h.y, d = Math.hypot(dx, dy), min = STATS[h.kind].radius + STATS[a.kind].radius * 0.6;
-      if (d < min && d > 1e-3) { a.x = h.x + (dx / d) * min; a.y = h.y + (dy / d) * min; }
-    }
-    if (!flies(a.kind, fac(s, a.owner))) for (const [bx, by, bw, bh] of BLOCKS) { // скалы: выталкиваем к ближайшему краю
-      const r = STATS[a.kind].radius * 0.6;
-      if (a.x <= bx - r || a.x >= bx + bw + r || a.y <= by - r || a.y >= by + bh + r) continue;
+    const r = STATS[a.kind].radius * 0.6, out = (bx: number, by: number, bw: number, bh: number) => { // из прямоугольника — к ближайшему краю
+      if (a.x <= bx - r || a.x >= bx + bw + r || a.y <= by - r || a.y >= by + bh + r) return;
       const opts = [[bx - r - a.x, 0], [bx + bw + r - a.x, 0], [0, by - r - a.y], [0, by + bh + r - a.y]].sort((p, q) => Math.abs(p[0] + p[1]) - Math.abs(q[0] + q[1]))[0];
       a.x += opts[0]; a.y += opts[1];
+    };
+    if (!flies(a.kind, fac(s, a.owner))) {
+      for (const h of structs) { // постройки — квадратные следы на сетке
+        if (h.kind === 'mine' || h.kind === 'aegis' || (h.kind === 'wallgate' && h.owner === a.owner) || h.carry === a.id) continue;
+        const f = footRect(h.kind, h.x, h.y);
+        out(f.x0 * BCELL, f.y0 * BCELL, f.n * BCELL, f.n * BCELL);
+      }
+      for (const [bx, by, bw, bh] of BLOCKS) out(bx, by, bw, bh); // скалы
     }
     a.x = clamp(a.x, 0.5, MAP.w - 0.5); a.y = clamp(a.y, 0.5, MAP.h - 0.5);
   }
@@ -1112,14 +1157,14 @@ function separate(s: State) { // ponytail: O(n²) по парам, на сотн
 
 /** Уникальное сверхоружие фракций. */
 function doomStrike(s: State, st: { x: number; y: number; owner: number }) {
-  const f = s.players[st.owner]?.faction ?? 'order', boom = (x: number, y: number, r: number, dmg: number) => {
-    for (const v of s.units) if (v.hp > 0 && dist(v, { x, y }) < r + STATS[v.kind].radius) hurt(s, v, dmg * (1 - dist(v, { x, y }) / (r * 2)), st.owner);
+  const f = s.players[st.owner]?.faction ?? 'order', R = DOOM_R[f] ?? 16, boom = (x: number, y: number, r: number, dmg: number) => {
+    for (const v of s.units) if (v.owner !== st.owner && v.hp > 0 && dist(v, { x, y }) < r + STATS[v.kind].radius) hurt(s, v, dmg * (1 - dist(v, { x, y }) / (r * 2)), st.owner);
     if (s.shots.length < 200) s.shots.push([x, y, x, y - 0.1, 18]);
   };
-  if (f === 'order') boom(st.x, st.y, 12, 3500);                         // Длань Лампы: орбитальное копьё
-  else if (f === 'clockwork') { boom(st.x, st.y, 20, 1500); for (const v of s.units) if (v.owner !== st.owner && v.hp > 0 && dist(v, st) < 20) v.frozen = 8; } // Звёздный жнец: время встаёт
-  else if (f === 'orks') for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2 + Math.random(), d = Math.random() * 16; boom(st.x + Math.cos(a) * d, st.y + Math.sin(a) * d, 9, 1400); } // Большая Красная Кнопка
-  else { boom(st.x, st.y, 14, 1500); for (let i = 0; i < 3; i++) spawn(s, st.owner, 'elite', st.x + (i - 1) * 3, st.y + 2); } // Око Разлома: из разлома выходят демоны
+  if (f === 'order') boom(st.x, st.y, R, 3500);                         // Длань Лампы: орбитальное копьё
+  else if (f === 'clockwork') { boom(st.x, st.y, R, 1500); for (const v of s.units) if (v.owner !== st.owner && v.hp > 0 && dist(v, st) < R) v.frozen = 8; } // Звёздный жнец: время встаёт
+  else if (f === 'orks') for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2 + Math.random(), d = Math.random() * (R - 9); boom(st.x + Math.cos(a) * d, st.y + Math.sin(a) * d, 9, 1400); } // Большая Красная Кнопка
+  else { boom(st.x, st.y, R, 1500); for (let i = 0; i < 3; i++) spawn(s, st.owner, 'elite', st.x + (i - 1) * 3, st.y + 2); } // Око Разлома: из разлома выходят демоны
 }
 
 function victoryPoints(s: State, dt: number) {
@@ -1190,8 +1235,8 @@ function cleanup(s: State) {
   if (alive.length <= 1) s.winner = alive.length ? alive[0] : -1;
 }
 
-const prodPct = (u: Unit) => u.kind === 'doom' ? Math.floor((u.prog / DOOM.charge) * 100) : u.q <= 0 || u.kind === 'legend' ? 0
-  : u.kind === 'key4' && u.q > 100 ? Math.floor((u.prog / UNLOCKS[u.q - 101].time) * 100)
+const prodPct = (u: Unit) => u.q <= 0 || u.kind === 'legend' ? 0
+  : u.q > 100 ? Math.floor((u.prog / UNLOCKS[u.q - 101].time) * 100)
   : /^key/.test(u.kind) && !u.que.length ? Math.floor((u.prog / researchCost(u.q - 1).time) * 100)
   : u.kind === 'gate' ? Math.floor((u.prog / SUMMON_TIME) * 100)
   : u.que[0] ? Math.floor((u.prog / STATS[u.que[0]].time) * 100) : 0;
@@ -1209,7 +1254,7 @@ export function snapshot(s: State): Snap {
     tick: s.tick,
     // [id, owner, kind, x*10, y*10, hp, face*100, очередь, стройка %, пополняется, уровень, апгрейд %, найм текущего %]
     u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), (u.hp > 0 ? Math.max(1, Math.round(u.hp)) : 0), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : u.kind === 'post' ? 12 : UPGRADES[u.kind]!.time)) * 100), prodPct(u), u.gear, ...u.ch, Math.ceil(u.gcd), Math.round(u.sh), Math.ceil(u.frozen * 10), u.carry, Math.ceil(u.rise * 10), u.off > 0 ? 1 : 0, u.kind === 'captain' && u.hp <= 0 ? Math.max(0, Math.ceil(CAPTAIN_RESPAWN + 2 * (s.players[u.owner]?.clvl ?? 1) - u.dead)) : 0, u.kind === 'captain' ? ARCHS.indexOf(archOf(s, u)) : -1]), // 24 — архетип героя // 23 — секунд до возрождения капитана // 18 щит, 19 заморозка, 20 тащит/тащат, 21 вознесение, 22 купол пробит
-    ps: s.players.map(p => [Math.ceil(p.stopCd), p.unlock]), // 13 снаряжение, 14–16 заряды, 17 перезарядка броска
+    ps: s.players.map(p => [Math.ceil(p.stopCd), p.unlock, Math.floor((p.doom / DOOM.charge) * 100)]), // 13 снаряжение, 14–16 заряды, 17 перезарядка броска
     qk: Object.fromEntries(s.units.filter(u => u.que.length).map(u => [u.id, u.que.map(k => KINDS.indexOf(k))])),
     sm: [...s.smoke.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), Math.ceil(c.t)]), ...s.plagues.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), Math.ceil(c.t), c.fire ? 2 : 1])],
     p: s.points.map(p => [p.owner, Math.round(p.prog * 100), p.by]),
