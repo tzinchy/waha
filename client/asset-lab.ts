@@ -10,6 +10,8 @@ const descriptions: Record<FactionId, string> = {
   heretics: 'Чёрное железо, багровые пластины и рога. Резкий силуэт чемпиона, стрелок культа и кузнец.',
   scrap: 'Зелёная кожа, тяжёлая челюсть, клёпаный металлолом. Массивный вожак, стрелок и механик.',
   necrons: 'Сегментированные металлические скелеты и зелёная энергия. Владыка с боевой косой, гаусс-воин и криптек-ремонтник.',
+  drukhari: 'Тёмные Эльдар: фиолетовая броня, бирюзовые энергоклинки, рейдеры, инкубы и стремительные боевые машины.',
+  daemons: 'Демоны Хаоса: багровая плоть, варп-огонь, чудовищные герои, демонические машины и врата призыва.',
 };
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x222a2d); scene.fog = new THREE.Fog(0x222a2d, 45, 100);
 const renderer = new THREE.WebGLRenderer({ canvas: $<HTMLCanvasElement>('scene'), antialias: false, alpha: false });
