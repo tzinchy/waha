@@ -286,10 +286,39 @@ export class Game {
     Object.assign(tex.style, { position: 'absolute', left: '0', top: '0', width: MAP.w * S + 'px', height: MAP.h * S + 'px', imageRendering: 'pixelated' });
     this.ground.append(tex);
     this.ground.insertAdjacentHTML('beforeend', mapSvg());
+    // Three distinct capture-site silhouettes and a command/capture animation layer.
+    if (!this.root.querySelector('#waha-capture-style')) {
+      const style = document.createElement('style');
+      style.id = 'waha-capture-style';
+      style.textContent = `
+        .w2d-point.capture-normal { --capture-accent: #a6c9c0; }
+        .w2d-point.capture-relic { --capture-accent: #eac16e; }
+        .w2d-point.capture-key { --capture-accent: #ff8266; }
+        .w2d-point.capture-normal, .w2d-point.capture-relic, .w2d-point.capture-key { border-color:var(--capture-accent); }
+        .w2d-point.capture-relic::after, .w2d-point.capture-key::after {
+          content:'';position:absolute;inset:12%;border:3px solid var(--capture-accent);
+          border-radius:50%;animation:waha-site-idle 3s ease-in-out infinite;pointer-events:none;
+        }
+        .w2d-point.capture-key::after { border-radius:15%;transform:rotate(45deg); }
+        .w2d-point.capture-active { animation:waha-capture-active .8s ease-in-out infinite alternate; }
+        .w2d-point.capture-commanded::before {
+          content:'';position:absolute;inset:-12%;border:5px dashed #f5e4ac;border-radius:50%;
+          animation:waha-capture-command 1.25s linear infinite;pointer-events:none;
+        }
+        .w2d-point.capture-complete { animation:waha-capture-done .7s ease-out 2; }
+        @keyframes waha-site-idle { 0%,100%{opacity:.3;scale:.96}50%{opacity:.85;scale:1.05} }
+        @keyframes waha-capture-active {from{filter:drop-shadow(0 0 2px var(--capture-accent))}to{filter:drop-shadow(0 0 15px var(--capture-accent))}}
+        @keyframes waha-capture-command {to{transform:rotate(360deg)}}
+        @keyframes waha-capture-done {50%{filter:brightness(2.5);scale:1.14}}
+        @media(prefers-reduced-motion:reduce){.w2d-point.capture-active,.w2d-point.capture-commanded::before,.w2d-point.capture-complete,.w2d-point.capture-relic::after,.w2d-point.capture-key::after{animation:none}}
+      `;
+      this.root.append(style);
+    }
     [...POINTS, ...RELICS].forEach(([x, y], i) => {
       const relic = i >= POINTS.length;
       const ring = document.createElement('div'), fill = document.createElement('div');
-      ring.className = 'w2d-point'; fill.className = 'w2d-point-fill';
+      ring.className = 'w2d-point ' + (i === 0 ? 'capture-key' : relic ? 'capture-relic' : 'capture-normal'); fill.className = 'w2d-point-fill';
+      ring.title = i === 0 ? 'Ключевая точка' : relic ? 'Реликтовая точка' : 'Стратегическая точка';
       for (const e of [ring, fill]) Object.assign(e.style, { left: (x - POINT_R) * S + 'px', top: (y - POINT_R) * S + 'px', width: POINT_R * 2 * S + 'px', height: POINT_R * 2 * S + 'px' });
       const el = this.place2(art(relic ? 'Buildings/reliquary.svg' : 'Defenses/point-3.svg', (relic ? 5 : 3.6) * S), x, y); // реликварий / знаменный столп
       el.classList.add('w2d-neutral');
@@ -410,8 +439,15 @@ export class Game {
       if (this.pointOwner[i] !== undefined && this.pointOwner[i] !== owner) {
         if (owner === this.slot) audio.captured(); else if (this.pointOwner[i] === this.slot) audio.lost();
       }
+      const ownerChanged = this.pointOwner[i] !== undefined && this.pointOwner[i] !== owner;
       this.pointOwner[i] = owner;
       const p = this.points[i], col = owner >= 0 ? hex(SLOT_COLORS[owner]) : 'var(--art-bone)';
+      p.ring.classList.toggle('capture-active', by >= 0 && prog > 0);
+      if (ownerChanged) {
+        p.ring.classList.remove('capture-commanded');
+        p.ring.classList.add('capture-complete');
+        setTimeout(() => p.ring.classList.remove('capture-complete'), 1500);
+      }
       p.ring.style.setProperty('--team', col);
       p.ring.classList.toggle('owned', owner >= 0);
       p.zone.style.setProperty('--team', col); p.zone.classList.toggle('owned', owner >= 0); p.zone.classList.toggle('mine', owner === this.slot);
@@ -1151,8 +1187,23 @@ export class Game {
     const site = this.pick(sx, sy, v => v.owner === this.slot && !v.dead && (isStruct(v.kind) || VEHICLES.has(v.kind)) && (v.build < 1 || v.hp < maxHp(v.kind) - 1)); // стройка или ремонт
     if (site && sel.some(v => v.kind === 'builder')) { this.markTarget(site, 'assist'); return this.cmd({ c: 'assist', ids, id: site.id }); }
     const p = this.toWorld(sx, sy);
-    this.cmd({ c: 'move', ids, x: p.x, y: p.y });
-    this.marker(p.x, p.y);
+    // Clicking near a capture marker snaps the move command to its center.
+    // The server remains authoritative: progress only advances while units stand in range.
+    const sites = [...POINTS, ...RELICS];
+    let nearest = -1, distance = Infinity;
+    sites.forEach(([x, y], i) => {
+      const d = Math.hypot(p.x - x, p.y - y);
+      if (d < distance) { nearest = i; distance = d; }
+    });
+    const target = nearest >= 0 && distance < POINT_R * 2.5 ? sites[nearest] : null;
+    if (target) {
+      this.points.forEach(point => point.ring.classList.remove('capture-commanded'));
+      const ring = this.points[nearest]?.ring;
+      ring?.classList.add('capture-commanded');
+      setTimeout(() => ring?.classList.remove('capture-commanded'), 6000);
+    }
+    this.cmd({ c: 'move', ids, x: target?.[0] ?? p.x, y: target?.[1] ?? p.y });
+    this.marker(target?.[0] ?? p.x, target?.[1] ?? p.y);
   }
   /** Цель приказа: кольцо под ней мигает (атака — красным, ремонт/стройка — зелёным). */
   private markTarget(v: View, tone: 'attack' | 'assist') {
