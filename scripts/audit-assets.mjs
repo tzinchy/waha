@@ -3,7 +3,7 @@ import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
 import { join, basename } from 'node:path';
 import { PNG } from 'pngjs';
 import { validateAtlas } from '../client/sprite-atlas.ts';
-import { FACTIONS, UNITS, BUILDINGS, motions } from './asset-catalog.mjs';
+import { FACTIONS, UNITS, BUILDINGS, ASSET_TARGETS, motions } from './asset-catalog.mjs';
 const root='client/public/models/factions';
 const paths=(await readdir(root,{recursive:true})).filter(p=>/\.(glb|png)$/.test(p)).sort();
 const errors=[],warnings=[],records=[],models=[];
@@ -23,6 +23,8 @@ for(const path of paths){
     }
     const png=PNG.sync.read(data);
     const meta=validateAtlas(JSON.parse(await readFile(join(root,path.replace(/\.png$/,'.json')),'utf8')));
+    if(meta.rows!==8||meta.columns!==8||meta.directionsDegrees.some((angle,i)=>angle!==i*45))throw Error('Require eight 45-degree directions and eight frames');
+    for(const event of meta.events??[])if(!event.name||!Number.isFinite(event.time)||event.time<0||event.time>meta.duration)throw Error('Invalid animation event timestamp');
     if(meta.faction!==faction||meta.role!==role||meta.animation!==basename(path,'.png'))throw Error('Atlas identity disagrees with path');
     if(png.width!==meta.cellWidth*meta.columns||png.height!==meta.cellHeight*meta.rows)throw Error('PNG dimensions disagree with JSON');
     let transparent=0,opaque=0,partial=0;
@@ -51,9 +53,11 @@ for(const path of paths){
   }catch(e){errors.push({file:path,issue:String(e)});}
 }
 const missing=[];
-for(const f of FACTIONS)for(const r of [...UNITS,...BUILDINGS]){
+for(const {faction:f,role:r} of ASSET_TARGETS){
   if(!paths.includes(`${f}/${r}/model.glb`))missing.push(`${f}/${r}/model.glb`);
-  if(UNITS.includes(r))for(const a of motions(r))for(const ext of ['png','json']){const file=`${f}/${r}/sprites/${a}.${ext}`;try{await readFile(join(root,file));}catch{missing.push(file);}}
+  const model=models.find(m=>m.faction===f&&m.role===r);
+  if(model)for(const a of motions(r))if(!model.glbAnimations.includes(a))missing.push(`${f}/${r}/model.glb#${a}`);
+  for(const a of motions(r))for(const ext of ['png','json']){const file=`${f}/${r}/sprites/${a}.${ext}`;try{await readFile(join(root,file));}catch{missing.push(file);}}
 }
 const report={version:1,licenses:{legacyModels:{file:'client/public/models/LICENSE.txt',text:await readFile('client/public/models/LICENSE.txt','utf8')},ground:{file:'client/public/tex/LICENSE.txt',text:await readFile('client/public/tex/LICENSE.txt','utf8')},proceduralModels:{source:'client/faction-models.ts',status:'Repository-generated prototypes; no third-party character pack recorded'},generatedSource:{file:'client/public/art-src/legion/captain/walk-candidate.json',artisticAcceptance:'rejected; not imported into runtime'}},scope:'Technical inventory only. Procedural atlas art remains unapproved.',summary:{models:models.length,glbAnimationClips:clips,spriteAtlases:paths.filter(p=>p.endsWith('.png')).length,bytes:totalBytes,errors:errors.length,warnings:warnings.length,missing:missing.length,productionArtApproved:approved},factions:FACTIONS.map(f=>({faction:f,models:models.filter(m=>m.faction===f).length,spriteAtlases:records.filter(r=>r.file.startsWith(f+'/')&&r.file.endsWith('.png')).length,productionArtApproved:records.filter(r=>r.file.startsWith(f+'/')&&r.art==='accepted-authored').length})),missing,errors,warnings,files:records};
 if(process.argv.includes('--write')){

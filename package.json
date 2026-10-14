@@ -10,7 +10,10 @@
     "assets:validate": "node --import tsx scripts/audit-assets.mjs",
     "assets:import": "node --import tsx scripts/import-atlas.mjs",
     "smoke": "node scripts/smoke-game.mjs",
-    "assets:glb": "node scripts/validate-glb.mjs"
+    "assets:glb": "node scripts/validate-glb.mjs",
+    "assets:export": "node scripts/export-factions.mjs",
+    "assets:check-pack": "node --import tsx scripts/check-model-pack.mjs",
+    "assets:pack": "node scripts/pack-models.mjs"
   },
   "dependencies": {
     "three": "^0.186.1",

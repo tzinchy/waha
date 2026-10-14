@@ -1,10 +1,10 @@
-import { GRENADE_WINDUP, GRENADE_FLIGHT } from '../shared/sim.ts';
 import * as THREE from 'three';
 import { BattleEffect, CAPTURE_SITES, type CaptureKind } from './expansion-assets.ts';
 import { BATTLE_MAPS } from './battle-maps.ts';
-import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { assetArchive } from './asset-archive.ts';
-import { UNIT_ROLES, BUILDING_ROLES, VEHICLE_ROLES, FACTION_ART, FactionActor, factionBuilding, upgradeFactionBuilding, ROLE_MOTIONS, type BuildingRole, type FactionId, type Motion, type UnitRole } from './faction-models.ts';
+import { glb, spriteAtlas, type ExportRole } from './asset-export.ts';
+import { StructureActor, STRUCTURE_ROLES, STRUCTURE_ROLE_MOTIONS, type StructureRole, type StructureMotion } from './structure-models.ts';
+import { UNIT_ROLES, VEHICLE_ROLES, FACTION_ART, FactionActor, factionBuilding, upgradeFactionBuilding, ROLE_MOTIONS, type FactionId, type Motion, type UnitRole } from './faction-models.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const ids = Object.keys(FACTION_ART) as FactionId[];
@@ -163,6 +163,7 @@ const stage = $('stage'); stage.style.position = 'relative'; stage.append(previe
 let batchExport=false;
 const actors: FactionActor[] = [];
 const buildings = new Map<FactionId, THREE.Group>();
+const previewStructures = new Map<FactionId, StructureActor>();
 const buildingTiers = new Map<FactionId, number>();
 const productionGlows = new Map<FactionId, { light: THREE.PointLight; activeUntil: number; mats: THREE.MeshStandardMaterial[] }>();
 function startProduction(faction: FactionId, duration = 6) {
@@ -239,27 +240,43 @@ for (const id of ids) {
   const art = FACTION_ART[id], b = document.createElement('button'); b.className = 'faction'; b.dataset.faction = id;
   const icon = document.createElement('span'); icon.className = 'sigil'; icon.style.color = '#' + art.primary.toString(16).padStart(6, '0'); icon.textContent = id === 'legion' ? '✦' : id === 'heretics' ? '✶' : id === 'scrap' ? '⚒' : '◈';
   const text = document.createElement('span'), strong = document.createElement('strong'), small = document.createElement('small'); strong.textContent = art.name; small.textContent = art.subtitle; text.append(strong, small); b.append(icon, text); b.onclick = () => selectFaction(id); $('factions').append(b);
-  const label = document.createElement('div'); label.textContent = art.name; const roles = document.createElement('span'); roles.textContent = '13 юнитов · 10 построек'; label.append(roles); $('plotLabels').append(label);
+  const label = document.createElement('div'); label.textContent = art.name; const roles = document.createElement('span'); roles.textContent = `${UNIT_ROLES.length} юнитов · ${STRUCTURE_ROLES.length} построек и точек`; label.append(roles); $('plotLabels').append(label);
 }
 $('selectedDescription').textContent = descriptions[selected];
 
-const roleNames: Record<UnitRole | BuildingRole,string> = { captain:'Командир',guard:'Пехота',builder:'Строитель',sniper:'Снайпер',heavy:'Тяжёлый стрелок',flamer:'Огнемётчик',elite:'Элита',medic:'Медик',transport:'Бронетранспортёр',tank:'Танк',walker:'Шагоход',artillery:'Артиллерия',titan:'Титан',hq:'Штаб',barracks:'Казармы',post:'Пост',turret:'Турель',generator:'Генератор',factory:'Завод',armory:'Оружейная',relic:'Реликварий',wall:'Стена',gate:'Ворота'};
-const roleSelect=$<HTMLSelectElement>('role'); roleSelect.innerHTML=[...UNIT_ROLES,...BUILDING_ROLES].map(r=>`<option value="${r}">${roleNames[r]}</option>`).join('');
+const roleNames: Record<ExportRole,string> = { captain:'Командир',guard:'Пехота',builder:'Строитель',sniper:'Снайпер',heavy:'Тяжёлый стрелок',flamer:'Огнемётчик',elite:'Элита',medic:'Медик',transport:'Бронетранспортёр',tank:'Танк',walker:'Шагоход',artillery:'Артиллерия',titan:'Титан',scout:'Разведчик',flyer:'Летающий отряд',nuclear_blast:'Атомный взрыв',capture_point:'Точка захвата',resource_point:'Ресурсная точка',hq:'Штаб',barracks:'Казармы',post:'Пост',turret:'Турель',generator:'Генератор',factory:'Завод',armory:'Оружейная',relic:'Реликварий',wall:'Стена',gate:'Ворота'};
+const roleSelect=$<HTMLSelectElement>('role'); roleSelect.innerHTML=[...UNIT_ROLES,...STRUCTURE_ROLES].map(r=>`<option value="${r}">${roleNames[r]}</option>`).join('');
 let previewOnly=false;
-function previewRole(){previewOnly=true;const role=roleSelect.value;for(const a of actors){a.root.visible=a.role===role;a.root.position.set(centerX(a.faction),0,1.6);}for(const id of ids){const old=buildings.get(id)!;scene.remove(old);const g=factionBuilding(id,(BUILDING_ROLES as readonly string[]).includes(role)?role as BuildingRole:'hq');g.position.set(centerX(id),0,-2.6);g.visible=(BUILDING_ROLES as readonly string[]).includes(role);buildings.set(id,g);scene.add(g);}status(`Просмотр: ${roleNames[role as UnitRole]} · четыре фракционных варианта`);}
+function previewRole() {
+  previewOnly = true;
+  const role = roleSelect.value as ExportRole;
+  for (const actor of actors) { actor.root.visible = actor.role === role; actor.root.position.set(centerX(actor.faction), 0, 1.6); }
+  previewStructures.clear();
+  for (const id of ids) {
+    const old = buildings.get(id)!; scene.remove(old);
+    const structure = new StructureActor(id, (STRUCTURE_ROLES as readonly string[]).includes(role) ? role as StructureRole : 'hq');
+    structure.root.position.set(centerX(id), 0, -2.6);
+    structure.root.visible = (STRUCTURE_ROLES as readonly string[]).includes(role);
+    buildings.set(id, structure.root); scene.add(structure.root);
+    if (structure.root.visible) previewStructures.set(id, structure);
+  }
+  setMotion(motion);
+  status(`Просмотр: ${roleNames[role]} · ${ids.length} фракционных вариантов`);
+}
 roleSelect.onchange=previewRole;
 const stains=new THREE.Group();scene.add(stains);
 const bloodMaterial=new THREE.MeshBasicMaterial({color:0x791e22,depthWrite:false,side:THREE.DoubleSide});
 function hit(actor:FactionActor,death=false){if(VEHICLE_ROLES.has(actor.role)||actor.faction==='necrons'){explodeAt(actor.root.position.x,actor.root.position.z,0.45,0.03);return;}for(let i=0;i<(death?16:7);i++){const particle=new THREE.Mesh(particleGeometry,bloodMaterial);particle.position.copy(actor.root.position).add(new THREE.Vector3(0,1,0));particle.scale.setScalar(0.4);scene.add(particle);particles.push({mesh:particle,velocity:new THREE.Vector3((Math.random()-.5)*3,1+Math.random()*2,(Math.random()-.5)*3),ttl:0.6,age:0,spin:2,kind:'blood'});const drop=new THREE.Mesh(new THREE.CircleGeometry(0.04+Math.random()*0.1,6),bloodMaterial);drop.rotation.x=-Math.PI/2;const x=actor.root.position.x+(Math.random()-.5)*1.4,z=actor.root.position.z+(Math.random()-.5)*1.4;drop.position.set(x,heightAt(x,z)+0.025,z);stains.add(drop);}while(stains.children.length>300){const old=stains.children[0];stains.remove(old);if(old instanceof THREE.Mesh)old.geometry.dispose();}}
 $('hit').onclick=()=>{for(const a of actors)if(a.faction===selected&&a.root.visible)hit(a);status('Попадание: кровь у живых бойцов, искры у машин и некронов.');};
 
-const motionLabels: Record<Motion, string> = { idle: 'Стойка', idle_scan: 'Осмотр', idle_inspect: 'Оружие', idle_taunt: 'Провокация', walk: 'Ходьба', run: 'Бег', attack: 'Удар', attack_slash: 'Рубящий', attack_thrust: 'Выпад', attack_overhead: 'Сверху', attack_combo: 'Комбо', execute: 'Добивание', throw_grenade: 'Бросок гранаты', fly: 'Полёт', dash_flight: 'Быстрый полёт', teleport: 'Телепортация', shoot: 'Огонь', work: 'Работа', death: 'Гибель' };
+const motionLabels: Record<Motion, string> = { idle: 'Стойка', idle_scan: 'Осмотр', idle_inspect: 'Оружие', idle_taunt: 'Провокация', walk: 'Ходьба', run: 'Бег', attack: 'Удар', attack_butt: 'Удар прикладом', attack_slam: 'Удар корпусом', throw_projectile: 'Метание снаряда', attack_slash: 'Рубящий', attack_thrust: 'Выпад', attack_overhead: 'Сверху', attack_combo: 'Комбо', execute: 'Добивание', throw_grenade: 'Бросок гранаты', fly: 'Полёт', dash_flight: 'Быстрый полёт', teleport: 'Телепортация', shoot: 'Огонь', work: 'Работа', death: 'Гибель', reload: 'Перезарядка', hit: 'Ранение', stunned: 'Оглушение', knockback: 'Отбрасывание', fall: 'Падение', death_blast: 'Гибель от взрыва', build: 'Строительство', capture: 'Захват' };
 function setMotion(next: Motion) {
   motion = next;
   for (const actor of actors) {
     const mode = ROLE_MOTIONS[actor.role].includes(next) ? next : next === 'attack' && ROLE_MOTIONS[actor.role].includes('shoot') ? 'shoot' : 'idle';
     actor.setMotion(mode); if(next==='death' && actor.root.visible)hit(actor,true);
   }
+  for (const structure of previewStructures.values()) structure.setMotion(STRUCTURE_ROLE_MOTIONS[structure.role].includes(next as StructureMotion) ? next as StructureMotion : 'idle');
   document.querySelectorAll<HTMLElement>('[data-motion]').forEach(b => b.classList.toggle('on', b.dataset.motion === next));
 }
 for (const name of Object.keys(motionLabels) as Motion[]) {
@@ -302,7 +319,7 @@ $('destroy').onclick = () => {
   status(`${FACTION_ART[selected].name}: штаб разрушен. Основание и обломки остались на земле.`);
 };
 $('reset').onclick = () => {
-  for(const old of [...stains.children]){stains.remove(old);if(old instanceof THREE.Mesh)old.geometry.dispose();} previewOnly=false; for(const a of actors){a.root.visible=true;a.root.position.set(centerX(a.faction)+(UNIT_ROLES.indexOf(a.role)%3-1)*2.1,0,0.5+Math.floor(UNIT_ROLES.indexOf(a.role)/3)*2.8);} craters.length = 0; explosions = shots = 0; refreshGround(); populateBuildings();
+  for(const old of [...stains.children]){stains.remove(old);if(old instanceof THREE.Mesh)old.geometry.dispose();} previewOnly=false; for(const a of actors){a.root.visible=true;a.root.position.set(centerX(a.faction)+(UNIT_ROLES.indexOf(a.role)%3-1)*2.1,0,0.5+Math.floor(UNIT_ROLES.indexOf(a.role)/3)*2.8);} previewStructures.clear(); craters.length = 0; explosions = shots = 0; refreshGround(); populateBuildings();
   for (const p of particles) { scene.remove(p.mesh); if (p.kind === 'smoke') (p.mesh.material as THREE.Material).dispose(); } particles.length = 0;
   for (const b of bullets) { scene.remove(b.mesh); b.mesh.geometry.dispose(); (b.mesh.material as THREE.Material).dispose(); } bullets.length = 0;
   while (rubble.children.length > initialRubbleCount) { const child = rubble.children.at(-1)!; rubble.remove(child); if (child instanceof THREE.Mesh) child.geometry.dispose(); }
@@ -312,45 +329,16 @@ $('reset').onclick = () => {
 function download(data: BlobPart, filename: string, type: string) {
   const url = URL.createObjectURL(new Blob([data], { type })); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
-async function glb(faction: FactionId, role: UnitRole | BuildingRole, clip?: Motion) {
-  const character = (UNIT_ROLES as readonly string[]).includes(role), actor = character ? new FactionActor(faction, role as UnitRole) : undefined;
-  const root = actor?.root ?? factionBuilding(faction, role as BuildingRole);
-  const animations = actor?.clips().filter(a => !clip || a.name === clip) ?? [];
-  actor?.pose('idle', 0);
-  const result = await new GLTFExporter().parseAsync(root, { binary: true, animations, onlyVisible: false });
-  if (!(result instanceof ArrayBuffer)) throw new Error('Expected binary GLB');
-  return result;
-}
 $('exportGlb').onclick = async () => {
-  const role = $<HTMLSelectElement>('role').value as UnitRole | BuildingRole, b = $<HTMLButtonElement>('exportGlb'); b.disabled = true;
+  const role = $<HTMLSelectElement>('role').value as ExportRole, b = $<HTMLButtonElement>('exportGlb'); b.disabled = true;
   try { const data = await glb(selected, role); download(data, `${selected}-${role}.glb`, 'model/gltf-binary'); status(`Экспортирован ${FACTION_ART[selected].name}: ${role}.`); }
   catch (e) { status(`Ошибка экспорта: ${String(e)}`); } finally { b.disabled = false; }
 };
 
-async function spriteAtlas(faction: FactionId, role: UnitRole, requestedMotion: Motion) {
-  const available = ROLE_MOTIONS[role], selectedMotion = available.includes(requestedMotion) ? requestedMotion : available[0];
-  const actor = new FactionActor(faction, role), s = new THREE.Scene(); lighting(s); s.add(actor.root);
-  const r = new THREE.WebGLRenderer({ alpha: true, antialias: false, preserveDrawingBuffer: true }); r.setSize(128, 128); r.setClearColor(0x000000, 0);
-  r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
-  // One world-space scale for every role, including the full weapon-swing envelope.
-  const span=VEHICLE_ROLES.has(role)?4:2.5;
-  const c = new THREE.OrthographicCamera(-span, span, span, -span, 0.1, 30); c.position.set(8 / Math.sqrt(2), 1.1 + 8 * Math.tan(35 * Math.PI / 180), 8 / Math.sqrt(2)); c.lookAt(0, 1.1, 0);
-  const atlas = document.createElement('canvas'); atlas.width = atlas.height = 1024; const ctx = atlas.getContext('2d')!; ctx.imageSmoothingEnabled = false;
-  const duration = selectedMotion === 'run' ? 0.65 : selectedMotion === 'walk' ? 1 : selectedMotion === 'idle' ? 2 : selectedMotion === 'attack' ? 0.7 : selectedMotion === 'shoot' ? 0.45 : 1.1;
-  const loop = ['idle', 'walk', 'run', 'work'].includes(selectedMotion);
-  for (let direction = 0; direction < 8; direction++) {
-    actor.root.rotation.y = direction * Math.PI / 4;
-    for (let frame = 0; frame < 8; frame++) { actor.pose(selectedMotion, duration * frame / (loop ? 8 : 7)); r.render(s, c); ctx.drawImage(r.domElement, frame * 128, direction * 128); }
-    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-  }
-  const blob = await new Promise<Blob>((resolve, reject) => atlas.toBlob(b => b ? resolve(b) : reject(new Error('Atlas encoding failed')), 'image/png'));
-  const anchor = new THREE.Vector3(0, 0, 0).project(c);
-  r.dispose(); r.forceContextLoss();
-  return { blob, metadata: { faction, role, animation: selectedMotion, events: selectedMotion === 'throw_grenade' ? [{ name: 'release', time: GRENADE_WINDUP }, { name: 'impact', time: GRENADE_WINDUP + GRENADE_FLIGHT }] : [], image: `${selectedMotion}.png`, cellWidth: 128, cellHeight: 128, columns: 8, rows: 8, duration, loop, directionsDegrees: [0, 45, 90, 135, 180, 225, 270, 315], rootForward: '+Z', camera: { elevationDegrees: 35, azimuthDegrees: 45, targetHeight: 1.1, orthographicHeight: span*2 }, anchor: { x: Math.round((anchor.x + 1) * 64), y: Math.round((1 - anchor.y) * 64) }, frames: Array.from({ length: 8 }, (_, direction) => Array.from({ length: 8 }, (_, frame) => ({ x: frame * 128, y: direction * 128, w: 128, h: 128, time: duration * frame / (loop ? 8 : 7) }))) } };
-}
 $('exportSprites').onclick = async () => {
-  const role = $<HTMLSelectElement>('role').value as UnitRole;
-  if (!(UNIT_ROLES as readonly string[]).includes(role)) { status('Для спрайтов выбери юнита или технику.'); return; }
+  const role = $<HTMLSelectElement>('role').value as ExportRole;
+  const available = (UNIT_ROLES as readonly string[]).includes(role) ? ROLE_MOTIONS[role as UnitRole] : STRUCTURE_ROLE_MOTIONS[role as StructureRole];
+  if (!available.includes(motion as StructureMotion)) { status('Это движение недоступно выбранной модели.'); return; }
   const button = $<HTMLButtonElement>('exportSprites'); button.disabled = true; status('Запекаю восемь направлений…');
   try {
     const a = await spriteAtlas(selected, role, motion);
@@ -363,12 +351,14 @@ $('exportSprites').onclick = async () => {
 let last = performance.now(), previousShotCycle = -1;
 function frame(now: number) {
   requestAnimationFrame(frame); const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (batchExport) return;
   focus.lerp(focusTarget, 1 - Math.exp(-dt * 5));
   const aspect = $('stage').clientWidth / $('stage').clientHeight, halfW = (overview ? 22 : 8.5) * zoom;
   camera.left = -halfW; camera.right = halfW; camera.top = halfW / aspect; camera.bottom = -camera.top; camera.updateProjectionMatrix();
   // Orthographic fixed 35-degree elevation. Models remain 3D at both display resolutions.
   camera.position.copy(focus).add(new THREE.Vector3(8, 21, 29)); camera.lookAt(focus);
   for (const actor of actors) { actor.root.position.y = heightAt(actor.root.position.x, actor.root.position.z); actor.update(dt); }
+  for (const structure of previewStructures.values()) structure.update(dt);
   productionGlows.forEach(({ light, activeUntil, mats }) => {
     const active = now < activeUntil;
     const pulse = active ? 0.6 + 0.4 * Math.sin(now * 0.012) : 0;
@@ -400,7 +390,7 @@ function frame(now: number) {
   if(!batchExport) renderer.render(scene, camera);
 }
 requestAnimationFrame(frame);
-status('52 юнита и техники · 40 построек · 260 анимационных клипов · GLB и запекание спрайтов доступны.');
+status(`${actors.length} юнитов и техники · ${ids.length * STRUCTURE_ROLES.length} построек и точек · GLB со всеми клипами и спрайты восьми направлений.`);
 
 // Development-only inspection/export surface for repeatable browser checks and asset generation.
 Object.assign(window, { assetLab: {

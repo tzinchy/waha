@@ -14,7 +14,7 @@ permissions:
 jobs:
   export:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 120
     env:
       EXPORT_SCOPE: ${{ inputs.export_scope || 'missing' }}
     steps:
@@ -37,6 +37,14 @@ jobs:
           name: prototype-asset-audit
           path: assets/art-audit.json
       - run: npm run assets:glb
+      - name: Verify model and sprite animation roundtrip
+        run: npm run assets:check-pack
+      - name: Package portable GLB and sprite assets
+        run: npm run assets:pack
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WAHA-model-pack
+          path: artifacts/WAHA-model-pack.zip
       - name: Commit generated assets
         run: |
           git config user.name "github-actions[bot]"
