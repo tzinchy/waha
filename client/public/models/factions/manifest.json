@@ -1,459 +1,1060 @@
 {
-  "version": 1,
-  "quality": "procedural prototype; art reference is the final detail target",
-  "generator": "client/faction-models.ts + client/asset-lab.ts",
+  "version": 2,
+  "quality": "0 approved authored atlases; all other atlas art remains procedural prototype",
+  "generator": "scripts/audit-assets.mjs (inventory from physical files)",
   "models": 92,
   "animationClips": 260,
   "spriteAtlases": 260,
-  "framesPerAtlas": 64,
+  "atlases": [
+    {
+      "file": "heretics/artillery/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/artillery/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/artillery/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/artillery/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/artillery/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/builder/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/builder/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/builder/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/builder/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/builder/sprites/work.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/captain/sprites/attack.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/captain/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/captain/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/captain/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/captain/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/elite/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/elite/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/elite/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/elite/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/elite/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/flamer/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/flamer/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/flamer/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/flamer/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/flamer/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/guard/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/guard/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/guard/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/guard/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/guard/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/heavy/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/heavy/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/heavy/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/heavy/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/heavy/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/medic/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/medic/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/medic/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/medic/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/medic/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/sniper/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/sniper/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/sniper/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/sniper/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/sniper/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/tank/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/tank/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/tank/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/tank/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/tank/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/titan/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/titan/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/titan/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/titan/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/titan/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/transport/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/transport/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/transport/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/transport/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/transport/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/walker/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/walker/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/walker/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/walker/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "heretics/walker/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/artillery/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/artillery/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/artillery/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/artillery/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/artillery/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/builder/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/builder/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/builder/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/builder/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/builder/sprites/work.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/captain/sprites/attack.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/captain/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/captain/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/captain/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/captain/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/elite/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/elite/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/elite/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/elite/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/elite/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/flamer/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/flamer/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/flamer/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/flamer/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/flamer/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/guard/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/guard/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/guard/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/guard/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/guard/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/heavy/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/heavy/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/heavy/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/heavy/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/heavy/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/medic/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/medic/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/medic/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/medic/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/medic/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/sniper/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/sniper/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/sniper/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/sniper/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/sniper/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/tank/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/tank/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/tank/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/tank/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/tank/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/titan/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/titan/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/titan/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/titan/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/titan/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/transport/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/transport/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/transport/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/transport/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/transport/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/walker/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/walker/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/walker/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/walker/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "legion/walker/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/artillery/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/artillery/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/artillery/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/artillery/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/artillery/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/builder/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/builder/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/builder/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/builder/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/builder/sprites/work.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/captain/sprites/attack.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/captain/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/captain/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/captain/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/captain/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/elite/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/elite/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/elite/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/elite/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/elite/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/flamer/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/flamer/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/flamer/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/flamer/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/flamer/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/guard/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/guard/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/guard/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/guard/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/guard/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/heavy/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/heavy/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/heavy/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/heavy/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/heavy/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/medic/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/medic/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/medic/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/medic/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/medic/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/sniper/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/sniper/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/sniper/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/sniper/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/sniper/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/tank/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/tank/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/tank/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/tank/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/tank/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/titan/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/titan/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/titan/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/titan/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/titan/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/transport/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/transport/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/transport/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/transport/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/transport/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/walker/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/walker/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/walker/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/walker/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "necrons/walker/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/artillery/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/artillery/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/artillery/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/artillery/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/artillery/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/builder/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/builder/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/builder/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/builder/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/builder/sprites/work.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/captain/sprites/attack.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/captain/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/captain/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/captain/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/captain/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/elite/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/elite/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/elite/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/elite/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/elite/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/flamer/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/flamer/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/flamer/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/flamer/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/flamer/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/guard/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/guard/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/guard/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/guard/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/guard/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/heavy/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/heavy/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/heavy/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/heavy/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/heavy/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/medic/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/medic/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/medic/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/medic/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/medic/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/sniper/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/sniper/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/sniper/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/sniper/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/sniper/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/tank/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/tank/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/tank/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/tank/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/tank/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/titan/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/titan/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/titan/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/titan/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/titan/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/transport/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/transport/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/transport/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/transport/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/transport/sprites/walk.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/walker/sprites/death.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/walker/sprites/idle.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/walker/sprites/run.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/walker/sprites/shoot.png",
+      "art": "prototype"
+    },
+    {
+      "file": "scrap/walker/sprites/walk.png",
+      "art": "prototype"
+    }
+  ],
   "files": [
     {
-      "faction": "legion",
-      "role": "captain",
-      "file": "legion/captain/model.glb",
-      "bytes": 288320,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "attack",
-        "death"
-      ],
-      "triangles": 1508
-    },
-    {
-      "faction": "legion",
-      "role": "guard",
-      "file": "legion/guard/model.glb",
-      "bytes": 264448,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1280
-    },
-    {
-      "faction": "legion",
-      "role": "builder",
-      "file": "legion/builder/model.glb",
-      "bytes": 256996,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "work",
-        "death"
-      ],
-      "triangles": 1168
-    },
-    {
-      "faction": "legion",
-      "role": "hq",
-      "file": "legion/hq/model.glb",
-      "bytes": 111708,
-      "animations": [],
-      "triangles": 1048
-    },
-    {
-      "faction": "legion",
-      "role": "barracks",
-      "file": "legion/barracks/model.glb",
-      "bytes": 100172,
-      "animations": [],
-      "triangles": 928
-    },
-    {
-      "faction": "legion",
-      "role": "post",
-      "file": "legion/post/model.glb",
-      "bytes": 24968,
-      "animations": [],
-      "triangles": 144
-    },
-    {
-      "faction": "legion",
-      "role": "turret",
-      "file": "legion/turret/model.glb",
-      "bytes": 24316,
-      "animations": [],
-      "triangles": 152
-    },
-    {
-      "faction": "legion",
-      "role": "sniper",
-      "file": "legion/sniper/model.glb",
-      "bytes": 270208,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1340
-    },
-    {
-      "faction": "legion",
-      "role": "heavy",
-      "file": "legion/heavy/model.glb",
-      "bytes": 273268,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1372
-    },
-    {
-      "faction": "legion",
-      "role": "flamer",
-      "file": "legion/flamer/model.glb",
-      "bytes": 273356,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1376
-    },
-    {
-      "faction": "legion",
-      "role": "elite",
-      "file": "legion/elite/model.glb",
-      "bytes": 293268,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1564
-    },
-    {
-      "faction": "legion",
-      "role": "medic",
-      "file": "legion/medic/model.glb",
-      "bytes": 274420,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1364
-    },
-    {
-      "faction": "legion",
-      "role": "transport",
-      "file": "legion/transport/model.glb",
-      "bytes": 176632,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1168
-    },
-    {
-      "faction": "legion",
-      "role": "tank",
-      "file": "legion/tank/model.glb",
-      "bytes": 167496,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1088
-    },
-    {
-      "faction": "legion",
-      "role": "walker",
-      "file": "legion/walker/model.glb",
-      "bytes": 87144,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 264
-    },
-    {
-      "faction": "legion",
-      "role": "artillery",
-      "file": "legion/artillery/model.glb",
-      "bytes": 167900,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1088
-    },
-    {
-      "faction": "legion",
-      "role": "titan",
-      "file": "legion/titan/model.glb",
-      "bytes": 104512,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 412
-    },
-    {
-      "faction": "legion",
-      "role": "generator",
-      "file": "legion/generator/model.glb",
-      "bytes": 61488,
-      "animations": [],
-      "triangles": 536
-    },
-    {
-      "faction": "legion",
-      "role": "factory",
-      "file": "legion/factory/model.glb",
-      "bytes": 111688,
-      "animations": [],
-      "triangles": 1048
-    },
-    {
-      "faction": "legion",
+      "faction": "heretics",
       "role": "armory",
-      "file": "legion/armory/model.glb",
-      "bytes": 110924,
+      "file": "heretics/armory/model.glb",
+      "bytes": 110928,
       "animations": [],
-      "triangles": 1040
-    },
-    {
-      "faction": "legion",
-      "role": "relic",
-      "file": "legion/relic/model.glb",
-      "bytes": 28036,
-      "animations": [],
-      "triangles": 176
-    },
-    {
-      "faction": "legion",
-      "role": "wall",
-      "file": "legion/wall/model.glb",
-      "bytes": 36788,
-      "animations": [],
-      "triangles": 280
-    },
-    {
-      "faction": "legion",
-      "role": "gate",
-      "file": "legion/gate/model.glb",
-      "bytes": 39480,
-      "animations": [],
-      "triangles": 308
-    },
-    {
-      "faction": "heretics",
-      "role": "captain",
-      "file": "heretics/captain/model.glb",
-      "bytes": 282712,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "attack",
-        "death"
-      ],
-      "triangles": 1468
-    },
-    {
-      "faction": "heretics",
-      "role": "guard",
-      "file": "heretics/guard/model.glb",
-      "bytes": 277076,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1404
-    },
-    {
-      "faction": "heretics",
-      "role": "builder",
-      "file": "heretics/builder/model.glb",
-      "bytes": 269636,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "work",
-        "death"
-      ],
-      "triangles": 1292
-    },
-    {
-      "faction": "heretics",
-      "role": "hq",
-      "file": "heretics/hq/model.glb",
-      "bytes": 111716,
-      "animations": [],
-      "triangles": 1048
-    },
-    {
-      "faction": "heretics",
-      "role": "barracks",
-      "file": "heretics/barracks/model.glb",
-      "bytes": 100176,
-      "animations": [],
-      "triangles": 928
-    },
-    {
-      "faction": "heretics",
-      "role": "post",
-      "file": "heretics/post/model.glb",
-      "bytes": 24972,
-      "animations": [],
-      "triangles": 144
-    },
-    {
-      "faction": "heretics",
-      "role": "turret",
-      "file": "heretics/turret/model.glb",
-      "bytes": 24320,
-      "animations": [],
-      "triangles": 152
-    },
-    {
-      "faction": "heretics",
-      "role": "sniper",
-      "file": "heretics/sniper/model.glb",
-      "bytes": 282836,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1464
-    },
-    {
-      "faction": "heretics",
-      "role": "heavy",
-      "file": "heretics/heavy/model.glb",
-      "bytes": 285896,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1496
-    },
-    {
-      "faction": "heretics",
-      "role": "flamer",
-      "file": "heretics/flamer/model.glb",
-      "bytes": 285980,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1500
-    },
-    {
-      "faction": "heretics",
-      "role": "elite",
-      "file": "heretics/elite/model.glb",
-      "bytes": 302896,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1664
-    },
-    {
-      "faction": "heretics",
-      "role": "medic",
-      "file": "heretics/medic/model.glb",
-      "bytes": 287048,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1488
-    },
-    {
-      "faction": "heretics",
-      "role": "transport",
-      "file": "heretics/transport/model.glb",
-      "bytes": 188904,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1296
-    },
-    {
-      "faction": "heretics",
-      "role": "tank",
-      "file": "heretics/tank/model.glb",
-      "bytes": 179768,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1216
-    },
-    {
-      "faction": "heretics",
-      "role": "walker",
-      "file": "heretics/walker/model.glb",
-      "bytes": 99416,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 392
+      "glbAnimations": []
     },
     {
       "faction": "heretics",
@@ -461,35 +1062,87 @@
       "file": "heretics/artillery/model.glb",
       "bytes": 180176,
       "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
         "idle",
         "walk",
         "run",
         "shoot",
         "death"
-      ],
-      "triangles": 1216
+      ]
     },
     {
       "faction": "heretics",
-      "role": "titan",
-      "file": "heretics/titan/model.glb",
-      "bytes": 116784,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 540
-    },
-    {
-      "faction": "heretics",
-      "role": "generator",
-      "file": "heretics/generator/model.glb",
-      "bytes": 61492,
+      "role": "barracks",
+      "file": "heretics/barracks/model.glb",
+      "bytes": 100176,
       "animations": [],
-      "triangles": 536
+      "glbAnimations": []
+    },
+    {
+      "faction": "heretics",
+      "role": "builder",
+      "file": "heretics/builder/model.glb",
+      "bytes": 269636,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "walk",
+        "work"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "work",
+        "death"
+      ]
+    },
+    {
+      "faction": "heretics",
+      "role": "captain",
+      "file": "heretics/captain/model.glb",
+      "bytes": 282712,
+      "animations": [
+        "attack",
+        "death",
+        "idle",
+        "run",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "attack",
+        "death"
+      ]
+    },
+    {
+      "faction": "heretics",
+      "role": "elite",
+      "file": "heretics/elite/model.glb",
+      "bytes": 302896,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
     },
     {
       "faction": "heretics",
@@ -497,31 +1150,27 @@
       "file": "heretics/factory/model.glb",
       "bytes": 111692,
       "animations": [],
-      "triangles": 1048
+      "glbAnimations": []
     },
     {
       "faction": "heretics",
-      "role": "armory",
-      "file": "heretics/armory/model.glb",
-      "bytes": 110928,
-      "animations": [],
-      "triangles": 1040
-    },
-    {
-      "faction": "heretics",
-      "role": "relic",
-      "file": "heretics/relic/model.glb",
-      "bytes": 28040,
-      "animations": [],
-      "triangles": 176
-    },
-    {
-      "faction": "heretics",
-      "role": "wall",
-      "file": "heretics/wall/model.glb",
-      "bytes": 36796,
-      "animations": [],
-      "triangles": 280
+      "role": "flamer",
+      "file": "heretics/flamer/model.glb",
+      "bytes": 285980,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
     },
     {
       "faction": "heretics",
@@ -529,499 +1178,555 @@
       "file": "heretics/gate/model.glb",
       "bytes": 39488,
       "animations": [],
-      "triangles": 308
+      "glbAnimations": []
     },
     {
-      "faction": "scrap",
-      "role": "captain",
-      "file": "scrap/captain/model.glb",
-      "bytes": 275852,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "attack",
-        "death"
-      ],
-      "triangles": 1376
+      "faction": "heretics",
+      "role": "generator",
+      "file": "heretics/generator/model.glb",
+      "bytes": 61492,
+      "animations": [],
+      "glbAnimations": []
     },
     {
-      "faction": "scrap",
+      "faction": "heretics",
       "role": "guard",
-      "file": "scrap/guard/model.glb",
-      "bytes": 283568,
+      "file": "heretics/guard/model.glb",
+      "bytes": 277076,
       "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
         "idle",
         "walk",
         "run",
         "shoot",
         "death"
-      ],
-      "triangles": 1460
+      ]
     },
     {
-      "faction": "scrap",
-      "role": "builder",
-      "file": "scrap/builder/model.glb",
-      "bytes": 276144,
+      "faction": "heretics",
+      "role": "heavy",
+      "file": "heretics/heavy/model.glb",
+      "bytes": 285896,
       "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "heretics",
+      "role": "hq",
+      "file": "heretics/hq/model.glb",
+      "bytes": 111716,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "heretics",
+      "role": "medic",
+      "file": "heretics/medic/model.glb",
+      "bytes": 287048,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "heretics",
+      "role": "post",
+      "file": "heretics/post/model.glb",
+      "bytes": 24972,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "heretics",
+      "role": "relic",
+      "file": "heretics/relic/model.glb",
+      "bytes": 28040,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "heretics",
+      "role": "sniper",
+      "file": "heretics/sniper/model.glb",
+      "bytes": 282836,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "heretics",
+      "role": "tank",
+      "file": "heretics/tank/model.glb",
+      "bytes": 179768,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "heretics",
+      "role": "titan",
+      "file": "heretics/titan/model.glb",
+      "bytes": 116784,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "heretics",
+      "role": "transport",
+      "file": "heretics/transport/model.glb",
+      "bytes": 188904,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "heretics",
+      "role": "turret",
+      "file": "heretics/turret/model.glb",
+      "bytes": 24320,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "heretics",
+      "role": "walker",
+      "file": "heretics/walker/model.glb",
+      "bytes": 99416,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "heretics",
+      "role": "wall",
+      "file": "heretics/wall/model.glb",
+      "bytes": 36796,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "legion",
+      "role": "armory",
+      "file": "legion/armory/model.glb",
+      "bytes": 110924,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "legion",
+      "role": "artillery",
+      "file": "legion/artillery/model.glb",
+      "bytes": 167900,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "legion",
+      "role": "barracks",
+      "file": "legion/barracks/model.glb",
+      "bytes": 100172,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "legion",
+      "role": "builder",
+      "file": "legion/builder/model.glb",
+      "bytes": 256996,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "walk",
+        "work"
+      ],
+      "glbAnimations": [
         "idle",
         "walk",
         "run",
         "work",
         "death"
-      ],
-      "triangles": 1348
+      ]
     },
     {
-      "faction": "scrap",
-      "role": "hq",
-      "file": "scrap/hq/model.glb",
-      "bytes": 119772,
-      "animations": [],
-      "triangles": 1132
-    },
-    {
-      "faction": "scrap",
-      "role": "barracks",
-      "file": "scrap/barracks/model.glb",
-      "bytes": 97136,
-      "animations": [],
-      "triangles": 896
-    },
-    {
-      "faction": "scrap",
-      "role": "post",
-      "file": "scrap/post/model.glb",
-      "bytes": 24968,
-      "animations": [],
-      "triangles": 144
-    },
-    {
-      "faction": "scrap",
-      "role": "turret",
-      "file": "scrap/turret/model.glb",
-      "bytes": 24316,
-      "animations": [],
-      "triangles": 152
-    },
-    {
-      "faction": "scrap",
-      "role": "sniper",
-      "file": "scrap/sniper/model.glb",
-      "bytes": 289328,
+      "faction": "legion",
+      "role": "captain",
+      "file": "legion/captain/model.glb",
+      "bytes": 288320,
       "animations": [
+        "attack",
+        "death",
+        "idle",
+        "run",
+        "walk"
+      ],
+      "glbAnimations": [
         "idle",
         "walk",
         "run",
-        "shoot",
+        "attack",
         "death"
-      ],
-      "triangles": 1520
+      ]
     },
     {
-      "faction": "scrap",
-      "role": "heavy",
-      "file": "scrap/heavy/model.glb",
-      "bytes": 292392,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1552
-    },
-    {
-      "faction": "scrap",
-      "role": "flamer",
-      "file": "scrap/flamer/model.glb",
-      "bytes": 292476,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1556
-    },
-    {
-      "faction": "scrap",
+      "faction": "legion",
       "role": "elite",
-      "file": "scrap/elite/model.glb",
-      "bytes": 295980,
+      "file": "legion/elite/model.glb",
+      "bytes": 293268,
       "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
         "idle",
         "walk",
         "run",
         "shoot",
         "death"
-      ],
-      "triangles": 1572
+      ]
     },
     {
-      "faction": "scrap",
-      "role": "medic",
-      "file": "scrap/medic/model.glb",
-      "bytes": 293540,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1544
-    },
-    {
-      "faction": "scrap",
-      "role": "transport",
-      "file": "scrap/transport/model.glb",
-      "bytes": 186592,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1264
-    },
-    {
-      "faction": "scrap",
-      "role": "tank",
-      "file": "scrap/tank/model.glb",
-      "bytes": 177460,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1184
-    },
-    {
-      "faction": "scrap",
-      "role": "walker",
-      "file": "scrap/walker/model.glb",
-      "bytes": 97104,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 360
-    },
-    {
-      "faction": "scrap",
-      "role": "artillery",
-      "file": "scrap/artillery/model.glb",
-      "bytes": 177864,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1184
-    },
-    {
-      "faction": "scrap",
-      "role": "titan",
-      "file": "scrap/titan/model.glb",
-      "bytes": 114472,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 508
-    },
-    {
-      "faction": "scrap",
-      "role": "generator",
-      "file": "scrap/generator/model.glb",
-      "bytes": 61484,
-      "animations": [],
-      "triangles": 536
-    },
-    {
-      "faction": "scrap",
+      "faction": "legion",
       "role": "factory",
-      "file": "scrap/factory/model.glb",
-      "bytes": 108648,
+      "file": "legion/factory/model.glb",
+      "bytes": 111688,
       "animations": [],
-      "triangles": 1016
+      "glbAnimations": []
     },
     {
-      "faction": "scrap",
-      "role": "armory",
-      "file": "scrap/armory/model.glb",
-      "bytes": 107848,
-      "animations": [],
-      "triangles": 1008
+      "faction": "legion",
+      "role": "flamer",
+      "file": "legion/flamer/model.glb",
+      "bytes": 273356,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
     },
     {
-      "faction": "scrap",
-      "role": "relic",
-      "file": "scrap/relic/model.glb",
-      "bytes": 28036,
-      "animations": [],
-      "triangles": 176
-    },
-    {
-      "faction": "scrap",
-      "role": "wall",
-      "file": "scrap/wall/model.glb",
-      "bytes": 36788,
-      "animations": [],
-      "triangles": 280
-    },
-    {
-      "faction": "scrap",
+      "faction": "legion",
       "role": "gate",
-      "file": "scrap/gate/model.glb",
+      "file": "legion/gate/model.glb",
       "bytes": 39480,
       "animations": [],
-      "triangles": 308
+      "glbAnimations": []
     },
     {
-      "faction": "necrons",
-      "role": "captain",
-      "file": "necrons/captain/model.glb",
-      "bytes": 298128,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "attack",
-        "death"
-      ],
-      "triangles": 1652
+      "faction": "legion",
+      "role": "generator",
+      "file": "legion/generator/model.glb",
+      "bytes": 61488,
+      "animations": [],
+      "glbAnimations": []
     },
     {
-      "faction": "necrons",
+      "faction": "legion",
       "role": "guard",
-      "file": "necrons/guard/model.glb",
-      "bytes": 289668,
+      "file": "legion/guard/model.glb",
+      "bytes": 264448,
       "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
         "idle",
         "walk",
         "run",
         "shoot",
         "death"
-      ],
-      "triangles": 1548
+      ]
     },
     {
-      "faction": "necrons",
-      "role": "builder",
-      "file": "necrons/builder/model.glb",
-      "bytes": 280228,
+      "faction": "legion",
+      "role": "heavy",
+      "file": "legion/heavy/model.glb",
+      "bytes": 273268,
       "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
         "idle",
         "walk",
         "run",
-        "work",
+        "shoot",
         "death"
-      ],
-      "triangles": 1424
+      ]
     },
     {
-      "faction": "necrons",
+      "faction": "legion",
       "role": "hq",
-      "file": "necrons/hq/model.glb",
-      "bytes": 33360,
+      "file": "legion/hq/model.glb",
+      "bytes": 111708,
       "animations": [],
-      "triangles": 232
+      "glbAnimations": []
     },
     {
-      "faction": "necrons",
-      "role": "barracks",
-      "file": "necrons/barracks/model.glb",
-      "bytes": 33372,
-      "animations": [],
-      "triangles": 232
+      "faction": "legion",
+      "role": "medic",
+      "file": "legion/medic/model.glb",
+      "bytes": 274420,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
     },
     {
-      "faction": "necrons",
+      "faction": "legion",
       "role": "post",
-      "file": "necrons/post/model.glb",
+      "file": "legion/post/model.glb",
       "bytes": 24968,
       "animations": [],
-      "triangles": 144
+      "glbAnimations": []
     },
     {
-      "faction": "necrons",
-      "role": "turret",
-      "file": "necrons/turret/model.glb",
-      "bytes": 24692,
+      "faction": "legion",
+      "role": "relic",
+      "file": "legion/relic/model.glb",
+      "bytes": 28036,
       "animations": [],
-      "triangles": 152
+      "glbAnimations": []
     },
     {
-      "faction": "necrons",
+      "faction": "legion",
       "role": "sniper",
-      "file": "necrons/sniper/model.glb",
-      "bytes": 295404,
+      "file": "legion/sniper/model.glb",
+      "bytes": 270208,
       "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
         "idle",
         "walk",
         "run",
         "shoot",
         "death"
-      ],
-      "triangles": 1608
+      ]
     },
     {
-      "faction": "necrons",
-      "role": "heavy",
-      "file": "necrons/heavy/model.glb",
-      "bytes": 299312,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1640
-    },
-    {
-      "faction": "necrons",
-      "role": "flamer",
-      "file": "necrons/flamer/model.glb",
-      "bytes": 298784,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1644
-    },
-    {
-      "faction": "necrons",
-      "role": "elite",
-      "file": "necrons/elite/model.glb",
-      "bytes": 321128,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1860
-    },
-    {
-      "faction": "necrons",
-      "role": "medic",
-      "file": "necrons/medic/model.glb",
-      "bytes": 299812,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 1632
-    },
-    {
-      "faction": "necrons",
-      "role": "transport",
-      "file": "necrons/transport/model.glb",
-      "bytes": 92476,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 316
-    },
-    {
-      "faction": "necrons",
+      "faction": "legion",
       "role": "tank",
-      "file": "necrons/tank/model.glb",
-      "bytes": 83716,
+      "file": "legion/tank/model.glb",
+      "bytes": 167496,
       "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
         "idle",
         "walk",
         "run",
         "shoot",
         "death"
-      ],
-      "triangles": 236
+      ]
     },
     {
-      "faction": "necrons",
-      "role": "walker",
-      "file": "necrons/walker/model.glb",
-      "bytes": 87520,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 264
-    },
-    {
-      "faction": "necrons",
-      "role": "artillery",
-      "file": "necrons/artillery/model.glb",
-      "bytes": 84120,
-      "animations": [
-        "idle",
-        "walk",
-        "run",
-        "shoot",
-        "death"
-      ],
-      "triangles": 236
-    },
-    {
-      "faction": "necrons",
+      "faction": "legion",
       "role": "titan",
-      "file": "necrons/titan/model.glb",
+      "file": "legion/titan/model.glb",
       "bytes": 104512,
       "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
         "idle",
         "walk",
         "run",
         "shoot",
         "death"
+      ]
+    },
+    {
+      "faction": "legion",
+      "role": "transport",
+      "file": "legion/transport/model.glb",
+      "bytes": 176632,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
       ],
-      "triangles": 412
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
     },
     {
-      "faction": "necrons",
-      "role": "generator",
-      "file": "necrons/generator/model.glb",
-      "bytes": 61484,
+      "faction": "legion",
+      "role": "turret",
+      "file": "legion/turret/model.glb",
+      "bytes": 24316,
       "animations": [],
-      "triangles": 536
+      "glbAnimations": []
     },
     {
-      "faction": "necrons",
-      "role": "factory",
-      "file": "necrons/factory/model.glb",
-      "bytes": 44800,
+      "faction": "legion",
+      "role": "walker",
+      "file": "legion/walker/model.glb",
+      "bytes": 87144,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "legion",
+      "role": "wall",
+      "file": "legion/wall/model.glb",
+      "bytes": 36788,
       "animations": [],
-      "triangles": 352
+      "glbAnimations": []
     },
     {
       "faction": "necrons",
@@ -1029,23 +1734,123 @@
       "file": "necrons/armory/model.glb",
       "bytes": 44124,
       "animations": [],
-      "triangles": 344
+      "glbAnimations": []
     },
     {
       "faction": "necrons",
-      "role": "relic",
-      "file": "necrons/relic/model.glb",
-      "bytes": 28036,
-      "animations": [],
-      "triangles": 176
+      "role": "artillery",
+      "file": "necrons/artillery/model.glb",
+      "bytes": 84120,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
     },
     {
       "faction": "necrons",
-      "role": "wall",
-      "file": "necrons/wall/model.glb",
-      "bytes": 36796,
+      "role": "barracks",
+      "file": "necrons/barracks/model.glb",
+      "bytes": 33372,
       "animations": [],
-      "triangles": 280
+      "glbAnimations": []
+    },
+    {
+      "faction": "necrons",
+      "role": "builder",
+      "file": "necrons/builder/model.glb",
+      "bytes": 280228,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "walk",
+        "work"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "work",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "captain",
+      "file": "necrons/captain/model.glb",
+      "bytes": 298128,
+      "animations": [
+        "attack",
+        "death",
+        "idle",
+        "run",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "attack",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "elite",
+      "file": "necrons/elite/model.glb",
+      "bytes": 321128,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "factory",
+      "file": "necrons/factory/model.glb",
+      "bytes": 44800,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "necrons",
+      "role": "flamer",
+      "file": "necrons/flamer/model.glb",
+      "bytes": 298784,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
     },
     {
       "faction": "necrons",
@@ -1053,7 +1858,555 @@
       "file": "necrons/gate/model.glb",
       "bytes": 39488,
       "animations": [],
-      "triangles": 308
+      "glbAnimations": []
+    },
+    {
+      "faction": "necrons",
+      "role": "generator",
+      "file": "necrons/generator/model.glb",
+      "bytes": 61484,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "necrons",
+      "role": "guard",
+      "file": "necrons/guard/model.glb",
+      "bytes": 289668,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "heavy",
+      "file": "necrons/heavy/model.glb",
+      "bytes": 299312,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "hq",
+      "file": "necrons/hq/model.glb",
+      "bytes": 33360,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "necrons",
+      "role": "medic",
+      "file": "necrons/medic/model.glb",
+      "bytes": 299812,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "post",
+      "file": "necrons/post/model.glb",
+      "bytes": 24968,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "necrons",
+      "role": "relic",
+      "file": "necrons/relic/model.glb",
+      "bytes": 28036,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "necrons",
+      "role": "sniper",
+      "file": "necrons/sniper/model.glb",
+      "bytes": 295404,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "tank",
+      "file": "necrons/tank/model.glb",
+      "bytes": 83716,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "titan",
+      "file": "necrons/titan/model.glb",
+      "bytes": 104512,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "transport",
+      "file": "necrons/transport/model.glb",
+      "bytes": 92476,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "turret",
+      "file": "necrons/turret/model.glb",
+      "bytes": 24692,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "necrons",
+      "role": "walker",
+      "file": "necrons/walker/model.glb",
+      "bytes": 87520,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "necrons",
+      "role": "wall",
+      "file": "necrons/wall/model.glb",
+      "bytes": 36796,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "scrap",
+      "role": "armory",
+      "file": "scrap/armory/model.glb",
+      "bytes": 107848,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "scrap",
+      "role": "artillery",
+      "file": "scrap/artillery/model.glb",
+      "bytes": 177864,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "barracks",
+      "file": "scrap/barracks/model.glb",
+      "bytes": 97136,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "scrap",
+      "role": "builder",
+      "file": "scrap/builder/model.glb",
+      "bytes": 276144,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "walk",
+        "work"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "work",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "captain",
+      "file": "scrap/captain/model.glb",
+      "bytes": 275852,
+      "animations": [
+        "attack",
+        "death",
+        "idle",
+        "run",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "attack",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "elite",
+      "file": "scrap/elite/model.glb",
+      "bytes": 295980,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "factory",
+      "file": "scrap/factory/model.glb",
+      "bytes": 108648,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "scrap",
+      "role": "flamer",
+      "file": "scrap/flamer/model.glb",
+      "bytes": 292476,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "gate",
+      "file": "scrap/gate/model.glb",
+      "bytes": 39480,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "scrap",
+      "role": "generator",
+      "file": "scrap/generator/model.glb",
+      "bytes": 61484,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "scrap",
+      "role": "guard",
+      "file": "scrap/guard/model.glb",
+      "bytes": 283568,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "heavy",
+      "file": "scrap/heavy/model.glb",
+      "bytes": 292392,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "hq",
+      "file": "scrap/hq/model.glb",
+      "bytes": 119772,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "scrap",
+      "role": "medic",
+      "file": "scrap/medic/model.glb",
+      "bytes": 293540,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "post",
+      "file": "scrap/post/model.glb",
+      "bytes": 24968,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "scrap",
+      "role": "relic",
+      "file": "scrap/relic/model.glb",
+      "bytes": 28036,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "scrap",
+      "role": "sniper",
+      "file": "scrap/sniper/model.glb",
+      "bytes": 289328,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "tank",
+      "file": "scrap/tank/model.glb",
+      "bytes": 177460,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "titan",
+      "file": "scrap/titan/model.glb",
+      "bytes": 114472,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "transport",
+      "file": "scrap/transport/model.glb",
+      "bytes": 186592,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "turret",
+      "file": "scrap/turret/model.glb",
+      "bytes": 24316,
+      "animations": [],
+      "glbAnimations": []
+    },
+    {
+      "faction": "scrap",
+      "role": "walker",
+      "file": "scrap/walker/model.glb",
+      "bytes": 97104,
+      "animations": [
+        "death",
+        "idle",
+        "run",
+        "shoot",
+        "walk"
+      ],
+      "glbAnimations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ]
+    },
+    {
+      "faction": "scrap",
+      "role": "wall",
+      "file": "scrap/wall/model.glb",
+      "bytes": 36788,
+      "animations": [],
+      "glbAnimations": []
     }
   ]
 }

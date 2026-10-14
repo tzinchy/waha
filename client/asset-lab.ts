@@ -345,7 +345,7 @@ async function spriteAtlas(faction: FactionId, role: UnitRole, requestedMotion: 
   const blob = await new Promise<Blob>((resolve, reject) => atlas.toBlob(b => b ? resolve(b) : reject(new Error('Atlas encoding failed')), 'image/png'));
   const anchor = new THREE.Vector3(0, 0, 0).project(c);
   r.dispose(); r.forceContextLoss();
-  return { blob, metadata: { faction, role, animation: selectedMotion, image: `${faction}-${role}-${selectedMotion}.png`, cellWidth: 128, cellHeight: 128, columns: 8, rows: 8, duration, loop, directionsDegrees: [0, 45, 90, 135, 180, 225, 270, 315], rootForward: '+Z', camera: { elevationDegrees: 35, azimuthDegrees: 45, targetHeight: 1.1, orthographicHeight: span*2 }, anchor: { x: Math.round((anchor.x + 1) * 64), y: Math.round((1 - anchor.y) * 64) }, frames: Array.from({ length: 8 }, (_, direction) => Array.from({ length: 8 }, (_, frame) => ({ x: frame * 128, y: direction * 128, w: 128, h: 128, time: duration * frame / (loop ? 8 : 7) }))) } };
+  return { blob, metadata: { faction, role, animation: selectedMotion, image: `${selectedMotion}.png`, cellWidth: 128, cellHeight: 128, columns: 8, rows: 8, duration, loop, directionsDegrees: [0, 45, 90, 135, 180, 225, 270, 315], rootForward: '+Z', camera: { elevationDegrees: 35, azimuthDegrees: 45, targetHeight: 1.1, orthographicHeight: span*2 }, anchor: { x: Math.round((anchor.x + 1) * 64), y: Math.round((1 - anchor.y) * 64) }, frames: Array.from({ length: 8 }, (_, direction) => Array.from({ length: 8 }, (_, frame) => ({ x: frame * 128, y: direction * 128, w: 128, h: 128, time: duration * frame / (loop ? 8 : 7) }))) } };
 }
 $('exportSprites').onclick = async () => {
   const role = $<HTMLSelectElement>('role').value as UnitRole;

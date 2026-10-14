@@ -4,15 +4,45 @@
  * saves files directly; no base64 transfers and no dependency on GitHub browser downloads.
  */
 import { createServer } from 'node:http';
-import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
+import { PNG } from 'pngjs';
+import { validateAtlas } from '../client/sprite-atlas.ts';
+import { FACTIONS, UNITS, BUILDINGS, motions } from './asset-catalog.mjs';
 
-const factions = ['legion','heretics','scrap','necrons','drukhari','daemons'];
 const missingOnly = process.env.EXPORT_SCOPE !== 'all';
-const targets = missingOnly ? factions.slice(4) : factions;
 const dest = 'client/public/models/factions';
+const filter = process.env.EXPORT_FILTER;
+const selectedActions = process.env.EXPORT_ACTIONS?.split(',');
+if (filter && !FACTIONS.some(f=>[...UNITS,...BUILDINGS].some(r=>filter===f+'/'+r))) throw Error('Unknown export filter: '+filter);
+const exists = async path => {
+  try {
+    const bytes=await readFile(join(dest,path));
+    if(path.endsWith('.png')){const png=PNG.sync.read(bytes);return png.width>0&&png.height>0;}
+    if(path.endsWith('.json')){validateAtlas(JSON.parse(bytes.toString()));return true;}
+    return bytes.toString('ascii',0,4)==='glTF'&&bytes.readUInt32LE(8)===bytes.length;
+  } catch { return false; }
+};
+const reviewed = async path => {
+  try {const p=JSON.parse(await readFile(join(dest,path),'utf8'));return p.visualQA?.status==='accepted';}
+  catch {return false;}
+};
+const targets = [];
+for (const faction of FACTIONS) for (const role of [...UNITS,...BUILDINGS]) {
+  if (filter && filter!==faction+'/'+role) continue;
+  const model = !missingOnly || !(await exists(`${faction}/${role}/model.glb`));
+  const actions = [];
+  if (UNITS.includes(role)) for (const action of motions(role)) {
+    if (selectedActions && !selectedActions.includes(action)) continue;
+    if (await reviewed(`${faction}/${role}/sprites/${action}.provenance.json`)) continue;
+    if (!missingOnly || !(await exists(`${faction}/${role}/sprites/${action}.png`)) || !(await exists(`${faction}/${role}/sprites/${action}.json`))) actions.push(action);
+  }
+  if (model || actions.length) targets.push({ faction, role, model, actions });
+}
+console.log('Procedural prototype export jobs:',targets.length,'scope:',missingOnly?'missing':'all');
+// The exporter intentionally does not certify production art or replace authored atlases.
 const files = [];
 const server = createServer(async (req,res) => {
   res.setHeader('Access-Control-Allow-Origin','*');
@@ -30,7 +60,7 @@ const server = createServer(async (req,res) => {
   } catch(e) {res.writeHead(400);res.end(String(e));}
 });
 await new Promise(resolve=>server.listen(4174,'127.0.0.1',resolve));
-const vite = spawn('npx',['vite','client','--host','127.0.0.1','--port','4173'],{stdio:'inherit'});
+const vite = spawn(process.execPath,['node_modules/vite/bin/vite.js','client','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'inherit'});
 let browser;
 try {
   for(let attempt=0;attempt<90;attempt++) {
@@ -38,59 +68,38 @@ try {
     await new Promise(r=>setTimeout(r,1000));
     if(attempt===89)throw Error('Vite failed to start');
   }
-  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--disable-web-security']});
+  browser=await chromium.launch({headless:true,executablePath:process.env.WAHA_CHROMIUM_PATH || undefined,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--disable-web-security']});
   const page=await browser.newPage({viewport:{width:1440,height:900},acceptDownloads:true});
   page.on('console',m=>{if(m.type()==='error')console.error('[browser]',m.text())});
   page.on('pageerror',e=>console.error('[browser exception]',e.message));
   await page.goto('http://127.0.0.1:4173/asset-lab.html',{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>!!window.assetLab?.glb,{timeout:120000});
+  await page.waitForFunction(()=>!!window.assetLab?.glb,null,{timeout:120000});
   page.setDefaultTimeout(180000);
-  for(const faction of targets) {
-    console.log('Exporting faction:',faction);
-    const result=await page.evaluate(async faction=>{
+  for(const job of targets) {
+    console.log('Exporting prototype:',job.faction,job.role,job.actions.join(','));
+    const result=await page.evaluate(async job=>{
       const api=window.assetLab;
-      const units=['captain','guard','builder','sniper','heavy','flamer','elite','medic','transport','tank','walker','artillery','titan'];
-      const buildings=['hq','barracks','post','turret','generator','factory','armory','relic','wall','gate'];
-      const actions={captain:['idle','walk','run','attack','throw_grenade','death'],guard:['idle','walk','run','shoot','death'],builder:['idle','walk','run','work','death'],elite:['idle','walk','run','shoot','attack_slash','throw_grenade','death']};
       const upload=async(path,bytes,type='application/octet-stream')=>{
         const response=await fetch('http://127.0.0.1:4174/upload?path='+encodeURIComponent(path),{method:'POST',body:bytes,headers:{'Content-Type':type}});
         if(!response.ok)throw Error(path+': '+await response.text());
       };
-      const outcome=[];
-      for(const role of [...units,...buildings]){
-        const b=await api.glb(faction,role);
-        await upload(faction+'/'+role+'/model.glb',b,'model/gltf-binary');
-        outcome.push(role+':glb');
-        if(!units.includes(role))continue;
-        for(const motion of actions[role]??['idle','walk','run','shoot','death']) {
-          const data=await api.spriteAtlas(faction,role,motion);
-          const prefix=faction+'/'+role+'/sprites/'+motion;
-          await upload(prefix+'.png',data.blob,'image/png');
-          await upload(prefix+'.json',JSON.stringify(data.metadata),'application/json');
-          outcome.push(role+':'+motion);
-        }
+      const prefix=job.faction+'/'+job.role;
+      if(job.model)await upload(prefix+'/model.glb',await api.glb(job.faction,job.role),'model/gltf-binary');
+      for(const motion of job.actions){
+        const data=await api.spriteAtlas(job.faction,job.role,motion);
+        if(data.metadata.animation!==motion)throw Error('Exporter substituted '+data.metadata.animation+' for '+motion);
+        data.metadata.image=motion+'.png';
+        data.metadata.provenance={source:'client/faction-models.ts',kind:'procedural-prototype',productionArtApproved:false};
+        await upload(prefix+'/sprites/'+motion+'.png',data.blob,'image/png');
+        await upload(prefix+'/sprites/'+motion+'.json',JSON.stringify(data.metadata,null,2)+'\n','application/json');
       }
-      return outcome;
-    },faction);
-    console.log('  assets exported:',result.length);
+      return {model:job.model,atlases:job.actions.length};
+    },job);
+    console.log('  exported:',result);
   }
-  // Add newly generated records while preserving historical entries and file metadata.
-  const manifestFile=join(dest,'manifest.json');
-  const manifest=JSON.parse(await readFile(manifestFile,'utf8'));
-  const existing=new Map(manifest.files.map(v=>[v.file,v]));
-  for(const record of files.filter(f=>f.file.endsWith('/model.glb'))) {
-    const [faction,role]=record.file.split('/');
-    existing.set(record.file,{...(existing.get(record.file)??{}),faction,role,file:record.file,bytes:record.bytes});
-  }
-  manifest.files=[...existing.values()];
-  manifest.models=manifest.files.length;
-  const entries=await readdir(dest,{recursive:true});
-  manifest.spriteAtlases=entries.filter(p=>p.endsWith('.png')&&p.includes('/sprites/')).length;
-  manifest.animationClips=manifest.spriteAtlases;
-  manifest.generator='client/faction-models.ts + scripts/export-factions.mjs';
-  manifest.quality='baked procedural 3D pixel-sampled sprite atlases; still needs hand-authored high-resolution pixel art';
-  await writeFile(manifestFile,JSON.stringify(manifest,null,2)+'\n');
-  console.log('DONE:',files.length,'files,',manifest.models,'GLB,',manifest.spriteAtlases,'sprite atlases');
+  const audit=spawn(process.execPath,['--import','tsx','scripts/audit-assets.mjs','--write',...(filter||selectedActions?[]:['--require-complete'])],{stdio:'inherit'});
+  await new Promise((resolve,reject)=>{audit.on('error',reject);audit.on('exit',code=>code===0?resolve():reject(Error('Exported asset audit failed: '+code)));});
+  console.log('DONE: exported',files.length,'prototype files. Artistic acceptance remains separate.');
 } finally {
   await browser?.close();
   vite.kill('SIGTERM');

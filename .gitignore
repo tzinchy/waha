@@ -3,3 +3,5 @@ dist
 .superpowers/
 .env.local
 tools/meshy-state.json
+
+artifacts/

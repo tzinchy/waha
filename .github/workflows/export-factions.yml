@@ -3,17 +3,12 @@ on:
   workflow_dispatch:
     inputs:
       export_scope:
-        description: "Export missing factions or regenerate all six"
+        description: "Export procedural prototypes: missing files or all (not final artwork)"
         type: choice
         options:
           - missing
           - all
         default: missing
-  push:
-    branches: [codex/faction-asset-lab]
-    paths:
-      - scripts/export-factions.mjs
-      - .github/workflows/export-factions.yml
 permissions:
   contents: write
 jobs:
@@ -31,22 +26,23 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npm install --no-save --package-lock=false playwright@1.56.1
       - run: npx playwright install --with-deps chromium
       - name: Render and export sprite atlases
-        run: node scripts/export-factions.mjs
+        run: node --import tsx scripts/export-factions.mjs
       - name: Validate all exported files
-        run: |
-          test -f client/public/models/factions/drukhari/captain/model.glb
-          test -s client/public/models/factions/drukhari/captain/sprites/idle.png
-          test -f client/public/models/factions/daemons/captain/model.glb
-          test -s client/public/models/factions/daemons/captain/sprites/idle.png
+        run: node --import tsx scripts/audit-assets.mjs --require-complete
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prototype-asset-audit
+          path: assets/art-audit.json
+      - run: npm run assets:glb
       - name: Commit generated assets
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add client/public/models/factions
+          git add client/public/models/factions client/public/models/meshy-manifest.json assets/art-audit.json
           if ! git diff --cached --quiet; then
-            git commit -m "assets: bake missing factions GLB and directional PNG atlases"
+            git commit -m "assets: export validated procedural prototypes (art approval pending)"
             git push
           fi

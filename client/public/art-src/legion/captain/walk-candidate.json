@@ -1,0 +1,21 @@
+{
+  "faction": "legion",
+  "role": "captain",
+  "animation": "walk",
+  "source": "image_gen; generated in this session from an original design prompt",
+  "sourceImage": "walk-candidate.png",
+  "width": 1254,
+  "height": 1254,
+  "requestedGrid": { "rows": 8, "columns": 8, "cellWidth": 128, "cellHeight": 128 },
+  "visualQA": {
+    "status": "rejected",
+    "reasons": [
+      "1254x1254 cannot be divided into 8 equal integer-sized cells",
+      "silhouettes cross proposed cell boundaries",
+      "ground contact and pose scale drift between cells",
+      "walk-cycle contacts and direction convention need frame-by-frame correction"
+    ],
+    "runtimeIntegrated": false
+  },
+  "rights": "Generated artwork; no third-party asset pack or commercial source image used. No claim of trademark ownership."
+}

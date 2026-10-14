@@ -5,7 +5,12 @@
   "scripts": {
     "dev": "tsx watch server/index.ts",
     "test": "node --import tsx --test shared/*.test.ts",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "assets:audit": "node --import tsx scripts/audit-assets.mjs --write",
+    "assets:validate": "node --import tsx scripts/audit-assets.mjs",
+    "assets:import": "node --import tsx scripts/import-atlas.mjs",
+    "smoke": "node scripts/smoke-game.mjs",
+    "assets:glb": "node scripts/validate-glb.mjs"
   },
   "dependencies": {
     "three": "^0.186.1",
@@ -15,6 +20,9 @@
     "@types/node": "^22.0.0",
     "@types/three": "^0.186.0",
     "@types/ws": "^8.5.0",
+    "gltf-validator": "2.0.0-dev.3.10",
+    "playwright": "1.56.1",
+    "pngjs": "7.0.0",
     "tsx": "^4.23.15",
     "typescript": "^5.9.0",
     "vite": "^8.3.4"
