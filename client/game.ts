@@ -300,7 +300,7 @@ export class Game {
     root.add(body, ov(ring), ov(sel), ov(bar));
     let sprite: SpriteActor | undefined;
     if (kind === 'captain' || kind === 'guard' || kind === 'builder') {
-      sprite = new SpriteActor(PLAYER_FACTIONS[owner % PLAYER_FACTIONS.length], kind, root);
+      sprite = new SpriteActor(this.players[owner]?.captain.faction ?? PLAYER_FACTIONS[owner % PLAYER_FACTIONS.length], kind, root);
       void sprite.ready.then(ok => { if (ok && root.parent) body.visible = false; });
     }
     this.scene.add(root);
