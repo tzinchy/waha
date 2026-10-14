@@ -470,7 +470,7 @@ test('сверхоружие и мегапостройки: сначала до�
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'lighthouse', ...spot }) ?? '', /Мегапостройки/);
   const k4 = spawn(s, 0, 'key4', hq.x - 2, hq.y + 16);
   assert.equal(applyCmd(s, 0, { c: 'unlock', id: k4.id, u: 0 }), undefined);
-  run(s, 61);
+  run(s, 91);
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'lighthouse', ...spot }), undefined);
   assert.ok(snapshotFor(s, 1).mg.some(r => KINDS[r[3]] === 'lighthouse'), 'враг видит стройку маяка');
   // удар Ордена
@@ -482,8 +482,10 @@ test('сверхоружие и мегапостройки: сначала до�
   assert.equal(snapshotFor(s, 1).ss.length, 1, 'враг видит предупреждение');
   run(s, 7);
   assert.ok(foe.hp < hp - 2000, 'копьё Длани Лампы');
+  doom.prog = 180; p.energy = 0; p.req = 0;
+  assert.match(applyCmd(s, 0, { c: 'strike', id: doom.id, x: foe.x, y: foe.y }) ?? '', /./, 'пуск стоит энергии');
   // Нежить: чумное облако
-  const u = s.players[1]; u.tier = 5; const d2 = spawn(s, 1, 'doom', 300, 300); d2.prog = 180;
+  const u = s.players[1]; u.tier = 5; u.req = 1e4; u.energy = 1e4; const d2 = spawn(s, 1, 'doom', 300, 300); d2.prog = 180;
   const g = spawn(s, 0, 'guard', 200, 200), gh = g.hp;
   applyCmd(s, 1, { c: 'strike', id: d2.id, x: 200, y: 200 }); run(s, 6.5); const after = g.hp; run(s, 5);
   assert.ok(g.hp < after || !s.units.includes(g), 'облако губит со временем'); assert.ok(after < gh);

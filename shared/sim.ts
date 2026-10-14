@@ -49,7 +49,7 @@ export const STATS: Record<Kind, Stat> = {
   lveh: { hp: 700, n: 1, dmg: 9, range: 12, cd: 0.6, speed: 12, sight: 18, radius: 2.2, cost: 120, time: 14 },
   mveh: { hp: 1200, n: 1, dmg: 10, range: 14, cd: 0.5, speed: 7, sight: 16, radius: 2.7, cost: 160, time: 18 },
   hveh: { hp: 2000, n: 1, dmg: 95, range: 20, cd: 3, speed: 5, sight: 22, radius: 3, cost: 220, time: 24 },
-  titan: { hp: 15000, n: 1, dmg: 280, range: 26, cd: 3, speed: 3.2, sight: 30, radius: 5, cost: 1500, time: 180 }, // титан: 1500 влияния, 2500 энергии, 10 реликвий, 3 минуты
+  titan: { hp: 15000, n: 1, dmg: 280, range: 26, cd: 3, speed: 3.2, sight: 30, radius: 5, cost: 3000, time: 240 }, // титан: 3000 влияния, 5000 энергии, 15 реликвий, 4 минуты
   // особые механики фракций (пресет FactionSpecials)
   deity: { hp: 4200, n: 1, dmg: 95, range: 6, cd: 1, speed: 9, sight: 22, radius: 2.2, cost: 0, time: 0 },        // Бог-Механизм Династий
   aegis: { hp: 700, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.3, cost: 150, time: 14 },        // Купол-эгида Консенсуса
@@ -61,11 +61,11 @@ export const STATS: Record<Kind, Stat> = {
   pyre: { hp: 1000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 1.8, cost: 150, time: 14 },         // Огненная яма Синклита: жжёт всё вокруг
   bell: { hp: 1100, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 16, radius: 1.6, cost: 160, time: 16 },         // Колокол Скорби Нежити
   // сверхоружие (тир V) и мегапостройки обороны (тир IV)
-  doom: { hp: 3500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 12, radius: 3, cost: 1500, time: 180 },
-  lighthouse: { hp: 3000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 70, radius: 2.4, cost: 600, time: 120 },   // Великий Маяк Ордена: видит 70 м
-  obelisk: { hp: 4000, n: 1, dmg: 220, range: 40, cd: 3, speed: 0, sight: 40, radius: 3, cost: 700, time: 120 },     // Обелиск Вечности Династий
-  megagun: { hp: 3500, n: 1, dmg: 180, range: 38, cd: 4, speed: 0, sight: 30, radius: 3, cost: 650, time: 120 },     // Мега-Пушка Орды
-  plague: { hp: 3000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 30, radius: 2.4, cost: 550, time: 120 },        // Чумной шпиль Нежити
+  doom: { hp: 3500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 12, radius: 3, cost: 3000, time: 240 },
+  lighthouse: { hp: 3000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 70, radius: 2.4, cost: 1200, time: 150 },  // Великий Маяк Ордена: видит 70 м
+  obelisk: { hp: 4000, n: 1, dmg: 220, range: 40, cd: 3, speed: 0, sight: 40, radius: 3, cost: 1400, time: 150 },    // Обелиск Вечности Династий
+  megagun: { hp: 3500, n: 1, dmg: 180, range: 38, cd: 4, speed: 0, sight: 30, radius: 3, cost: 1300, time: 150 },    // Мега-Пушка Орды
+  plague: { hp: 3000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 30, radius: 2.4, cost: 1100, time: 150 },       // Чумной шпиль Нежити
   fturret: { hp: 700, n: 1, dmg: 9, range: 6, cd: 0.4, speed: 0, sight: 8, radius: 1.3, cost: 90, time: 10 },     // Огнемётная печь Орды
 };
 /** Артиллерия не стреляет в упор (мёртвая зона), уникальные постройки: радиусы аур. */
@@ -74,9 +74,10 @@ export const MIN_RANGE: Partial<Record<Kind, number>> = { arty: 10, battery: 8, 
 export const DOOM = { charge: 180, warn: 6, r: 16, energy: 1500, relics: 6 }; // r — радиус предупреждения; урон у каждой фракции свой (doomStrike)
 /** Открытия в ключевом здании тира IV: мегапостройки обороны и сверхоружие (дорого). */
 export const UNLOCKS = [
-  { name: 'Мегапостройки', info: 'открывает мегапостройку обороны фракции', cost: 800, energy: 600, relics: 3, time: 60, tier: 4 },
-  { name: 'Сверхоружие', info: 'открывает сверхоружие фракции', cost: 1500, energy: 1500, relics: 8, time: 90, tier: 5 },
+  { name: 'Мегапостройки', info: 'открывает мегапостройку обороны фракции', cost: 1500, energy: 1200, relics: 5, time: 90, tier: 4 },
+  { name: 'Сверхоружие', info: 'открывает сверхоружие фракции', cost: 3000, energy: 3000, relics: 12, time: 120, tier: 5 },
 ];
+export const DOOM_SHOT = 800;
 export const MEGA = new Set<Kind>(['lighthouse', 'obelisk', 'megagun', 'plague', 'doom']);
 export const LIGHTHOUSE = { r: 25, armor: 0.85 }, PLAGUE = { r: 30, pct: 0.01 };
 export const PYRE = { r: 8, dps: 18 }, BELL = { r: 14, dmg: 0.8, speed: 0.8 };
@@ -108,7 +109,7 @@ export const ROLES: Partial<Record<Kind, Role>> = {
   mveh: { from: 'key2', tier: 3, pop: 6, armor: 'veh', dmg: 'small', energy: 120, aoe: 3, meters: 6 },
   hveh: { from: 'key2', tier: 3, pop: 8, armor: 'veh', dmg: 'heavy', energy: 260, aoe: 2.5, meters: 8 },
   arty: { from: 'key2', tier: 3, pop: 6, armor: 'veh', dmg: 'blast', energy: 200, aoe: 5, meters: 6 },
-  titan: { from: 'hq', tier: 4, pop: 20, armor: 'titan', dmg: 'blast', energy: 2500, relics: 10, aoe: 7, meters: 34, one: true },
+  titan: { from: 'hq', tier: 4, pop: 20, armor: 'titan', dmg: 'blast', energy: 5000, relics: 15, aoe: 7, meters: 34, one: true },
 };
 /** Урон по броне (как в DoW): снайпер косит пехоту, тяжёлое оружие — технику, взрывчатка — здания. */
 export const VS: Record<DmgType, Record<Armor, number>> = {
@@ -179,6 +180,8 @@ export function attackFx(k: Kind, f: FactionId, variant = 0) {
   if (k === 'guard') return GUARD_FX[f];
   if (k === 'captain') return f === 'ashen' || f === 'orks' ? FX.claws : FX.chop; // мистика переопределяет act
   if (k === 'legend') return variant === 2 ? FX.fire : variant === 1 ? FX.chop : FX.beam;
+  if (k === 'titan' && f === 'clockwork') return 20; // Монолит: изумрудный разряд с ветвящимися молниями
+  if (k === 'titan' && f === 'orks') return 12; // Топтун лупит снарядами из брюха и многоствольника
   if (k === 'turret' && f === 'ashen') return 19; // идол Синклита плюётся огненными шарами
   if (k === 'elite') return f === 'prism' ? FX.beam : f === 'order' || f === 'clockwork' ? FX.thrust : FX.claws;
   return ({ obelisk: 3, megagun: 12, arty: 12, battery: 12, pylon: 3, rturret: 12, fturret: FX.fire, deity: FX.chop, sniper: 10, heavy: 11, hveh: 12, titan: 13, mveh: f === 'ashen' || f === 'orks' ? FX.fire : 14, lveh: 14 } as Partial<Record<Kind, number>>)[k] ?? FX.shot;
@@ -229,7 +232,7 @@ const nearCapWith = (s: State, u: Unit, a: number, r: number) => {
   return !!c && c.hp > 0 && dist(c, u) < r;
 };
 /** Три ресурса пресета: Влияние (req, с точек), Энергия (с Литейни и насосов), Реликвии (с реликтовых точек). */
-export const ENERGY_COST: Partial<Record<Kind, number>> = { turret: 30, aegis: 100, rturret: 20, battery: 150, pylon: 120, pyre: 60, bell: 60, doom: 1500, lighthouse: 400, obelisk: 600, megagun: 400, plague: 400 };
+export const ENERGY_COST: Partial<Record<Kind, number>> = { turret: 30, aegis: 100, rturret: 20, battery: 150, pylon: 120, pyre: 60, bell: 60, doom: 3000, lighthouse: 800, obelisk: 1200, megagun: 800, plague: 800 };
 export const ENERGY_INCOME: Partial<Record<Kind, number>> = { foundry: 2, pump: 4 };
 export const RELIC_RATE = 1 / 20; // реликвий в секунду с одной реликтовой точки
 /**
@@ -243,6 +246,7 @@ export const UPGRADES: Partial<Record<Kind, Upgrade>> = {
   wallgate: { cost: 60, energy: 0, relics: 0, time: 8, tier: 2, name: 'Укрепить стены' },
   guard: { cost: 80, energy: 50, relics: 0, time: 8, tier: 2, name: 'Тяжёлое оружие' },
   captain: { cost: 0, energy: 0, relics: 2, time: 5, tier: 1, name: 'Реликвийный доспех' },
+  lveh: { cost: 60, energy: 40, relics: 0, time: 8, tier: 3, name: 'Гранатомёт' }, // только Багги Орды: выстрел по площади 3 м
 };
 const LVL2 = { dmg: { post: 1, turret: 1.8, guard: 1.6, captain: 1.5 } as Partial<Record<Kind, number>>, armor: { post: 1, turret: 0.6, guard: 0.8, captain: 0.7, wall: 0.5, wallgate: 0.5 } as Partial<Record<Kind, number>>, range: { post: 0, turret: 3 } as Partial<Record<Kind, number>> };
 export const BUILD_TIER: Record<Buildable, number> = { hq: 2, barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1, key1: 1, key2: 2, key3: 3, key4: 4, gate: 5, wall: 1, wallgate: 1, bunker: 2, mine: 1, aegis: 2, rturret: 1, fturret: 1, battery: 2, pylon: 2, pyre: 2, bell: 2, doom: 5, lighthouse: 4, obelisk: 4, megagun: 4, plague: 4 };
@@ -532,6 +536,8 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     const d = s.units.find(v => v.id === cmd.id && v.owner === owner && v.kind === 'doom' && v.hp > 0 && v.build >= 1);
     if (!d || !Number.isFinite(cmd.x) || !Number.isFinite(cmd.y)) return;
     if (d.prog < DOOM.charge) return `Заряд ${Math.floor((d.prog / DOOM.charge) * 100)}%`;
+    const e = pay(s.players[owner], 0, DOOM_SHOT); // каждый пуск ещё и стоит энергии
+    if (e) return e;
     d.prog = 0;
     s.strikes.push({ x: clamp(cmd.x, 0, MAP.w), y: clamp(cmd.y, 0, MAP.h), t: DOOM.warn, owner });
     return;
@@ -583,6 +589,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     const u = s.units.find(v => v.id === cmd.id && v.owner === owner && v.hp > 0);
     const up = u && UPGRADES[u.kind];
     if (!u || !up) return;
+    if (u.kind === 'lveh' && fac(s, owner) !== 'orks') return 'Только у Ржавой Орды';
     if (u.build < 1) return 'Строительство не завершено';
     if (u.lvl >= 2 || u.upg >= 0) return 'Уже улучшено';
     if (p.tier < up.tier) return `Нужен тир ${up.tier}`;
@@ -1020,12 +1027,13 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
         const vs = (t: Unit) => netted * (smoked ? 0.5 : 1) * VS[u.kind === 'turret' && u.lvl > 1 ? 'heavy' : dmgOf(u.kind, fac(s, u.owner))][armorOf(t.kind)];
         const dealt = (u.kind === 'post' && u.lvl >= 3 ? 14 : melee ? MELEE_GUARD.dmg : st.dmg) * (SQUADS.has(u.kind) ? members(u.kind, u.hp) : 1) * mult * armor * dmgMul(s, u) * armorMul(s, target) * vs(target);
         hurt(s, target, dealt, u.owner);
-        const aoe = ROLES[u.kind]?.aoe ?? STRUCT_AOE[u.kind] ?? (mystic ? 3 : undefined);
+        const nade = u.kind === 'lveh' && u.lvl > 1; // Багги с гранатомётом
+        const aoe = (nade ? 3 : undefined) ?? ROLES[u.kind]?.aoe ?? STRUCT_AOE[u.kind] ?? (mystic ? 3 : undefined);
         if (aoe) for (const v of s.units) if (v !== target && v.owner !== u.owner && v.hp > 0 && dist(v, target) < aoe) { hurt(s, v, dealt * 0.6 * (vs(v) / Math.max(0.01, vs(target))), u.owner); } // взрыв по площади
         if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) { hurt(s, v, dealt * 0.5, u.owner); } // огненная буря
         const pa = s.players[u.owner];
         if (pa.faction === 'orks' && pa.waagh <= 0) { pa.rage += (dealt * 0.08 + (target.hp <= 0 ? 6 : 0)) * (s.units.some(w => w.kind === 'elite' && w.owner === u.owner && w.hp > 0 && dist(w, u) < 12) ? 2 : 1); /* Вожак рядом — ярость вдвое */ if (pa.rage >= RAGE_MAX) { pa.rage = 0; pa.waagh = WAAGH_TIME; } } // Ярость
-        if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y, mystic ? FX.fire : attackFx(u.kind, fac(s, u.owner), u.q)]);
+        if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y, mystic ? FX.fire : nade ? 12 : attackFx(u.kind, fac(s, u.owner), u.q)]);
       }
     } else if (st.speed) go(s, u, target.x, target.y, dt);
     return;

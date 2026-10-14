@@ -54,7 +54,7 @@ function render(f: FactionId) {
     return card('Капитан · ' + o.name, o.info, p, f, [['idle', 'покой'], ['walk', 'ходьба'], [a === 'mystic' ? 'cast' : 'attack', 'удар'], ['ritual', 'ритуал']], 70, needsTint(p, f));
   });
   const heroes = [
-    card(R.titan.name, `титан · ${ROSTER[f].titanM} м · тир IV`, R.titan.art, f, [['idle', 'покой'], ['stride', 'шаг'], ['beam', 'удар']], 160, false, true),
+    card(R.titan.name, `титан · ${ROSTER[f].titanM} м · тир IV`, R.titan.art, f, f === 'clockwork' ? [['hover', 'парит'], ['beam', 'разряд']] : [['idle', 'покой'], ['stride', 'шаг'], ['beam', 'удар']], 120, false, true),
     ...F.legends.map((n, i) => card(n, 'легенда тира V · ' + F.legendInfo[i], F.legendArt[i], f, [['idle', 'покой'], ['walk', 'ходьба'], ['attack', 'удар']], 80)),
     ...(f === 'clockwork' ? [card('Бог-Механизм', 'вознесённый капитан · летает · Остановка времени', 'Factions/deity.svg', f, [['hover', 'парение'], ['attack', 'удар'], ['ritual', 'вознесение']], 110)] : []),
   ];
@@ -85,6 +85,7 @@ const FX: [string, string, () => string][] = [
   ['Когти', 'демоны', () => [-8, 0, 8].map(o => `<path class="w2d-claw" d="M${94 + o} 34 Q${120 + o} 52 ${110 + o} 76"/>`).join('')],
   ['Укол', 'Костяные латники', () => [-5, 5].map(o => `<line class="w2d-thrust" x1="84" y1="${60 + o}" x2="116" y2="${60 + o}"/>`).join('')],
   ['Луч', 'Консенсус, Вечные, Обелиск', () => `<line class="w2d-beam" x1="20" y1="70" x2="190" y2="60"/><circle class="w2d-hitring" cx="190" cy="60" r="8"/>`],
+  ['Разряд Монолита', 'титан Династий', () => `<line class="w2d-gauss" x1="20" y1="20" x2="190" y2="80"/><path class="w2d-flux" d="M20 20 L50 40 L80 34 L110 58 L140 54 L170 76 L190 80"/><circle class="w2d-boom" cx="190" cy="80" r="24" style="stroke:#5affa0"/>`],
   ['Огненные шары', 'Пламенный идол — турель Синклита', () => `<circle class="w2d-orb" cx="60" cy="52" r="6"/><circle class="w2d-orb" cx="110" cy="34" r="5"/><circle class="w2d-orb" cx="160" cy="44" r="4"/><circle class="w2d-blast" cx="195" cy="80" r="16"/>`],
   ['Огонь', 'адострелы Отступников, огнемёты, Мистик', () => `<path class="w2d-fire" d="M20 80 Q105 10 190 70"/><circle class="w2d-blast" cx="190" cy="70" r="14"/>`],
   ['Снайпер', 'снайперы всех фракций', () => `<line class="w2d-snipe" x1="10" y1="70" x2="200" y2="58"/>${sp(200, 58, 6, '#fff', 18)}`],
