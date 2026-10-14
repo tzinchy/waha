@@ -62,6 +62,7 @@ export type Unit = {
   hit: number;                  // секунд с последнего урона (пополнять под огнём нельзя)
   lvl: number; upg: number;     // уровень и прогресс апгрейда в секундах (-1: нет)
   gear?: Partial<Record<'weapon' | 'armor' | 'mobility' | 'relic', number>>;
+  grenadeCd?: number;
 };
 export type Point = { x: number; y: number; owner: number; prog: number; by: number };
 export type Player = { req: number; alive: boolean; tier: number };
@@ -81,7 +82,8 @@ export type Cmd =
   | { c: 'reinforce'; ids: number[] }
   | { c: 'upgrade'; id: number }
   | { c: 'equip'; id: number; slot: 'weapon' | 'armor' | 'mobility' | 'relic' }
-  | { c: 'nuke'; x: number; y: number };
+  | { c: 'nuke'; x: number; y: number }
+  | { c: 'grenade'; id: number; x: number; y: number };
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -121,6 +123,24 @@ export const queued = (s: State, owner: number, what: Kind) => s.units.reduce((n
 export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined {
   const p = s.players[owner];
   if (s.winner !== null || !p?.alive || !cmd || typeof cmd !== 'object') return;
+  if (cmd.c === 'grenade') {
+    const u = s.units.find(v => v.id === cmd.id && v.owner === owner && v.hp > 0 && (v.kind === 'captain' || v.kind === 'guard'));
+    if (!u) return 'Гранату может бросить только капитан или гвардия';
+    if (!Number.isFinite(cmd.x) || !Number.isFinite(cmd.y) || cmd.x < 0 || cmd.x > MAP.w || cmd.y < 0 || cmd.y > MAP.h) return 'Недопустимая цель';
+    if (Math.hypot(cmd.x - u.x, cmd.y - u.y) > 14) return 'Цель слишком далеко';
+    if ((u.grenadeCd ?? 0) > 0) return 'Граната перезаряжается';
+    u.grenadeCd = 18;
+    for (const target of s.units) {
+      if (target.hp <= 0 || target.owner === owner) continue;
+      const d = Math.hypot(target.x - cmd.x, target.y - cmd.y);
+      if (d <= 4 + STATS[target.kind].radius) {
+        target.hp -= 110 * Math.max(0.2, 1 - d / (4 + STATS[target.kind].radius));
+        target.hit = 0;
+      }
+    }
+    (s.blasts ??= []).push({ x: cmd.x, y: cmd.y, age: 0, radius: 4 });
+    return;
+  }
   if (cmd.c === 'equip') {
     const u = s.units.find(v => v.id === cmd.id && v.owner === owner && v.hp > 0 && !isStruct(v.kind));
     const slots = ['weapon', 'armor', 'mobility', 'relic'] as const;
@@ -229,6 +249,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
 export function step(s: State, dt = DT): void {
   if (s.winner !== null) return;
   s.tick++;
+  for (const u of s.units) if (u.grenadeCd && u.grenadeCd > 0) u.grenadeCd = Math.max(0, u.grenadeCd - dt);
   if (s.nuclearCooldowns) s.nuclearCooldowns = s.nuclearCooldowns.map(v => Math.max(0, v - dt));
   if (s.blasts) {
     for (const b of s.blasts) b.age += dt;
