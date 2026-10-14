@@ -5,6 +5,7 @@ import { CaptainPreview } from './captain.ts';
 import { Game, artFor, ready2d } from './game2d.ts';
 import { ARCH_INFO, CAPTAIN_ART, FACTIONS, FACTION_IDS, type FactionId } from '../shared/factions.ts';
 import { voice } from './voice.ts';
+import { MAPS, setMap } from '../shared/mapdata.ts';
 import { audio } from './audio.ts';
 import { nextTheme, setTheme, themeName } from './theme.ts';
 
@@ -93,13 +94,14 @@ function show(screen: 'menu' | 'lobby' | 'game') {
 
 function onMsg(m: S2C) {
   if (m.t === 'lobby') { lobby = m; if (!game) renderLobby(); }
-  else if (m.t === 'start') startGame(m.slot, m.players);
+  else if (m.t === 'start') startGame(m.slot, m.players, m.map ?? 0);
   else if (m.t === 'snap') game?.onSnap(m.s);
   else if (m.t === 'left') { lobby = null; show('menu'); }
   else if (m.t === 'error') { if (game) game.alert('warn', m.msg); else toast(m.msg); audio.error(); }
 }
 
-function startGame(slot: number, players: LobbyPlayer[]) {
+function startGame(slot: number, players: LobbyPlayer[], map = 0) {
+  setMap(map); // карта матча: до создания игры
   game?.destroy();
   $('result').classList.add('hidden');
   show('game');
@@ -153,6 +155,9 @@ function renderLobby() {
   $('spec').textContent = me.spec ? 'Играть' : 'Зритель';
   $('ready').textContent = me.ready ? 'Не готов' : 'Готов';
   $('ready').classList.toggle('lc-btn--ghost', !me.ready);
+  $('maps').innerHTML = MAPS.map((mp, i) => `<button class="lc-btn lc-btn--sm ${i === lobby!.map ? '' : 'lc-btn--ghost'}" data-map="${i}" ${host ? '' : 'disabled'} title="${mp.info}">${mp.name}</button>`).join('');
+  $('map-info').textContent = MAPS[lobby.map]?.info ?? '';
+  $('maps').querySelectorAll<HTMLElement>('[data-map]').forEach(b => { b.onclick = () => tx({ t: 'map', m: Number(b.dataset.map) }); });
   $('addbot').classList.toggle('hidden', !host);
   $('start').classList.toggle('hidden', !host);
 }

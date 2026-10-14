@@ -38,6 +38,8 @@ export const CAPTAIN_ART: Record<FactionId, Record<'assault' | 'commander' | 'my
   orks: { assault: 'Factions/warboss.svg', commander: 'Units/captain-crown.svg', mystic: 'Units/captain-hood.svg' },
   ashen: { assault: 'Factions/possessed.svg', commander: 'Factions/ashen-chancellor.svg', mystic: 'Units/chancellor.svg' },
 };
+/** Название штаба фракции (второй и третий строятся с тира II). */
+export const HQ_NAME: Record<FactionId, string> = { order: 'Собор', undead: 'Склеп-Престол', prism: 'Узел Консенсуса', clockwork: 'Монолит', orks: 'Становище', ashen: 'Чёрный Алтарь' };
 export const ARCH_INFO: Record<'assault' | 'commander' | 'mystic', { name: string; info: string }> = {
   assault: { name: 'Штурм', info: 'Молот и прыжок: урон +30%, скорость +15%, получает на 10% меньше.' },
   commander: { name: 'Командор', info: 'Клинок, щит и знамя: союзники в 12 м бьют на 10% сильнее и получают на 10% меньше.' },

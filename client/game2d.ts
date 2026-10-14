@@ -2,7 +2,7 @@
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import type { Arch } from '../shared/sim.ts';
 import { isMelee, ROLES, GEAR, SQUADS, VEHICLES, LEGION_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
-import { CAPTAIN_ART, FACTIONS, ROSTER, type FactionId } from '../shared/factions.ts';
+import { CAPTAIN_ART, FACTIONS, HQ_NAME, ROSTER, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
 import { paintMap } from './mappaint.ts';
@@ -555,7 +555,7 @@ export class Game {
 
   private kindName(k: Kind, f: FactionId) {
     const F = FACTIONS[f], R = ROSTER[f] as unknown as Record<string, { name: string } | undefined>;
-    return k === 'builder' ? F.builder : k === 'guard' ? F.guard : R[k]?.name ?? KIND_NAME[k] ?? k;
+    return k === 'builder' ? F.builder : k === 'guard' ? F.guard : k === 'hq' ? HQ_NAME[f] : R[k]?.name ?? KIND_NAME[k] ?? k;
   }
   private nameOf(v: View) {
     const F = FACTIONS[this.fac(v.owner)];
@@ -685,7 +685,7 @@ export class Game {
         ...(this.fac() === 'undead' ? [card('bell', 'Колокол Скорби', 'R', 'Враги в 14 м бьют на 20% слабее и ходят на 20% медленнее.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'clockwork' ? [card('pylon', 'Гаусс-пилон', 'R', 'Дальний луч 30 м: пробивает технику и здания.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'ashen' ? [card('pyre', 'Огненная яма', 'R', 'Жжёт всех врагов в 8 м: 18 урона в секунду.', this.tier < 2 ? 'Нужен тир II' : undefined)] : [])]],
-      ['Святыни', (() => { const k = keyKind(); return k ? [card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : []; })()],
+      ['Святыни', (() => { const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — только когда пали все штабы.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra]; })()],
     ];
     const tab = tabs[this.buildTab] ?? tabs[0];
     return `<div class="lc-buildhead">${miniArt(artFor('builder', this.fac()))}<div><div class="lc-buildhead__who">${F.builder} ×${bs.length}</div><div class="lc-buildhead__meta">скорость стройки ×${bs.length}</div></div><button class="lc-btn lc-btn--sm lc-btn--ghost" data-act="cmdgrid">Команды ▸</button></div>`
@@ -780,7 +780,7 @@ export class Game {
     else if (/^res[0-3]$/.test(act)) { const k = sel.find(v => /^key/.test(v.kind)); if (k) this.cmd({ c: 'research', id: k.id, r: Number(act[3]) }); }
     else if (/^sum[0-2]$/.test(act)) { const g = sel.find(v => v.kind === 'gate'); if (g) this.cmd({ c: 'summon', id: g.id, v: Number(act[3]) }); }
     else if (/^key[1-4]$|^gate$/.test(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
-    else if (['barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine', 'aegis', 'rturret', 'fturret', 'battery', 'pylon', 'pyre', 'bell'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
+    else if (['hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine', 'aegis', 'rturret', 'fturret', 'battery', 'pylon', 'pyre', 'bell'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
     else if (act === 'upgrade') { for (const v of sel) if ((UPGRADES[v.kind] && v.lvl < 2 || v.kind === 'post') && v.upg < 0) this.cmd({ c: 'upgrade', id: v.id }); }
     else if (act === 'reinforce') this.cmd({ c: 'reinforce', ids: sel.filter(v => v.kind === 'guard').map(v => v.id) });
   }
@@ -989,6 +989,12 @@ export class Game {
       const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16) || (['turret', 'battery', 'pylon', 'pyre', 'bell'].includes(this.place ?? '') && nearOwnPt(g.x, g.y));
       const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1);
       return { ...g, ok: near && free };
+    }
+    if (this.place === 'hq') { // ещё один штаб: у своей точки или построек, не ближе 50 м к чужому штабу
+      const nearOwn = nearOwnPt(g.x, g.y) || vs.some(v => v.owner === this.slot && isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < 30);
+      const foeHq = vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 50);
+      const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS.hq.radius + 1);
+      return { ...g, ok: nearOwn && !foeHq && free };
     }
     const hq = vs.find(v => v.kind === 'hq' && v.owner === this.slot), d = hq ? Math.hypot(hq.x - g.x, hq.y - g.y) : 99;
     const clear = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS.barracks.radius + 1);

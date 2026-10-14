@@ -6,14 +6,14 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { ARCHS, type Arch, applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
+import { MAPS, setMap, ARCHS, type Arch, applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import { botThink } from './bot.ts';
 import { FACTION_IDS, isFaction } from '../shared/factions.ts';
 
 type Member = LobbyPlayer & { ws?: WebSocket; left?: boolean };
 type Match = { state: State; slots: Member[]; timer: NodeJS.Timeout };
-type Lobby = { code: string; host: string; members: Member[]; match?: Match };
+type Lobby = { code: string; host: string; members: Member[]; match?: Match; map: number };
 
 const lobbies = new Map<string, Lobby>();
 const memberOf = new WeakMap<WebSocket, { lobby: Lobby; me: Member }>();
@@ -35,7 +35,7 @@ function newCode() {
 }
 
 function broadcastLobby(l: Lobby) {
-  for (const m of l.members) send(m.ws, { t: 'lobby', code: l.code, you: m.id, host: l.host, players: l.members.map(pub) });
+  for (const m of l.members) send(m.ws, { t: 'lobby', code: l.code, you: m.id, host: l.host, players: l.members.map(pub), map: l.map });
 }
 
 function leave(ws: WebSocket) {
@@ -53,17 +53,19 @@ function leave(ws: WebSocket) {
 
 function startMatch(l: Lobby) {
   const fighters = l.members.filter(m => !m.spec);
+  setMap(l.map); // карта лобби — до создания состояния
   const state = newState(fighters.length, fighters.map(m => m.faction), fighters.map(m => m.captain.arch));
   state.dev = process.env.NODE_ENV !== 'production'; // чит F9 только в разработке
   const slots = fighters;
   const m: Match = { state, slots, timer: setInterval(() => tick(l), DT * 1000) };
   l.match = m;
-  slots.forEach((p, i) => send(p.ws, { t: 'start', slot: i, players: slots.map(pub) }));
-  for (const sp of l.members.filter(x => x.spec)) send(sp.ws, { t: 'start', slot: -1, players: slots.map(pub) }); // зрители: слот −1
+  slots.forEach((p, i) => send(p.ws, { t: 'start', slot: i, players: slots.map(pub), map: l.map }));
+  for (const sp of l.members.filter(x => x.spec)) send(sp.ws, { t: 'start', slot: -1, players: slots.map(pub), map: l.map }); // зрители: слот −1
 }
 
 function tick(l: Lobby) {
   const m = l.match!;
+  setMap(l.map);
   m.slots.forEach((p, i) => { if (p.bot && m.state.players[i].alive) botThink(m.state, i); });
   step(m.state);
   const over = m.state.winner !== null;
@@ -97,17 +99,18 @@ function onMessage(ws: WebSocket, raw: string) {
       if (!l.match && l.members.filter(x => !x.spec).length >= MAX_PLAYERS) return err('Лобби заполнено');
     }
     const me: Member = { id: randomBytes(4).toString('hex'), name: cleanName(m.name), captain: cleanCaptain(m.captain), ready: false, bot: false, faction: 'order', ws };
-    if (!l) { l = { code: newCode(), host: me.id, members: [] }; lobbies.set(l.code, l); }
+    if (!l) { l = { code: newCode(), host: me.id, members: [], map: 0 }; lobbies.set(l.code, l); }
     if (l.match) me.spec = true; // в идущий матч — зрителем
     l.members.push(me);
     memberOf.set(ws, { lobby: l, me });
-    if (l.match) return send(ws, { t: 'start', slot: -1, players: l.match.slots.map(pub) });
+    if (l.match) return send(ws, { t: 'start', slot: -1, players: l.match.slots.map(pub), map: l.map });
     return broadcastLobby(l);
   }
   if (!ctx) return;
   const { lobby: l, me } = ctx;
   if (m.t === 'leave') { leave(ws); return send(ws, { t: 'left' }); }
   if (m.t === 'cmd') { // команда от игрока: слот = индекс в списке слотов матча
+    if (l.match) setMap(l.map);
     const e = l.match && applyCmd(l.match.state, l.match.slots.indexOf(me), m.cmd);
     if (e) err(e);
     return;
@@ -118,6 +121,7 @@ function onMessage(ws: WebSocket, raw: string) {
   else if (m.t === 'faction') { if (isFaction(m.f)) me.faction = m.f; }
   else if (m.t === 'spec') { if (m.on || l.members.filter(x => !x.spec).length < MAX_PLAYERS) { me.spec = !!m.on; me.ready = me.spec; } }
   else if (l.host !== me.id) return err('Только хост');
+  else if (m.t === 'map') { if (Number.isInteger(m.m) && MAPS[m.m]) l.map = m.m; }
   else if (m.t === 'bot') {
     if (l.members.filter(x => !x.spec).length >= MAX_PLAYERS) return err('Лобби заполнено');
     l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({ armor: 0x8a2be2 + l.members.length * 0x300a0, trim: 0xe0e0e0, arch: ARCHS[Math.floor(Math.random() * 3)] }), ready: true, bot: true, faction: FACTION_IDS[1 + Math.floor(Math.random() * (FACTION_IDS.length - 1))] });
@@ -126,6 +130,7 @@ function onMessage(ws: WebSocket, raw: string) {
     if (k && k !== me) { l.members = l.members.filter(p => p !== k); if (k.ws) { memberOf.delete(k.ws); send(k.ws, { t: 'left' }); } }
   } else if (m.t === 'start') {
     if (l.members.filter(x => !x.spec).length < 2) return err('Нужно минимум 2 бойца (добавьте ботов — зрители не в счёт)');
+    if (l.members.filter(x => !x.spec).length > MAPS[l.map].hq.length) return err(`На карте «${MAPS[l.map].name}» мест: ${MAPS[l.map].hq.length}`);
     if (!l.members.every(p => p.ready || p.spec)) return err('Не все готовы');
     return startMatch(l);
   }

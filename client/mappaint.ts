@@ -1,5 +1,5 @@
 // Текстура карты: рисуется один раз в половинном разрешении и растягивается без сглаживания — получается пиксель-арт.
-import { BRIDGES, COVER, CRATERS, HQ_POS, MAP, PLATEAUS, POINTS, RELICS, RIVER, ROADS, RUINS, VENTS } from '../shared/mapdata.ts';
+import { BLOCKS, BRIDGES, COVER, CRATERS, HQ_POS, MAP, PLATEAUS, POINTS, RELICS, RIVER, ROADS, RUINS, VENTS } from '../shared/mapdata.ts';
 
 export const TEX = 13; // текселей на метр (S = 26 px → тексель 2×2 px)
 type C = CanvasRenderingContext2D;
@@ -95,6 +95,18 @@ export function paintMap(): HTMLCanvasElement {
     const px = r() * W, py = r() * H;
     if (r() > 0.5) { x.fillStyle = '#c9bfa8'; x.fillRect(px, py, 3, 3); x.fillStyle = '#1a1612'; x.fillRect(px, py + 1, 1, 1); x.fillRect(px + 2, py + 1, 1, 1); } // череп
     else { x.fillStyle = r() > 0.5 ? '#a89e88' : '#4a4038'; x.fillRect(px, py, 4 + r() * 4, 1); }
+  }
+  // 11б. Скалы (непроходимо): тёмная порода, светлый гребень по краю тоннеля, осыпь
+  for (const [bx, by, bw, bh] of BLOCKS) {
+    const X = P(bx), Y = P(by), Wd = P(bw), Hd = P(bh);
+    const g = x.createLinearGradient(0, Y, 0, Y + Hd); g.addColorStop(0, '#16120f'); g.addColorStop(0.5, '#241d17'); g.addColorStop(1, '#100c0a');
+    x.fillStyle = g; x.fillRect(X, Y, Wd, Hd);
+    for (let i = 0; i < (Wd * Hd) / 900; i++) { x.fillStyle = r() > 0.5 ? '#3a3027' : '#0b0908'; x.fillRect(X + r() * Wd, Y + r() * Hd, 6 + r() * 18, 3 + r() * 6); } // слоистость породы
+    for (let xx = X; xx < X + Wd; xx += 6) { // гребень над тоннелем и под ним
+      const top = Y + Hd, bot = Y;
+      if (Y > 0) { x.fillStyle = '#5a4c3e'; x.fillRect(xx, bot - 2 - r() * 4, 6, 4); }
+      if (Y + Hd < H) { x.fillStyle = '#6b5a48'; x.fillRect(xx, top - 3, 6, 3); x.fillStyle = '#0a0807'; x.fillRect(xx, top, 6, 6 + r() * 6); }
+    }
   }
   // 12. Виньетка по краю карты
   const v = x.createRadialGradient(W / 2, H / 2, W * 0.35, W / 2, H / 2, W * 0.72);

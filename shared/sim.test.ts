@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
+import { setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -217,8 +217,8 @@ test('укрепления: стена строится по сегментам 
   const cap = unit(s, 0, 'captain');
   [cap.x, cap.y] = [66, 56];
   applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 76, y: 56 });
-  run(s, 3);
-  assert.ok(cap.x < 70, 'стена не пропускает');
+  for (let i = 0; i < 20 * 8; i++) { const x0 = cap.x; run(s, 0.05); if ((x0 - 70) * (cap.x - 70) <= 0) assert.ok(cap.y < 49.5 || cap.y > 62.5, 'сквозь стену не прошёл'); } // обходит, а не проходит насквозь
+  assert.ok(cap.x > 70, 'обошёл стену и дошёл');
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'mine', x: 58, y: 76 }), undefined);
   run(s, 15); // по эту сторону стены: обхода препятствий у юнитов нет
   const enemy = unit(s, 1, 'captain'), hp = enemy.hp;
@@ -421,4 +421,43 @@ test('здоровье по лестнице, стены укрепляются,
   const bell = spawn(s, 1, 'bell', 200, 200), me = spawn(s, 0, 'guard', 205, 200); void bell;
   applyCmd(s, 0, { c: 'move', ids: [me.id], x: 230, y: 200 }); const x0 = me.x; run(s, 1);
   assert.ok(me.x - x0 < 8.6 * 0.85, 'замедлен колоколом'); // одержимые Синклита бегут 8.6 м/с, колокол режет на 20%
+});
+
+test('карта «Ущелье Пепла»: тоннель, скалы непроходимы, в карманах по 2 реликвария и жила', () => {
+  setMap(1);
+  try {
+    const s = newState(2);
+    assert.equal(s.points.filter(p => p.relic).length, 4);
+    const cap = unit(s, 0, 'captain'), b = unit(s, 0, 'builder');
+    [cap.x, cap.y] = [60, 30]; // в кармане, у скалы
+    applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 140, y: 30 }); // приказ прямо в скалу
+    run(s, 8);
+    assert.ok(cap.y >= 46 - 1.2 || cap.x <= 70, 'в скалу не залез');
+    applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 200, y: 60 }); run(s, 20);
+    assert.ok(cap.x > 190, 'прошёл тоннелем');
+    assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: 40, y: 10 }) ?? '', /./); // далеко/нельзя — хоть какая-то причина
+    s.players[0].req = 1e4; s.players[0].energy = 1e4; s.players[0].tier = 2; s.points[1].owner = 0;
+    assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: 100, y: 40 }) ?? '', /скалах/);
+  } finally { setMap(0); }
+});
+
+test('Династии: только энергия (доход с точек и столпов — энергией), второй штаб-Монолит, проигрыш только без всех штабов', () => {
+  const s = newState(2, ['clockwork', 'order']);
+  const p = s.players[0];
+  p.req = 0; p.energy = 0;
+  s.points[3].owner = 0; spawn(s, 0, 'post', s.points[3].x, s.points[3].y);
+  run(s, 10);
+  assert.equal(p.req, 0, 'влияния у Династий нет');
+  assert.ok(p.energy > 30, 'точка и столп дают энергию');
+  // Монолит: второй штаб у своей точки
+  p.energy = 2000; p.tier = 2;
+  const b = unit(s, 0, 'builder');
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'hq', x: s.points[3].x + 8, y: s.points[3].y }), undefined);
+  assert.ok(p.energy <= 1400, 'Монолит оплачен энергией');
+  const mono = s.units.filter(u => u.owner === 0 && u.kind === 'hq')[1];
+  mono.build = 1; mono.hp = maxHp('hq');
+  unit(s, 0, 'hq').hp = 0; run(s, 0.1);
+  assert.equal(p.alive, true, 'жив, пока стоит Монолит');
+  mono.hp = 0; run(s, 0.1);
+  assert.equal(p.alive, false);
 });

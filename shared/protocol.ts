@@ -10,6 +10,7 @@ export type C2S =
   | { t: 'ready'; ready: boolean }
   | { t: 'faction'; f: FactionId }
   | { t: 'spec'; on: boolean }
+  | { t: 'map'; m: number }
   | { t: 'bot' }
   | { t: 'kick'; id: string }
   | { t: 'start' }
@@ -17,8 +18,8 @@ export type C2S =
   | { t: 'leave' };
 
 export type S2C =
-  | { t: 'lobby'; code: string; you: string; host: string; players: LobbyPlayer[] }
-  | { t: 'start'; slot: number; players: LobbyPlayer[] } // players в порядке слотов: индекс = owner в симуляции
+  | { t: 'lobby'; code: string; you: string; host: string; players: LobbyPlayer[]; map: number }
+  | { t: 'start'; slot: number; players: LobbyPlayer[]; map: number } // players в порядке слотов: индекс = owner в симуляции
   | { t: 'snap'; s: Snap }
   | { t: 'left' }
   | { t: 'error'; msg: string };
