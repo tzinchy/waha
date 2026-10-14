@@ -1,0 +1,52 @@
+name: Export faction assets
+on:
+  workflow_dispatch:
+    inputs:
+      export_scope:
+        description: "Export missing factions or regenerate all six"
+        type: choice
+        options:
+          - missing
+          - all
+        default: missing
+  push:
+    branches: [codex/faction-asset-lab]
+    paths:
+      - scripts/export-factions.mjs
+      - .github/workflows/export-factions.yml
+permissions:
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      EXPORT_SCOPE: ${{ inputs.export_scope || 'missing' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Render and export sprite atlases
+        run: node scripts/export-factions.mjs
+      - name: Validate all exported files
+        run: |
+          test -f client/public/models/factions/drukhari/captain/model.glb
+          test -s client/public/models/factions/drukhari/captain/sprites/idle.png
+          test -f client/public/models/factions/daemons/captain/model.glb
+          test -s client/public/models/factions/daemons/captain/sprites/idle.png
+      - name: Commit generated assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add client/public/models/factions
+          if ! git diff --cached --quiet; then
+            git commit -m "assets: bake missing factions GLB and directional PNG atlases"
+            git push
+          fi
