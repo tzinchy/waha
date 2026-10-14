@@ -183,6 +183,7 @@ export function attackFx(k: Kind, f: FactionId, variant = 0) {
   if (k === 'titan' && f === 'clockwork') return 20; // Монолит: изумрудный разряд с ветвящимися молниями
   if (k === 'titan' && f === 'orks') return 12; // Топтун лупит снарядами из брюха и многоствольника
   if (k === 'turret' && f === 'ashen') return 19; // идол Синклита плюётся огненными шарами
+  if (k === 'sniper' && f === 'ashen') return FX.fire; // Колдун Пепла: огненный сгусток
   if (k === 'elite') return f === 'prism' ? FX.beam : f === 'order' || f === 'clockwork' ? FX.thrust : FX.claws;
   return ({ obelisk: 3, megagun: 12, arty: 12, battery: 12, pylon: 3, rturret: 12, fturret: FX.fire, deity: FX.chop, sniper: 10, heavy: 11, hveh: 12, titan: 13, mveh: f === 'ashen' || f === 'orks' ? FX.fire : 14, lveh: 14 } as Partial<Record<Kind, number>>)[k] ?? FX.shot;
 }
