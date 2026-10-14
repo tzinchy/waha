@@ -367,6 +367,59 @@ export class FactionActor {
   }
 }
 
+/** Upgrade geometry for all six factions. Rebuild when a building's tier changes. */
+export function upgradeFactionBuilding(model: THREE.Group, faction: FactionId, level: number) {
+  if (faction === 'necrons') return upgradeNecronMonolith(model, level);
+  const old = model.getObjectByName('FactionUpgrade');
+  if (old) {
+    old.traverse(obj => {
+      if (obj instanceof THREE.Mesh) {
+        obj.geometry.dispose();
+        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+        else obj.material.dispose();
+      }
+    });
+    model.remove(old);
+  }
+  const tier = Math.max(1, Math.min(3, Math.floor(level)));
+  const art = FACTION_ART[faction];
+  const group = new THREE.Group(); group.name = 'FactionUpgrade';
+  const armor = new THREE.MeshStandardMaterial({ color: art.metal, metalness: 0.7, roughness: 0.35 });
+  const trim = new THREE.MeshStandardMaterial({ color: art.trim, metalness: 0.65, roughness: 0.4 });
+  const glow = new THREE.MeshStandardMaterial({ color: art.glow, emissive: art.glow, emissiveIntensity: 1.1 });
+  for (let i = 0; i < tier * 2 + 2; i++) {
+    const a = i * Math.PI * 2 / (tier * 2 + 2);
+    const r = 1.3 + tier * 0.22;
+    const h = 0.7 + tier * 0.35;
+    const tower = new THREE.Mesh(
+      faction === 'daemons' ? new THREE.ConeGeometry(0.25, h, 5) :
+      faction === 'drukhari' ? new THREE.ConeGeometry(0.19, h, 4) :
+      faction === 'scrap' ? new THREE.BoxGeometry(0.4, h, 0.3) :
+      faction === 'heretics' ? new THREE.CylinderGeometry(0.08, 0.24, h, 5) :
+      new THREE.CylinderGeometry(0.2, 0.3, h, 8),
+      i % 2 ? armor : trim
+    );
+    tower.position.set(Math.cos(a) * r, 1.6 + h / 2, Math.sin(a) * r);
+    tower.rotation.y = a;
+    if (faction === 'scrap') tower.rotation.z = (i % 2 ? 1 : -1) * 0.13;
+    group.add(tower);
+    const energy = new THREE.Mesh(new THREE.OctahedronGeometry(0.09 + tier * 0.04), glow);
+    energy.position.set(tower.position.x, tower.position.y + h * 0.55, tower.position.z);
+    group.add(energy);
+  }
+  if (tier > 1) {
+    const crest = new THREE.Mesh(
+      faction === 'legion' ? new THREE.BoxGeometry(0.28, 1.3, 0.28) :
+      faction === 'scrap' ? new THREE.DodecahedronGeometry(0.35) :
+      new THREE.OctahedronGeometry(0.4 + tier * 0.12),
+      tier === 3 ? glow : trim
+    );
+    crest.position.y = 3.0 + tier * 0.3; group.add(crest);
+  }
+  model.add(group);
+  return group;
+}
+
 /** Necron monolith upgrades add actual geometry, not just a HUD level icon. */
 export function upgradeNecronMonolith(model: THREE.Group, level: number) {
   const old = model.getObjectByName('NecronUpgrade');
