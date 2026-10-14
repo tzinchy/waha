@@ -61,12 +61,15 @@ export type Unit = {
   reinf: boolean; rt: number;   // идёт пополнение отряда
   hit: number;                  // секунд с последнего урона (пополнять под огнём нельзя)
   lvl: number; upg: number;     // уровень и прогресс апгрейда в секундах (-1: нет)
+  gear?: Partial<Record<'weapon' | 'armor' | 'mobility' | 'relic', number>>;
 };
 export type Point = { x: number; y: number; owner: number; prog: number; by: number };
 export type Player = { req: number; alive: boolean; tier: number };
 export type State = {
   tick: number; units: Unit[]; points: Point[]; players: Player[]; nextId: number;
   winner: number | null; shots: number[][];
+  blasts?: { x: number; y: number; age: number; radius: number }[];
+  nuclearCooldowns?: number[];
 };
 export type Cmd =
   | { c: 'move' | 'amove'; ids: number[]; x: number; y: number }
@@ -76,13 +79,15 @@ export type Cmd =
   | { c: 'build'; ids: number[]; kind: Buildable; x: number; y: number }
   | { c: 'assist'; ids: number[]; id: number }
   | { c: 'reinforce'; ids: number[] }
-  | { c: 'upgrade'; id: number };
+  | { c: 'upgrade'; id: number }
+  | { c: 'equip'; id: number; slot: 'weapon' | 'armor' | 'mobility' | 'relic' }
+  | { c: 'nuke'; x: number; y: number };
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
 export function newState(n: number): State {
-  const s: State = { tick: 0, units: [], points: POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), players: [], nextId: 1, winner: null, shots: [] };
+  const s: State = { tick: 0, units: [], points: POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), players: [], nextId: 1, winner: null, shots: [], blasts: [], nuclearCooldowns: Array(n).fill(0) };
   for (let i = 0; i < n; i++) {
     s.players.push({ req: START_REQ, alive: true, tier: 1 });
     const [hx, hy] = HQ_POS[i];
@@ -116,6 +121,38 @@ export const queued = (s: State, owner: number, what: Kind) => s.units.reduce((n
 export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined {
   const p = s.players[owner];
   if (s.winner !== null || !p?.alive || !cmd || typeof cmd !== 'object') return;
+  if (cmd.c === 'equip') {
+    const u = s.units.find(v => v.id === cmd.id && v.owner === owner && v.hp > 0 && !isStruct(v.kind));
+    const slots = ['weapon', 'armor', 'mobility', 'relic'] as const;
+    if (!u || !slots.includes(cmd.slot)) return 'Недопустимый юнит или слот';
+    if (p.tier < 2) return 'Нужен тир 2';
+    const gear = u.gear ?? (u.gear = {});
+    const current = gear[cmd.slot] ?? 0;
+    if (current >= 2) return 'Максимальный уровень снаряжения';
+    const cost = (current + 1) * 125;
+    if (p.req < cost) return 'Не хватает requisition';
+    p.req -= cost; gear[cmd.slot] = current + 1;
+    if (cmd.slot === 'armor') u.hp += STATS[u.kind].hp * STATS[u.kind].n * 0.15;
+    return;
+  }
+  if (cmd.c === 'nuke') {
+    if (!Number.isFinite(cmd.x) || !Number.isFinite(cmd.y) || cmd.x < 0 || cmd.x > MAP.w || cmd.y < 0 || cmd.y > MAP.h) return 'Недопустимая цель';
+    if (p.tier < 2 || !s.units.some(u => u.owner === owner && u.kind === 'hq' && u.hp > 0)) return 'Нужен штаб второго уровня';
+    const cooldown = s.nuclearCooldowns ?? (s.nuclearCooldowns = Array(s.players.length).fill(0));
+    if (cooldown[owner] > 0) return 'Ядерное оружие перезаряжается';
+    if (p.req < 900) return 'Не хватает requisition';
+    p.req -= 900; cooldown[owner] = 240;
+    const radius = 17;
+    for (const u of s.units) {
+      if (u.hp <= 0) continue;
+      const d = Math.hypot(u.x - cmd.x, u.y - cmd.y);
+      if (d > radius + STATS[u.kind].radius) continue;
+      const falloff = Math.max(0.15, 1 - d / (radius + STATS[u.kind].radius));
+      u.hp -= 650 * falloff; u.hit = 0;
+    }
+    (s.blasts ??= []).push({ x: cmd.x, y: cmd.y, age: 0, radius });
+    return;
+  }
   if (cmd.c === 'train') {
     const b = s.units.find(u => u.id === cmd.id && u.owner === owner && u.hp > 0);
     const what = b && producing(b.kind);
@@ -192,6 +229,11 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
 export function step(s: State, dt = DT): void {
   if (s.winner !== null) return;
   s.tick++;
+  if (s.nuclearCooldowns) s.nuclearCooldowns = s.nuclearCooldowns.map(v => Math.max(0, v - dt));
+  if (s.blasts) {
+    for (const b of s.blasts) b.age += dt;
+    s.blasts = s.blasts.filter(b => b.age < 3);
+  }
   const income = s.players.map(() => 1);
   for (const pt of s.points) if (pt.owner >= 0) income[pt.owner] += 1 + (postAt(s, pt)?.owner === pt.owner ? 2 : 0);
   s.players.forEach((p, i) => { if (p.alive) p.req += income[i] * dt; });
@@ -247,7 +289,7 @@ function go(u: Unit, x: number, y: number, dt: number) {
   const dx = x - u.x, dy = y - u.y, d = Math.hypot(dx, dy);
   if (d < 1e-6) return;
   u.face = Math.atan2(dy, dx);
-  const m = Math.min(STATS[u.kind].speed * dt, d);
+  const m = Math.min(STATS[u.kind].speed * (1 + (u.gear?.mobility ?? 0) * 0.1) * dt, d);
   u.x += (dx / d) * m; u.y += (dy / d) * m;
 }
 
@@ -290,7 +332,7 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
       if (u.cd === 0) {
         u.cd = st.cd;
         const mult = u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1, armor = target.lvl > 1 ? LVL2.armor[target.kind] ?? 1 : 1;
-        target.hp -= st.dmg * (u.kind === 'guard' ? members('guard', u.hp) : 1) * mult * armor;
+        target.hp -= st.dmg * (u.kind === 'guard' ? members('guard', u.hp) : 1) * mult * armor * (1 + (u.gear?.weapon ?? 0) * 0.1) * (1 - (target.gear?.armor ?? 0) * 0.1);
         target.hit = 0;
         if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y]);
       }
@@ -346,7 +388,7 @@ function cleanup(s: State) {
 }
 
 /** Компактный снимок для сети: целые числа вместо float, чтобы JSON был короче. */
-export type Snap = { tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null };
+export type Snap = { tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; blasts?: number[][]; gear?: number[][]; nuclearCooldowns?: number[] };
 export function snapshot(s: State): Snap {
   return {
     tick: s.tick,
@@ -356,5 +398,8 @@ export function snapshot(s: State): Snap {
     pl: s.players.map(p => [Math.floor(p.req), p.alive ? 1 : 0, p.tier]),
     sh: s.shots.map(v => v.map(n => Math.round(n * 10))),
     w: s.winner,
+    blasts: (s.blasts ?? []).map(b => [Math.round(b.x * 10), Math.round(b.y * 10), Math.round(b.age * 100), Math.round(b.radius * 10)]),
+    gear: s.units.map(u => [u.id, u.gear?.weapon ?? 0, u.gear?.armor ?? 0, u.gear?.mobility ?? 0, u.gear?.relic ?? 0]),
+    nuclearCooldowns: (s.nuclearCooldowns ?? []).map(v => Math.ceil(v)),
   };
 }
