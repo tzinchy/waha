@@ -139,6 +139,14 @@
   .w2d-fog{position:absolute;left:0;top:0;z-index:8500;pointer-events:none}
   .w2d-unit.ghost{filter:grayscale(.9) brightness(.6);opacity:.7}
   .w2d-unit.ghost .w2d-bar,.w2d-unit.ghost .w2d-ring{display:none}
+  body.spectating #hud-res,body.spectating #hud-cap,body.spectating #hud-cmd,body.spectating #hud-levelup,body.spectating #hud-queue,body.spectating #hud-dead{display:none!important}
+  body.spectating #hud-players{min-width:min(560px,60vw)}
+  .w2d-spechead{font:600 11px/16px var(--font-label);letter-spacing:.14em;color:var(--gilt-300);margin-bottom:6px}
+  .w2d-specrow{display:grid;grid-template-columns:12px 1fr auto auto auto auto auto;gap:10px;align-items:center;font:500 12px/18px var(--font-label);color:var(--ink)}
+  .w2d-specrow i{width:10px;height:10px;transform:rotate(45deg)}
+  .w2d-specrow span{color:var(--ink-muted)}
+  .w2d-specrow .vp{color:var(--gilt-300)}
+  .w2d-specrow.out{opacity:.4;text-decoration:line-through}
   .w2d-sparkline{stroke-width:2;stroke-linecap:square;animation:w2d-fade .28s steps(4) both}
   .w2d-arc{fill:none;stroke:var(--amber-300);stroke-width:3;stroke-dasharray:6 8;animation:w2d-dash .9s linear both}
   .w2d-boom{fill:rgba(240,120,40,.35);stroke:#f0a540;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:w2d-ring .6s steps(6) both}
@@ -239,6 +247,7 @@
       <ul id="plist"></ul>
       <div class="row">
         <button class="lc-btn lc-btn--sm lc-btn--ghost" id="ready"></button>
+        <button class="lc-btn lc-btn--sm lc-btn--ghost" id="spec" title="Смотреть матч без тумана войны, не занимая слот">Зритель</button>
         <button class="lc-btn lc-btn--sm lc-btn--ghost" id="addbot">+ Бот</button>
         <button class="lc-btn lc-btn--sm" id="start">Начать осаду</button>
         <button class="lc-btn lc-btn--sm lc-btn--blood" id="leave">Отступить</button>

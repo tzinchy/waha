@@ -1,7 +1,7 @@
 import type { CaptainCfg, Cmd, Snap } from './sim.ts';
 import type { FactionId } from './factions.ts';
 
-export type LobbyPlayer = { id: string; name: string; captain: CaptainCfg; ready: boolean; bot: boolean; faction: FactionId };
+export type LobbyPlayer = { id: string; name: string; captain: CaptainCfg; ready: boolean; bot: boolean; faction: FactionId; spec?: boolean }; // spec — зритель
 
 export type C2S =
   | { t: 'create'; name: string; captain: CaptainCfg }
@@ -9,6 +9,7 @@ export type C2S =
   | { t: 'captain'; captain: CaptainCfg }
   | { t: 'ready'; ready: boolean }
   | { t: 'faction'; f: FactionId }
+  | { t: 'spec'; on: boolean }
   | { t: 'bot' }
   | { t: 'kick'; id: string }
   | { t: 'start' }

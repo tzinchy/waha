@@ -170,6 +170,8 @@ export class Game {
     private send: (c: Cmd) => void, private onEnd: (winner: number) => void,
   ) {
     root.classList.add('w2d');
+    document.body.classList.toggle('spectating', slot < 0); // режим просмотра: без тумана и команд
+    if (slot < 0) { this.cam.x = MAP.w / 2; this.cam.y = MAP.h / 2; this.cam.zoom = 0.6; this.centered = true; }
     this.world.className = 'w2d-world';
     this.ground.className = 'w2d-ground';
     Object.assign(this.ground.style, { width: MAP.w * S + 'px', height: MAP.h * S + 'px' });
@@ -193,6 +195,7 @@ export class Game {
   }
 
   destroy() {
+    document.body.classList.remove('spectating');
     audio.setBattle(false);
     cancelAnimationFrame(this.raf);
     this.ac.abort();
@@ -265,7 +268,7 @@ export class Game {
   onSnap(s: Snap) {
     const seen = new Set<number>(), first = this.snapN++ === 0, now = performance.now();
     this.qk = s.qk ?? {};
-    this.renderScore(s);
+    if (this.slot >= 0) this.renderScore(s);
     this.drawSmoke(s.sm ?? []);
     this.stopCd = s.ps?.[this.slot]?.[0] ?? 0;
     for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog, gear, c0, c1, c2, gcd, sh, frozen, carry, rise, off] of s.u) {
@@ -418,7 +421,7 @@ export class Game {
   private capHud(me: number[]) {
     const c = this.cap;
     const [lvl, xp, pts, abil] = [me[9] ?? 1, me[10] ?? 0, me[11] ?? 0, me[12] ?? 0];
-    if (lvl > c.lvl && this.snapN > 2) { audio.built(); this.alert('ok', `Ранг ${lvl}`, 'выберите дар'); const v = [...this.views.values()].find(u => u.owner === this.slot && u.kind === 'captain'); v?.el.animate([{ filter: 'drop-shadow(0 0 0 var(--gilt-300))' }, { filter: 'drop-shadow(0 0 22px var(--gilt-300))' }, { filter: 'none' }], { duration: 900 }); }
+    if (lvl > c.lvl && this.snapN > 2) { audio.built(); this.alert('ok', `Ранг ${lvl}`, 'дар: клик по ромбу уровня или Alt+1–3'); const v = [...this.views.values()].find(u => u.owner === this.slot && u.kind === 'captain'); v?.el.animate([{ filter: 'drop-shadow(0 0 0 var(--gilt-300))' }, { filter: 'drop-shadow(0 0 22px var(--gilt-300))' }, { filter: 'none' }], { duration: 900 }); }
     Object.assign(c, { lvl, xp, pts, abil, cd: me.slice(13) });
     $('cap-lvl').textContent = String(lvl);
     $('cap-xp').style.setProperty('--xp', lvl >= MAX_LVL ? '100%' : `${(xp / xpNeed(lvl)) * 100}%`);
@@ -427,7 +430,7 @@ export class Game {
     const open = ABILITIES.map((a, i) => ({ ...a, i })).filter(a => !canLearn(fake, a.i));
     const html = pts > 0 && open.length ? `<p class="lc-levelup__rank">Ранг ${lvl}</p><p class="lc-levelup__sub">Выберите дар · очков: ${pts}</p><div class="lc-choices">`
       + open.map((a, n) => `<button class="lc-choice" data-learn="${a.i}"><kbd>Alt+${n + 1}</kbd><strong>${a.name}</strong><span>${a.info}${a.cd ? ` · <em>перезарядка ${a.cd} с</em>` : ' · <em>пассивная</em>'}</span></button>`).join('') + '</div>' : '';
-    if (html !== this.learnHtml) { this.learnHtml = html; $('hud-levelup').innerHTML = html; this.lvlUpAt = performance.now(); this.lvlUpOpen = !!html; }
+    if (html !== this.learnHtml) { this.learnHtml = html; $('hud-levelup').innerHTML = html; if (!html) this.lvlUpOpen = false; } // окно не всплывает само: открывается кликом по ромбу уровня
     if (this.lvlUpOpen && performance.now() - this.lvlUpAt > 15000) this.lvlUpOpen = false; // не выбрал за 15 с — сворачивается в ромб уровня
     $('hud-levelup').classList.toggle('hidden', !this.lvlUpOpen);
     $('hud-cap').classList.toggle('has-pts', pts > 0 && !this.lvlUpOpen);
@@ -456,6 +459,7 @@ export class Game {
 
   // ---------- HUD ----------
   private hud(s: Snap) {
+    if (this.slot < 0) { this.specHud(s); return; }
     const me = s.pl[this.slot];
     this.req = me[0]; this.energy = me[3] ?? 0; this.relics = me[4] ?? 0;
     const learnt = (me[8] ?? 0) & ~this.research;
@@ -639,7 +643,7 @@ export class Game {
     };
     const undead = this.fac() === 'undead';
     const tabs: [string, ReturnType<typeof card>[]][] = [
-      ['Экономика', [card('post', 'Реликварий', 'P', 'Ставится на захваченную точку: держит её и даёт +2 влияния/с.'), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своих построек.', undead ? 'Нежити не нужна' : undefined), card('pump', 'Насос', 'N', '+4 энергии/с. Только на жилу.', undead ? 'Нежити не нужен' : undefined)]],
+      ['Экономика', [card('post', 'Реликварий', 'P', 'Ставится на захваченную точку: держит её и даёт +2 влияния/с.'), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своей точки или построек.', undead ? 'Нежити не нужна' : undefined), card('pump', 'Насос', 'N', '+4 энергии/с. На жилу или у своей точки.', undead ? 'Нежити не нужен' : undefined)]],
       ['Армия', [card('barracks', 'Казарма', 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`)]],
       ['Оборона', [card('turret', 'Турель', 'Y', 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'W', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
         ...(this.fac() === 'prism' ? [card('aegis', 'Купол-эгида', 'E', 'Купол 12 м: поглощает 1200 урона, восстанавливается за 30 с, пробитый 10 с не работает.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
@@ -931,13 +935,16 @@ export class Game {
       const taken = vs.some(v => v.kind === 'post' && Math.hypot(v.x - x, v.y - y) < 2);
       return { x, y, ok: (this.pointOwner[i] === this.slot || this.pointOwner[i] < 0) && !taken };
     }
-    if (this.place === 'pump') {
-      const v = VENTS.find(([x, y]) => Math.hypot(x - g.x, y - g.y) < 6);
-      if (!v) return { ...g, ok: false };
-      return { x: v[0], y: v[1], ok: !vs.some(u => u.kind === 'pump' && Math.hypot(u.x - v[0], u.y - v[1]) < 2) };
+    if (this.place === 'pump' || this.place === 'foundry') { // на жилу (насос) или рядом со своей точкой
+      const v = this.place === 'pump' ? VENTS.find(([x, y]) => Math.hypot(x - g.x, y - g.y) < 6) : undefined;
+      const p = v ? { x: v[0], y: v[1] } : g;
+      const nearPt = [...POINTS, ...RELICS].some(([x, y], i) => this.pointOwner[i] === this.slot && Math.hypot(x - p.x, y - p.y) < 14);
+      const nearBase = this.place === 'foundry' && vs.some(u => u.owner === this.slot && isStruct(u.kind) && u.kind !== 'turret' && Math.hypot(u.x - p.x, u.y - p.y) < 16);
+      const free = !vs.some(u => isStruct(u.kind) && Math.hypot(u.x - p.x, u.y - p.y) < STATS[u.kind].radius + STATS[this.place!].radius + 1);
+      return { ...p, ok: (!!v || nearPt || nearBase) && free };
     }
     if (['mine', 'wallgate', 'bunker'].includes(this.place ?? '')) return { ...g, ok: !vs.some(v => isStruct(v.kind) && v.kind !== 'mine' && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1) };
-    if (this.place === 'turret' || this.place === 'foundry' || /^key|^gate/.test(this.place ?? '')) {
+    if (this.place === 'turret' || /^key|^gate/.test(this.place ?? '')) {
       const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16);
       const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1);
       return { ...g, ok: near && free };
@@ -967,6 +974,17 @@ export class Game {
     setTimeout(() => m.remove(), 600);
   }
 
+  /** Зритель: таблица всех игроков — фракция, очки, ресурсы, тир, армия. */
+  private specHud(s: Snap) {
+    const rows = this.players.map((p, i) => {
+      const pl = s.pl[i] ?? [], alive = pl[1], units = s.u.filter(u => u[1] === i && !isStruct(KINDS[u[2]])).length;
+      return `<div class="w2d-specrow${alive ? '' : ' out'}"><i style="background:${hex(SLOT_COLORS[i])}"></i><b>${p.name.replace(/[<>&]/g, '')}</b><span>${FACTIONS[p.faction ?? 'order'].name}</span><span>тир ${['I', 'II', 'III', 'IV', 'V'][(pl[2] ?? 1) - 1]}</span><span>◆${pl[0] ?? 0} ϟ${pl[3] ?? 0} ⌂${pl[4] ?? 0}</span><span>войск ${units}</span><span class="vp">${s.vp?.[i] ?? 0} оч.</span></div>`;
+    }).join('');
+    const html = `<div class="w2d-spechead">РЕЖИМ ПРОСМОТРА · без тумана · колесо — масштаб, стрелки — камера</div>${rows}`;
+    if ($('hud-players').innerHTML !== html) $('hud-players').innerHTML = html;
+    this.renderScore(s); this.drawMini(s); this.drawFog();
+  }
+
   /** Видит ли игрок точку: в обзоре своих войск и построек (тот же расчёт, что на сервере). */
   private inSight(x: number, y: number) {
     for (const v of this.views.values()) if (v.owner === this.slot && !v.dead && Math.hypot(v.x - x, v.y - y) < Math.max(STATS[v.kind].sight, isStruct(v.kind) ? 12 : 10)) return true;
@@ -975,6 +993,7 @@ export class Game {
 
   /** Туман войны: тёмная вуаль вне обзора — на карте и на мини-карте. */
   private drawFog() {
+    if (this.slot < 0) { this.fogCv.getContext('2d')!.clearRect(0, 0, this.fogCv.width, this.fogCv.height); this.miniFog.innerHTML = '<rect width="100" height="100" fill="#000"/>'; return; } // зритель видит всё
     const c = this.fogCv, x = c.getContext('2d')!, k = c.width / MAP.w;
     x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, c.width, c.height);
     x.fillStyle = 'rgba(6,5,9,0.72)'; x.fillRect(0, 0, c.width, c.height);
@@ -993,9 +1012,10 @@ export class Game {
 
   /** Победные очки (CapturePoint): ромбы точек по буквам, перетягивание «мы — сильнейший враг» и счёт. */
   private renderScore(s: Snap) {
-    const me = s.vp?.[this.slot] ?? 0, foe = Math.max(0, ...(s.vp ?? []).filter((_, i) => i !== this.slot && s.pl[i]?.[1]));
+    const me = s.vp?.[Math.max(0, this.slot)] ?? 0, foe = Math.max(0, ...(s.vp ?? []).filter((_, i) => i !== Math.max(0, this.slot) && s.pl[i]?.[1])); // зритель: первый игрок против сильнейшего
     const L = ['Д', 'А', 'В', 'Б', 'Г', 'Е', 'Ж'];
-    const pts = s.p.slice(0, POINTS.length).map(([o], i) => `<span class="lc-score__pt${o === this.slot ? ' lc-score__pt--ally' : o >= 0 ? ' lc-score__pt--enemy' : ''}"><span>${L[i]}</span></span>`).join('');
+    const ally = Math.max(0, this.slot); // зритель смотрит со стороны первого игрока
+    const pts = s.p.slice(0, POINTS.length).map(([o], i) => `<span class="lc-score__pt${o >= 0 && o === ally ? ' lc-score__pt--ally' : o >= 0 ? ' lc-score__pt--enemy' : ''}"><span>${L[i]}</span></span>`).join('');
     const total = Math.max(1, me + foe);
     const html = `<div class="lc-score__points">${pts}</div><div class="lc-score__tug"><i class="ally" style="width:${(me / total) * 100}%"></i><i class="enemy" style="width:${(foe / total) * 100}%"></i></div><div class="lc-score__nums"><span class="ally">${me}</span><span class="goal">победные очки · 0 — поражение</span><span class="enemy">${foe}</span></div>`;
     if (html !== this.scoreHtml) { this.scoreHtml = html; $('hud-score').innerHTML = html; }

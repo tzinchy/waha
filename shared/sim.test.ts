@@ -209,20 +209,20 @@ test('укрепления: стена строится по сегментам 
   const s = newState(2);
   const b = unit(s, 0, 'builder');
   s.players[0].req = 2000;
-  assert.equal(applyCmd(s, 0, { c: 'wall', ids: [b.id], x1: 30, y1: 20, x2: 30, y2: 32 }), undefined);
+  assert.equal(applyCmd(s, 0, { c: 'wall', ids: [b.id], x1: 70, y1: 50, x2: 70, y2: 62 }), undefined);
   const walls = s.units.filter(u => u.kind === 'wall');
   assert.ok(walls.length >= 5, 'сегменты заложены');
   run(s, 45);
   assert.ok(walls.every(w => w.build === 1), 'строитель обошёл все сегменты');
   const cap = unit(s, 0, 'captain');
-  [cap.x, cap.y] = [26, 26];
-  applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 36, y: 26 });
+  [cap.x, cap.y] = [66, 56];
+  applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 76, y: 56 });
   run(s, 3);
-  assert.ok(cap.x < 30, 'стена не пропускает');
-  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'mine', x: 40, y: 40 }), undefined);
-  run(s, 15);
+  assert.ok(cap.x < 70, 'стена не пропускает');
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'mine', x: 58, y: 76 }), undefined);
+  run(s, 15); // по эту сторону стены: обхода препятствий у юнитов нет
   const enemy = unit(s, 1, 'captain'), hp = enemy.hp;
-  [enemy.x, enemy.y] = [40, 41];
+  [enemy.x, enemy.y] = [58, 77];
   run(s, 0.2);
   assert.ok(enemy.hp <= hp - 170, 'мина сработала');
   assert.ok(!s.units.some(u => u.kind === 'mine'), 'мина исчезла');

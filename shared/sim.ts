@@ -604,15 +604,16 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
       if (pt.owner >= 0 && pt.owner !== owner) return 'Точка занята врагом';
       ({ x, y } = pt);
       if (s.units.some(u => u.kind === 'post' && u.hp > 0 && dist(u, pt) < 2)) return 'На точке уже есть пост';
-    } else if (cmd.kind === 'pump') {
-      const v = VENTS.map(([vx, vy]) => ({ x: vx, y: vy })).filter(q => dist(q, { x, y }) < 6).sort((a, b) => dist(a, { x, y }) - dist(b, { x, y }))[0];
-      if (!v) return 'Насос ставится на жилу';
-      ({ x, y } = v);
+    } else if (cmd.kind === 'pump' || cmd.kind === 'foundry') { // генераторы: на жилу или рядом со своей точкой (как в DoW)
+      const v = cmd.kind === 'pump' ? VENTS.map(([vx, vy]) => ({ x: vx, y: vy })).filter(q => dist(q, { x, y }) < 6).sort((a, b) => dist(a, { x, y }) - dist(b, { x, y }))[0] : undefined;
+      if (v) ({ x, y } = v);
+      else if (!nearOwnPoint(s, owner, x, y) && !(cmd.kind === 'foundry' && s.units.some(u => u.owner === owner && isStruct(u.kind) && u.kind !== 'turret' && u.hp > 0 && dist(u, { x, y }) < 16)))
+        return cmd.kind === 'pump' ? 'Генератор ставится на жилу или рядом со своей точкой' : 'Литейня ставится рядом со своей точкой или постройками';
     } else if (cmd.kind === 'mine' || cmd.kind === 'wallgate' || cmd.kind === 'bunker' || cmd.kind === 'wall') { // укрепления: своя или нейтральная земля
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) return 'Слишком близко к чужому штабу';
     } else if (/turret$/.test(cmd.kind) && p.faction === 'orks') { // Орда ставит турели где угодно, кроме 20 м у чужого штаба
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) return 'Слишком близко к чужому штабу';
-    } else if (cmd.kind === 'turret' || cmd.kind === 'aegis' || cmd.kind === 'foundry' || /^key|^gate/.test(cmd.kind)) {
+    } else if (cmd.kind === 'turret' || cmd.kind === 'aegis' || /^key|^gate/.test(cmd.kind)) {
       if (/^key|^gate/.test(cmd.kind) && s.units.some(u => u.owner === owner && u.kind === cmd.kind && u.hp > 0)) return 'Ключевое здание уже есть';
       if (!s.units.some(u => u.owner === owner && isStruct(u.kind) && u.kind !== 'turret' && u.hp > 0 && dist(u, { x, y }) < 16)) return 'Турель ставится рядом с вашим штабом, казармами или постом';
     } else {
@@ -716,6 +717,9 @@ export function step(s: State, dt = DT): void {
   cleanup(s);
 }
 
+/** Рядом со своей захваченной точкой (стратегической или реликварием): там можно ставить генераторы. */
+export const GEN_R = 14;
+export const nearOwnPoint = (s: State, owner: number, x: number, y: number) => s.points.some(p => p.owner === owner && dist(p, { x, y }) < GEN_R);
 const postAt = (s: State, pt: { x: number; y: number }) => s.units.find(u => u.kind === 'post' && u.build >= 1 && u.hp > 0 && dist(u, pt) < 2);
 
 function produce(s: State, b: Unit, dt: number) {

@@ -102,9 +102,9 @@ function startGame(slot: number, players: LobbyPlayer[]) {
   $('result').classList.add('hidden');
   show('game');
   ready2d.then(() => { game = new Game($('view'), slot, players, cmd => tx({ t: 'cmd', cmd }), winner => {
-    $('result-title').textContent = winner === slot ? 'Победа' : winner < 0 ? 'Ничья' : `Победил ${esc(players[winner].name)}`;
+    $('result-title').textContent = slot < 0 ? (winner < 0 ? 'Ничья' : `Победил ${esc(players[winner].name)}`) : winner === slot ? 'Победа' : winner < 0 ? 'Ничья' : `Победил ${esc(players[winner].name)}`;
     $('result').classList.remove('hidden');
-    if (winner === slot) audio.win(); else audio.lose();
+    if (winner === slot || slot < 0) audio.win(); else audio.lose();
   }); });
 }
 $('result-back').onclick = () => {
@@ -144,9 +144,11 @@ function renderLobby() {
     <span class="dot" style="background:${hex(p.captain.armor)}"></span>
     <span class="name">${esc(p.name)}<br><small class="tag">${FACTIONS[p.faction]?.name ?? ''}</small></span>
     ${p.id === lobby!.host ? '<span class="tag">хост</span>' : ''}
-    <span class="tag ${p.ready ? 'ready' : ''}">${p.bot ? 'бот' : p.ready ? 'готов' : 'не готов'}</span>
+    <span class="tag ${p.ready ? 'ready' : ''}">${p.spec ? 'зритель' : p.bot ? 'бот' : p.ready ? 'готов' : 'не готов'}</span>
     ${host && p.id !== lobby!.you ? `<button data-kick="${p.id}">✕</button>` : ''}</li>`).join('');
   $('plist').querySelectorAll<HTMLElement>('[data-kick]').forEach(b => { b.onclick = () => tx({ t: 'kick', id: b.dataset.kick! }); });
+  $('ready').classList.toggle('hidden', !!me.spec);
+  $('spec').textContent = me.spec ? 'Играть' : 'Зритель';
   $('ready').textContent = me.ready ? 'Не готов' : 'Готов';
   $('ready').classList.toggle('lc-btn--ghost', !me.ready);
   $('addbot').classList.toggle('hidden', !host);
@@ -154,6 +156,7 @@ function renderLobby() {
 }
 $('ready').onclick = () => { const me = lobby?.players.find(p => p.id === lobby!.you); if (me) tx({ t: 'ready', ready: !me.ready }); };
 $('addbot').onclick = () => tx({ t: 'bot' });
+$('spec').onclick = () => { const me = lobby?.players.find(p => p.id === lobby!.you); tx({ t: 'spec', on: !me?.spec }); };
 $('start').onclick = () => tx({ t: 'start' });
 $('leave').onclick = () => tx({ t: 'leave' });
 $('copy').onclick = () => {
