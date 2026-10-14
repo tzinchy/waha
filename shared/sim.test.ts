@@ -227,6 +227,44 @@ test('укрепления: стена строится по сегментам 
   assert.ok(!s.units.some(u => u.kind === 'mine'), 'мина исчезла');
 });
 
+test('сетка построек: стена встаёт на любой свободной земле, клетка за клеткой без дыр', () => {
+  const s = newState(2), b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq'), foe = unit(s, 1, 'hq');
+  s.players[0].req = 1e6;
+  for (let x = 6; x < 400; x += 22) for (let y = 6; y < 400; y += 22) {
+    const far = (q: { x: number; y: number }, d: number) => Math.hypot(q.x - x, q.y - y) > d;
+    if (far({ x: POINTS[0][0], y: POINTS[0][1] }, 14) && far(foe, 22) && far(hq, 8)) assert.equal(applyCmd(s, 0, { c: 'wall', ids: [b.id], x1: x, y1: y, x2: x + 3, y2: y }), undefined, `${x},${y}`);
+  }
+  assert.ok(s.units.filter(u => u.kind === 'wall').every(w => w.x % BCELL === 1 && w.y % BCELL === 1), 'сегменты по центрам клеток');
+  const cells = wallCells(101, 301, 120, 290); // косая протяжка: соседние клетки — по стороне
+  assert.ok(cells.length <= 16 && cells.every((c, i) => !i || Math.abs(c.x - cells[i - 1].x) + Math.abs(c.y - cells[i - 1].y) === BCELL), 'без диагональных дыр');
+  assert.match(applyCmd(s, 0, { c: 'wall', ids: [b.id], x1: POINTS[0][0], y1: POINTS[0][1], x2: POINTS[0][0] + 4, y2: POINTS[0][1] }) ?? '', /нельзя/, 'не у критической точки');
+  assert.match(applyCmd(s, 0, { c: 'wall', ids: [b.id], x1: foe.x + 10, y1: foe.y, x2: foe.x + 12, y2: foe.y }) ?? '', /нельзя/, 'не у чужого штаба');
+  setMap(1);
+  try {
+    const r = newState(2), rb = unit(r, 0, 'builder'); r.players[0].req = 1e4;
+    assert.match(applyCmd(r, 0, { c: 'wall', ids: [rb.id], x1: 156, y1: 156, x2: 160, y2: 156 }) ?? '', /нельзя/, 'не на скалах');
+  } finally { setMap(0); }
+});
+
+test('сетка построек: здание привязано к клеткам, занятость по квадратным следам, юниты обходят', () => {
+  const s = newState(2), b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq');
+  s.players[0].req = 1e4;
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: hq.x + 13.3, y: hq.y + 0.7 }), undefined);
+  const bar = unit(s, 0, 'barracks'), f = footRect('barracks', bar.x, bar.y);
+  assert.deepEqual([bar.x, bar.y], [(f.x0 + f.n / 2) * BCELL, (f.y0 + f.n / 2) * BCELL], 'центр на сетке');
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: bar.x, y: bar.y + (f.n - 1) * BCELL }), 'Место занято', 'следы пересекаются');
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: bar.x, y: bar.y + f.n * BCELL }), undefined, 'вплотную по клеткам можно');
+  const cap = unit(s, 0, 'captain'), w = spawn(s, 0, 'barracks', 200, 120), g = footRect('barracks', w.x, w.y);
+  [cap.x, cap.y] = [w.x - 12, w.y];
+  applyCmd(s, 0, { c: 'move', ids: [cap.id], x: w.x + 12, y: w.y });
+  for (let i = 0; i < 6 / DT; i++) {
+    step(s);
+    const inside = cap.x > g.x0 * BCELL && cap.x < (g.x0 + g.n) * BCELL && cap.y > g.y0 * BCELL && cap.y < (g.y0 + g.n) * BCELL;
+    assert.ok(!inside, 'не проходит сквозь здание');
+  }
+  assert.ok(Math.hypot(cap.x - (w.x + 12), cap.y - w.y) < 1, 'обошёл и дошёл');
+});
+
 test('прокачка точки: столп → укреплённый → бастион, центр не укрепить', () => {
   const s = newState(2);
   const p = s.players[0], b = unit(s, 0, 'builder');
@@ -449,13 +487,8 @@ test('Династии: только энергия (доход с точек и
   assert.equal(p.alive, false);
 });
 
-<<<<<<< HEAD
 test('сверхоружие и мегапостройки: сначала дорогое открытие, стройка видна всем, удар у каждой фракции свой', () => {
   const s = newState(2, ['order', 'ashen']);
-=======
-test('сверхоружие и мегапостройки: открытия в штабе, стройка видна всем, удар у каждой фракции свой и только по врагам', () => {
-  const s = newState(2, ['order', 'undead']);
->>>>>>> 4a8620c (feat: superweapon researched and fired from the HQ: no separate doom building; megabuildings unlock also moved to the HQ; strike hits only enemies, warning circle matches each faction's blast radius)
   const p = s.players[0], hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
   p.req = 1e5; p.energy = 1e5; p.relics = 50; p.tier = 5;
   const spot = { x: hq.x + 14, y: hq.y + 4 };
@@ -478,21 +511,8 @@ test('сверхоружие и мегапостройки: открытия в 
   assert.equal(snapshotFor(s, 1).ss.length, 1, 'враг видит предупреждение');
   run(s, 7);
   assert.ok(foe.hp < hp - 2000, 'копьё Длани Лампы');
-<<<<<<< HEAD
   doom.prog = 180; p.energy = 0; p.req = 0;
   assert.match(applyCmd(s, 0, { c: 'strike', id: doom.id, x: foe.x, y: foe.y }) ?? '', /./, 'пуск стоит энергии');
-=======
-  p.doom = 180; const own = hq.hp;
-  assert.equal(applyCmd(s, 0, { c: 'strike', x: hq.x, y: hq.y }), undefined); run(s, 7);
-  assert.equal(hq.hp, own, 'своих не задевает');
-  p.doom = 180; p.energy = 0; p.req = 0;
-  assert.match(applyCmd(s, 0, { c: 'strike', x: foe.x, y: foe.y }) ?? '', /./, 'пуск стоит энергии');
-  // Нежить: чумное облако
-  const u = s.players[1]; u.unlock = 2; u.doom = 180; u.req = 1e4; u.energy = 1e4;
-  const g = spawn(s, 0, 'guard', 200, 200), gh = g.hp;
-  applyCmd(s, 1, { c: 'strike', x: 200, y: 200 }); run(s, 6.5); const after = g.hp; run(s, 5);
-  assert.ok(g.hp < after || !s.units.includes(g), 'облако губит со временем'); assert.ok(after < gh);
->>>>>>> 4a8620c (feat: superweapon researched and fired from the HQ: no separate doom building; megabuildings unlock also moved to the HQ; strike hits only enemies, warning circle matches each faction's blast radius)
 });
 
 test('цена: Династии платят всё энергией, остальные — влиянием и энергией', () => {
