@@ -472,32 +472,39 @@ test('Династии: только энергия (доход с точек и
   assert.equal(p.alive, false);
 });
 
-test('сверхоружие и мегапостройки: сначала дорогое открытие, стройка видна всем, удар у каждой фракции свой', () => {
+test('сверхоружие и мегапостройки: открытия в штабе, стройка видна всем, удар у каждой фракции свой и только по врагам', () => {
   const s = newState(2, ['order', 'undead']);
   const p = s.players[0], hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
   p.req = 1e5; p.energy = 1e5; p.relics = 50; p.tier = 5;
   const spot = { x: hq.x + 14, y: hq.y + 4 };
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'lighthouse', ...spot }) ?? '', /Мегапостройки/);
-  const k4 = spawn(s, 0, 'key4', hq.x - 2, hq.y + 16);
-  assert.equal(applyCmd(s, 0, { c: 'unlock', id: k4.id, u: 0 }), undefined);
+  assert.equal(applyCmd(s, 0, { c: 'unlock', id: hq.id, u: 0 }), undefined);
+  assert.match(applyCmd(s, 0, { c: 'unlock', id: hq.id, u: 1 }) ?? '', /исследует/, 'по одному открытию');
+  assert.match(applyCmd(s, 0, { c: 'train', id: hq.id }) ?? '', /исследует/, 'штаб не нанимает во время открытия');
   run(s, 91);
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'lighthouse', ...spot }), undefined);
   assert.ok(snapshotFor(s, 1).mg.some(r => KINDS[r[3]] === 'lighthouse'), 'враг видит стройку маяка');
-  // удар Ордена
-  const doom = spawn(s, 0, 'doom', hq.x + 20, hq.y + 20);
-  assert.match(applyCmd(s, 0, { c: 'strike', id: doom.id, x: 200, y: 200 }) ?? '', /Заряд/);
-  doom.prog = 180;
+  // сверхоружие: открытие в штабе, затем заряд и удар самим штабом
+  assert.equal(applyCmd(s, 0, { c: 'strike', x: 200, y: 200 }), undefined, 'без открытия — молча нельзя');
+  assert.equal(applyCmd(s, 0, { c: 'unlock', id: hq.id, u: 1 }), undefined);
+  run(s, 121);
+  assert.ok(p.unlock & 2);
+  assert.match(applyCmd(s, 0, { c: 'strike', x: 200, y: 200 }) ?? '', /Заряд/);
+  p.doom = 180;
   const foe = unit(s, 1, 'hq'), hp = foe.hp;
-  assert.equal(applyCmd(s, 0, { c: 'strike', id: doom.id, x: foe.x, y: foe.y }), undefined);
+  assert.equal(applyCmd(s, 0, { c: 'strike', x: foe.x, y: foe.y }), undefined);
   assert.equal(snapshotFor(s, 1).ss.length, 1, 'враг видит предупреждение');
   run(s, 7);
   assert.ok(foe.hp < hp - 2000, 'копьё Длани Лампы');
-  doom.prog = 180; p.energy = 0; p.req = 0;
-  assert.match(applyCmd(s, 0, { c: 'strike', id: doom.id, x: foe.x, y: foe.y }) ?? '', /./, 'пуск стоит энергии');
+  p.doom = 180; const own = hq.hp;
+  assert.equal(applyCmd(s, 0, { c: 'strike', x: hq.x, y: hq.y }), undefined); run(s, 7);
+  assert.equal(hq.hp, own, 'своих не задевает');
+  p.doom = 180; p.energy = 0; p.req = 0;
+  assert.match(applyCmd(s, 0, { c: 'strike', x: foe.x, y: foe.y }) ?? '', /./, 'пуск стоит энергии');
   // Нежить: чумное облако
-  const u = s.players[1]; u.tier = 5; u.req = 1e4; u.energy = 1e4; const d2 = spawn(s, 1, 'doom', 300, 300); d2.prog = 180;
+  const u = s.players[1]; u.unlock = 2; u.doom = 180; u.req = 1e4; u.energy = 1e4;
   const g = spawn(s, 0, 'guard', 200, 200), gh = g.hp;
-  applyCmd(s, 1, { c: 'strike', id: d2.id, x: 200, y: 200 }); run(s, 6.5); const after = g.hp; run(s, 5);
+  applyCmd(s, 1, { c: 'strike', x: 200, y: 200 }); run(s, 6.5); const after = g.hp; run(s, 5);
   assert.ok(g.hp < after || !s.units.includes(g), 'облако губит со временем'); assert.ok(after < gh);
 });
 
