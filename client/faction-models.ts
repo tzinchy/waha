@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-export type FactionId = 'legion' | 'heretics' | 'scrap' | 'necrons';
+export type FactionId = 'legion' | 'heretics' | 'scrap' | 'necrons' | 'drukhari' | 'daemons';
 export const UNIT_ROLES = ['captain','guard','builder','sniper','heavy','flamer','elite','medic','transport','tank','walker','artillery','titan'] as const;
 export type UnitRole = typeof UNIT_ROLES[number];
 export const VEHICLE_ROLES = new Set<UnitRole>(['transport','tank','walker','artillery','titan']);
@@ -14,6 +14,8 @@ export const FACTION_ART: Record<FactionId, { name: string; subtitle: string; pr
   heretics: { name: 'Хаос', subtitle: 'Пепельный культ', primary: 0x79272d, trim: 0xae8551, metal: 0x242129, cloth: 0x482131, glow: 0xf07835, skin: 0x776059 },
   scrap: { name: 'Орки', subtitle: 'Железные кланы', primary: 0x935045, trim: 0xac9764, metal: 0x4c504e, cloth: 0x49332d, glow: 0xd5a455, skin: 0x657d43 },
   necrons: { name: 'Некроны', subtitle: 'Пробуждённые династии', primary: 0x394844, trim: 0xa18b54, metal: 0x606b68, cloth: 0x27362c, glow: 0x78ee51, skin: 0x737d76 },
+  drukhari: { name: 'Тёмные Эльдар', subtitle: 'Налётчики Комморры', primary: 0x261d3c, trim: 0xa15cba, metal: 0x414454, cloth: 0x28192f, glow: 0x59e8d0, skin: 0xa2a2ba },
+  daemons: { name: 'Демоны Хаоса', subtitle: 'Варп-легионы Апокалипсиса', primary: 0x8d223c, trim: 0xe6a74e, metal: 0x352139, cloth: 0x5c214a, glow: 0xff5a23, skin: 0xa43b56 },
 };
 export const ROLE_MOTIONS: Record<UnitRole, Motion[]> = {
   captain: ['idle', 'walk', 'run', 'attack', 'death'],
