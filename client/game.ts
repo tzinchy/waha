@@ -102,6 +102,9 @@ export class Game {
   private tier = 1;
   private snapN = 0;
   private lastAlert = 0;
+  private grenadeTargeting = false;
+  private lastBlastKey = '';
+  private alertMarkers: { el: HTMLButtonElement; x: number; z: number; until: number }[] = [];
   private pointOwner: number[] = [];
   private cmdHtml = '';
   private raf = 0;
@@ -126,6 +129,9 @@ export class Game {
     r.shadowMap.enabled = true;
     r.toneMapping = THREE.ACESFilmicToneMapping;
     root.prepend(r.domElement);
+    const style = document.createElement('style');
+    style.textContent = '.waha-alert{position:absolute;z-index:30;border:2px solid #ff704e;border-radius:50%;background:#ff503022;color:#ffe2cc;box-shadow:0 0 16px #ff5030;min-width:44px;min-height:44px;cursor:pointer;animation:waha-ping 1s ease-in-out infinite alternate}@keyframes waha-ping{to{transform:scale(1.3);box-shadow:0 0 28px #ff5030}}';
+    root.append(style);
     this.camera.layers.enableAll();
     this.pass = new AsciiPass(r, 7, 12);
     this.composer = new EffectComposer(r);
@@ -156,6 +162,7 @@ export class Game {
 
   destroy() {
     audio.setBattle(false);
+    for (const a of this.alertMarkers) a.el.remove();
     cancelAnimationFrame(this.raf);
     this.ac.abort();
     this.renderer.dispose();
@@ -307,7 +314,7 @@ export class Game {
       } else if (owner === this.slot) { // события своих юнитов: стройка завершена, капитан пал, нас бьют
         if (v.build < 1 && bp >= 100) audio.built();
         if (kind === 'captain' && v.hp > 0 && hp <= 0) audio.alarm();
-        else if (hp < v.hp && now - this.lastAlert > 8000) { this.lastAlert = now; audio.alarm(); }
+        else if (hp < v.hp && now - this.lastAlert > 5000) { this.lastAlert = now; audio.alarm(); this.addAttackAlert(v.tx, v.tz); }
       }
       v.tx = x / 10; v.tz = y / 10; v.tf = face / 100; v.hp = hp; v.q = q; v.build = bp / 100; v.dead = hp <= 0; v.lvl = lvl; v.upg = upg;
       if (kind === 'hq' && owner === this.slot && !this.centered) {
@@ -351,8 +358,25 @@ export class Game {
     audio.heat(Math.min(0.4, s.sh.length * 0.02));
     const until = performance.now() + 130;
     for (const [x1, y1, x2, y2] of s.sh) this.shots.push({ a: new THREE.Vector3(x1 / 10, 1.4, y1 / 10), b: new THREE.Vector3(x2 / 10, 1.4, y2 / 10), until });
+    const newest = (s.blasts ?? []).find(b => b[2] < 10);
+    if (newest) {
+      const key = newest.join(':');
+      if (key !== this.lastBlastKey) {
+        this.lastBlastKey = key;
+        if (newest[3] <= 50) audio.grenadeImpact(this.audioAt(newest[0] / 10, newest[1] / 10)?.pan ?? 0);
+        else audio.boom(this.audioAt(newest[0] / 10, newest[1] / 10)?.pan ?? 0);
+      }
+    }
     this.hud(s);
     if (s.w !== null && !this.ended) { this.ended = true; this.onEnd(s.w); }
+  }
+
+  private addAttackAlert(x: number, z: number) {
+    const el = document.createElement('button');
+    el.className = 'waha-alert'; el.textContent = '!'; el.title = 'Наши войска атакованы — перейти к месту';
+    el.onclick = () => { this.cam.x = x; this.cam.z = z; };
+    this.root.append(el);
+    this.alertMarkers.push({ el, x, z, until: performance.now() + 7500 });
   }
 
   // ---------- HUD ----------
@@ -464,7 +488,10 @@ export class Game {
       if (e.target instanceof HTMLInputElement) return;
       const k = e.key.toLowerCase();
       this.keys.add(k);
-      if (k === 'a') { this.amove = true; this.place = null; this.ghost.visible = false; cv.style.cursor = 'crosshair'; }
+      if (k === 'h' && this.selected().some(v => v.kind === 'captain' || v.kind === 'guard')) {
+        this.grenadeTargeting = true; cv.style.cursor = 'crosshair';
+      }
+      else if (k === 'a') { this.amove = true; this.place = null; this.ghost.visible = false; cv.style.cursor = 'crosshair'; }
       else if (k === 't') this.doAct('train');
       else if (k === 'b') this.doAct('barracks');
       else if (k === 'p') this.doAct('post');
@@ -517,6 +544,13 @@ export class Game {
   private ownStruct = (v: View) => v.owner === this.slot && isStruct(v.kind);
 
   private click(sx: number, sy: number, add: boolean) {
+    if (this.grenadeTargeting) {
+      this.grenadeTargeting = false; this.renderer.domElement.style.cursor = '';
+      const p = this.groundAt(sx, sy);
+      const unit = this.selected().find(v => v.kind === 'captain' || v.kind === 'guard');
+      if (p && unit) { this.cmd({ c: 'grenade', id: unit.id, x: p.x, y: p.z }); audio.grenadeThrow(this.audioAt(unit.x, unit.z)?.pan ?? 0); }
+      return;
+    }
     if (this.place) { // установка постройки; при неверном месте остаёмся в режиме, сервер подскажет причину
       const sp = this.placePoint(sx, sy), ids = this.selected().filter(v => v.kind === 'builder').map(v => v.id);
       if (sp && ids.length) this.cmd({ c: 'build', ids, kind: this.place, x: sp.p.x, y: sp.p.z });
@@ -586,6 +620,13 @@ export class Game {
   private frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
     const dt = Math.min(0.05, (now - this.t0) / 1000);
+    this.alertMarkers = this.alertMarkers.filter(a => {
+      if (now >= a.until) { a.el.remove(); return false; }
+      const p = this.toScreen({ x: a.x, z: a.z } as View);
+      a.el.style.display = p.ok ? '' : 'none';
+      a.el.style.left = (p.x - 22) + 'px'; a.el.style.top = (p.y - 22) + 'px';
+      return true;
+    });
     this.t0 = now;
     const c = this.cam, k = this.keys, sp = c.dist * 0.9 * dt;
     const fx = -Math.sin(c.yaw), fz = -Math.cos(c.yaw), rx = Math.cos(c.yaw), rz = -Math.sin(c.yaw);
