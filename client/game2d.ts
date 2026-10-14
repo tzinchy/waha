@@ -106,6 +106,8 @@ export const setAnim = (svg: SVGElement, a: string) => {
  *  Кадр 128 px ≈ 5 м, т. е. ≈ S; рисуем с целым увеличением PX_SCALE и без сглаживания. */
 type PxRole = 'captain' | 'guard' | 'builder';
 const PX_SCALE = 2, PX_CELL = 128, PX_ANCHOR = [64, 87] as const;
+/** Верх фигуры в ячейке (idle, минимум по пакетам) — полоса здоровья ставится над ним. */
+const PX_TOP: Record<PxRole, number> = { captain: 33, guard: 43, builder: 49 };
 const PX_DUR: Record<string, number> = { idle: 2, walk: 1, run: 0.65, attack: 0.7, shoot: 0.45, work: 1.1, death: 1.1 };
 export const isPx = (k: Kind): boolean => k === 'captain' || k === 'guard' || k === 'builder';
 const pxUrl = (f: FactionId, role: PxRole, anim: string) => `/models/factions/${PACK[f]}/${role}/sprites/${anim}.png`;
@@ -324,6 +326,7 @@ export class Game {
     const bar = document.createElement('div'); bar.className = 'lc-vitals w2d-bar';
     const fg = document.createElement('div'); fg.className = 'lc-vitals__bar'; bar.append(fg);
     bar.style.width = Math.max(40, Math.min(widthOf(kind, pl.faction ?? 'order'), 9) * S * (isStruct(kind) ? 0.7 : 1)) + 'px';
+    if (isPx(kind)) bar.style.top = -((PX_ANCHOR[1] - PX_TOP[kind as PxRole]) * PX_SCALE + 10) + 'px'; // над макушкой атласа, по центру опорной точки
     if (kind === 'titan') { bar.style.bottom = widthOf(kind, pl.faction ?? 'order') * 1.36 * S + 'px'; el.classList.add('titan'); } // полоса над головой титана
     el.append(ring, sel, body, bar);
     this.place2(el, x, y);
