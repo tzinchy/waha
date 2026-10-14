@@ -30,6 +30,7 @@ function getSheet(path: string) {
 export const PLAYER_FACTIONS: FactionId[] = ['legion', 'scrap', 'heretics', 'necrons', 'drukhari', 'daemons'];
 export class SpriteActor {
   readonly sprite: THREE.Sprite;
+  readonly squad: THREE.Sprite[] = [];
   readonly ready: Promise<boolean>;
   private action: SpriteAction = 'idle';
   private time = 0;
@@ -47,6 +48,16 @@ export class SpriteActor {
     this.sprite.position.y = height * 0.5;
     this.sprite.visible = false;
     root.add(this.sprite);
+    this.squad.push(this.sprite);
+    const positions = role === 'guard' ? [[0.9,0],[-0.4,-1.5],[-0.4,1.5],[-1.8,-0.7],[-1.8,0.9]] :
+      role === 'builder' ? [[0,-0.9],[0,0.9]] : [[0,0]];
+    for (let i=0;i<positions.length;i++) {
+      const unit = i===0 ? this.sprite : new THREE.Sprite(this.material);
+      const [x,z] = positions[i];
+      unit.position.set(x, height*0.5, z);
+      unit.visible=false;
+      if (i>0) { this.squad.push(unit); root.add(unit); }
+    }
     this.ready = this.load('idle');
   }
 
@@ -56,7 +67,7 @@ export class SpriteActor {
     this.images.set(action, t);
     if (action === this.action || this.fallback) this.apply(t);
     this.fallback = false;
-    this.sprite.visible = true;
+    for (const member of this.squad) member.visible = true;
     return true;
   }
   private apply(texture: THREE.Texture) {
@@ -88,8 +99,8 @@ export class SpriteActor {
     const frame = Math.min(7, Math.floor(((this.time % durations[this.action]) / durations[this.action]) * 8));
     const map = this.material.map;
     if (map) map.offset.set(frame / 8, 1 - (this.direction + 1) / 8);
-    this.sprite.visible = alive || this.action === 'death';
+    for (const member of this.squad) member.visible = alive || this.action === 'death';
   }
   get active() { return !this.fallback; }
-  dispose() { this.material.map?.dispose(); this.material.dispose(); this.root.remove(this.sprite); }
+  dispose() { this.material.map?.dispose(); this.material.dispose(); for (const member of this.squad) this.root.remove(member); }
 }
