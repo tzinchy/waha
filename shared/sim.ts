@@ -3,7 +3,7 @@ export const MAP = { w: 100, h: 100 };
 export const DT = 1 / 20;
 
 export type Weapon = 'sword' | 'hammer';
-export type CaptainCfg = { armor: number; trim: number; weapon: Weapon; banner: boolean };
+export type CaptainCfg = { armor: number; trim: number; weapon: Weapon; banner: boolean; faction?: 'legion' | 'heretics' | 'scrap' | 'necrons' | 'drukhari' | 'daemons' };
 export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' | 'turret';
 export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret'];
 export const isStruct = (k: Kind) => k === 'hq' || k === 'barracks' || k === 'post' || k === 'turret';
