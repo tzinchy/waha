@@ -295,9 +295,12 @@ test('армия по ролям: найм по тиру, Легион, урон
   for (const k of ['sniper', 'heavy', 'support', 'elite', 'healer'] as const) assert.equal(applyCmd(s, 0, { c: 'train', id: bar.id, k }), undefined, k);
   run(s, 70);
   for (const k of ['sniper', 'heavy', 'support', 'elite', 'healer'] as const) assert.ok(s.units.some(u => u.owner === 0 && u.kind === k), k + ' нанят');
-  // Легион: титан занимает 20, второго не дадут
-  assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }), undefined);
-  assert.match(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }) ?? '', /один|Легион/);
+  // Легион: титан занимает 20, второго не дадут; строится только на верфи
+  const yard = spawn(s, 0, 'yard', hq.x - 20, hq.y);
+  assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }), undefined); // штаб титана не строит: заказ подменяется на строителя
+  assert.ok(!hq.que.includes('titan'));
+  assert.equal(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }), undefined);
+  assert.match(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }) ?? '', /один|Легион/);
   // снайпер почти не царапает технику, тяжёлое оружие — сильно
   const veh = spawn(s, 1, 'mveh', 80, 80), sn = unit(s, 0, 'sniper'), hv = unit(s, 0, 'heavy');
   [sn.x, sn.y] = [80, 66]; const hp0 = veh.hp; sn.order = { t: 'attack', id: veh.id }; hv.x = -50;
@@ -527,9 +530,9 @@ test('захват точки длится 12 секунд, отсутствие
 });
 
 for (const faction of ['order', 'undead', 'prism', 'clockwork', 'orks', 'ashen'] as const) {
-  test(`техника ${faction}: три пресета нанимаются в кузне на III тире`, () => {
+  test(`техника ${faction}: три пресета нанимаются в техцехе на III тире`, () => {
     const s = newState(2, [faction, 'order']), p = s.players[0], hq = unit(s, 0, 'hq');
-    const factory = spawn(s, 0, 'key2', hq.x + 12, hq.y);
+    const factory = spawn(s, 0, 'motorpool', hq.x + 14, hq.y);
     p.req = 1e5; p.energy = 1e5; p.tier = 2;
     for (const k of ['lveh', 'mveh', 'hveh'] as const) assert.match(applyCmd(s, 0, { c: 'train', id: factory.id, k }) ?? '', /тир 3/);
     assert.equal(factory.que.length, 0);
@@ -541,7 +544,8 @@ for (const faction of ['order', 'undead', 'prism', 'clockwork', 'orks', 'ashen']
 }
 
 test('титан требует полную цену каждого ресурса; второй не нанимается', () => {
-  const s = newState(2), p = s.players[0], hq = unit(s, 0, 'hq'); p.tier = 4;
+  const s = newState(2), p = s.players[0], hq0 = unit(s, 0, 'hq'); p.tier = 4;
+  const hq = spawn(s, 0, 'yard', hq0.x - 20, hq0.y); // верфь титана
   const cost = STATS.titan.cost, energyCost = ROLES.titan!.energy!, relicCost = ROLES.titan!.relics!;
   assert.ok(cost >= 1500 && energyCost >= 2500 && relicCost >= 10, 'титан — дорогой юнит поздней игры');
   for (const [req, energy, relics, missing] of [[cost - 1, energyCost, relicCost, 'влияния'], [cost, energyCost - 1, relicCost, 'энергии'], [cost, energyCost, relicCost - 1, 'реликвий']] as const) {
@@ -557,24 +561,17 @@ test('титан требует полную цену каждого ресур�
   assert.match(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }) ?? '', /один/);
 });
 
-test('производство техники и исследования в одном здании не подменяют друг друга', () => {
+test('техника — в техцехе, исследования — в ключевом здании: одно другому не мешает', () => {
   const s = newState(2), p = s.players[0], hq = unit(s, 0, 'hq');
-  const factory = spawn(s, 0, 'key2', hq.x + 12, hq.y);
+  const key = spawn(s, 0, 'key2', hq.x + 12, hq.y), pool = spawn(s, 0, 'motorpool', hq.x - 14, hq.y);
   Object.assign(p, { tier: 3, req: 1e5, energy: 1e5 });
-  assert.equal(applyCmd(s, 0, { c: 'train', id: factory.id, k: 'lveh' }), undefined);
-  assert.match(applyCmd(s, 0, { c: 'research', id: factory.id, r: 0 }) ?? '', /нанимает/);
-  run(s, 13);
-  assert.equal(p.research, 0, 'очередь не запускает случайное исследование');
-  assert.ok(!s.units.some(u => u.owner === 0 && u.kind === 'lveh'));
-  run(s, 1 + DT);
+  assert.equal(applyCmd(s, 0, { c: 'train', id: pool.id, k: 'lveh' }), undefined);
+  assert.equal(applyCmd(s, 0, { c: 'research', id: key.id, r: 0 }), undefined);
+  assert.equal(key.que.length, 0, 'ключевое здание технику не строит');
+  run(s, STATS.lveh.time + 1);
   assert.ok(s.units.some(u => u.owner === 0 && u.kind === 'lveh'));
-  assert.equal(applyCmd(s, 0, { c: 'research', id: factory.id, r: 0 }), undefined);
-  const before = [p.req, p.energy];
-  assert.match(applyCmd(s, 0, { c: 'train', id: factory.id, k: 'mveh' }) ?? '', /исследует/);
-  assert.deepEqual([p.req, p.energy], before);
-  run(s, 20 + DT);
+  run(s, 20);
   assert.ok(p.research & (1 << 4));
-  assert.equal(applyCmd(s, 0, { c: 'train', id: factory.id, k: 'mveh' }), undefined);
 });
 
 test('Адская мортира: зажигательный снаряд оставляет пожар, он жжёт и здания', () => {

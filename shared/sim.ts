@@ -10,11 +10,11 @@ export type Arch = 'assault' | 'commander' | 'mystic';
 export const ARCHS: Arch[] = ['assault', 'commander', 'mystic'];
 export type CaptainCfg = { armor: number; trim: number; arch: Arch };
 export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'legend' | 'wall' | 'wallgate' | 'bunker' | 'mine'
-  | 'sniper' | 'heavy' | 'support' | 'elite' | 'healer' | 'lveh' | 'mveh' | 'hveh' | 'titan' | 'deity' | 'aegis' | 'rturret' | 'fturret' | 'arty' | 'battery' | 'pylon' | 'pyre' | 'bell' | 'doom' | 'lighthouse' | 'obelisk' | 'megagun' | 'plague';
-export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'key1', 'key2', 'key3', 'key4', 'gate', 'legend', 'wall', 'wallgate', 'bunker', 'mine', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'aegis', 'rturret', 'fturret', 'arty', 'battery', 'pylon', 'pyre', 'bell', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague'];
+  | 'sniper' | 'heavy' | 'support' | 'elite' | 'healer' | 'lveh' | 'mveh' | 'hveh' | 'titan' | 'deity' | 'aegis' | 'rturret' | 'fturret' | 'arty' | 'battery' | 'pylon' | 'pyre' | 'bell' | 'doom' | 'lighthouse' | 'obelisk' | 'megagun' | 'plague' | 'motorpool' | 'yard';
+export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'key1', 'key2', 'key3', 'key4', 'gate', 'legend', 'wall', 'wallgate', 'bunker', 'mine', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'aegis', 'rturret', 'fturret', 'arty', 'battery', 'pylon', 'pyre', 'bell', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague', 'motorpool', 'yard']; // новые — только в конец: индексы идут в снимки
 const MOBILE = new Set<Kind>(['captain', 'builder', 'guard', 'legend', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'arty']);
 export const isStruct = (k: Kind) => !MOBILE.has(k);
-export type Buildable = 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'wall' | 'wallgate' | 'bunker' | 'mine' | 'aegis' | 'rturret' | 'fturret' | 'battery' | 'pylon' | 'pyre' | 'bell' | 'doom' | 'lighthouse' | 'obelisk' | 'megagun' | 'plague';
+export type Buildable = 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'wall' | 'wallgate' | 'bunker' | 'mine' | 'aegis' | 'rturret' | 'fturret' | 'battery' | 'pylon' | 'pyre' | 'bell' | 'doom' | 'lighthouse' | 'obelisk' | 'megagun' | 'plague' | 'motorpool' | 'yard';
 
 // hp: у отрядов хп ОДНОЙ модели (общий пул = hp * n), у остальных общий. dmg: урон одной модели.
 type Stat = { hp: number; n: number; dmg: number; range: number; cd: number; speed: number; sight: number; radius: number; cost: number; time: number };
@@ -30,6 +30,8 @@ export const STATS: Record<Kind, Stat> = {
   pump: { hp: 600, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.6, cost: 100, time: 12 },     // Глубинный насос на жиле
   key1: { hp: 1500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.6, cost: 150, time: 20 },    // ключевые здания тиров I–IV
   key2: { hp: 1800, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.8, cost: 250, time: 25 },
+  motorpool: { hp: 2600, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 3.4, cost: 300, time: 45 }, // техцех: вся техника
+  yard: { hp: 5000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 12, radius: 5.5, cost: 1000, time: 120 },    // верфь титана
   key3: { hp: 2000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.8, cost: 350, time: 30 },
   key4: { hp: 2400, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3, cost: 450, time: 35 },
   gate: { hp: 3000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3.6, cost: 500, time: 40 },    // Врата призыва, тир V
@@ -107,11 +109,11 @@ export const ROLES: Partial<Record<Kind, Role>> = {
   support: { from: 'barracks', tier: 2, pop: 2, armor: 'inf', dmg: 'small', meters: 2.2 },
   elite: { from: 'barracks', tier: 3, pop: 4, armor: 'hinf', dmg: 'melee', energy: 80, meters: 3.1 },
   healer: { from: 'barracks', tier: 3, pop: 4, armor: 'hinf', dmg: 'small', energy: 100, heal: 0.05, meters: 3.4 },
-  lveh: { from: 'key2', tier: 3, pop: 4, armor: 'veh', dmg: 'small', energy: 40, meters: 4.5 },
-  mveh: { from: 'key2', tier: 3, pop: 6, armor: 'veh', dmg: 'small', energy: 120, aoe: 3, meters: 6 },
-  hveh: { from: 'key2', tier: 3, pop: 8, armor: 'veh', dmg: 'heavy', energy: 260, aoe: 2.5, meters: 8 },
-  arty: { from: 'key2', tier: 3, pop: 6, armor: 'veh', dmg: 'blast', energy: 200, aoe: 5, meters: 6 },
-  titan: { from: 'hq', tier: 4, pop: 20, armor: 'titan', dmg: 'blast', energy: 5000, relics: 15, aoe: 7, meters: 34, one: true },
+  lveh: { from: 'motorpool', tier: 3, pop: 4, armor: 'veh', dmg: 'small', energy: 40, meters: 4.5 },
+  mveh: { from: 'motorpool', tier: 3, pop: 6, armor: 'veh', dmg: 'small', energy: 120, aoe: 3, meters: 6 },
+  hveh: { from: 'motorpool', tier: 3, pop: 8, armor: 'veh', dmg: 'heavy', energy: 260, aoe: 2.5, meters: 8 },
+  arty: { from: 'motorpool', tier: 3, pop: 6, armor: 'veh', dmg: 'blast', energy: 200, aoe: 5, meters: 6 },
+  titan: { from: 'yard', tier: 4, pop: 20, armor: 'titan', dmg: 'blast', energy: 5000, relics: 15, aoe: 7, meters: 34, one: true },
 };
 /** Урон по броне (как в DoW): снайпер косит пехоту, тяжёлое оружие — технику, взрывчатка — здания. */
 export const VS: Record<DmgType, Record<Armor, number>> = {
@@ -235,7 +237,7 @@ const nearCapWith = (s: State, u: Unit, a: number, r: number) => {
   return !!c && c.hp > 0 && dist(c, u) < r;
 };
 /** Три ресурса пресета: Влияние (req, с точек), Энергия (с Литейни и насосов), Реликвии (с реликтовых точек). */
-export const ENERGY_COST: Partial<Record<Kind, number>> = { turret: 30, aegis: 100, rturret: 20, battery: 150, pylon: 120, pyre: 60, bell: 60, doom: 3000, lighthouse: 800, obelisk: 1200, megagun: 800, plague: 800 };
+export const ENERGY_COST: Partial<Record<Kind, number>> = { motorpool: 150, yard: 800, turret: 30, aegis: 100, rturret: 20, battery: 150, pylon: 120, pyre: 60, bell: 60, doom: 3000, lighthouse: 800, obelisk: 1200, megagun: 800, plague: 800 };
 export const ENERGY_INCOME: Partial<Record<Kind, number>> = { foundry: 2, pump: 4 };
 export const RELIC_RATE = 1 / 20; // реликвий в секунду с одной реликтовой точки
 /**
@@ -252,7 +254,7 @@ export const UPGRADES: Partial<Record<Kind, Upgrade>> = {
   lveh: { cost: 60, energy: 40, relics: 0, time: 8, tier: 3, name: 'Гранатомёт' }, // только Багги Орды: выстрел по площади 3 м
 };
 const LVL2 = { dmg: { post: 1, turret: 1.8, guard: 1.6, captain: 1.5 } as Partial<Record<Kind, number>>, armor: { post: 1, turret: 0.6, guard: 0.8, captain: 0.7, wall: 0.5, wallgate: 0.5 } as Partial<Record<Kind, number>>, range: { post: 0, turret: 3 } as Partial<Record<Kind, number>> };
-export const BUILD_TIER: Record<Buildable, number> = { hq: 2, barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1, key1: 1, key2: 2, key3: 3, key4: 4, gate: 5, wall: 1, wallgate: 1, bunker: 2, mine: 1, aegis: 2, rturret: 1, fturret: 1, battery: 2, pylon: 2, pyre: 2, bell: 2, doom: 5, lighthouse: 4, obelisk: 4, megagun: 4, plague: 4 };
+export const BUILD_TIER: Record<Buildable, number> = { hq: 2, barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1, key1: 1, key2: 2, key3: 3, key4: 4, gate: 5, motorpool: 3, yard: 4, wall: 1, wallgate: 1, bunker: 2, mine: 1, aegis: 2, rturret: 1, fturret: 1, battery: 2, pylon: 2, pyre: 2, bell: 2, doom: 5, lighthouse: 4, obelisk: 4, megagun: 4, plague: 4 };
 /** Постройки только своей фракции. */
 export const FACTION_ONLY: Partial<Record<Buildable, FactionId>> = { aegis: 'prism', rturret: 'orks', fturret: 'orks', battery: 'order', bell: 'undead', pylon: 'clockwork', pyre: 'ashen', lighthouse: 'order', obelisk: 'clockwork', megagun: 'orks', plague: 'undead' };
 export const maxHp = (k: Kind) => STATS[k].hp * STATS[k].n;

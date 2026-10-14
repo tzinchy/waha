@@ -1,6 +1,6 @@
 // Галерея: армии всех фракций на данных игры — юниты с анимациями, капитаны, титаны, легенды, постройки и виды оружия.
 import { art, artFor, ready2d, setAnim, needsTint } from './game2d.ts';
-import { ARCH_OPTS, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, ROSTER, type FactionId } from '../shared/factions.ts';
+import { ARCH_OPTS, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PROD_NAME, ROSTER, type FactionId } from '../shared/factions.ts';
 import { attackFx, isMelee, ROLES, type Kind } from '../shared/sim.ts';
 
 // стили эффектов и запасных анимаций — из страницы игры; прокрутку здесь возвращаем
@@ -61,7 +61,7 @@ function render(f: FactionId) {
   const b = (k: Kind, title: string, sub: string, lvl = 1, path?: string) => card(title, sub, path ?? artFor(k, f, lvl), f, [['idle', 'стоит'], ['build', 'стройка']], 110);
   const uniq: [Kind, string][] = ({ order: [['battery', 'артиллерия 40 м'], ['lighthouse', 'мегапостройка: видит 70 м']], undead: [['bell', 'враги слабее и медленнее'], ['plague', 'мегапостройка: чума 30 м']], prism: [['aegis', 'щит 1200 урона на 12 м']], clockwork: [['pylon', 'луч 30 м против техники'], ['obelisk', 'мегапостройка: луч 40 м']], orks: [['rturret', 'ракеты по площади'], ['fturret', 'огнемёт в упор'], ['megagun', 'мегапостройка: 38 м по площади']], ashen: [['pyre', 'жжёт всех в 8 м']] } as Record<FactionId, [Kind, string][]>)[f];
   const builds = [
-    b('hq', HQ_NAME[f], 'штаб · можно строить ещё два'), b('barracks', 'Казарма', 'пехота и роли'),
+    b('hq', HQ_NAME[f], 'штаб · можно строить ещё два'), b('barracks', 'Казарма', 'пехота и роли'), b('motorpool', PROD_NAME[f].motorpool, 'техцех: вся техника, тир III'), b('yard', PROD_NAME[f].yard, 'верфь титана, тир IV'),
     ...F.keys.map((n, i) => b(('key' + (i + 1)) as Kind, n, `ключевое здание тира ${['I', 'II', 'III', 'IV'][i]}`)), b('gate', F.gate, 'врата легенд, тир V'),
     card('Турель', 'тир I', artFor('turret', f), f, [['idle', 'стоит'], ['attack', 'огонь']], 110), b('turret', 'Тяжёлая турель', 'тир II', 2),
     ...uniq.map(([k, s]) => b(k, NAMES[k] ?? k, s)),

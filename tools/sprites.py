@@ -10,6 +10,7 @@ ROOT = os.path.join(os.path.dirname(__file__), '..')
 OUT = [os.path.join(ROOT, 'client/public/ds/assets'), os.path.join(ROOT, 'ds/project/assets')]
 
 PAL = {  # main — основной металл/ткань, dark — тень, trim — отделка, glow — свечение, skin — кость/кожа
+    'order':     dict(main='#c8a868', dark='#4a3a20', trim='#f0d890', glow='#ffe9a8', skin='#e8dcc0', cloth='#7a2a22'),
     'undead':    dict(main='#7a7f6a', dark='#2e3128', trim='#b8b090', glow='#7affc8', skin='#d8d0b0', cloth='#3a2a3a'),
     'prism':     dict(main='#d8dce8', dark='#5a6078', trim='#5ac8f0', glow='#8ae8ff', skin='#b8c0d0', cloth='#3a4870'),
     'clockwork': dict(main='#3a4440', dark='#101614', trim='#c8a850', glow='#5affa0', skin='#8a948e', cloth='#1c2422'),
@@ -166,6 +167,140 @@ def building(k, p, form='spire', extra=''):
     return base + f + extra
 
 
+# ---------- постройки фракций: форма по типу здания, крыша и украшения по стилю фракции ----------
+def roof(style, k, p, x, y, w):
+    """Крыша над блоком x..x+w с верхом y."""
+    L, M, T, G = LINE, f'url(#{k}M)', f'url(#{k}T)', f'url(#{k}G)'
+    c = x + w / 2
+    if style == 'undead':  # готические шпили с крестами
+        return (f'<path d="M{x} {y}L{c} {y-w*.55}L{x+w} {y}Z" fill="{p["dark"]}" stroke="{L}" stroke-width="2"/>'
+                f'<path d="M{c} {y-w*.55}V{y-w*.55-14}M{c-5} {y-w*.55-9}H{c+5}" stroke="{p["trim"]}" stroke-width="2.5"/>'
+                f'<path d="M{x+4} {y}L{x+10} {y-18}L{x+16} {y}Z M{x+w-16} {y}L{x+w-10} {y-18}L{x+w-4} {y}Z" fill="{p["dark"]}" stroke="{L}"/>')
+    if style == 'prism':  # кристаллы и линза
+        return (f'<path d="M{c-14} {y}L{c} {y-34}L{c+14} {y}Z" fill="{G}" stroke="{p["trim"]}" stroke-width="2" class="glowpulse"/>'
+                f'<path d="M{x+6} {y}L{x+14} {y-18}L{x+22} {y}Z M{x+w-22} {y}L{x+w-14} {y-18}L{x+w-6} {y}Z" fill="{p["main"]}" stroke="{p["trim"]}" stroke-width="1.5"/>'
+                f'<path d="M{x} {y}H{x+w}" stroke="{p["trim"]}" stroke-width="3"/>')
+    if style == 'clockwork':  # ступенчатая пирамида с кристаллом
+        return (f'<path d="M{x} {y}L{x+w*.18} {y-w*.22}H{x+w*.82}L{x+w} {y}Z" fill="{M}" stroke="{L}" stroke-width="2"/>'
+                f'<path d="M{x+w*.2} {y-w*.22}L{c} {y-w*.5}L{x+w*.8} {y-w*.22}Z" fill="{p["dark"]}" stroke="{p["trim"]}" stroke-width="2"/>'
+                f'<circle cx="{c}" cy="{y-w*.3}" r="5" fill="{G}" class="glowpulse"/>')
+    if style == 'orks':  # кривая ржавая крыша, шипы, трубы
+        return (f'<path d="M{x-6} {y+2}L{x+w*.3} {y-16}L{x+w*.6} {y-8}L{x+w+6} {y-20}L{x+w+4} {y+2}Z" fill="{p["cloth"]}" stroke="{L}" stroke-width="2"/>'
+                f'<path d="M{x+4} {y-4}L{x+w*.3} {y-14}M{x+w*.4} {y-6}L{x+w*.6} {y-8}" stroke="{p["dark"]}" stroke-width="1.5"/>'
+                f'<rect x="{x+w*.7}" y="{y-44}" width="9" height="30" fill="{p["dark"]}" stroke="{L}"/><circle cx="{x+w*.7+4}" cy="{y-48}" r="6" fill="#666" opacity=".5" class="glowpulse"/>')
+    # ashen: рога и огонь
+    return (f'<path d="M{x} {y}Q{c} {y-26} {x+w} {y}Z" fill="{p["dark"]}" stroke="{L}" stroke-width="2"/>'
+            f'<path d="M{x+6} {y-2}Q{x-8} {y-30} {x+2} {y-46}Q{x+8} {y-26} {x+18} {y-8}Z M{x+w-6} {y-2}Q{x+w+8} {y-30} {x+w-2} {y-46}Q{x+w-8} {y-26} {x+w-18} {y-8}Z" fill="{p["skin"]}" stroke="{L}" stroke-width="1.5"/>'
+            f'<circle cx="{c}" cy="{y-12}" r="8" fill="{G}" class="glowpulse"/>')
+
+
+def emblem(style, k, p, cx, cy, r=10):
+    L, T, G = LINE, f'url(#{k}T)', f'url(#{k}G)'
+    e = {
+        'undead': f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{p["skin"]}" stroke="{L}" stroke-width="1.5"/><path d="M{cx-r*.5} {cy-r*.2}h{r*.35}v{r*.35}h-{r*.35}zM{cx+r*.15} {cy-r*.2}h{r*.35}v{r*.35}h-{r*.35}z" fill="{L}"/>',
+        'prism': f'<path d="M{cx} {cy-r}L{cx+r} {cy}L{cx} {cy+r}L{cx-r} {cy}Z" fill="{G}" stroke="{p["trim"]}" stroke-width="1.5" class="glowpulse"/>',
+        'clockwork': f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{p["dark"]}" stroke="{p["trim"]}" stroke-width="2"/><path d="M{cx} {cy-r*.7}V{cy}L{cx+r*.5} {cy+r*.4}" stroke="{p["trim"]}" stroke-width="1.5" fill="none"/><circle cx="{cx}" cy="{cy}" r="{r*.3}" fill="{p["glow"]}" class="glowpulse"/>',
+        'orks': f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{p["trim"]}" stroke="{L}" stroke-width="1.5"/><path d="M{cx-r*.5} {cy-r*.3}l{r*.3} {r*.2}M{cx+r*.5} {cy-r*.3}l-{r*.3} {r*.2}M{cx-r*.5} {cy+r*.4}h{r}" stroke="{L}" stroke-width="2"/>',
+        'ashen': f'<path d="M{cx} {cy-r}L{cx+r*.9} {cy+r*.6}H{cx-r*.9}Z" fill="none" stroke="{p["glow"]}" stroke-width="2" class="glowpulse"/><circle cx="{cx}" cy="{cy+r*.1}" r="{r*.3}" fill="{p["glow"]}" class="glowpulse"/>',
+    }
+    return e[style]
+
+
+def facade(style, k, p, x, y, w, h):
+    """Стена блока: камень/металл фракции с отделкой."""
+    L, M, C = LINE, f'url(#{k}M)', f'url(#{k}C)'
+    body = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{C if style in ("undead", "ashen") else M}" stroke="{L}" stroke-width="2"/>'
+    if style == 'orks':  # заплаты и полосы
+        body += f'<path d="M{x} {y+h*.3}H{x+w}M{x+w*.4} {y}V{y+h}" stroke="{p["dark"]}" stroke-width="1.5"/><path d="M{x+4} {y+h-10}h{w*.3}v8h-{w*.3}z" fill="{p["trim"]}" stroke="{L}"/><path d="M{x+6} {y+h-10}l6 8M{x+16} {y+h-10}l6 8" stroke="{L}" stroke-width="2"/>'
+    elif style == 'prism':
+        body += f'<path d="M{x} {y+8}H{x+w}M{x} {y+h-8}H{x+w}" stroke="{p["trim"]}" stroke-width="2"/>'
+    elif style == 'clockwork':
+        body += f'<path d="M{x+8} {y+4}V{y+h}M{x+w-8} {y+4}V{y+h}" stroke="{p["glow"]}" stroke-width="1.5" opacity=".7" class="glowpulse"/><path d="M{x} {y}H{x+w}" stroke="{p["trim"]}" stroke-width="3"/>'
+    elif style == 'undead':
+        body += f'<path d="M{x} {y+h*.5}H{x+w}" stroke="{p["dark"]}" stroke-width="1.5"/>' + ''.join(f'<path d="M{x+w*f-4} {y+h*.35}Q{x+w*f} {y+h*.15} {x+w*f+4} {y+h*.35}V{y+h*.5}H{x+w*f-4}Z" fill="{p["glow"]}" opacity=".7" class="glowpulse"/>' for f in (.25, .75))
+    else:  # ashen
+        body += f'<path d="M{x} {y+h*.4}H{x+w}" stroke="{p["skin"]}" stroke-width="2"/><path d="M{x+w*.2} {y+h}L{x+w*.25} {y+h*.6}L{x+w*.3} {y+h}" fill="{p["glow"]}" class="glowpulse"/>'
+    return body
+
+
+def door(style, k, p, cx, base, w=22, h=30):
+    G = f'url(#{k}G)'
+    if style == 'clockwork' or style == 'prism':
+        return f'<path d="M{cx-w/2} {base}V{base-h+w/2}L{cx} {base-h}L{cx+w/2} {base-h+w/2}V{base}Z" fill="{LINE}"/><path d="M{cx-w/2+4} {base}V{base-h+w/2+2}L{cx} {base-h+6}L{cx+w/2-4} {base-h+w/2+2}V{base}Z" fill="{G}" opacity=".7" class="glowpulse"/>'
+    if style == 'orks':
+        return f'<rect x="{cx-w/2}" y="{base-h}" width="{w}" height="{h}" fill="{LINE}"/><path d="M{cx-w/2} {base-h}h{w}" stroke="{p["trim"]}" stroke-width="3" stroke-dasharray="4 4"/>'
+    return f'<path d="M{cx-w/2} {base}V{base-h+w/2}Q{cx} {base-h-4} {cx+w/2} {base-h+w/2}V{base}Z" fill="{LINE}"/><path d="M{cx-w/2+4} {base}V{base-h+w/2+2}Q{cx} {base-h+2} {cx+w/2-4} {base-h+w/2+2}V{base}Z" fill="{G}" opacity=".55" class="glowpulse"/>'
+
+
+def structure(style, k, p, kind):
+    L, M, T, G = LINE, f'url(#{k}M)', f'url(#{k}T)', f'url(#{k}G)'
+    ground = '<ellipse cx="100" cy="190" rx="80" ry="8" fill="#000" opacity=".5"/>'
+    plinth = f'<path d="M24 190L32 176H168L176 190Z" fill="{p["dark"]}" stroke="{L}" stroke-width="2"/>'
+    if kind == 'key1':  # мастерская: низкий зал, пристройка
+        return ground + plinth + facade(style, k, p, 40, 110, 120, 66) + roof(style, k, p, 40, 110, 120) + door(style, k, p, 100, 176) + facade(style, k, p, 140, 132, 36, 44) + emblem(style, k, p, 70, 140, 9)
+    if kind == 'key2':  # кузня: широкий цех, ворота, две трубы
+        return (ground + plinth + facade(style, k, p, 28, 100, 144, 76) + roof(style, k, p, 28, 100, 144) + door(style, k, p, 100, 176, 44, 46)
+                + f'<rect x="40" y="56" width="14" height="44" fill="{p["dark"]}" stroke="{L}"/><rect x="146" y="64" width="14" height="36" fill="{p["dark"]}" stroke="{L}"/><circle cx="47" cy="50" r="8" fill="{G}" opacity=".6" class="glowpulse"/><circle cx="153" cy="58" r="7" fill="{G}" opacity=".6" class="glowpulse"/>')
+    if kind == 'key3':  # башня: узкая высокая, наверху — фокус фракции
+        return ground + plinth + facade(style, k, p, 74, 70, 52, 106) + roof(style, k, p, 70, 70, 60) + door(style, k, p, 100, 176, 20, 26) + emblem(style, k, p, 100, 100, 11) + facade(style, k, p, 44, 140, 30, 36) + facade(style, k, p, 126, 140, 30, 36)
+    if kind == 'key4':  # реликварий: храм с колоннами
+        cols = ''.join(f'<rect x="{x}" y="96" width="10" height="80" fill="{T}" stroke="{L}"/>' for x in (44, 70, 120, 146))
+        return ground + plinth + facade(style, k, p, 38, 96, 124, 80) + cols + roof(style, k, p, 34, 96, 132) + door(style, k, p, 100, 176, 28, 40) + emblem(style, k, p, 100, 80, 12)
+    if kind == 'gate':  # врата легенд: две башни и портал
+        return (ground + plinth + facade(style, k, p, 30, 60, 40, 116) + facade(style, k, p, 130, 60, 40, 116) + roof(style, k, p, 26, 60, 48) + roof(style, k, p, 126, 60, 48)
+                + f'<path d="M70 176V90Q100 50 130 90V176Z" fill="{L}"/><path d="M76 176V94Q100 60 124 94V176Z" fill="{G}" opacity=".85" class="glowpulse"/>' + emblem(style, k, p, 100, 70, 12))
+    if kind == 'foundry':  # литейня: корпус, баки, свечение
+        return (ground + plinth + facade(style, k, p, 30, 116, 100, 60) + roof(style, k, p, 30, 116, 100)
+                + f'<rect x="134" y="104" width="34" height="72" rx="14" fill="{T}" stroke="{L}" stroke-width="2"/><path d="M138 124H164M138 150H164" stroke="{L}"/><rect x="60" y="140" width="40" height="22" fill="{G}" class="glowpulse"/><path d="M60 140V162M70 140V162M80 140V162M90 140V162" stroke="{L}" stroke-width="2"/>')
+    if kind == 'pump':  # насос: вышка над жилой
+        return (ground + plinth + f'<path d="M60 176L88 40H112L140 176" fill="none" stroke="{p["main"]}" stroke-width="7"/><path d="M60 176L88 40H112L140 176M70 130H130M78 90H122" fill="none" stroke="{L}" stroke-width="2"/>'
+                + roof(style, k, p, 80, 44, 40) + f'<rect x="88" y="120" width="24" height="56" fill="{p["dark"]}" stroke="{L}"/><circle cx="100" cy="166" r="9" fill="{G}" class="glowpulse"/>' + emblem(style, k, p, 100, 100, 8))
+    if kind == 'wall':  # сегмент стены
+        tops = {'undead': ''.join(f'<path d="M{x} 104L{x+8} 88L{x+16} 104Z" fill="{p["dark"]}" stroke="{L}"/>' for x in range(20, 180, 24)),
+                'prism': ''.join(f'<path d="M{x} 104L{x+8} 84L{x+16} 104Z" fill="{G}" stroke="{p["trim"]}" class="glowpulse"/>' for x in range(20, 180, 32)),
+                'clockwork': f'<path d="M14 104H186" stroke="{p["trim"]}" stroke-width="4"/><path d="M30 120H170" stroke="{p["glow"]}" stroke-width="2" class="glowpulse"/>',
+                'orks': ''.join(f'<path d="M{x} 104L{x+6} 82L{x+12} 104Z" fill="{p["main"]}" stroke="{L}"/>' for x in range(16, 184, 20)),
+                'ashen': ''.join(f'<path d="M{x} 104Q{x-4} 84 {x+6} 76Q{x+4} 92 {x+12} 104Z" fill="{p["skin"]}" stroke="{L}"/>' for x in range(20, 180, 26))}[style]
+        return ground + facade(style, k, p, 14, 104, 172, 82) + tops + emblem(style, k, p, 100, 146, 10)
+    if kind == 'wallgate':
+        return ground + facade(style, k, p, 10, 96, 50, 90) + facade(style, k, p, 140, 96, 50, 90) + roof(style, k, p, 8, 96, 54) + roof(style, k, p, 138, 96, 54) + f'<rect x="60" y="110" width="80" height="76" fill="{L}"/>' + ''.join(f'<path d="M{x} 112V186" stroke="{p["trim"]}" stroke-width="3"/>' for x in (70, 86, 100, 114, 130)) + f'<path d="M60 110H140" stroke="{p["trim"]}" stroke-width="5"/>'
+    if kind == 'bunker':
+        return ground + f'<path d="M24 186Q22 128 100 120Q178 128 176 186Z" fill="{M}" stroke="{L}" stroke-width="2.5"/><path d="M50 152H150V162H50Z" fill="{L}"/><path d="M56 155H144" stroke="{p["glow"]}" stroke-width="2" class="glowpulse"/>' + emblem(style, k, p, 100, 136, 8) + facade(style, k, p, 30, 172, 140, 14)
+    if kind == 'mine':
+        return f'<ellipse cx="100" cy="150" rx="46" ry="14" fill="#000" opacity=".45"/><ellipse cx="100" cy="140" rx="40" ry="14" fill="{M}" stroke="{L}" stroke-width="2"/><ellipse cx="100" cy="134" rx="24" ry="8" fill="{p["dark"]}" stroke="{L}"/>' + emblem(style, k, p, 100, 132, 7)
+    if kind == 'bell':  # Колокол Скорби
+        return ground + plinth + facade(style, k, p, 60, 60, 80, 116) + roof(style, k, p, 56, 60, 88) + f'<path d="M80 84Q80 70 100 70Q120 70 120 84L126 118H74Z" fill="{T}" stroke="{L}" stroke-width="2"/><circle cx="100" cy="122" r="5" fill="{p["trim"]}"/>' + door(style, k, p, 100, 176, 20, 30)
+    if kind == 'plague':  # Чумной шпиль
+        return ground + plinth + f'<path d="M70 176L90 30L100 6L110 30L130 176Z" fill="{p["dark"]}" stroke="{L}" stroke-width="2.5"/><path d="M100 6V176" stroke="{p["trim"]}" stroke-width="2"/>' + ''.join(f'<circle cx="{100 + dx}" cy="{y}" r="{r}" fill="#7ab040" opacity=".55" class="glowpulse"/>' for dx, y, r in ((-20, 40, 14), (22, 70, 12), (-16, 100, 10), (0, 20, 16))) + emblem(style, k, p, 100, 130, 10)
+    if kind == 'motorpool':  # техцех: ангар с большими воротами, кран-балка, силуэт машины внутри
+        return (ground + plinth + facade(style, k, p, 22, 96, 156, 80) + roof(style, k, p, 22, 96, 156)
+                + f'<rect x="56" y="112" width="88" height="64" fill="{L}"/><path d="M56 112H144" stroke="{p["trim"]}" stroke-width="4"/>'
+                + ''.join(f'<path d="M{x} 116V176" stroke="{p["dark"]}" stroke-width="2"/>' for x in range(64, 144, 10))
+                + f'<path d="M70 168L76 150H118L126 168Z" fill="{p["main"]}" opacity=".5"/><circle cx="82" cy="170" r="6" fill="{p["dark"]}"/><circle cx="114" cy="170" r="6" fill="{p["dark"]}"/>'
+                + f'<path d="M150 96V40H176V48H158V96" fill="none" stroke="{p["main"]}" stroke-width="4"/><path d="M172 48V70" stroke="{L}" stroke-width="1.5"/><rect x="167" y="70" width="10" height="8" fill="{T}" stroke="{L}"/>' + emblem(style, k, p, 40, 130, 9))
+    if kind == 'yard':  # верфь титана: леса-гантри, недостроенный каркас титана
+        scaff = ''.join(f'<path d="M{x} 186V20" stroke="{p["main"]}" stroke-width="6"/><path d="M{x} 186V20" stroke="{L}" stroke-width="1.5"/>' for x in (14, 186)) + ''.join(f'<path d="M14 {y}H186" stroke="{p["dark"]}" stroke-width="4"/>' for y in (40, 90, 140))
+        frame = (f'<path d="M78 186L84 120H116L122 186" fill="none" stroke="{p["trim"]}" stroke-width="5"/><path d="M70 120L66 60Q100 40 134 60L130 120Z" fill="{p["dark"]}" stroke="{p["trim"]}" stroke-width="3"/>'
+                 f'<path d="M80 70H120M76 96H124" stroke="{p["trim"]}" stroke-width="2"/><circle cx="100" cy="82" r="10" fill="{G}" class="glowpulse"/><path d="M84 40Q100 24 116 40L112 60H88Z" fill="{p["main"]}" stroke="{L}" stroke-width="2"/>')
+        sparks = ''.join(f'<circle cx="{x}" cy="{y}" r="2" fill="{p["glow"]}" class="glowpulse"/>' for x, y in ((66, 64), (134, 98), (90, 126), (112, 150)))
+        return '<ellipse cx="100" cy="192" rx="94" ry="7" fill="#000" opacity=".5"/>' + f'<rect x="8" y="182" width="184" height="10" fill="{p["dark"]}" stroke="{L}"/>' + scaff + frame + sparks + roof(style, k, p, 8, 20, 184) + emblem(style, k, p, 100, 168, 9)
+    if kind == 'pylon':  # Гаусс-пилон: высокий обелиск, между рогами бьёт молния
+        return (ground + plinth + f'<path d="M84 176L90 50H110L116 176Z" fill="{M}" stroke="{L}" stroke-width="2"/><path d="M90 50L80 20L94 40M110 50L120 20L106 40" fill="none" stroke="{p["trim"]}" stroke-width="4"/>'
+                + f'<path d="M82 22L92 32L100 22L108 32L118 22" fill="none" stroke="{p["glow"]}" stroke-width="2.5" class="glowpulse"/><circle cx="100" cy="30" r="10" fill="{G}" class="glowpulse"/><path d="M92 70V170M108 70V170" stroke="{p["glow"]}" stroke-width="1.5" opacity=".7" class="glowpulse"/>' + emblem(style, k, p, 100, 120, 9))
+    if kind == 'fturret':  # Огнемётная печь: пузатая печь с соплом и пламенем
+        return (ground + plinth + f'<path d="M50 176Q44 110 100 104Q156 110 150 176Z" fill="{M}" stroke="{L}" stroke-width="2"/><rect x="66" y="136" width="40" height="22" fill="{G}" class="glowpulse"/><path d="M66 136V158M76 136V158M86 136V158M96 136V158" stroke="{L}" stroke-width="2"/>'
+                + f'<path d="M120 124H176V140H120Z" fill="{p["dark"]}" stroke="{L}" stroke-width="1.5"/><path d="M176 122L194 116V148L176 142Z" fill="{p["trim"]}" stroke="{L}"/><path d="M186 132Q196 120 200 132Q196 144 186 132Z" fill="#ff9a3a" class="glowpulse"/>'
+                + f'<rect x="80" y="70" width="14" height="36" fill="{p["dark"]}" stroke="{L}"/><circle cx="87" cy="64" r="8" fill="#666" opacity=".5" class="glowpulse"/>' + roof(style, k, p, 60, 108, 80))
+    if kind == 'bigbutton':  # Большая Красная Кнопка: пусковая шахта, ракета, огромная кнопка
+        return (ground + plinth + f'<rect x="40" y="96" width="70" height="80" fill="{M}" stroke="{L}" stroke-width="2"/><path d="M50 96L75 20L100 96Z" fill="{p["cloth"]}" stroke="{L}" stroke-width="2"/><path d="M58 70H92" stroke="{p["trim"]}" stroke-width="4" stroke-dasharray="6 4"/>'
+                + f'<path d="M40 176H110" stroke="{p["trim"]}" stroke-width="6" stroke-dasharray="8 8"/><rect x="122" y="140" width="46" height="36" fill="{p["dark"]}" stroke="{L}" stroke-width="2"/><ellipse cx="145" cy="138" rx="20" ry="8" fill="#c8241a" stroke="{L}" stroke-width="2"/><ellipse cx="145" cy="134" rx="16" ry="6" fill="#ff4a3a" class="glowpulse"/>' + emblem(style, k, p, 75, 130, 10))
+    raise KeyError(kind)
+
+
+BUILD_KINDS = {'key1': 'Ключевое здание I', 'key2': 'Ключевое здание II', 'key3': 'Ключевое здание III', 'key4': 'Ключевое здание IV', 'gate': 'Врата легенд',
+               'foundry': 'Литейня', 'pump': 'Насос', 'wall': 'Стена', 'wallgate': 'Ворота', 'bunker': 'Бункер', 'mine': 'Мина'}
+
+
 # ---------- что рисуем ----------
 def H(**kw): return ('h', kw)
 def V(**kw): return ('v', kw)
@@ -249,6 +384,17 @@ if __name__ == '__main__':
             s = render(f, name, title, spec)
             for d in OUT:
                 with open(os.path.join(d, 'Factions', name + '.svg'), 'w') as fh:
+                    fh.write(s)
+            n += 1
+    for f in ('order', 'undead', 'prism', 'clockwork', 'orks', 'ashen'):  # постройки фракций (у Ордена — только новые: свои есть в дизайн-системе)
+        p = PAL[f]
+        kinds = dict({} if f == 'order' else BUILD_KINDS, motorpool='Техцех', yard='Верфь титана', **({'bell': 'Колокол Скорби', 'plague': 'Чумной шпиль'} if f == 'undead' else {}), **({'pylon': 'Гаусс-пилон'} if f == 'clockwork' else {}), **({'fturret': 'Огнемётная печь', 'bigbutton': 'Большая Красная Кнопка'} if f == 'orks' else {}))
+        for kind, title in kinds.items():
+            k = f[:3] + kind
+            s = svg(title, structure('undead' if f == 'order' else f, k, p, kind), k, p, 200, 200, '0 0 200 200')  # Орден — готика, как Нежить, но в золоте
+            for d in OUT:
+                os.makedirs(os.path.join(d, 'Buildings', f), exist_ok=True)
+                with open(os.path.join(d, 'Buildings', f, kind + '.svg'), 'w') as fh:
                     fh.write(s)
             n += 1
     print('спрайтов:', n)

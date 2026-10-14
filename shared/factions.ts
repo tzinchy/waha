@@ -38,6 +38,12 @@ export const CAPTAIN_ART: Record<FactionId, Record<'assault' | 'commander' | 'my
   orks: { assault: 'Factions/ork-boss.svg', commander: 'Factions/ork-boss.svg', mystic: 'Factions/ork-weirdboy.svg' },
   ashen: { assault: 'Factions/demon-prince.svg', commander: 'Factions/ashen-chancellor.svg', mystic: 'Factions/ashen-chancellor.svg' },
 };
+/** Отдельные производственные здания: техцех (вся техника) и верфь титана. */
+export const PROD_NAME: Record<FactionId, { motorpool: string; yard: string }> = {
+  order: { motorpool: 'Литургический ангар', yard: 'Кафедра Колосса' }, undead: { motorpool: 'Мертвецкая', yard: 'Склеп Ковчега' },
+  prism: { motorpool: 'Сборочный каркас', yard: 'Призменная верфь' }, clockwork: { motorpool: 'Гробница машин', yard: 'Пирамида Пробуждения' },
+  orks: { motorpool: 'Мекова мастерская', yard: 'Большая Свалка' }, ashen: { motorpool: 'Кузнечная яма', yard: 'Врата Пожирателя' },
+};
 /** Название штаба фракции (второй и третий строятся с тира II). */
 /** Сверхоружие фракций (тир V): имя, суть, силуэт постройки. */
 export const DOOM_OF: Record<FactionId, { name: string; info: string; art: string }> = {
@@ -45,7 +51,7 @@ export const DOOM_OF: Record<FactionId, { name: string; info: string; art: strin
   undead: { name: 'Колокол Конца', info: 'чумное облако 18 м: 20 с губит всё живое', art: 'Buildings/banner.svg' },
   prism: { name: 'Солнечное копьё', info: 'точный луч 8 м: 6000 урона, рвёт титанов', art: 'Factions/prism-doom.svg' },
   clockwork: { name: 'Звёздный жнец', info: '1500 урона в 20 м и остановка времени на 8 с', art: 'Factions/tomb.svg' },
-  orks: { name: 'Большая Красная Кнопка', info: 'пять взрывов вразброс по 9 м', art: 'Defenses/rocketbarrel.svg' },
+  orks: { name: 'Большая Красная Кнопка', info: 'пять взрывов вразброс по 9 м', art: 'Buildings/orks/bigbutton.svg' },
   ashen: { name: 'Око Разлома', info: '1500 урона в 14 м, из разлома выходят три демона', art: 'Factions/ashen-doom.svg' },
 };
 export const HQ_NAME: Record<FactionId, string> = { order: 'Собор', undead: 'Склеп-Престол', prism: 'Узел Консенсуса', clockwork: 'Монолит', orks: 'Становище', ashen: 'Чёрный Алтарь' };

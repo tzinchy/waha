@@ -31,7 +31,9 @@ export function botThink(s: State, me: number): void {
     if (free) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'post', x: free.x, y: free.y });
   }
   if (builders.length + hq.que.filter(k => k === 'builder').length < 3) applyCmd(s, me, { c: 'train', id: hq.id, k: 'builder' });
-  if (s.players[me].tier >= 4) applyCmd(s, me, { c: 'train', id: hq.id, k: 'titan' });
+  const P0 = s.players[me]; // техцех с тира III, верфь титана с тира IV
+  for (const [k, t, a] of [['motorpool', 3, 2.0], ['yard', 4, -2.0]] as const) if (P0.tier >= t && !of(k).length && !site && idle.length) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: k, x: hq.x + Math.cos(dir + a) * 18, y: hq.y + Math.sin(dir + a) * 18 });
+  for (const y of of('yard')) if (y.build >= 1) applyCmd(s, me, { c: 'train', id: y.id, k: 'titan' });
   if (barracks.some(b => b.build >= 1) && !of('foundry').length && !site && idle.length && req >= 140) { // энергия: литейня у штаба
     applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'foundry', x: hq.x + Math.cos(dir + 1.4) * 10, y: hq.y + Math.sin(dir + 1.4) * 10 });
   }
@@ -51,7 +53,7 @@ export function botThink(s: State, me: number): void {
     applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'turret', x: hq.x + Math.cos(dir) * 9, y: hq.y + Math.sin(dir) * 9 });
   }
   if (s.players[me].tier > 1) for (const u of [...of('post'), ...of('turret'), ...guards]) if (u.lvl < 2 && u.upg < 0 && s.players[me].req >= 150) applyCmd(s, me, { c: 'upgrade', id: u.id });
-  for (const b of [...barracks, ...of('key2')]) if (b.build >= 1 && b.que.length < 2) { // смешанный состав: всё, что открыто тиром
+  for (const b of [...barracks, ...of('motorpool')]) if (b.build >= 1 && b.que.length < 2) { // смешанный состав: всё, что открыто тиром
     const opts = producible(b.kind).filter(k => ROLES[k]!.tier <= s.players[me].tier);
     if (opts.length) applyCmd(s, me, { c: 'train', id: b.id, k: opts[Math.floor(Math.random() * opts.length)] });
   }

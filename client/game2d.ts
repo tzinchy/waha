@@ -2,7 +2,7 @@
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import type { Arch } from '../shared/sim.ts';
 import { resourceCost, DOOM_SHOT, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, VEHICLES, LEGION_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
-import { CAPTAIN_ART, DOOM_OF, FACTIONS, HQ_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
+import { CAPTAIN_ART, DOOM_OF, FACTIONS, HQ_NAME, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
 import { paintMap } from './mappaint.ts';
@@ -43,9 +43,11 @@ export const SLOT_COLORS = [0x4fa392, 0xe0675c, 0xe0a53a, 0xb9c3c6];
 
 // какой силуэт из пресетов у какого юнита, его ширина в мире и сколько бойцов в отряде
 // ширина силуэта в мире (единиц симуляции); сами силуэты — по фракции игрока (shared/factions.ts)
-const WIDTH: Record<string, number> = { doom: 8, lighthouse: 5, obelisk: 8, megagun: 7, plague: 5, battery: 4.4, pylon: 3.4, pyre: 3.8, bell: 3.8, deity: 9, aegis: 3.2, rturret: 3.6, fturret: 3.6, captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, legend: 6, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
+const WIDTH: Record<string, number> = { doom: 8, lighthouse: 5, obelisk: 8, megagun: 7, plague: 5, battery: 4.4, pylon: 3.4, pyre: 3.8, bell: 3.8, deity: 9, aegis: 3.2, rturret: 3.6, fturret: 3.6, captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, motorpool: 9, yard: 14, legend: 6, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
 /** Ширина силуэта на карте = рост в метрах (все силуэты дизайн-системы в одном поле 120×164): Стражник 2.4 м, титан — 26–34 м. */
 const widthOf = (kind: Kind, f: FactionId) => (kind === 'titan' ? ROSTER[f].titanM : ROLES[kind]?.meters && !WIDTH[kind] ? ROLES[kind]!.meters : WIDTH[kind] ?? 2.4);
+/** Постройки, нарисованные для каждой фракции (tools/sprites.py); у Ордена — исходные из дизайн-системы. */
+const FAC_BUILD = new Set<Kind>(['key1', 'key2', 'key3', 'key4', 'gate', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine']);
 const NEUTRAL: Partial<Record<Kind, [string, string]>> = {
   lighthouse: ['Buildings/beacon.svg', 'Buildings/beacon.svg'], obelisk: ['Factions/obelisk.svg', 'Factions/obelisk.svg'], megagun: ['Defenses/scrapgun.svg', 'Defenses/scrapgun.svg'], plague: ['Buildings/banner.svg', 'Buildings/banner.svg'],
   battery: ['Defenses/battery.svg', 'Defenses/battery.svg'], pylon: ['Turrets/clockwork-t2.svg', 'Turrets/clockwork-t2.svg'], pyre: ['Turrets/ashen-t2.svg', 'Turrets/ashen-t2.svg'], bell: ['Buildings/beacon.svg', 'Buildings/beacon.svg'],
@@ -63,6 +65,7 @@ export function artFor(kind: Kind, faction: FactionId, lvl = 1, arch: Arch = 'co
   if (kind === 'captain') return CAPTAIN_ART[faction][archFor(faction, arch)] ?? a.captain[0];
   if (kind === 'turret') return a.turret[lvl > 1 ? 1 : 0];
   if (kind === 'post') return lvl >= 3 ? 'Defenses/point-3.svg' : lvl === 2 ? 'Defenses/point-2.svg' : 'Defenses/point-1.svg';
+  if (faction !== 'order' && FAC_BUILD.has(kind) || kind === 'motorpool' || kind === 'yard' || faction === 'undead' && (kind === 'bell' || kind === 'plague') || faction === 'clockwork' && kind === 'pylon' || faction === 'orks' && kind === 'fturret') return `Buildings/${faction}/${kind}.svg`; // свои постройки у каждой фракции
   if (NEUTRAL[kind]) return NEUTRAL[kind]![lvl > 1 ? 1 : 0];
   return a[kind as 'builder' | 'guard' | 'hq' | 'barracks'];
 }
@@ -74,7 +77,7 @@ const FORM: Partial<Record<Kind, [number, number][]>> = {
 
 const svgCache = new Map<string, string>();
 /** Загружает все силуэты один раз. */
-const ALL_ART = new Set([...Object.values(DOOM_OF).map(d => d.art), 'Factions/obelisk.svg', ...Object.values(CAPTAIN_ART).flatMap(o => Object.values(o)), 'Factions/deity.svg', ...Object.values(ROSTER).flatMap(r => Object.values(r).flatMap(v => (typeof v === 'object' ? [v.art] : []))), ...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
+const ALL_ART = new Set([...Object.values(DOOM_OF).map(d => d.art), 'Factions/obelisk.svg', ...Object.values(CAPTAIN_ART).flatMap(o => Object.values(o)), 'Factions/deity.svg', ...Object.values(ROSTER).flatMap(r => Object.values(r).flatMap(v => (typeof v === 'object' ? [v.art] : []))), ...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), ...(['undead', 'prism', 'clockwork', 'orks', 'ashen'] as const).flatMap(f => [...FAC_BUILD, ...(f === 'undead' ? ['bell', 'plague'] : [])].map(k => `Buildings/${f}/${k}.svg`)), ...Object.keys(FACTIONS).flatMap(f => [`Buildings/${f}/motorpool.svg`, `Buildings/${f}/yard.svg`]), 'Buildings/clockwork/pylon.svg', 'Buildings/orks/fturret.svg', 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
 export const ready2d = Promise.all([...ALL_ART]
   .map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgCache.set(p, t)))).then(() => undefined);
 
@@ -580,7 +583,7 @@ export class Game {
 
   private kindName(k: Kind, f: FactionId) {
     const F = FACTIONS[f], R = ROSTER[f] as unknown as Record<string, { name: string } | undefined>;
-    return k === 'builder' ? F.builder : k === 'guard' ? F.guard : k === 'hq' ? HQ_NAME[f] : k === 'doom' ? DOOM_OF[f].name : R[k]?.name ?? KIND_NAME[k] ?? k;
+    return k === 'builder' ? F.builder : k === 'guard' ? F.guard : k === 'hq' ? HQ_NAME[f] : k === 'motorpool' || k === 'yard' ? PROD_NAME[f][k] : k === 'doom' ? DOOM_OF[f].name : R[k]?.name ?? KIND_NAME[k] ?? k;
   }
   private nameOf(v: View) {
     const F = FACTIONS[this.fac(v.owner)];
@@ -706,7 +709,7 @@ export class Game {
     const undead = this.fac() === 'undead';
     const tabs: [string, ReturnType<typeof card>[]][] = [
       ['Экономика', [card('post', 'Реликварий', 'P', 'Ставится на захваченную точку: держит её и даёт +2 влияния/с.'), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своей точки или построек.', undead ? 'Нежити не нужна' : undefined), card('pump', 'Насос', 'N', '+4 энергии/с. На жилу или у своей точки.', undead ? 'Нежити не нужен' : undefined)]],
-      ['Армия', [card('barracks', 'Казарма', 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`), { k: 'barracks' as Buildable, html: `<p class="lc-buildhint">Техника и танки — в здании «${F.keys[1]}» (ключевое здание тира II, вкладка «Святыни»); открываются с тира III. Титан — в штабе с тира IV.</p>` }]],
+      ['Армия', [card('barracks', 'Казарма', 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`), card('motorpool', PROD_NAME[this.fac()].motorpool, 'T', 'Вся техника и артиллерия фракции. Тир III.', this.tier < 3 ? 'Нужен тир III' : undefined), card('yard', PROD_NAME[this.fac()].yard, 'U', 'Строит титана. Одна армия — один титан. Тир IV.', this.tier < 4 ? 'Нужен тир IV' : undefined)]],
       ['Оборона', [card('turret', 'Турель', 'Y', 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'W', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
         ...(this.fac() === 'prism' ? [card('aegis', 'Купол-эгида', 'E', 'Купол 12 м: поглощает 1200 урона, восстанавливается за 30 с, пробитый 10 с не работает.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'orks' ? [card('rturret', 'Ракетная бочка', 'R', 'Ракеты по площади. Копит Ярость.'), card('fturret', 'Огнемётная печь', 'Q', 'Жжёт в упор. Копит Ярость.')] : []),
@@ -813,7 +816,7 @@ export class Game {
     else if (/^res[0-3]$/.test(act)) { const k = sel.find(v => /^key/.test(v.kind)); if (k) this.cmd({ c: 'research', id: k.id, r: Number(act[3]) }); }
     else if (/^sum[0-2]$/.test(act)) { const g = sel.find(v => v.kind === 'gate'); if (g) this.cmd({ c: 'summon', id: g.id, v: Number(act[3]) }); }
     else if (/^key[1-4]$|^gate$/.test(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
-    else if (['doom', 'lighthouse', 'obelisk', 'megagun', 'plague', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine', 'aegis', 'rturret', 'fturret', 'battery', 'pylon', 'pyre', 'bell'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
+    else if (['motorpool', 'yard', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine', 'aegis', 'rturret', 'fturret', 'battery', 'pylon', 'pyre', 'bell'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
     else if (act === 'upgrade') { for (const v of sel) if ((UPGRADES[v.kind] && v.lvl < 2 || v.kind === 'post') && v.upg < 0) this.cmd({ c: 'upgrade', id: v.id }); }
     else if (act === 'reinforce') this.cmd({ c: 'reinforce', ids: sel.filter(v => v.kind === 'guard').map(v => v.id) });
   }
