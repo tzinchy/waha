@@ -47,7 +47,7 @@
   #hud-extra .rage{display:inline-block;width:70px;height:6px;background:var(--surface-000);border:1px solid var(--gilt-700)}
   #hud-extra .rage i{display:block;height:100%;width:var(--v);background:var(--blood-300)}
   #hud-extra .waagh{color:var(--blood-300);animation:lc-glow 1s infinite}
-  .w2d-unit.legend .art svg{filter:drop-shadow(0 0 14px var(--amber-500)) drop-shadow(0 6px 4px rgba(0,0,0,.55))}
+  .w2d-unit.legend .art svg{filter:url(#px) drop-shadow(0 0 14px var(--amber-500)) drop-shadow(0 6px 4px rgba(0,0,0,.55))}
   .w2d-wallline{stroke:var(--verdigris-300);stroke-width:6;stroke-dasharray:14 10;opacity:.8}
   #hud-cap{position:absolute;left:var(--space-4);top:84px;width:280px;padding:var(--space-3) var(--space-4);gap:var(--space-4)}
   #hud-cap .lc-xp__fill{animation:none}
@@ -222,8 +222,13 @@
   .w2d-ent{position:absolute;left:0;top:0;width:0;height:0}
   .w2d-ent .art,.w2d-body{position:absolute;left:0;top:0}
   .w2d-ent .art{transform-origin:0 0}
-  .w2d-ent .art svg{display:block;position:absolute;left:0;bottom:0;transform:translateX(-50%);overflow:visible;filter:drop-shadow(0 6px 4px rgba(0,0,0,.55))}
+  .w2d-ent .art svg{display:block;position:absolute;left:0;bottom:0;transform:translateX(-50%);overflow:visible;filter:url(#px) drop-shadow(0 3px 0 rgba(0,0,0,.55))}
   .w2d-body.flip{transform:scaleX(-1)}
+  /* палитры пакета faction-asset-lab (tools/faction-presets.mjs): основной цвет, отделка, металл, свечение, ткань — для векторных силуэтов рядом с атласами */
+  .pal-order{--art-brass:#244a91;--art-brass-lit:#b79a52;--art-iron:#343c49;--art-glow:#f2634f;--art-blood:#733938}
+  .pal-ashen{--art-brass:#79272d;--art-brass-lit:#ae8551;--art-iron:#242129;--art-glow:#f07835;--art-blood:#482131}
+  .pal-orks{--art-brass:#935045;--art-brass-lit:#ac9764;--art-iron:#4c504e;--art-glow:#d5a455;--art-blood:#657d43}
+  .pal-clockwork{--art-brass:#394844;--art-brass-lit:#a18b54;--art-iron:#1f2725;--art-glow:#78ee51;--art-blood:#27362c}
   .w2d-ent .turret{transform-box:fill-box;transform-origin:50% 75%;transition:transform .25s var(--ease-snap)}
   .w2d-unit.enemy{--art-brass:var(--art-blood-lit);--art-brass-lit:#ee9a8e;--art-glow:var(--art-fire)} /* сторона читается металлом и светом, не обводкой */
   .w2d-ring,.w2d-sel{position:absolute;left:0;top:0;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none}
@@ -258,6 +263,8 @@
 </style>
 </head>
 <body>
+<!-- Пиксельный фильтр для векторных силуэтов: берёт один пиксель из каждого квадрата 2×2 и размножает его — блоки как у текстуры земли и атласов ×2 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="px" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feFlood x="0" y="0" width="1" height="1"/><feComposite width="2" height="2"/><feTile result="grid"/><feComposite in="SourceGraphic" in2="grid" operator="in" result="s"/><feOffset in="s" dx="1" result="s1"/><feMerge result="h"><feMergeNode in="s"/><feMergeNode in="s1"/></feMerge><feOffset in="h" dy="1" result="h1"/><feMerge><feMergeNode in="h"/><feMergeNode in="h1"/></feMerge></filter></svg>
 <main id="home">
   <button id="theme" class="lc-btn lc-btn--sm lc-btn--ghost" title="Тема фракции"></button>
   <header>

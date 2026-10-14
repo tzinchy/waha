@@ -2,8 +2,8 @@
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import type { CaptainCfg } from '../shared/sim.ts';
 import { CaptainPreview } from './captain.ts';
-import { Game, artFor, ready2d } from './game2d.ts';
-import { ARCH_OPTS, archFor, CAPTAIN_ART, FACTIONS, FACTION_IDS, type FactionId } from '../shared/factions.ts';
+import { Game, pxIcon, ready2d } from './game2d.ts';
+import { ARCH_OPTS, archFor, FACTIONS, FACTION_IDS, type FactionId } from '../shared/factions.ts';
 import { voice } from './voice.ts';
 import { MAPS, setMap } from '../shared/mapdata.ts';
 import { audio } from './audio.ts';
@@ -120,9 +120,7 @@ function renderFactions(mine: FactionId) {
   $('faction-mech').textContent = FACTIONS[mine].mech;
   if (faction !== mine) { faction = mine; setTheme(FACTIONS[mine].theme); preview.setFaction(mine); paintTheme(); renderArch(); preview.set({ ...cfg, arch: archFor(mine, cfg.arch) }); }
 }
-const svgFor = (f: FactionId) => (svgText.get(artFor('captain', f, 1, cfg.arch)) ?? '').replace('<svg ', '<svg class="lc-art lc-anim-idle" ');
-const svgText = new Map<string, string>();
-ready2d.then(() => Promise.all([...new Set(Object.values(CAPTAIN_ART).flatMap(o => Object.values(o)))].map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgText.set(p, t))))); // все сборки всех фракций
+const svgFor = (f: FactionId) => pxIcon(f, 'captain', true); // пиксельный капитан фракции
 
 function renderLobby() {
   if (!lobby) return;

@@ -2,7 +2,7 @@
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import { ARCHS, HERO, type Arch } from '../shared/sim.ts';
 import { resourceCost, DOOM_SHOT, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
-import { ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, HQ_NAME, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
+import { ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
 import { paintMap } from './mappaint.ts';
@@ -103,14 +103,49 @@ export const setAnim = (svg: SVGElement, a: string) => {
   svg.dataset.anim = a;
 };
 
+/** Пиксельные атласы пакета faction-asset-lab: 8 строк направлений × 8 кадров по 128 px, опора на земле (64, 87).
+ *  Кадр 128 px ≈ 5 м, т. е. ≈ S; рисуем с целым увеличением PX_SCALE и без сглаживания. */
+type PxRole = 'captain' | 'guard' | 'builder';
+const PX_SCALE = 2, PX_CELL = 128, PX_ANCHOR = [64, 87] as const;
+const PX_DUR: Record<string, number> = { idle: 2, walk: 1, run: 0.65, attack: 0.7, shoot: 0.45, work: 1.1, death: 1.1 };
+export const isPx = (k: Kind): boolean => k === 'captain' || k === 'guard' || k === 'builder';
+const pxUrl = (f: FactionId, role: PxRole, anim: string) => `/models/factions/${PACK[f]}/${role}/sprites/${anim}.png`;
+/** Строка атласа по направлению на экране (рад, y вниз): строка 0 смотрит вниз-влево, дальше по 45° против часовой. */
+export const pxRow = (face: number) => (((Math.round((135 - (face * 180) / Math.PI) / 45) % 8) + 8) % 8);
+type Px = { el: HTMLElement; anim: string; t0: number; ph: number };
+function pxSprite(): Px {
+  const el = document.createElement('div');
+  const w = PX_CELL * PX_SCALE;
+  Object.assign(el.style, { position: 'absolute', left: -PX_ANCHOR[0] * PX_SCALE + 'px', top: -PX_ANCHOR[1] * PX_SCALE + 'px', width: w + 'px', height: w + 'px', backgroundSize: `${w * 8}px ${w * 8}px`, imageRendering: 'pixelated', pointerEvents: 'none', filter: 'drop-shadow(0 3px 2px rgba(0,0,0,.55))' });
+  return { el, anim: '', t0: 0, ph: Math.random() * 2 };
+}
+/** Кадр: строка — по направлению, столбец — по времени; смерть играется один раз и замирает на последнем кадре. */
+function pxFrame(p: Px, f: FactionId, role: PxRole, anim: string, face: number, now: number) {
+  if (p.anim !== anim) { p.anim = anim; p.t0 = now; p.el.style.backgroundImage = `url(${pxUrl(f, role, anim)})`; }
+  const t = (now - p.t0) / 1000, d = PX_DUR[anim] ?? 1, w = PX_CELL * PX_SCALE;
+  const col = anim === 'death' ? Math.min(7, Math.floor((t / d) * 7)) : Math.floor(((t + (anim === 'idle' ? p.ph : 0)) / d) * 8) % 8;
+  p.el.style.backgroundPosition = `${-col * w}px ${-pxRow(face) * w}px`;
+}
+/** Пиксельный фильтр #px (index.html) под масштаб камеры: блок 2 px мира, но не мельче 2 px экрана — иначе при отдалении
+ *  выборка 1 px пропадает вместе с силуэтом. Берёт пиксель из каждого квадрата и размножает его на весь квадрат. */
+function pxFilter(zoom: number) {
+  const b = Math.max(2, 2 / zoom), h = b / 2, f = document.getElementById('px');
+  if (f) f.innerHTML = `<feFlood x="0" y="0" width="${h}" height="${h}"/><feComposite width="${b}" height="${b}"/><feTile result="grid"/><feComposite in="SourceGraphic" in2="grid" operator="in" result="s"/><feOffset in="s" dx="${h}" result="s1"/><feMerge result="m"><feMergeNode in="s"/><feMergeNode in="s1"/></feMerge><feOffset in="m" dy="${h}" result="m1"/><feMerge><feMergeNode in="m"/><feMergeNode in="m1"/></feMerge>`;
+}
+/** Статичный кадр атласа как SVG (для HUD и лобби): idle, лицом к зрителю. viewBox режет ячейку вокруг фигуры. */
+export const pxIcon = (f: FactionId, role: PxRole, head = false) =>
+  `<svg class="lc-art" viewBox="${head ? (role === 'captain' ? '42 160 44 40' : '46 168 36 32') : role === 'captain' ? '22 158 84 74' : '30 166 68 56'}" style="image-rendering:pixelated;overflow:hidden"><image href="${pxUrl(f, role, 'idle')}" width="1024" height="1024" style="image-rendering:pixelated"/></svg>`;
+/** Путь силуэта → пиксельный атлас (капитаны всех сборок, стрелки, строители). */
+const PX_BY_ART = new Map<string, [FactionId, PxRole]>(FACTION_IDS.flatMap(f => [[FACTIONS[f].art.guard, [f, 'guard']], [FACTIONS[f].art.builder, [f, 'builder']], ...Object.values(CAPTAIN_ART[f]).map(p => [p, [f, 'captain']])] as [string, [FactionId, PxRole]][]));
+
 /** SVG капитана по оружию (Меч — Штурм, Молот — Командор), для превью в редакторе. */
 export const captainSvg = (a: Arch, f: FactionId = 'order') => svgCache.get(artFor('captain', f, 1, a)) ?? '';
 /** Чужой силуэт (Ордена) у другой фракции — перекрасить в её цвета. */
 export const needsTint = (path: string, f: FactionId) => f !== 'order' && path.startsWith('Units/');
 /** Маленький силуэт для HUD: живой SVG, чтобы палитра art-* применилась. */
-const miniArt = (path: string) => (svgCache.get(path) ?? '').replace('<svg ', '<svg class="lc-art" ');
+const miniArt = (path: string) => (PX_BY_ART.has(path) ? pxIcon(...PX_BY_ART.get(path)!) : (svgCache.get(path) ?? '').replace('<svg ', '<svg class="lc-art" '));
 /** Портрет: голова и плечи силуэта крупно (обрезка viewBox у фигур 120×164). */
-const portrait = (path: string) => miniArt(path).replace(/viewBox="0 -12 120 164"/, 'viewBox="14 -10 92 92"');
+const portrait = (path: string) => (PX_BY_ART.has(path) ? pxIcon(...PX_BY_ART.get(path)!, true) : miniArt(path).replace(/viewBox="0 -12 120 164"/, 'viewBox="14 -10 92 92"'));
 
 /** Карта на языке пресета MapExample (классы lc-bigmap из bundle.css), в координатах мира. Пока декор: проходимость не меняет. */
 function mapSvg() {
@@ -127,7 +162,7 @@ function mapSvg() {
 type View = {
   id: number; owner: number; kind: Kind; el: HTMLElement; body: HTMLElement; svgs: SVGElement[]; bar: HTMLElement; fg: HTMLElement; sel: HTMLElement;
   x: number; y: number; tx: number; ty: number; f: number; hp: number; build: number; q: number; dead: boolean; lvl: number; upg: number;
-  atkUntil: number; melee?: boolean; atkFx?: number; respawn?: number; arch?: Arch; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; prog: number; prod: number;
+  atkUntil: number; melee?: boolean; atkFx?: number; respawn?: number; arch?: Arch; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; px: Px[]; prog: number; prod: number;
 };
 
 export class Game {
@@ -137,6 +172,7 @@ export class Game {
   private views = new Map<number, View>();
   private sel = new Set<number>();
   private cam = { x: 50, y: 50, zoom: 1 };
+  private pxZoom = 0;
   private keys = new Set<string>();
   private points: { ring: HTMLElement; fill: HTMLElement; el: HTMLElement; zone: HTMLElement }[] = [];
   private pointOwner: number[] = [];
@@ -274,12 +310,12 @@ export class Game {
     el.append(range);
     const ring = document.createElement('div'); ring.className = 'w2d-ring';
     for (const e of [sel, ring]) Object.assign(e.style, { width: r * 2.4 * S + 'px', height: r * 1.3 * S + 'px' });
-    const body = document.createElement('div'); body.className = 'w2d-body';
+    const body = document.createElement('div'); body.className = 'w2d-body pal-' + (this.players[owner].faction ?? 'order'); // палитра пакета фракции (index.html)
     const pl = this.players[owner], artPath = artFor(kind, pl.faction ?? 'order', 1, arch ?? pl.captain.arch, variant);
-    const svgs: SVGElement[] = [];
+    const svgs: SVGElement[] = [], px: Px[] = [];
     for (const [ox, oy] of FORM[kind] ?? [[0, 0]]) {
+      if (isPx(kind)) { const p = pxSprite(); p.el.style.transform = `translate(${ox * S}px, ${oy * S * 0.6}px)`; body.append(p.el); px.push(p); continue; } // пиксельный атлас фракции
       const a = art(artPath, widthOf(kind, pl.faction ?? 'order') * S);
-      if (ROSTER[pl.faction ?? 'order'][kind as 'sniper']?.tint || (kind === 'captain' && needsTint(artPath, pl.faction ?? 'order'))) a.style.filter = ROSTER[pl.faction ?? 'order'].tint; // чужой силуэт в цветах фракции
       a.style.transform = `translate(${ox * S}px, ${oy * S * 0.6}px)`;
       body.append(a);
       svgs.push(a.querySelector('svg')!);
@@ -290,7 +326,7 @@ export class Game {
     if (kind === 'titan') { bar.style.bottom = widthOf(kind, pl.faction ?? 'order') * 1.36 * S + 'px'; el.classList.add('titan'); } // полоса над головой титана
     el.append(ring, sel, body, bar);
     this.place2(el, x, y);
-    return { id, owner, kind, el, body, svgs, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0, prod: 0, gear: 0, ch: [0, 0, 0], gcd: 0, sh: 0, frozen: 0, carry: 0, rise: 0, off: false, arch: kind === 'captain' ? arch ?? pl.captain.arch : undefined };
+    return { id, owner, kind, el, body, svgs, px, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0, prod: 0, gear: 0, ch: [0, 0, 0], gcd: 0, sh: 0, frozen: 0, carry: 0, rise: 0, off: false, arch: kind === 'captain' ? arch ?? pl.captain.arch : undefined };
   }
 
   onSnap(s: Snap) {
@@ -321,10 +357,10 @@ export class Game {
       if (lvl !== v.lvl && lvlArt !== v.artPath) { // апгрейд: новый силуэт уровня 2
         v.artPath = lvlArt;
         const a = art(lvlArt, widthOf(kind, this.players[owner].faction ?? 'order') * S * 1.1);
-        v.body.replaceChildren(a); v.svgs = [a.querySelector('svg')!];
+        v.body.replaceChildren(a); v.svgs = [a.querySelector('svg')!]; v.px = [];
       }
       v.lvl = lvl; v.upg = upg; v.prog = prog ?? 0; v.prod = prog ?? 0; v.gear = gear ?? 0; v.ch = [c0 ?? 0, c1 ?? 0, c2 ?? 0]; v.gcd = gcd ?? 0;
-      if (v.kind !== kind) { v.kind = kind; v.artPath = artFor(kind, this.fac(owner)); const a = art(v.artPath, widthOf(kind, this.fac(owner)) * S); v.body.replaceChildren(a); v.svgs = [a.querySelector('svg')!]; if (kind === 'deity') { this.alert(owner === this.slot ? 'ok' : 'danger', 'Вознесение', 'Бог-Механизм пробудился', x / 10, y / 10); voice.announce(owner === this.slot ? 'Бог-Механизм пробудился.' : 'Враг вознёсся! Бог-Механизм на поле!'); this.shakeBy(14); } } // капитан ⇄ Бог-Механизм
+      if (v.kind !== kind) { v.kind = kind; v.artPath = artFor(kind, this.fac(owner)); const a = art(v.artPath, widthOf(kind, this.fac(owner)) * S); v.body.replaceChildren(a); v.svgs = [a.querySelector('svg')!]; v.px = []; if (kind === 'deity') { this.alert(owner === this.slot ? 'ok' : 'danger', 'Вознесение', 'Бог-Механизм пробудился', x / 10, y / 10); voice.announce(owner === this.slot ? 'Бог-Механизм пробудился.' : 'Враг вознёсся! Бог-Механизм на поле!'); this.shakeBy(14); } } // капитан ⇄ Бог-Механизм
       v.sh = sh ?? 0; v.frozen = frozen ?? 0; v.carry = carry ?? 0; v.rise = (rise ?? 0) / 10; v.off = off === 1; v.respawn = respawn ?? 0;
       if (kind === 'hq' && owner === this.slot && !this.centered) {
         this.centered = true;
@@ -342,6 +378,7 @@ export class Game {
       this.views.delete(id); this.sel.delete(id); v.dome?.remove();
       v.bar.remove(); v.sel.remove();
       v.svgs.forEach(sv => setAnim(sv, 'death'));
+      for (const p of v.px) if (p.anim !== 'death') { const w = PX_CELL * PX_SCALE; pxFrame(p, this.fac(v.owner), v.kind as PxRole, 'death', v.f, performance.now()); p.el.animate([{ backgroundPositionX: '0px' }, { backgroundPositionX: -7 * w + 'px' }], { duration: PX_DUR.death * 1000, easing: 'steps(7, jump-none)', fill: 'forwards' }); }
       v.el.classList.add(isStruct(v.kind) ? 'w2d-razed' : 'w2d-dying');
       setTimeout(() => v.el.remove(), isStruct(v.kind) ? 1200 : 1700);
       const a = this.audioAt(v.x, v.y);
@@ -1220,6 +1257,7 @@ export class Game {
     c.y = Math.max(0, Math.min(MAP.h, c.y + fy * sp));
     const r = this.root.getBoundingClientRect();
     { const k = 100 / MAP.w, w = (r.width / (S * c.zoom)) * k, h = (r.height / (S * c.zoom)) * k; this.miniCam.setAttribute('x', String(c.x * k - w / 2)); this.miniCam.setAttribute('y', String(c.y * k - h / 2)); this.miniCam.setAttribute('width', String(w)); this.miniCam.setAttribute('height', String(h)); }
+    if (this.pxZoom !== c.zoom) pxFilter((this.pxZoom = c.zoom));
     this.world.style.transform = `translate(${r.width / 2 - c.x * S * c.zoom}px, ${r.height / 2 - c.y * S * c.zoom}px) scale(${c.zoom})`;
 
     if (this.throwG >= 0 && this.mouse) { // прицел броска: зона поражения у курсора, красная — вне дальности
@@ -1256,12 +1294,13 @@ export class Game {
         v.svgs.forEach(s => setAnim(s, v.build < 1 ? 'build' : now < v.atkUntil && (v.kind === 'turret' || v.kind === 'hq') ? 'recoil' : 'idle')); // выстрел: отдача
         if ((v.kind === 'turret' || v.kind === 'post') && v.build >= 1) this.aimHead(v, now);
       } else {
-        v.body.classList.toggle('flip', Math.cos(v.f) < -0.1); // силуэты смотрят вправо
+        if (!v.px.length) v.body.classList.toggle('flip', Math.cos(v.f) < -0.1); // силуэты смотрят вправо; атласы — по своей строке направления
         const building = !moving && v.kind === 'builder' && sites.some(s => s.owner === v.owner && Math.hypot(s.x - v.x, s.y - v.y) < STATS[s.kind].radius + 3.5);
         const n = members(v.kind, v.hp);
         const atk = ({ 1: 'chop', 2: 'claw', 5: 'thrust', 3: 'beam', 11: 'beam', 13: 'beam', 4: 'cast' } as Record<number, string>)[v.atkFx ?? -1] ?? (v.kind === 'guard' && !v.melee ? 'recoil' : 'attack'); // анимация по оружию
         const flyer = v.kind === 'deity' || (v.kind === 'healer' && this.fac(v.owner) === 'order') || (v.kind === 'titan' && this.fac(v.owner) === 'clockwork'), heavyWalk = !flyer && (v.kind === 'titan' || v.kind === 'hveh');
         const anim = v.dead ? 'death' : v.rise > 0 ? 'ritual' : building ? 'work' : now < v.atkUntil ? atk : moving ? (heavyWalk ? 'stride' : flyer ? 'hover' : 'walk') : flyer ? 'hover' : 'idle';
+        if (v.frozen <= 0) v.px.forEach((p, i) => pxFrame(p, this.fac(v.owner), v.kind as PxRole, i >= n || v.dead ? 'death' : anim === 'work' ? 'work' : now < v.atkUntil ? (v.kind === 'captain' ? 'attack' : v.kind === 'guard' ? 'shoot' : 'idle') : moving ? (v.kind === 'captain' ? 'run' : 'walk') : 'idle', v.f, now));
         v.svgs.forEach((sv, i) => {
           const alive = i < n;
           setAnim(sv, alive ? anim : 'death');
