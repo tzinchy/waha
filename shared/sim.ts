@@ -78,6 +78,8 @@ export const UNLOCKS = [
   { name: 'Сверхоружие', info: 'открывает сверхоружие фракции', cost: 3000, energy: 3000, relics: 12, time: 120, tier: 5 },
 ];
 export const DOOM_SHOT = 800;
+/** Пожар от зажигательного снаряда: радиус, урон в секунду (и по зданиям), длительность. */
+export const FIRE = { r: 4, dps: 25, t: 6 };
 export const MEGA = new Set<Kind>(['lighthouse', 'obelisk', 'megagun', 'plague', 'doom']);
 export const LIGHTHOUSE = { r: 25, armor: 0.85 }, PLAGUE = { r: 30, pct: 0.01 };
 export const PYRE = { r: 8, dps: 18 }, BELL = { r: 14, dmg: 0.8, speed: 0.8 };
@@ -184,7 +186,7 @@ export function attackFx(k: Kind, f: FactionId, variant = 0) {
   if (k === 'titan' && f === 'orks') return 12; // Топтун лупит снарядами из брюха и многоствольника
   if (k === 'turret' && f === 'ashen') return 19; // идол Синклита плюётся огненными шарами
   if (k === 'sniper' && f === 'ashen') return FX.fire; // Колдун Пепла: огненный сгусток
-  if (k === 'elite') return f === 'prism' ? FX.beam : f === 'order' || f === 'clockwork' ? FX.thrust : FX.claws;
+  if (k === 'elite') return f === 'prism' || f === 'clockwork' ? FX.chop : f === 'order' ? FX.thrust : FX.claws; // Склеповая стража — булавы, Осколочная стража — клинки
   return ({ obelisk: 3, megagun: 12, arty: 12, battery: 12, pylon: 3, rturret: 12, fturret: FX.fire, deity: FX.chop, sniper: 10, heavy: 11, hveh: 12, titan: 13, mveh: f === 'ashen' || f === 'orks' ? FX.fire : 14, lveh: 14 } as Partial<Record<Kind, number>>)[k] ?? FX.shot;
 }
 /** Рукопашная пехота: дальность в упор, бьёт сильнее и реже, бегает быстрее. */
@@ -311,7 +313,7 @@ export type State = {
   rewind: { owner: number; x: number; y: number; t: number }[]; // Перезавод Династий: отряды, которые встанут
   blasts: { x: number; y: number; t: number; g: number; owner: number }[]; // летящие гранаты
   strikes: { x: number; y: number; t: number; owner: number }[];          // удары сверхоружия: предупреждение всем
-  plagues: { x: number; y: number; t: number; owner: number }[];          // чумные облака Колокола Конца
+  plagues: { x: number; y: number; t: number; owner: number; fire?: boolean }[]; // чумные облака Колокола Конца и пожары зажигательных снарядов
   smoke: { x: number; y: number; t: number }[];
 };
 export type Cmd =
@@ -814,7 +816,7 @@ export function step(s: State, dt = DT): void {
     if (s.shots.length < 200) s.shots.push([m.x, m.y, m.x, m.y - 0.1]);
   }
   for (const st of s.strikes) if ((st.t -= dt) <= 0) doomStrike(s, st); // удар сверхоружия — у каждой фракции свой
-  for (const z of s.plagues) { z.t -= dt; if (s.tick % 20 === 0) for (const v of s.units) if (v.owner !== z.owner && v.hp > 0 && !isStruct(v.kind) && dist(v, z) < 18) hurt(s, v, maxHp(v.kind) * 0.06, z.owner); }
+  for (const z of s.plagues) { z.t -= dt; if (s.tick % 20 === 0) for (const v of s.units) if (v.owner !== z.owner && v.hp > 0 && (z.fire || !isStruct(v.kind)) && dist(v, z) < (z.fire ? FIRE.r : 18)) hurt(s, v, z.fire ? FIRE.dps : maxHp(v.kind) * 0.06, z.owner); }
   s.plagues = s.plagues.filter(z => z.t > 0);
   s.strikes = s.strikes.filter(st => st.t > 0);
   for (const b of s.blasts) if ((b.t -= dt) <= 0) { // гранаты долетели
@@ -1039,6 +1041,7 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
         hurt(s, target, dealt, u.owner);
         const nade = u.kind === 'lveh' && u.lvl > 1; // Багги с гранатомётом
         const aoe = (nade ? 3 : undefined) ?? ROLES[u.kind]?.aoe ?? STRUCT_AOE[u.kind] ?? (mystic ? 3 : undefined);
+        if (u.kind === 'arty' && fac(s, u.owner) === 'ashen' && s.plagues.length < 60) s.plagues.push({ x: target.x, y: target.y, t: FIRE.t, owner: u.owner, fire: true }); // Адская мортира: зажигательный снаряд, земля горит
         if (aoe) for (const v of s.units) if (v !== target && v.owner !== u.owner && v.hp > 0 && dist(v, target) < aoe) { hurt(s, v, dealt * 0.6 * (vs(v) / Math.max(0.01, vs(target))), u.owner); } // взрыв по площади
         if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) { hurt(s, v, dealt * 0.5, u.owner); } // огненная буря
         const pa = s.players[u.owner];
@@ -1185,7 +1188,7 @@ export function snapshot(s: State): Snap {
     u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), (u.hp > 0 ? Math.max(1, Math.round(u.hp)) : 0), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : u.kind === 'post' ? 12 : UPGRADES[u.kind]!.time)) * 100), prodPct(u), u.gear, ...u.ch, Math.ceil(u.gcd), Math.round(u.sh), Math.ceil(u.frozen * 10), u.carry, Math.ceil(u.rise * 10), u.off > 0 ? 1 : 0]), // 18 щит, 19 заморозка, 20 тащит/тащат, 21 вознесение, 22 купол пробит
     ps: s.players.map(p => [Math.ceil(p.stopCd), p.unlock]), // 13 снаряжение, 14–16 заряды, 17 перезарядка броска
     qk: Object.fromEntries(s.units.filter(u => u.que.length).map(u => [u.id, u.que.map(k => KINDS.indexOf(k))])),
-    sm: [...s.smoke.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), Math.ceil(c.t)]), ...s.plagues.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), Math.ceil(c.t), 1])],
+    sm: [...s.smoke.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), Math.ceil(c.t)]), ...s.plagues.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), Math.ceil(c.t), c.fire ? 2 : 1])],
     p: s.points.map(p => [p.owner, Math.round(p.prog * 100), p.by]),
     pl: s.players.map(p => [Math.floor(p.req), p.alive ? 1 : 0, p.tier, Math.floor(p.energy), Math.floor(p.relics), Math.floor(p.rage), Math.ceil(p.waagh), p.remains, p.research, p.clvl, Math.floor(p.xp), p.pts, p.abil, ...p.acd.map(Math.ceil)]), // 9..13 капитан, 14+ перезарядки способностей
     sh: s.shots.map(v => v.map(n => Math.round(n * 10))),

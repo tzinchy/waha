@@ -576,3 +576,13 @@ test('производство техники и исследования в о�
   assert.ok(p.research & (1 << 4));
   assert.equal(applyCmd(s, 0, { c: 'train', id: factory.id, k: 'mveh' }), undefined);
 });
+
+test('Адская мортира: зажигательный снаряд оставляет пожар, он жжёт и здания', () => {
+  const s = newState(2, ['ashen', 'order']);
+  const m = spawn(s, 0, 'arty', 100, 100), b = spawn(s, 1, 'barracks', 120, 100);
+  m.build = 1; b.build = 1; spawn(s, 0, 'guard', 112, 100); // наводчик
+  run(s, 4);
+  assert.ok(s.plagues.some(z => z.fire), 'земля горит');
+  const hp = b.hp; m.hp = 0; run(s, 2);
+  assert.ok(b.hp < hp, 'пожар жжёт постройку');
+});
