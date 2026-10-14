@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, type Kind, type State } from './sim.ts';
+import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, BCELL, footRect, wallCells, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -487,7 +487,7 @@ test('Династии: только энергия (доход с точек и
   assert.equal(p.alive, false);
 });
 
-test('сверхоружие и мегапостройки: сначала дорогое открытие, стройка видна всем, удар у каждой фракции свой', () => {
+test('сверхоружие и мегапостройки: открытия в штабе, стройка видна всем, удар у каждой фракции свой и только по врагам', () => {
   const s = newState(2, ['order', 'ashen']);
   const p = s.players[0], hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
   p.req = 1e5; p.energy = 1e5; p.relics = 50; p.tier = 5;
@@ -511,8 +511,16 @@ test('сверхоружие и мегапостройки: сначала до�
   assert.equal(snapshotFor(s, 1).ss.length, 1, 'враг видит предупреждение');
   run(s, 7);
   assert.ok(foe.hp < hp - 2000, 'копьё Длани Лампы');
-  doom.prog = 180; p.energy = 0; p.req = 0;
-  assert.match(applyCmd(s, 0, { c: 'strike', id: doom.id, x: foe.x, y: foe.y }) ?? '', /./, 'пуск стоит энергии');
+  p.doom = 180; const own = hq.hp;
+  assert.equal(applyCmd(s, 0, { c: 'strike', x: hq.x, y: hq.y }), undefined); run(s, 7);
+  assert.equal(hq.hp, own, 'своих не задевает');
+  p.doom = 180; p.energy = 0; p.req = 0;
+  assert.match(applyCmd(s, 0, { c: 'strike', x: foe.x, y: foe.y }) ?? '', /./, 'пуск стоит энергии');
+  // Культ: Око Разлома — из разлома выходят три демона
+  const u = s.players[1]; u.unlock = 2; u.doom = 180; u.req = 1e4; u.energy = 1e4;
+  const elites = () => s.units.filter(v => v.owner === 1 && v.kind === 'elite').length, e0 = elites();
+  assert.equal(applyCmd(s, 1, { c: 'strike', x: 200, y: 200 }), undefined); run(s, 7);
+  assert.equal(elites() - e0, 3, 'демоны из разлома');
 });
 
 test('цена: Династии платят всё энергией, остальные — влиянием и энергией', () => {

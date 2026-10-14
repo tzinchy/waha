@@ -1,17 +1,8 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import { ARCHS, HERO, type Arch } from '../shared/sim.ts';
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { resourceCost, DOOM_SHOT, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
-=======
-import { resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
-=======
-import { resourceCost, DOOM_SHOT, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
->>>>>>> f3c8ed8 (feat: grid-based building placement, cell-by-cell walls, pathing around building footprints)
-import { ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, HQ_NAME, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
->>>>>>> 4a8620c (feat: superweapon researched and fired from the HQ: no separate doom building; megabuildings unlock also moved to the HQ; strike hits only enemies, warning circle matches each faction's blast radius)
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
 import { paintMap } from './mappaint.ts';
@@ -674,13 +665,8 @@ export class Game {
         mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: 'Артиллерия: 45 м, по площади, в упор не стреляет — нужна разведка и прикрытие.', titan: 'Титан: один на армию, давит пехоту шагами.' };
       producible(st.kind).forEach((k, i) => {
         const r = ROLES[k]!, n = this.qk[st.id]?.filter(q => q === KINDS.indexOf(k)).length ?? 0, now = this.qk[st.id]?.[0] === KINDS.indexOf(k);
-<<<<<<< HEAD
-        const researching = /^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length;
-        c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k), r.energy ?? 0, r.relics ?? 0),
-=======
         const researching = (/^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length) || st.q > 100;
-        c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(free && k === 'guard' ? 0 : trainCost(this.fac(), k), r.energy ?? 0, r.relics ?? 0),
->>>>>>> 4a8620c (feat: superweapon researched and fired from the HQ: no separate doom building; megabuildings unlock also moved to the HQ; strike hits only enemies, warning circle matches each faction's blast radius)
+        c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k), r.energy ?? 0, r.relics ?? 0),
           info: `${ROLE_INFO[k] ?? ''} Легион: ${r.pop}.`, req: this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
       });
       if (st.kind === 'hq') {
@@ -783,11 +769,7 @@ export class Game {
         ...(this.fac() === 'orks' ? [card('rturret', 'Ракетная бочка', 'R', 'Ракеты по площади. Копит Ярость.'), card('fturret', 'Огнемётная печь', 'Q', 'Жжёт в упор. Копит Ярость.')] : []),
         ...(this.fac() === 'order' ? [card('battery', 'Орган-батарея', 'R', 'Стационарная артиллерия: 40 м, мёртвая зона 8 м, урон по площади.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'clockwork' ? [card('pylon', 'Гаусс-пилон', 'R', 'Дальний луч 30 м: пробивает технику и здания.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
-<<<<<<< HEAD
-        ...((m => m ? [card(m as Buildable, KIND_NAME[m as Kind]!, 'M', ({ lighthouse: 'Открывает 70 м вокруг; союзники в 25 м получают на 15% меньше урона.', obelisk: 'Луч 220 на 40 м, пробивает технику и здания.', megagun: 'Снаряды 180 по площади 6 м, дальность 38 м.', plague: 'Враги в 30 м теряют 1% здоровья в секунду.' } as Record<string, string>)[m] + ' Строится 2 минуты — все игроки видят стройку.', this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в ключевом здании тира IV' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun' } as Record<string, string>)[this.fac()])),
-=======
-        ...((m => m ? [card(m as Buildable, KIND_NAME[m as Kind]!, 'M', ({ lighthouse: 'Открывает 70 м вокруг; союзники в 25 м получают на 15% меньше урона.', obelisk: 'Луч 220 на 40 м, пробивает технику и здания.', megagun: 'Снаряды 180 по площади 6 м, дальность 38 м.', plague: 'Враги в 30 м теряют 1% здоровья в секунду.' } as Record<string, string>)[m] + ' Строится 2 минуты — все игроки видят стройку.', this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в штабе' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun', undead: 'plague' } as Record<string, string>)[this.fac()])),
->>>>>>> 4a8620c (feat: superweapon researched and fired from the HQ: no separate doom building; megabuildings unlock also moved to the HQ; strike hits only enemies, warning circle matches each faction's blast radius)
+        ...((m => m ? [card(m as Buildable, KIND_NAME[m as Kind]!, 'M', ({ lighthouse: 'Открывает 70 м вокруг; союзники в 25 м получают на 15% меньше урона.', obelisk: 'Луч 220 на 40 м, пробивает технику и здания.', megagun: 'Снаряды 180 по площади 6 м, дальность 38 м.', plague: 'Враги в 30 м теряют 1% здоровья в секунду.' } as Record<string, string>)[m] + ' Строится 2 минуты — все игроки видят стройку.', this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в штабе' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun' } as Record<string, string>)[this.fac()])),
         ...(this.fac() === 'ashen' ? [card('pyre', 'Огненная яма', 'R', 'Жжёт всех врагов в 8 м: 18 урона в секунду.', this.tier < 2 ? 'Нужен тир II' : undefined)] : [])]],
       ['Святыни', (() => {
         const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — только когда пали все штабы.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra]; })()],
@@ -1099,19 +1081,11 @@ export class Game {
       const nearBase = this.place === 'foundry' && vs.some(u => u.owner === this.slot && isStruct(u.kind) && u.kind !== 'turret' && Math.hypot(u.x - p.x, u.y - p.y) < 16);
       return { ...p, ok: (!!v || nearPt || nearBase) && footFree(structs, this.place, p.x, p.y) };
     }
-<<<<<<< HEAD
-    if (['mine', 'wallgate', 'bunker'].includes(this.place ?? '')) return { ...g, ok: !vs.some(v => isStruct(v.kind) && v.kind !== 'mine' && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1) };
-    if (this.place === 'turret' || ['battery', 'pylon', 'pyre', 'bell', 'aegis', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') || /^key|^gate/.test(this.place ?? '')) {
-      const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16) || (['turret', 'battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') && nearOwnPt(g.x, g.y));
-      const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1);
-      return { ...g, ok: near && free };
-=======
     if (this.place === 'wall') return { ...g, ok: wallOk(structs, this.slot, g.x, g.y) };
     if (['mine', 'wallgate', 'bunker'].includes(this.place ?? '')) return { ...g, ok: footFree(structs, this.place!, g.x, g.y) && !vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 20) };
-    if (this.place === 'turret' || ['battery', 'pylon', 'pyre', 'bell', 'aegis', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') || /^key|^gate/.test(this.place ?? '')) {
-      const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16) || (['turret', 'battery', 'pylon', 'pyre', 'bell', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') && nearOwnPt(g.x, g.y));
+    if (this.place === 'turret' || ['battery', 'pylon', 'pyre', 'bell', 'aegis', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') || /^key|^gate/.test(this.place ?? '')) {
+      const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16) || (['turret', 'battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') && nearOwnPt(g.x, g.y));
       return { ...g, ok: near && footFree(structs, this.place!, g.x, g.y) };
->>>>>>> f3c8ed8 (feat: grid-based building placement, cell-by-cell walls, pathing around building footprints)
     }
     if (this.place === 'hq') { // ещё один штаб: у своей точки или построек, не ближе 50 м к чужому штабу
       const nearOwn = nearOwnPt(g.x, g.y) || vs.some(v => v.owner === this.slot && isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < 30);

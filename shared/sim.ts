@@ -75,7 +75,7 @@ export const MIN_RANGE: Partial<Record<Kind, number>> = { arty: 10, battery: 8, 
 /** Сверхоружие штаба: заряд 3 минуты, предупреждение 6 с всем игрокам; бьёт только врагов, у каждой фракции свой удар (doomStrike). */
 export const DOOM = { charge: 180, warn: 6 };
 /** Радиус поражения сверхоружия по фракциям — по нему же рисуется предупреждение. */
-export const DOOM_R: Partial<Record<FactionId, number>> = { order: 12, prism: 8, undead: 18, clockwork: 20, orks: 25, ashen: 14 };
+export const DOOM_R: Partial<Record<FactionId, number>> = { order: 12, clockwork: 20, orks: 25, ashen: 14 };
 /** Открытия в штабе: мегапостройки обороны (тир IV) и сверхоружие (тир V, дорого). */
 export const UNLOCKS = [
   { name: 'Мегапостройки', info: 'открывает мегапостройку обороны фракции', cost: 1500, energy: 1200, relics: 5, time: 90, tier: 4 },
@@ -754,14 +754,8 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (!(cmd.kind in BUILD_TIER) || !Number.isFinite(cmd.x) || !Number.isFinite(cmd.y)) return;
     if (p.tier < BUILD_TIER[cmd.kind]) return `Нужен тир ${BUILD_TIER[cmd.kind]}`;
     const c = STATS[cmd.kind];
-<<<<<<< HEAD
     if (cmd.kind in FACTION_ONLY && FACTION_ONLY[cmd.kind] !== p.faction) return 'Постройка другой фракции';
-    if (MEGA.has(cmd.kind) && !(p.unlock & (cmd.kind === 'doom' ? 2 : 1))) return `Сначала исследуйте «${UNLOCKS[cmd.kind === 'doom' ? 1 : 0].name}» в ключевом здании тира IV`;
-=======
-    if ((cmd.kind === 'foundry' || cmd.kind === 'pump') && p.faction === 'undead') return 'Нежити не нужны генераторы: энергию даёт Скорбь';
-    if (FACTION_ONLY[cmd.kind] && FACTION_ONLY[cmd.kind] !== p.faction) return 'Постройка другой фракции';
     if (MEGA.has(cmd.kind) && !(p.unlock & 1)) return `Сначала исследуйте «${UNLOCKS[0].name}» в штабе`;
->>>>>>> 4a8620c (feat: superweapon researched and fired from the HQ: no separate doom building; megabuildings unlock also moved to the HQ; strike hits only enemies, warning circle matches each faction's blast radius)
     { const probe = { ...p }; const e = pay(probe, c.cost, ENERGY_COST[cmd.kind] ?? 0); if (e) return e; } // проверка цены теми же правилами, что и оплата
     let { x, y } = snapB(cmd.kind, clamp(cmd.x, 4, MAP.w - 4), clamp(cmd.y, 4, MAP.h - 4)); // встаёт по клеткам сетки
     if (dist(s.points[0], { x, y }) < CRIT_NOBUILD) return 'У критической точки строить нельзя — за неё сражаются';
@@ -1167,19 +1161,10 @@ function doomStrike(s: State, st: { x: number; y: number; owner: number }) {
     for (const v of s.units) if (v.owner !== st.owner && v.hp > 0 && dist(v, { x, y }) < r + STATS[v.kind].radius) hurt(s, v, dmg * (1 - dist(v, { x, y }) / (r * 2)), st.owner);
     if (s.shots.length < 200) s.shots.push([x, y, x, y - 0.1, 18]);
   };
-<<<<<<< HEAD
-  if (f === 'order') boom(st.x, st.y, 12, 3500);                         // Длань Лампы: орбитальное копьё
-  else if (f === 'clockwork') { boom(st.x, st.y, 20, 1500); for (const v of s.units) if (v.owner !== st.owner && v.hp > 0 && dist(v, st) < 20) v.frozen = 8; } // Звёздный жнец: время встаёт
-  else if (f === 'orks') for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2 + Math.random(), d = Math.random() * 16; boom(st.x + Math.cos(a) * d, st.y + Math.sin(a) * d, 9, 1400); } // Большая Красная Кнопка
-  else { boom(st.x, st.y, 14, 1500); for (let i = 0; i < 3; i++) spawn(s, st.owner, 'elite', st.x + (i - 1) * 3, st.y + 2); } // Око Разлома: из разлома выходят демоны
-=======
   if (f === 'order') boom(st.x, st.y, R, 3500);                         // Длань Лампы: орбитальное копьё
-  else if (f === 'prism') boom(st.x, st.y, R, 6000);                     // Солнечное копьё: точный луч, рвёт титанов
-  else if (f === 'undead') { boom(st.x, st.y, R, 800); s.plagues.push({ x: st.x, y: st.y, t: 20, owner: st.owner }); } // Колокол Конца: чумное облако 20 с
   else if (f === 'clockwork') { boom(st.x, st.y, R, 1500); for (const v of s.units) if (v.owner !== st.owner && v.hp > 0 && dist(v, st) < R) v.frozen = 8; } // Звёздный жнец: время встаёт
   else if (f === 'orks') for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2 + Math.random(), d = Math.random() * (R - 9); boom(st.x + Math.cos(a) * d, st.y + Math.sin(a) * d, 9, 1400); } // Большая Красная Кнопка
   else { boom(st.x, st.y, R, 1500); for (let i = 0; i < 3; i++) spawn(s, st.owner, 'elite', st.x + (i - 1) * 3, st.y + 2); } // Око Разлома: из разлома выходят демоны
->>>>>>> 4a8620c (feat: superweapon researched and fired from the HQ: no separate doom building; megabuildings unlock also moved to the HQ; strike hits only enemies, warning circle matches each faction's blast radius)
 }
 
 function victoryPoints(s: State, dt: number) {
