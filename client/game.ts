@@ -622,9 +622,12 @@ export class Game {
     const dt = Math.min(0.05, (now - this.t0) / 1000);
     this.alertMarkers = this.alertMarkers.filter(a => {
       if (now >= a.until) { a.el.remove(); return false; }
-      const p = this.toScreen({ x: a.x, z: a.z } as View);
-      a.el.style.display = p.ok ? '' : 'none';
-      a.el.style.left = (p.x - 22) + 'px'; a.el.style.top = (p.y - 22) + 'px';
+      const p = new THREE.Vector3(a.x, 2, a.z).project(this.camera);
+      const r = this.renderer.domElement.getBoundingClientRect();
+      const rootRect = this.root.getBoundingClientRect();
+      a.el.style.display = p.z < 1 && Math.abs(p.x) <= 1 && Math.abs(p.y) <= 1 ? '' : 'none';
+      a.el.style.left = (r.left - rootRect.left + (p.x * 0.5 + 0.5) * r.width - 22) + 'px';
+      a.el.style.top = (r.top - rootRect.top + (-p.y * 0.5 + 0.5) * r.height - 22) + 'px';
       return true;
     });
     this.t0 = now;
