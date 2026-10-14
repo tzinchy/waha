@@ -20,6 +20,7 @@ const int = (v: unknown, max: number) => (Number.isFinite(v) ? Math.max(0, Math.
 const cleanCaptain = (c: Partial<CaptainCfg> | undefined): CaptainCfg => ({
   armor: int(c?.armor, 0xffffff), trim: int(c?.trim, 0xffffff),
   weapon: c?.weapon === 'hammer' ? 'hammer' : 'sword', banner: c?.banner !== false,
+  faction: (['legion','heretics','scrap','necrons','drukhari','daemons'] as const).find(f => f === c?.faction) ?? 'legion',
 });
 const cleanName = (n: unknown) => (typeof n === 'string' && n.trim() ? n.trim().slice(0, 16) : 'Капитан');
 const pub = ({ id, name, captain, ready, bot }: Member): LobbyPlayer => ({ id, name, captain, ready, bot });
