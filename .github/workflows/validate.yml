@@ -1,0 +1,17 @@
+name: Validate RTS and asset lab
+on:
+  push:
+    branches: [codex/faction-asset-lab]
+  pull_request:
+jobs:
+  typecheck-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
