@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WAHA — Капитан: уровни, реликвии и способности</title>
+<style>
+:root{color-scheme:dark;--gold:#d8b97a;--bg:#101316;--panel:#1a2025;--line:#4c473c;--muted:#a9a79f}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -20%,#35312b,#101316 65%);color:#eee7d7;font:14px system-ui,Arial}header{padding:20px clamp(16px,3vw,44px);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font:clamp(25px,3vw,38px) Georgia;margin:0;color:var(--gold)}.sub{color:var(--muted);margin-top:7px}main{display:grid;grid-template-columns:minmax(250px,310px) minmax(350px,1fr) minmax(270px,340px);gap:15px;padding:18px;max-width:1750px;margin:auto}
+section{border:1px solid var(--line);background:linear-gradient(145deg,#20272b,#171b20);border-radius:8px;padding:16px;min-width:0}h2{font:21px Georgia;color:var(--gold);margin:0 0 12px}h3{font:17px Georgia;margin:16px 0 9px}
+.stat{display:flex;justify-content:space-between;border-bottom:1px solid #383d3e;padding:9px 0}.muted{color:var(--muted)}.value{color:var(--gold);font-weight:700}
+button,select{border:1px solid #776b53;background:#292d2e;color:#f0e6d3;padding:10px 12px;border-radius:5px;cursor:pointer;font:inherit}button:hover:not(:disabled){background:#454338}button:disabled{opacity:.4;cursor:not-allowed}button.active{background:#62502f;border-color:#edce87}
+.stack{display:grid;gap:8px}.item{padding:10px;border:1px solid #4b4b43;background:#23282b;border-radius:6px}.item b{display:block;color:#ead3a0}.item small{display:block;color:#b3b2a8;margin:5px 0}.item button{width:100%}
+#stage{width:100%;height:auto;aspect-ratio:1.12;background:radial-gradient(ellipse at center,#394149,#171d24 75%);border:1px solid #5b5647;image-rendering:pixelated;display:block;border-radius:6px}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.actions button{min-height:44px}
+.progress{height:10px;background:#0c1113;border:1px solid #55503f;border-radius:5px;overflow:hidden;margin:7px 0}.progress>div{height:100%;background:linear-gradient(90deg,#82602f,#e2bd74);transition:width .3s}
+#log{height:145px;overflow:auto;background:#0e1417;border:1px solid #3a4141;padding:10px;font:12px/1.7 ui-monospace,monospace;color:#c9c8ba}
+.pill{border:1px solid #6c5c40;color:#e7c786;border-radius:30px;padding:5px 10px;display:inline-block;margin:2px;font-size:12px}
+.controls{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}#inventory{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.slot{background:#101619;border:1px solid #494940;border-radius:5px;padding:10px;min-height:68px}.slot b{display:block;color:#e2c183;font-size:12px}.slot span{font-size:12px;color:#ddd}
+.note{line-height:1.55;color:#bcbab0;font-size:12px;margin:10px 0 0}
+@media(max-width:1080px){main{grid-template-columns:1fr 1fr}#preview{grid-column:1/-1;grid-row:1}}@media(max-width:680px){main{grid-template-columns:1fr}#preview{grid-column:auto;grid-row:auto}}
+</style></head><body>
+<header><div><h1>WAHA / Капитан</h1><div class="sub">Интерактивная HTML-лаборатория · внутренние уровни, экипировка, способности и анимации</div></div><div><span class="pill">6 уровней</span><span class="pill">8 предметов</span><span class="pill">5 боевых анимаций</span></div></header>
+<main>
+<section><h2>Прогресс героя</h2><div class="stat"><span>Уровень</span><strong id="level" class="value">1</strong></div><div class="stat"><span>Опыт</span><span id="xpText">0 / 100</span></div><div class="progress"><div id="xpBar" style="width:0%"></div></div><div class="stat"><span>Очки навыков</span><strong id="points" class="value">0</strong></div><div class="stat"><span>Requisition</span><strong id="money" class="value">700</strong></div><div class="stat"><span>Урон</span><strong id="damage">35</strong></div><div class="stat"><span>Броня</span><strong id="armor">10</strong></div><div class="stat"><span>Здоровье</span><strong id="health">600</strong></div>
+<div class="controls"><button id="earn">+150 XP (бой)</button><button id="fund">+500 ресурсов</button><button id="reset">Сброс</button></div>
+<h3>Внутренние навыки</h3><div id="skills" class="stack"></div><p class="note">Уровни открываются за боевой опыт. Очки навыков расходуются отдельно от ресурсов, за которые приобретаются физические предметы.</p>
+</section>
+<section id="preview"><h2>Внешний вид и анимации</h2><canvas id="stage" width="720" height="640"></canvas><div class="controls"><label for="facing">Ракурс</label><select id="facing"><option value="0">Спереди</option><option value="1">3/4 справа</option><option value="2">Справа</option><option value="3">Сзади</option><option value="4">3/4 слева</option></select><label><input type="checkbox" id="loop" checked> Повторять анимацию</label></div>
+<div class="actions"><button data-action="idle" class="active">Спокойная стойка</button><button data-action="slash">Силовой удар</button><button data-action="hammer">Удар молотом</button><button data-action="charge">Рывок / таран</button><button data-action="execute">Добивание</button><button data-action="grenade">Бросок гранаты</button></div>
+<p id="animInfo" class="note">Выберите способность: движения корпуса, оружия и визуальные эффекты анимируются в реальном времени.</p>
+<h3>Боевой журнал</h3><div id="log" aria-live="polite"></div></section>
+<section><h2>Арсенал</h2><p class="note">Покупка предмета меняет характеристики и вид героя: оружие, шлем, наплечники, щит, ранец и свечение реликвии.</p><h3>Надетое снаряжение</h3><div id="inventory"></div><h3>Магазин предметов</h3><div id="shop" class="stack"></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const catalog=[
+{id:'sword',slot:'weapon',name:'Цепной меч',cost:0,level:1,dmg:0,armor:0,hp:0,description:'Базовое оружие ближнего боя'},
+{id:'hammer',slot:'weapon',name:'Громовой молот',cost:260,level:2,dmg:23,armor:0,hp:0,description:'Массивный молот, ударная волна и электрические дуги'},
+{id:'blade',slot:'weapon',name:'Реликтовый клинок',cost:430,level:4,dmg:39,armor:0,hp:0,description:'Золотой клинок с энергетическим свечением'},
+{id:'helm',slot:'head',name:'Шлем ветерана',cost:160,level:2,dmg:0,armor:8,hp:0,description:'Закрытый шлем с красным визором'},
+{id:'pauldrons',slot:'shoulders',name:'Терминаторские наплечники',cost:270,level:3,dmg:0,armor:17,hp:110,description:'Усиленная броня и золотые накладки'},
+{id:'shield',slot:'offhand',name:'Штурмовой щит',cost:220,level:3,dmg:0,armor:16,hp:0,description:'Большой гербовый щит'},
+{id:'jetpack',slot:'back',name:'Прыжковый ранец',cost:310,level:4,dmg:6,armor:0,hp:0,description:'Два реактивных сопла и огненные шлейфы'},
+{id:'relic',slot:'relic',name:'Печать Императора',cost:540,level:5,dmg:14,armor:6,hp:120,description:'Сияющая реликвия и энергетическая аура'}
+];
+const skills=[{id:'strength',name:'Мастерство оружия',desc:'+7 урона за ранг',max:3},{id:'fortitude',name:'Несокрушимость',desc:'+60 здоровья за ранг',max:3},{id:'fury',name:'Ярость',desc:'Усиление анимации способностей',max:2}];
+const slots={weapon:'Оружие',head:'Шлем',shoulders:'Наплечники',offhand:'Левая рука',back:'Ранец',relic:'Реликвия'};
+let state={level:1,xp:0,money:700,points:0,gear:{weapon:'sword'},skills:{strength:0,fortitude:0,fury:0}};
+let action='idle',started=performance.now(),lastEffect=-1,shake=0,particles=[];
+const ctx=$('stage').getContext('2d');ctx.imageSmoothingEnabled=false;
+function log(msg){const el=document.createElement('div');el.textContent='['+new Date().toLocaleTimeString()+'] '+msg;$('log').prepend(el)}
+function item(id){return catalog.find(x=>x.id===id)}
+function stats(){const equipped=Object.values(state.gear).map(item).filter(Boolean);return {damage:35+equipped.reduce((a,b)=>a+b.dmg,0)+state.skills.strength*7,armor:10+equipped.reduce((a,b)=>a+b.armor,0),health:600+equipped.reduce((a,b)=>a+b.hp,0)+state.skills.fortitude*60}}
+function renderUI(){
+$('level').textContent=state.level;$('xpText').textContent=state.level===6?'MAX':state.xp+' / '+(state.level*100);$('xpBar').style.width=(state.level===6?100:state.xp/(state.level*100)*100)+'%';$('points').textContent=state.points;$('money').textContent=state.money;
+const st=stats();$('damage').textContent=st.damage;$('armor').textContent=st.armor;$('health').textContent=st.health;
+$('inventory').replaceChildren();for(const [slot,name] of Object.entries(slots)){const el=document.createElement('div');el.className='slot';const b=document.createElement('b');b.textContent=name;const t=document.createElement('span');t.textContent=item(state.gear[slot])?.name||'Не экипировано';el.append(b,t);$('inventory').append(el)}
+$('shop').replaceChildren();for(const it of catalog){if(it.cost===0)continue;const owned=state.gear[it.slot]===it.id;const el=document.createElement('div');el.className='item';const b=document.createElement('b');b.textContent=it.name;const small=document.createElement('small');small.textContent=it.description+' · ур. '+it.level+' · '+it.cost+' req';const btn=document.createElement('button');btn.textContent=owned?'Надето':state.level<it.level?'Требуется уровень '+it.level:'Купить / заменить';btn.disabled=owned||state.level<it.level||state.money<it.cost;btn.onclick=()=>{state.money-=it.cost;state.gear[it.slot]=it.id;log('Экипировано: '+it.name);renderUI()};el.append(b,small,btn);$('shop').append(el)}
+$('skills').replaceChildren();for(const skill of skills){const el=document.createElement('div');el.className='item';const b=document.createElement('b');b.textContent=skill.name+' '+state.skills[skill.id]+'/'+skill.max;const small=document.createElement('small');small.textContent=skill.desc;const btn=document.createElement('button');btn.textContent='Вложить 1 очко';btn.disabled=!state.points||state.skills[skill.id]>=skill.max;btn.onclick=()=>{state.points--;state.skills[skill.id]++;log('Навык: '+skill.name);renderUI()};el.append(b,small,btn);$('skills').append(el)}
+}
+$('earn').onclick=()=>{state.xp+=150;while(state.level<6&&state.xp>=state.level*100){state.xp-=state.level*100;state.level++;state.points++;state.money+=100;log('Новый уровень: '+state.level+' (+1 очко, +100 req)')}if(state.level===6)state.xp=0;renderUI()};
+$('fund').onclick=()=>{state.money+=500;renderUI()};
+$('reset').onclick=()=>{state={level:1,xp:0,money:700,points:0,gear:{weapon:'sword'},skills:{strength:0,fortitude:0,fury:0}};particles=[];log('Прогресс сброшен');renderUI()};
+document.querySelectorAll('[data-action]').forEach(btn=>btn.onclick=()=>{action=btn.dataset.action;started=performance.now();lastEffect=-1;document.querySelectorAll('[data-action]').forEach(x=>x.classList.toggle('active',x===btn));$('animInfo').textContent={idle:'Дыхание, осмотр местности и небольшие движения брони',slash:'Размах оружием, дуга удара и искры при контакте',hammer:'Подъём молота, удар о землю и расходящаяся ударная волна',charge:'Наклон корпуса, стремительный рывок и столкновение',execute:'Замах, тяжёлый добивающий удар и короткая пауза',grenade:'Достать гранату, замахнуться, бросить по дуге и взрыв'}[action];log('Анимация: '+btn.textContent)});
+function poly(points,fill,stroke='#111820',width=4){ctx.beginPath();ctx.moveTo(...points[0]);for(let i=1;i<points.length;i++)ctx.lineTo(...points[i]);ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke()}
+function line(a,b,color,width=5){ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke()}
+function circle(x,y,r,color){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()}
+function flash(x,y,color,count=16){for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,s=1+Math.random()*5;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,life:20+Math.random()*18,color})}}
+function frame(now){
+const W=720,H=640;ctx.clearRect(0,0,W,H);
+const t=(now-started)/1000;const durations={idle:4,slash:1.4,hammer:1.8,charge:1.4,execute:2.2,grenade:2.4};const dur=durations[action];let p=(t%dur)/dur;
+if(!$('loop').checked&&t>dur)p=1;
+const slash=action==='slash',hammer=action==='hammer',charge=action==='charge',execute=action==='execute',grenade=action==='grenade';
+const swing=slash||hammer||execute;
+const attack=Math.sin(Math.PI*Math.min(1,Math.max(0,(p-.18)/.56)));
+const angle=Number($('facing').value),side=[0,.25,.6,0,-.25][angle],back=angle===3;
+const bob=Math.sin(now*.002)*2.5,step=charge?Math.sin(p*30)*9:0,lean=charge?Math.sin(p*Math.PI)*22:0;
+const ox=charge?p*120-55:0,oy=bob+(hammer&&p>.55&&p<.72?18:0);
+ctx.fillStyle='#11171d';ctx.fillRect(0,0,W,H);
+for(let y=410;y<640;y+=32){line([0,y],[720,y],'#26323b',1)}
+for(let x=0;x<720;x+=48){line([x,410],[x+80,640],'#26323b',1)}
+circle(360+ox,530,96,'#0c1319');circle(360+ox,532,76,'#18232a');
+ctx.save();ctx.translate(360+ox,320+oy);ctx.transform(1,0,side*.32,1,0,0);
+const navy='#254b78',shade='#102943',metal='#a6a9aa',gold='#d9b66a',black='#111821',red='#c33e3e';
+const fury=state.skills.fury;
+if(state.gear.relic){ctx.shadowColor='#ffd57b';ctx.shadowBlur=35+Math.sin(now*.006)*12;circle(0,10,102,'#68502130');ctx.shadowBlur=0}
+if(state.gear.back==='jetpack'){poly([[-62,-88],[-104,-55],[-96,46],[-51,60]],shade);poly([[62,-88],[104,-55],[96,46],[51,60]],shade);for(const x of [-83,83]){circle(x,40,18,'#a7a9aa');circle(x,40,10,'#f0aa51');if(action==='charge'||action==='idle'){poly([[x-12,55],[x,85+Math.sin(now*.02)*16],[x+12,55]],'#e99035','#9d481f',2)}}}
+poly([[-58,54],[-45,158],[-4,158],[-4,57]],navy);poly([[8,57],[8,158],[50,158],[60,54]],navy);poly([[-52,150],[-53,180],[-1,180],[-1,149]],shade);poly([[10,150],[10,180],[59,180],[58,149]],shade);
+ctx.save();ctx.rotate(lean*.009);
+poly([[-67,-97],[67,-97],[78,52],[50,84],[-52,84],[-78,52]],shade);
+poly([[-55,-95],[55,-95],[67,39],[37,64],[-37,64],[-67,39]],navy);
+poly([[-22,-95],[22,-95],[31,53],[-31,53]],'#365f8d');
+poly([[-15,-30],[0,-48],[15,-30],[0,-7]],gold);
+poly([[-75,-105],[-15,-140],[15,-140],[75,-105],[52,-63],[-52,-63]],navy);
+poly([[-21,-128],[21,-128],[23,-83],[-23,-83]],metal);
+if(state.gear.head==='helm'){poly([[-39,-178],[0,-198],[39,-178],[32,-127],[-32,-127]],navy);poly([[-30,-166],[30,-166],[19,-148],[-19,-148]],black);line([-24,-160],[-4,-156],red,6);line([4,-156],[24,-160],red,6);poly([[-12,-146],[12,-146],[8,-121],[-8,-121]],metal)}
+else{poly([[-31,-176],[0,-189],[32,-176],[26,-128],[-27,-128]],'#c4a58c');poly([[-33,-183],[-7,-199],[29,-187],[31,-169],[-28,-171]],'#323638');line([-20,-151],[-6,-152],black,3);line([6,-152],[21,-151],black,3)}
+const heavy=state.gear.shoulders==='pauldrons';
+poly([[-105,-116],[-60,-144],[-33,-120],[-49,-58],[-100,-56]],heavy?gold:navy);
+poly([[105,-116],[60,-144],[33,-120],[49,-58],[100,-56]],heavy?gold:navy);
+if(heavy){poly([[-96,-114],[-64,-130],[-50,-108],[-66,-74],[-96,-78]],navy);poly([[96,-114],[64,-130],[50,-108],[66,-74],[96,-78]],navy)}
+ctx.save();ctx.translate(-79,-60);ctx.rotate(grenade?-Math.sin(p*Math.PI)*.5:swing?-attack*.3:0);
+poly([[-21,-8],[15,-8],[22,77],[-12,77]],navy);poly([[-14,68],[23,68],[25,95],[-17,95]],metal);
+if(state.gear.offhand==='shield'){poly([[-45,5],[12,-8],[42,27],[19,112],[-26,103]],gold);poly([[-31,13],[10,5],[29,31],[12,97],[-16,90]],navy);poly([[-7,22],[5,34],[-5,72],[-17,33]],gold)}
+ctx.restore();
+ctx.save();ctx.translate(79,-60);
+const rot=grenade?(-1.5*Math.sin(Math.min(1,p*1.7)*Math.PI)):(swing?(-1.7*attack+0.35*Math.sin(p*9)):charge?-.7:0);
+ctx.rotate(rot);
+poly([[-15,-8],[21,-8],[20,75],[-16,75]],navy);poly([[-21,62],[24,62],[24,92],[-22,92]],metal);
+const weapon=state.gear.weapon;
+if(grenade){circle(0,104,13,'#61795c');line([-9,98],[7,98],gold,3)}
+else if(weapon==='hammer'){line([0,88],[0,210],gold,13);poly([[-45,185],[45,185],[52,226],[-52,226]],metal);poly([[-45,190],[-28,190],[-28,221],[-45,221]],gold)}
+else{line([0,85],[0,185],gold,12);poly([[-12,174],[0,250],[16,177],[10,140],[-8,140]],weapon==='blade'?'#9de9f7':metal);line([-26,173],[26,173],gold,9)}
+ctx.restore();ctx.restore();ctx.restore();
+if(swing&&p>.37&&p<.76){ctx.strokeStyle=state.gear.weapon==='blade'?'#78f1ff':'#e9d3a0';ctx.lineWidth=8+fury*4;ctx.beginPath();ctx.arc(360+ox+90,275+oy,110+fury*15,-1.7,.6);ctx.stroke();if(lastEffect!==Math.floor(t/dur)){flash(455+ox,275+oy,'#ffd47a',12+fury*8);lastEffect=Math.floor(t/dur)}}
+if(hammer&&p>.57&&p<.78){ctx.strokeStyle='#f6d17e';ctx.lineWidth=7;ctx.beginPath();ctx.ellipse(360+ox,495,Math.max(1,(p-.57)*1100),20,0,0,Math.PI*2);ctx.stroke()}
+if(charge&&p>.78&&p<.95&&lastEffect!==Math.floor(t/dur)){flash(440+ox,370,'#ffcf76',30);lastEffect=Math.floor(t/dur)}
+if(grenade&&p>.47){const flight=(p-.47)/.53;const gx=440+flight*210,gy=230-140*Math.sin(Math.PI*flight)+flight*240;if(flight<.88){circle(gx,gy,12,'#8f9c6e');circle(gx-3,gy-3,4,'#d1bd7d')}else{const r=20+(flight-.88)*900;circle(Math.min(665,gx),Math.min(470,gy),r,'#d4862d88');circle(Math.min(665,gx),Math.min(470,gy),r*.55,'#ffe4a088');if(lastEffect!==Math.floor(t/dur)){flash(655,470,'#ffbd5d',30);lastEffect=Math.floor(t/dur)}}}
+particles=particles.filter(q=>q.life>0);for(const q of particles){circle(q.x,q.y,Math.max(1,q.life/7),q.color);q.x+=q.vx;q.y+=q.vy;q.vy+=.15;q.life--}
+ctx.fillStyle='#c6b18c';ctx.font='18px Georgia';ctx.fillText('CAPTAIN / LVL '+state.level,24,35);ctx.font='14px monospace';ctx.fillText('ARMOR '+stats().armor+'  DMG '+stats().damage,24,59);
+requestAnimationFrame(frame)}
+renderUI();log('Лаборатория готова. Покупай предметы и проверяй способности.');requestAnimationFrame(frame);
+</script></body></html>
