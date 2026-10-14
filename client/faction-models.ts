@@ -5,7 +5,7 @@ export type FactionId = 'legion' | 'heretics' | 'scrap' | 'necrons' | 'drukhari'
 export const UNIT_ROLES = ['captain','guard','builder','sniper','heavy','flamer','elite','medic','transport','tank','walker','artillery','titan'] as const;
 export type UnitRole = typeof UNIT_ROLES[number];
 export const VEHICLE_ROLES = new Set<UnitRole>(['transport','tank','walker','artillery','titan']);
-export type Motion = 'idle' | 'idle_scan' | 'idle_inspect' | 'idle_taunt' | 'walk' | 'run' | 'attack' | 'attack_slash' | 'attack_thrust' | 'attack_overhead' | 'attack_combo' | 'execute' | 'shoot' | 'work' | 'death';
+export type Motion = 'idle' | 'idle_scan' | 'idle_inspect' | 'idle_taunt' | 'walk' | 'run' | 'attack' | 'attack_slash' | 'attack_thrust' | 'attack_overhead' | 'attack_combo' | 'execute' | 'throw_grenade' | 'shoot' | 'work' | 'death';
 export const BUILDING_ROLES = ['hq','barracks','post','turret','generator','factory','armory','relic','wall','gate'] as const;
 export type BuildingRole = typeof BUILDING_ROLES[number];
 
@@ -18,13 +18,13 @@ export const FACTION_ART: Record<FactionId, { name: string; subtitle: string; pr
   daemons: { name: 'Демоны Хаоса', subtitle: 'Варп-легионы Апокалипсиса', primary: 0x8d223c, trim: 0xe6a74e, metal: 0x352139, cloth: 0x5c214a, glow: 0xff5a23, skin: 0xa43b56 },
 };
 export const ROLE_MOTIONS: Record<UnitRole, Motion[]> = {
-  captain: ['idle', 'idle_scan', 'idle_inspect', 'idle_taunt', 'walk', 'run', 'attack', 'attack_slash', 'attack_thrust', 'attack_overhead', 'attack_combo', 'execute', 'death'],
+  captain: ['idle', 'idle_scan', 'idle_inspect', 'idle_taunt', 'walk', 'run', 'attack', 'attack_slash', 'attack_thrust', 'attack_overhead', 'attack_combo', 'execute', 'throw_grenade', 'death'],
   guard: ['idle', 'walk', 'run', 'shoot', 'death'],
   builder: ['idle', 'walk', 'run', 'work', 'death'],
   sniper: ['idle','walk','run','shoot','death'],
   heavy: ['idle','walk','run','shoot','death'],
   flamer: ['idle','walk','run','shoot','death'],
-  elite: ['idle','idle_scan','idle_taunt','walk','run','attack_slash','attack_thrust','attack_combo','execute','shoot','death'],
+  elite: ['idle','idle_scan','idle_taunt','walk','run','attack_slash','attack_thrust','attack_combo','execute','throw_grenade','shoot','death'],
   medic: ['idle','walk','run','shoot','death'],
   transport: ['idle','walk','run','shoot','death'],
   tank: ['idle','walk','run','shoot','death'],
@@ -33,7 +33,7 @@ export const ROLE_MOTIONS: Record<UnitRole, Motion[]> = {
   titan: ['idle','walk','run','shoot','death'],
 
 };
-const DURATIONS: Record<Motion, number> = { idle: 2, idle_scan: 2.4, idle_inspect: 2.2, idle_taunt: 1.7, walk: 1, run: 0.65, attack: 0.7, attack_slash: 0.75, attack_thrust: 0.58, attack_overhead: 0.95, attack_combo: 1.25, execute: 1.6, shoot: 0.45, work: 1.1, death: 1.1 };
+const DURATIONS: Record<Motion, number> = { idle: 2, idle_scan: 2.4, idle_inspect: 2.2, idle_taunt: 1.7, walk: 1, run: 0.65, attack: 0.7, attack_slash: 0.75, attack_thrust: 0.58, attack_overhead: 0.95, attack_combo: 1.25, execute: 1.6, throw_grenade: 1.1, shoot: 0.45, work: 1.1, death: 1.1 };
 const geometries = new Map<string, THREE.BufferGeometry>();
 const materialCache = new Map<FactionId, Record<string, THREE.MeshStandardMaterial>>();
 const surfacePixels = new Uint8Array(64 * 64 * 4);
@@ -282,6 +282,15 @@ export class FactionActor {
       j.torso.rotation.y = mode === 'idle_scan' ? Math.sin(p * Math.PI * 2) * 0.22 : mode === 'idle_taunt' ? 0.16 : 0;
       j.armR.rotation.x = mode === 'idle_inspect' ? -1.2 : mode === 'idle_taunt' ? -2.2 * Math.sin(p * Math.PI) : -0.35;
       j.armL.rotation.z = mode === 'idle_taunt' ? -0.6 * Math.sin(p * Math.PI) : 0.08;
+    } else if (mode === 'throw_grenade') {
+      // Wind-up, overhand release and follow-through.
+      const windup = Math.min(1, p * 2.5);
+      const release = Math.max(0, Math.min(1, (p - 0.45) * 3));
+      j.armR.rotation.x = -0.35 + windup * 2.1 - release * 3.5;
+      j.armR.rotation.z = -0.35 + release * 0.8;
+      j.torso.rotation.y = -0.45 * windup + release * 0.85;
+      j.torso.rotation.x = -0.15 * windup + 0.3 * release;
+      j.legL.rotation.x = -0.25 * windup;
     } else if (mode === 'attack_slash' || mode === 'attack_thrust' || mode === 'attack_overhead' || mode === 'attack_combo' || mode === 'execute') {
       const strike = mode === 'attack_combo' ? Math.sin(p * Math.PI * 4) : Math.sin(p * Math.PI);
       j.armR.rotation.x = mode === 'attack_thrust' ? -1.2 + strike * 0.9 : mode === 'attack_overhead' ? -2.8 + strike * 2.4 : mode === 'execute' ? -2.9 + strike * 2.7 : -1.1 - strike * 1.5;
