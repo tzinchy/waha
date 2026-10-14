@@ -147,6 +147,7 @@
   .w2d-specrow span{color:var(--ink-muted)}
   .w2d-specrow .vp{color:var(--gilt-300)}
   .w2d-specrow.out{opacity:.4;text-decoration:line-through}
+  .arch-info{margin:0 0 var(--space-2);font:400 13px/18px var(--font-body);color:var(--ink-muted)}
   .w2d-sparkline{stroke-width:2;stroke-linecap:square;animation:w2d-fade .28s steps(4) both}
   .w2d-arc{fill:none;stroke:var(--amber-300);stroke-width:3;stroke-dasharray:6 8;animation:w2d-dash .9s linear both}
   .w2d-boom{fill:rgba(240,120,40,.35);stroke:#f0a540;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:w2d-ring .6s steps(6) both}
@@ -224,7 +225,8 @@
       <div id="preview"></div>
       <div class="row"><label>Броня</label><div class="sws" id="armorSw"></div><input type="color" id="armorIn" aria-label="Свой цвет брони"></div>
       <div class="row"><label>Отделка</label><div class="sws" id="trimSw"></div><input type="color" id="trimIn" aria-label="Свой цвет отделки"></div>
-      <div class="row"><label>Оружие</label><div class="inline" id="weapon"><button class="lc-btn lc-btn--sm lc-btn--ghost" data-w="sword">Меч</button><button class="lc-btn lc-btn--sm lc-btn--ghost" data-w="hammer">Молот</button></div></div>
+      <div class="row"><label>Сборка</label><div class="inline" id="arch"><button class="lc-btn lc-btn--sm lc-btn--ghost" data-a="assault">Штурм</button><button class="lc-btn lc-btn--sm lc-btn--ghost" data-a="commander">Командор</button><button class="lc-btn lc-btn--sm lc-btn--ghost" data-a="mystic">Мистик</button></div></div>
+      <p class="arch-info" id="arch-info"></p>
       <div class="row"><label>Знамя</label><button class="lc-btn lc-btn--sm lc-btn--ghost" id="banner"></button></div>
     </section>
 
@@ -238,8 +240,8 @@
 
     <section class="lc-frame lc-frame--lg hidden" id="lobby">
       <h3 class="lc-frame__head"><span>Лобби</span></h3>
-      <p class="code" id="lcode"></p>
-      <button class="lc-btn lc-btn--sm lc-btn--ghost" id="copy">Скопировать приглашение</button>
+      <p class="code" id="lcode" title="Нажмите, чтобы скопировать код" role="button" tabindex="0" style="cursor:copy"></p>
+      <div class="inline"><button class="lc-btn lc-btn--sm" id="copycode">Скопировать код</button><button class="lc-btn lc-btn--sm lc-btn--ghost" id="copy">Скопировать ссылку</button></div>
       <h3 class="lc-frame__head" style="margin-top:var(--space-6)"><span>Фракция</span></h3>
       <div id="factions" class="factions"></div>
       <p id="faction-mech" style="margin:var(--space-2) 0 0;font:italic 400 14px/20px var(--font-body);color:var(--ink-muted)"></p>

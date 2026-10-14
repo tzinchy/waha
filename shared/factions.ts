@@ -1,7 +1,8 @@
 // Фракции из дизайн-системы «Латунный Собор»: имя, тема интерфейса и силуэты (пути в ds/assets).
 // Пока фракции отличаются видом; характеристики общие (особые механики — следующий шаг).
 export type FactionId = 'order' | 'undead' | 'prism' | 'clockwork' | 'orks' | 'ashen';
-type Art = { captain: [string, string]; builder: string; guard: string; hq: string; barracks: string; turret: [string, string] };
+type Art = { captain: [string, string]; // устарело: см. CAPTAIN_ART
+ builder: string; guard: string; hq: string; barracks: string; turret: [string, string] };
 /** Ключевые здания тиров I–IV, Врата (тир V) и три легенды — по таблице FactionTiers. */
 type Tiers = { keys: [string, string, string, string]; gate: string; legends: [string, string, string]; legendInfo: [string, string, string]; legendArt: [string, string, string] };
 export const FACTIONS: Record<FactionId, { name: string; theme: string; art: Art; builder: string; guard: string; mech: string } & Tiers> = {
@@ -21,9 +22,24 @@ export type Roster = Record<'sniper' | 'heavy' | 'support' | 'elite' | 'healer' 
 const O = { sniper: 'Units/sniper.svg', heavy: 'Units/gunner.svg', support: 'Units/censer.svg', elite: 'Units/cathguard.svg', healer: 'Units/archangel.svg', lveh: 'Units/herald.svg', mveh: 'Units/liturgic.svg', hveh: 'Units/spire.svg' };
 export const ROSTER: Record<FactionId, Roster> = {
   order: { tint: 'none', titanM: 34, sniper: { name: 'Око Лампы', art: O.sniper }, heavy: { name: 'Канонир Литейни', art: O.heavy }, support: { name: 'Кадильщица', art: O.support }, elite: { name: 'Соборная гвардия', art: O.elite }, healer: { name: 'Архангел Милосердия', art: O.healer }, lveh: { name: 'Глашатай', art: O.lveh }, mveh: { name: 'Литургический бронеход', art: O.mveh }, hveh: { name: 'Шпиль-ходок', art: O.hveh }, titan: { name: 'Колосс Вечной Лампы', art: 'Units/colossus.svg' } },
-  undead: { tint: 'grayscale(.7) sepia(.35) hue-rotate(60deg) brightness(.9)', titanM: 26, sniper: { name: 'Плакальщица-стрелок', art: O.sniper, tint: true }, heavy: { name: 'Костяная баллиста', art: O.heavy, tint: true }, support: { name: 'Певчая Скорби', art: 'Factions/wailer.svg' }, elite: { name: 'Гробовые латники', art: 'Factions/boneknight.svg' }, healer: { name: 'Хранительница мощей', art: O.healer, tint: true }, lveh: { name: 'Костяной бегун', art: O.lveh, tint: true }, mveh: { name: 'Катафалк', art: O.mveh, tint: true }, hveh: { name: 'Костяной шагоход', art: O.hveh, tint: true }, titan: { name: 'Ковчег-Костница', art: 'Factions/ossuary.svg' } },
+  undead: { tint: 'grayscale(.7) sepia(.35) hue-rotate(60deg) brightness(.9)', titanM: 26, sniper: { name: 'Плакальщица-стрелок', art: O.sniper, tint: true }, heavy: { name: 'Костяная баллиста', art: O.heavy, tint: true }, support: { name: 'Гробовой страж', art: 'Factions/boneknight.svg' }, elite: { name: 'Плакальщица', art: 'Factions/wailer.svg' }, healer: { name: 'Хранительница мощей', art: O.healer, tint: true }, lveh: { name: 'Костяной бегун', art: O.lveh, tint: true }, mveh: { name: 'Катафалк', art: O.mveh, tint: true }, hveh: { name: 'Костяной шагоход', art: O.hveh, tint: true }, titan: { name: 'Ковчег-Костница', art: 'Factions/ossuary.svg' } },
   prism: { tint: 'hue-rotate(150deg) saturate(1.3)', titanM: 30, sniper: { name: 'Фокус-линза', art: O.sniper, tint: true }, heavy: { name: 'Призма-орудие', art: O.heavy, tint: true }, support: { name: 'Щитовой дрон', art: 'Factions/tender.svg' }, elite: { name: 'Хор Граней', art: O.elite, tint: true }, healer: { name: 'Ремонтный каркас', art: O.healer, tint: true }, lveh: { name: 'Глиссер', art: O.lveh, tint: true }, mveh: { name: 'Каркас-страж', art: 'Factions/strider.svg' }, hveh: { name: 'Линзовый колосс', art: O.hveh, tint: true }, titan: { name: 'Призма-ковчег', art: 'Factions/prismark.svg' } },
   clockwork: { tint: 'hue-rotate(95deg) saturate(1.2) brightness(.9)', titanM: 32, sniper: { name: 'Стрелок Циферблата', art: O.sniper, tint: true }, heavy: { name: 'Гаусс-носильщик', art: O.heavy, tint: true }, support: { name: 'Стражник Гробницы', art: 'Factions/warden.svg' }, elite: { name: 'Хронарх', art: 'Factions/chronarch.svg' }, healer: { name: 'Часовщик', art: O.healer, tint: true }, lveh: { name: 'Скарабей', art: O.lveh, tint: true }, mveh: { name: 'Ковчег Ночи', art: O.mveh, tint: true }, hveh: { name: 'Шагающая гробница', art: O.hveh, tint: true }, titan: { name: 'Маятник', art: 'Factions/pendulum.svg' } },
   orks: { tint: 'hue-rotate(55deg) saturate(1.4) brightness(.85)', titanM: 28, sniper: { name: 'Меткий Гит', art: O.sniper, tint: true }, heavy: { name: 'Бахальщики', art: O.heavy, tint: true }, support: { name: 'Барабанщик', art: 'Factions/tinker.svg' }, elite: { name: 'Вожаки', art: 'Factions/warboss.svg' }, healer: { name: 'Знахарь', art: O.healer, tint: true }, lveh: { name: 'Багги', art: O.lveh, tint: true }, mveh: { name: 'Бронедрын', art: O.mveh, tint: true }, hveh: { name: 'Банка-шагун', art: O.hveh, tint: true }, titan: { name: 'Идол-Таран', art: 'Factions/idol.svg' } },
   ashen: { tint: 'hue-rotate(-25deg) saturate(1.6) brightness(.85)', titanM: 30, sniper: { name: 'Око Пепла', art: O.sniper, tint: true }, heavy: { name: 'Огнемётчики серы', art: O.heavy, tint: true }, support: { name: 'Служитель', art: 'Factions/servant.svg' }, elite: { name: 'Пепельный Канцлер', art: 'Factions/ashen-chancellor.svg' }, healer: { name: 'Плоть-ткачиха', art: O.healer, tint: true }, lveh: { name: 'Гончая Порчи', art: O.lveh, tint: true }, mveh: { name: 'Печь-колесница', art: O.mveh, tint: true }, hveh: { name: 'Адский шагоход', art: O.hveh, tint: true }, titan: { name: 'Пожиратель Шпилей', art: 'Factions/devourer.svg' } },
+};
+
+/** Силуэт капитана по сборке (пресет CaptainArchetypes). Силуэты Ордена у других фракций перекрашиваются (Units/* → tint). */
+export const CAPTAIN_ART: Record<FactionId, Record<'assault' | 'commander' | 'mystic', string>> = {
+  order: { assault: 'Units/captain-spire.svg', commander: 'Units/captain-crown.svg', mystic: 'Units/captain-hood.svg' },
+  undead: { assault: 'Factions/boneknight.svg', commander: 'Factions/wailer.svg', mystic: 'Units/captain-hood.svg' },
+  prism: { assault: 'Factions/strider.svg', commander: 'Factions/lensman.svg', mystic: 'Factions/tender.svg' },
+  clockwork: { assault: 'Factions/warden.svg', commander: 'Factions/chronarch.svg', mystic: 'Units/captain-hood.svg' },
+  orks: { assault: 'Factions/warboss.svg', commander: 'Units/captain-crown.svg', mystic: 'Units/captain-hood.svg' },
+  ashen: { assault: 'Factions/possessed.svg', commander: 'Factions/ashen-chancellor.svg', mystic: 'Units/chancellor.svg' },
+};
+export const ARCH_INFO: Record<'assault' | 'commander' | 'mystic', { name: string; info: string }> = {
+  assault: { name: 'Штурм', info: 'Молот и прыжок: урон +30%, скорость +15%, получает на 10% меньше.' },
+  commander: { name: 'Командор', info: 'Клинок, щит и знамя: союзники в 12 м бьют на 10% сильнее и получают на 10% меньше.' },
+  mystic: { name: 'Мистик', info: 'Посох-лампа и кадило: бьёт огнём на 9 м по площади, лечит союзников рядом.' },
 };

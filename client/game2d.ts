@@ -1,7 +1,8 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
+import type { Arch } from '../shared/sim.ts';
 import { isMelee, ROLES, GEAR, SQUADS, VEHICLES, LEGION_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
-import { FACTIONS, ROSTER, type FactionId } from '../shared/factions.ts';
+import { CAPTAIN_ART, FACTIONS, ROSTER, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
 import { paintMap } from './mappaint.ts';
@@ -51,12 +52,12 @@ const NEUTRAL: Partial<Record<Kind, [string, string]>> = {
   key1: ['Buildings/scriptorium.svg', 'Buildings/scriptorium.svg'], key2: ['Buildings/forge.svg', 'Buildings/forge.svg'], key3: ['Buildings/observatory.svg', 'Buildings/observatory.svg'],
   key4: ['Buildings/reliqhall.svg', 'Buildings/reliqhall.svg'], gate: ['Buildings/gate.svg', 'Buildings/gate.svg'], post: ['Defenses/point-1.svg', 'Defenses/point-2.svg'], foundry: ['Buildings/foundry.svg', 'Buildings/foundry.svg'], pump: ['Buildings/pump.svg', 'Buildings/pump.svg'] };
 /** Путь к силуэту юнита: по фракции, уровню и (у капитана) оружию. */
-export function artFor(kind: Kind, faction: FactionId, lvl = 1, weapon: 'sword' | 'hammer' = 'sword', variant = 0) {
+export function artFor(kind: Kind, faction: FactionId, lvl = 1, arch: Arch = 'commander', variant = 0) {
   const a = FACTIONS[faction].art;
   if (kind === 'legend') return FACTIONS[faction].legendArt[variant] ?? FACTIONS[faction].legendArt[0];
   if (kind === 'deity') return 'Factions/deity.svg';
   if (kind in ROSTER[faction] && typeof (ROSTER[faction] as Record<string, unknown>)[kind] === 'object') return ROSTER[faction][kind as 'sniper'].art;
-  if (kind === 'captain') return a.captain[weapon === 'sword' ? 0 : 1];
+  if (kind === 'captain') return CAPTAIN_ART[faction][arch] ?? a.captain[0];
   if (kind === 'turret') return a.turret[lvl > 1 ? 1 : 0];
   if (kind === 'post') return lvl >= 3 ? 'Defenses/point-3.svg' : lvl === 2 ? 'Defenses/point-2.svg' : 'Defenses/point-1.svg';
   if (NEUTRAL[kind]) return NEUTRAL[kind]![lvl > 1 ? 1 : 0];
@@ -70,7 +71,7 @@ const FORM: Partial<Record<Kind, [number, number][]>> = {
 
 const svgCache = new Map<string, string>();
 /** Загружает все силуэты один раз. */
-const ALL_ART = new Set(['Factions/deity.svg', ...Object.values(ROSTER).flatMap(r => Object.values(r).flatMap(v => (typeof v === 'object' ? [v.art] : []))), ...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
+const ALL_ART = new Set([...Object.values(CAPTAIN_ART).flatMap(o => Object.values(o)), 'Factions/deity.svg', ...Object.values(ROSTER).flatMap(r => Object.values(r).flatMap(v => (typeof v === 'object' ? [v.art] : []))), ...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
 export const ready2d = Promise.all([...ALL_ART]
   .map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgCache.set(p, t)))).then(() => undefined);
 
@@ -95,7 +96,9 @@ const setAnim = (svg: SVGElement, a: string) => {
 };
 
 /** SVG капитана по оружию (Меч — Штурм, Молот — Командор), для превью в редакторе. */
-export const captainSvg = (w: 'sword' | 'hammer', f: FactionId = 'order') => svgCache.get(artFor('captain', f, 1, w)) ?? '';
+export const captainSvg = (a: Arch, f: FactionId = 'order') => svgCache.get(artFor('captain', f, 1, a)) ?? '';
+/** Чужой силуэт (Ордена) у другой фракции — перекрасить в её цвета. */
+export const needsTint = (path: string, f: FactionId) => f !== 'order' && path.startsWith('Units/');
 /** Маленький силуэт для HUD: живой SVG, чтобы палитра art-* применилась. */
 const miniArt = (path: string) => (svgCache.get(path) ?? '').replace('<svg ', '<svg class="lc-art" ');
 
@@ -245,11 +248,11 @@ export class Game {
     const ring = document.createElement('div'); ring.className = 'w2d-ring';
     for (const e of [sel, ring]) Object.assign(e.style, { width: r * 2.4 * S + 'px', height: r * 1.3 * S + 'px' });
     const body = document.createElement('div'); body.className = 'w2d-body';
-    const pl = this.players[owner], artPath = artFor(kind, pl.faction ?? 'order', 1, pl.captain.weapon, variant);
+    const pl = this.players[owner], artPath = artFor(kind, pl.faction ?? 'order', 1, pl.captain.arch, variant);
     const svgs: SVGElement[] = [];
     for (const [ox, oy] of FORM[kind] ?? [[0, 0]]) {
       const a = art(artPath, widthOf(kind, pl.faction ?? 'order') * S);
-      if (ROSTER[pl.faction ?? 'order'][kind as 'sniper']?.tint) a.style.filter = ROSTER[pl.faction ?? 'order'].tint; // чужой силуэт в цветах фракции
+      if (ROSTER[pl.faction ?? 'order'][kind as 'sniper']?.tint || (kind === 'captain' && needsTint(artPath, pl.faction ?? 'order'))) a.style.filter = ROSTER[pl.faction ?? 'order'].tint; // чужой силуэт в цветах фракции
       a.style.transform = `translate(${ox * S}px, ${oy * S * 0.6}px)`;
       body.append(a);
       svgs.push(a.querySelector('svg')!);
@@ -288,7 +291,7 @@ export class Game {
         else if (hp < v.hp && now - this.lastAlert > 8000) { this.lastAlert = now; audio.alarm(); if (isStruct(kind)) voice.announce('Наша база атакована.'); else voice.say(this.fac(), kind, 'hurt'); this.pingMini(x / 10, y / 10); this.alert('danger', 'Нас атакуют', this.nameOf(v), x / 10, y / 10); }
       }
       v.tx = x / 10; v.ty = y / 10; v.f = face / 100; v.hp = hp; v.q = q; v.build = bp / 100; v.dead = hp <= 0;
-      const lvlArt = artFor(kind, this.players[owner].faction ?? 'order', lvl, this.players[owner].captain.weapon, kind === 'legend' ? q : 0);
+      const lvlArt = artFor(kind, this.players[owner].faction ?? 'order', lvl, this.players[owner].captain.arch, kind === 'legend' ? q : 0);
       if (lvl !== v.lvl && lvlArt !== v.artPath) { // апгрейд: новый силуэт уровня 2
         v.artPath = lvlArt;
         const a = art(lvlArt, widthOf(kind, this.players[owner].faction ?? 'order') * S * 1.1);

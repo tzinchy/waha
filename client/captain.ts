@@ -1,7 +1,8 @@
 
 // Превью капитана в редакторе: силуэт архетипа из дизайн-системы, окрашенный цветами игрока; иногда делает замах.
 import type { CaptainCfg } from '../shared/sim.ts';
-import { captainSvg, ready2d } from './game2d.ts';
+import { captainSvg, needsTint, ready2d } from './game2d.ts';
+import { CAPTAIN_ART, ROSTER } from '../shared/factions.ts';
 import type { FactionId } from '../shared/factions.ts';
 
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
@@ -22,7 +23,9 @@ export class CaptainPreview {
   set(cfg: CaptainCfg) {
     this.cfg = cfg;
     ready2d.then(() => {
-      this.el.innerHTML = captainSvg(cfg.weapon, this.faction);
+      this.el.innerHTML = captainSvg(cfg.arch, this.faction);
+      const f = this.faction ?? 'order', path = CAPTAIN_ART[f][cfg.arch];
+      this.el.style.filter = needsTint(path, f) ? ROSTER[f].tint : '';
       this.el.style.setProperty('--art-brass', hex(cfg.armor));
       this.el.style.setProperty('--art-brass-lit', hex(cfg.trim));
       this.el.querySelector('svg')?.classList.add('lc-art', 'lc-anim-idle');

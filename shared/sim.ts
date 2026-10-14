@@ -5,8 +5,10 @@ import { MAP, HQ_POS, POINTS, RELICS, VENTS } from './mapdata.ts';
 export { MAP, HQ_POS, POINTS, RELICS, VENTS };
 export const DT = 1 / 20;
 
-export type Weapon = 'sword' | 'hammer';
-export type CaptainCfg = { armor: number; trim: number; weapon: Weapon; banner: boolean };
+/** Сборка капитана (пресет CaptainArchetypes): Штурм — рукопашная, Командор — ауры, Мистик — урон по площади и лечение. */
+export type Arch = 'assault' | 'commander' | 'mystic';
+export const ARCHS: Arch[] = ['assault', 'commander', 'mystic'];
+export type CaptainCfg = { armor: number; trim: number; arch: Arch; banner: boolean };
 export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'legend' | 'wall' | 'wallgate' | 'bunker' | 'mine'
   | 'sniper' | 'heavy' | 'support' | 'elite' | 'healer' | 'lveh' | 'mveh' | 'hveh' | 'titan' | 'deity' | 'aegis' | 'rturret' | 'fturret';
 export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'key1', 'key2', 'key3', 'key4', 'gate', 'legend', 'wall', 'wallgate', 'bunker', 'mine', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'aegis', 'rturret', 'fturret'];
@@ -148,7 +150,7 @@ const GUARD_FX: Record<FactionId, number> = { order: FX.shot, undead: FX.thrust,
 export const isMelee = (k: Kind, f: FactionId) => k === 'captain' || (k === 'guard' && GUARD_FX[f] !== FX.shot && GUARD_FX[f] !== FX.beam);
 export function attackFx(k: Kind, f: FactionId, variant = 0) {
   if (k === 'guard') return GUARD_FX[f];
-  if (k === 'captain') return f === 'ashen' || f === 'orks' ? FX.claws : FX.chop;
+  if (k === 'captain') return f === 'ashen' || f === 'orks' ? FX.claws : FX.chop; // мистика переопределяет act
   if (k === 'legend') return variant === 2 ? FX.fire : variant === 1 ? FX.chop : FX.beam;
   if (k === 'elite') return f === 'prism' ? FX.beam : f === 'order' || f === 'clockwork' ? FX.thrust : FX.claws;
   return ({ rturret: 12, fturret: FX.fire, deity: FX.chop, sniper: 10, heavy: 11, hveh: 12, titan: 13, mveh: f === 'ashen' || f === 'orks' ? FX.fire : 14, lveh: 14 } as Partial<Record<Kind, number>>)[k] ?? FX.shot;
@@ -181,6 +183,8 @@ export function canLearn(p: Player, a: number) {
   if (p.clvl < g.lvl || p.tier < g.tier) return `Нужен уровень ${g.lvl} и тир ${g.tier}`;
   if (t > 0 && !(p.abil & (1 << (a - 1)))) return 'Сначала предыдущая способность ветки';
 }
+/** Рядом со своим капитаном нужной сборки (аура Командора — 12 м). */
+const nearArch = (s: State, u: Unit, a: Arch) => { if (s.players[u.owner].arch !== a) return false; const c = s.units.find(v => v.owner === u.owner && v.kind === 'captain' && v.hp > 0); return !!c && dist(c, u) < 12; };
 const capOf = (s: State, owner: number) => s.units.find(u => u.owner === owner && (u.kind === 'captain' || u.kind === 'deity'));
 /** Летают: Бог-Механизм и Архангел Ордена — здания их не останавливают. */
 export const flies = (k: Kind, f: FactionId) => k === 'deity' || (k === 'healer' && f === 'order');
@@ -241,6 +245,7 @@ export type Unit = {
   gear: number; ch: number[]; gcd: number; // снаряжение отряда: биты купленного, заряды, перезарядка броска
   sh: number; off: number;      // щит: личный (дрон) или пул купола-эгиды; off — купол пробит, секунд до включения
   frozen: number;               // Остановка времени: секунд неподвижности
+  mark: number;                 // Сеть наведения Консенсуса: секунд метки
   carry: number;                // Орда: id турели, которую тащит отряд (0 — нет); у турели — id несущего
   rise: number;                 // Вознесение: секунд до появления Бога-Механизма
   build: number;                // 0..1, готовность постройки (у юнитов всегда 1)
@@ -255,7 +260,7 @@ export type Unit = {
 export type Point = { x: number; y: number; owner: number; prog: number; by: number; relic?: boolean };
 export type Player = {
   req: number; energy: number; relics: number; alive: boolean; tier: number;
-  faction: FactionId; rage: number; waagh: number; remains: number; // ярость и ВААГХ Орды, останки Нежити
+  faction: FactionId; arch: Arch; rage: number; waagh: number; remains: number; // ярость и ВААГХ Орды, останки Нежити
   research: number;                  // битовая маска изученного (RESEARCH)
   xp: number; clvl: number; pts: number; abil: number; acd: number[]; // капитан: опыт, уровень, очки, способности и их перезарядка
   stopCd: number; revive: number; // перезарядка Остановки времени, таймер воскрешения Архангела
@@ -288,16 +293,17 @@ export type Cmd =
   | { c: 'ascend' }
   | { c: 'timestop' }
   | { c: 'drag'; ids: number[]; id: number }
+  | { c: 'sacrifice'; ids: number[] }
   | { c: 'learn'; a: number }
   | { c: 'ability'; a: number };
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
-export function newState(n: number, factions: FactionId[] = []): State {
+export function newState(n: number, factions: FactionId[] = [], archs: Arch[] = []): State {
   const s: State = { tick: 0, units: [], points: [...POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), ...RELICS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1, relic: true }))], players: [], nextId: 1, winner: null, shots: [], rewind: [], blasts: [], smoke: [], vp: [], died: [] };
   for (let i = 0; i < n; i++) {
-    s.players.push({ req: START_REQ, energy: 0, relics: 0, alive: true, tier: 1, faction: factions[i] ?? 'order', rage: 0, waagh: 0, remains: 0, research: 0, xp: 0, clvl: 1, pts: 1, abil: 0, acd: ABILITIES.map(() => 0), stopCd: 0, revive: 0 });
+    s.players.push({ req: START_REQ, energy: 0, relics: 0, alive: true, tier: 1, faction: factions[i] ?? 'order', arch: archs[i] ?? 'commander', rage: 0, waagh: 0, remains: 0, research: 0, xp: 0, clvl: 1, pts: 1, abil: 0, acd: ABILITIES.map(() => 0), stopCd: 0, revive: 0 });
     s.vp.push(VP_START);
     const [hx, hy] = HQ_POS[i];
     spawn(s, i, 'hq', hx, hy);
@@ -313,7 +319,7 @@ const nearHq = (hx: number, hy: number, d: number): [number, number] => {
 };
 
 export function spawn(s: State, owner: number, kind: Kind, x: number, y: number): Unit {
-  const u: Unit = { id: s.nextId++, owner, kind, x, y, hp: maxHp(kind), face: Math.atan2(MAP.h / 2 - y, MAP.w / 2 - x), cd: 0, order: null, q: 0, prog: 0, que: [], gear: 0, ch: [0, 0, 0], gcd: 0, sh: kind === 'aegis' ? AEGIS.pool : 0, off: 0, frozen: 0, carry: 0, rise: 0, build: 1, dead: 0, reinf: false, rt: 0, hit: 9, lvl: 1, upg: -1, sm: 1, by: -1, rush: 0, stand: 0 };
+  const u: Unit = { id: s.nextId++, owner, kind, x, y, hp: maxHp(kind), face: Math.atan2(MAP.h / 2 - y, MAP.w / 2 - x), cd: 0, order: null, q: 0, prog: 0, que: [], gear: 0, ch: [0, 0, 0], gcd: 0, sh: kind === 'aegis' ? AEGIS.pool : 0, off: 0, frozen: 0, mark: 0, carry: 0, rise: 0, build: 1, dead: 0, reinf: false, rt: 0, hit: 9, lvl: 1, upg: -1, sm: 1, by: -1, rush: 0, stand: 0 };
   s.units.push(u);
   return u;
 }
@@ -351,11 +357,13 @@ const fac = (s: State, owner: number) => s.players[owner].faction;
 const nearOwn = (s: State, owner: number, x: number, y: number, r: number, kinds?: Kind[]) =>
   s.units.some(u => u.owner === owner && u.hp > 0 && u.build >= 1 && isStruct(u.kind) && (!kinds || kinds.includes(u.kind)) && dist(u, { x, y }) < r + STATS[u.kind].radius);
 /** Множитель скорости: Орден медленнее, Орда в ВААГХ быстрее. */
-const speedMul = (s: State, u: Unit) => { const p = s.players[u.owner]; return (u.carry ? 0.6 : 1) * (u.kind === 'guard' && isMelee('guard', p.faction) ? MELEE_GUARD.speed / STATS.guard.speed : 1) * (p.faction === 'order' ? 0.9 : p.faction === 'orks' && p.waagh > 0 ? 1.3 : 1) * (has(p, 7) ? 1.1 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 2 : 1); };
+const speedMul = (s: State, u: Unit) => { const p = s.players[u.owner]; return (u.kind === 'captain' && p.arch === 'assault' ? 1.15 : 1) * (u.carry ? 0.6 : 1) * (u.kind === 'guard' && isMelee('guard', p.faction) ? MELEE_GUARD.speed / STATS.guard.speed : 1) * (p.faction === 'order' ? 0.9 : p.faction === 'orks' && p.waagh > 0 ? 1.3 : 1) * (has(p, 7) ? 1.1 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 2 : 1); };
 /** Урон атакующего: ВААГХ +30%, Синклит вне Порчи −10%, ближний бой Консенсуса −40%. */
 function dmgMul(s: State, u: Unit) {
   const p = s.players[u.owner];
-  const r = (u.kind === 'guard' ? (has(p, 2) ? 1.1 : 1) * (has(p, 9) ? 1.1 : 1) : 1) * (u.kind === 'turret' && has(p, 5) ? 1.25 : 1) * (u.kind === 'captain' && has(p, 10) ? 1.2 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 1.5 : 1) * (u.kind === 'guard' && nearCapWith(s, u, 6, 12) ? 1.15 : 1);
+  const fear = s.units.some(w => w.kind === 'elite' && w.owner !== u.owner && fac(s, w.owner) === 'undead' && w.hp > 0 && dist(w, u) < 10) ? 0.8 : 1; // крик Плакальщицы
+  const capA = (u.kind === 'captain' && p.arch === 'assault' ? 1.3 : 1) * fear, cmdA = !isStruct(u.kind) && u.kind !== 'captain' && nearArch(s, u, 'commander') ? 1.1 : 1;
+  const r = capA * cmdA * (u.kind === 'guard' ? (has(p, 2) ? 1.1 : 1) * (has(p, 9) ? 1.1 : 1) : 1) * (u.kind === 'turret' && has(p, 5) ? 1.25 : 1) * (u.kind === 'captain' && has(p, 10) ? 1.2 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 1.5 : 1) * (u.kind === 'guard' && nearCapWith(s, u, 6, 12) ? 1.15 : 1);
   return r * factionDmg(s, u, p);
 }
 function factionDmg(s: State, u: Unit, p: Player) {
@@ -369,7 +377,7 @@ function armorMul(s: State, t: Unit) {
   const f = fac(s, t.owner), p = s.players[t.owner];
   if (isStruct(t.kind)) return (has(p, 4) ? 0.8 : 1) * (t.kind === 'post' && t.lvl >= 2 ? 0.5 : 1) * (t.kind === 'wall' ? 0.6 : 1);
   if (s.units.some(b => b.kind === 'bunker' && b.owner === t.owner && b.build >= 1 && b.hp > 0 && dist(b, t) < STATS.bunker.radius + 3)) return 0.5; // крипта-бункер
-  const res = (s.units.some(a => a.kind === 'support' && a.owner === t.owner && a.hp > 0 && dist(a, t) < 10) ? 0.85 : 1) * (nearCapWith(s, t, 0, 12) ? 0.85 : 1) * (t.kind === 'guard' && has(p, 0) ? 0.9 : 1) * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
+  const res = (t.kind === 'captain' && p.arch === 'assault' ? 0.9 : 1) * (t.kind !== 'captain' && nearArch(s, t, 'commander') ? 0.9 : 1) * (s.units.some(a => a.kind === 'support' && a.owner === t.owner && a.hp > 0 && dist(a, t) < 10) ? (f === 'order' ? 0.75 : 0.85) : 1) // Кадильщица Ордена: Свет веры * (nearCapWith(s, t, 0, 12) ? 0.85 : 1) * (t.kind === 'guard' && has(p, 0) ? 0.9 : 1) * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
   return res * factionArmor(f, s, t);
 }
 function factionArmor(f: FactionId, s: State, t: Unit) {
@@ -381,6 +389,7 @@ const rangeMul = (s: State, u: Unit) => (fac(s, u.owner) === 'prism' ? 1.15 : 1)
 /** Плата: Династии платят всё энергией (влияния у них нет). */
 function pay(p: Player, req: number, energy = 0, relics = 0): string | undefined {
   if (p.faction === 'clockwork') { energy += req; req = 0; }
+  if (p.faction === 'undead' && energy > p.energy) { req += energy - Math.max(0, p.energy); energy = Math.max(0, p.energy); } // у Нежити нет генераторов: недостающую энергию оплачивает влияние
   if (p.req < req) return 'Не хватает влияния';
   if (p.energy < energy) return 'Не хватает энергии';
   if (p.relics < relics) return 'Не хватает реликвий';
@@ -545,6 +554,19 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     u.order = { t: 'throw', g, x: clamp(cmd.x, 0, MAP.w), y: clamp(cmd.y, 0, MAP.h) };
     return;
   }
+  if (cmd.c === 'sacrifice') { // Синклит: отряд у Чёрного Алтаря (штаба) обращается в демона
+    if (p.faction !== 'ashen') return 'Жертвы приносит только Синклит';
+    const hq = hqOf(s, owner);
+    const victims = mine.filter(u => (SQUADS.has(u.kind) || VEHICLES.has(u.kind)) && u.kind !== 'elite' && u.kind !== 'titan' && hq && dist(u, hq) < 14);
+    if (!victims.length) return 'Подведите отряд к Алтарю';
+    for (const v of victims) {
+      const weight = ROLES[v.kind]?.pop ?? 2, d = spawn(s, owner, 'elite', v.x, v.y);
+      d.hp = maxHp('elite') * Math.min(1, weight / ROLES.elite!.pop); // демон того же веса
+      v.hp = 0; v.by = -1;
+      if (s.shots.length < 200) s.shots.push([v.x, v.y, v.x, v.y - 0.1, FX.fire]);
+    }
+    return;
+  }
   if (cmd.c === 'drag') { // Орда: отряд Рубак утаскивает свою турель (или бросает, если уже тащит)
     if (p.faction !== 'orks') return 'Таскать турели умеет только Орда';
     const carrying = mine.find(u => u.carry);
@@ -580,6 +602,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
       const x = a.x + ((b.x - a.x) * i) / Math.max(1, n - 1), y = a.y + ((b.y - a.y) * i) / Math.max(1, n - 1);
       if (s.units.some(u => isStruct(u.kind) && u.hp > 0 && dist(u, { x, y }) < (u.kind === 'wall' ? 1 : STATS[u.kind].radius + STATS.wall.radius))) continue;
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) continue;
+      if (dist(s.points[0], { x, y }) < CRIT_NOBUILD) continue; // не у критической точки
       if (pay(p, STATS.wall.cost)) break;
       const site = spawn(s, owner, 'wall', x, y);
       site.build = 0.05; site.hp = STATS.wall.hp * 0.05; first ??= site; built++;
@@ -596,8 +619,9 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     const c = STATS[cmd.kind];
     if ((cmd.kind === 'foundry' || cmd.kind === 'pump') && p.faction === 'undead') return 'Нежити не нужны генераторы: энергию даёт Скорбь';
     if (FACTION_ONLY[cmd.kind] && FACTION_ONLY[cmd.kind] !== p.faction) return 'Постройка другой фракции';
-    if (p.faction === 'clockwork' ? p.energy < c.cost + (ENERGY_COST[cmd.kind] ?? 0) : p.req < c.cost || p.energy < (ENERGY_COST[cmd.kind] ?? 0)) return p.req < c.cost && p.faction !== 'clockwork' ? 'Не хватает влияния' : 'Не хватает энергии';
+    { const probe = { ...p }; const e = pay(probe, c.cost, ENERGY_COST[cmd.kind] ?? 0); if (e) return e; } // проверка цены теми же правилами, что и оплата
     let x = clamp(cmd.x, 4, MAP.w - 4), y = clamp(cmd.y, 4, MAP.h - 4);
+    if (dist(s.points[0], { x, y }) < CRIT_NOBUILD) return 'У критической точки строить нельзя — за неё сражаются';
     if (cmd.kind === 'post') {
       const pt = s.points.filter(q => !q.relic && dist(q, { x, y }) < 9).sort((a, b) => dist(a, { x, y }) - dist(b, { x, y }))[0];
       if (!pt) return 'Пост строится у стратегической точки';
@@ -615,7 +639,8 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) return 'Слишком близко к чужому штабу';
     } else if (cmd.kind === 'turret' || cmd.kind === 'aegis' || /^key|^gate/.test(cmd.kind)) {
       if (/^key|^gate/.test(cmd.kind) && s.units.some(u => u.owner === owner && u.kind === cmd.kind && u.hp > 0)) return 'Ключевое здание уже есть';
-      if (!s.units.some(u => u.owner === owner && isStruct(u.kind) && u.kind !== 'turret' && u.hp > 0 && dist(u, { x, y }) < 16)) return 'Турель ставится рядом с вашим штабом, казармами или постом';
+      if (!s.units.some(u => u.owner === owner && isStruct(u.kind) && u.kind !== 'turret' && u.hp > 0 && dist(u, { x, y }) < 16) && !(cmd.kind === 'turret' && nearOwnPoint(s, owner, x, y)))
+        return 'Турель ставится у своих построек или вокруг своей точки';
     } else {
       const hq = hqOf(s, owner), d = hq ? dist(hq, { x, y }) : 99;
       if (d < 8 || d > 32) return 'Казармы строятся рядом со штабом';
@@ -663,6 +688,7 @@ export function step(s: State, dt = DT): void {
     if (!s.players[u.owner].alive) continue;
     u.hit += dt;
     u.rush = Math.max(0, u.rush - dt); u.stand = Math.max(0, u.stand - dt);
+    if (u.mark > 0) u.mark -= dt;
     if (u.frozen > 0) { u.frozen -= dt; continue; } // Остановка времени
     if (u.kind === 'aegis' && u.build >= 1) { if (u.off > 0) u.off -= dt; else u.sh = Math.min(AEGIS.pool, u.sh + AEGIS.regen * dt); }
     if (u.rise > 0) { // Вознесение: 4 с превращения, затем капитан становится Богом-Механизмом
@@ -719,7 +745,9 @@ export function step(s: State, dt = DT): void {
 
 /** Рядом со своей захваченной точкой (стратегической или реликварием): там можно ставить генераторы. */
 export const GEN_R = 14;
-export const nearOwnPoint = (s: State, owner: number, x: number, y: number) => s.points.some(p => p.owner === owner && dist(p, { x, y }) < GEN_R);
+export const nearOwnPoint = (s: State, owner: number, x: number, y: number) => s.points.some((p, i) => i !== 0 && p.owner === owner && dist(p, { x, y }) < GEN_R); // критическая точка не в счёт
+/** У критической точки (центр) строить нельзя ничего: за неё только сражаются. */
+export const CRIT_NOBUILD = 12;
 const postAt = (s: State, pt: { x: number; y: number }) => s.units.find(u => u.kind === 'post' && u.build >= 1 && u.hp > 0 && dist(u, pt) < 2);
 
 function produce(s: State, b: Unit, dt: number) {
@@ -777,6 +805,7 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
       if (sq) { p.revive = 0; sq.hp = Math.min(maxHp(sq.kind), sq.hp + STATS[sq.kind].hp); if (s.shots.length < 200) s.shots.push([sq.x, sq.y, sq.x, sq.y - 0.1, 16]); }
     }
   }
+  if (u.kind === 'captain' && s.players[u.owner].arch === 'mystic') for (const v of s.units) if (v.owner === u.owner && v !== u && !isStruct(v.kind) && !VEHICLES.has(v.kind) && v.hp > 0 && dist(v, u) < 10) v.hp = Math.min(maxHp(v.kind), v.hp + maxHp(v.kind) * 0.015 * dt); // Мистик: лампа лечит
   if (u.kind === 'healer') for (const v of s.units) if (v.owner === u.owner && v !== u && !isStruct(v.kind) && !VEHICLES.has(v.kind) && v.hp > 0 && dist(v, u) < 15) v.hp = Math.min(maxHp(v.kind), v.hp + maxHp(v.kind) * ROLES.healer!.heal! * dt); // целитель: 5%/с
   if (u.kind === 'titan' && u.order && s.tick % 4 === 0) for (const v of s.units) if (v.owner !== u.owner && !isStruct(v.kind) && armorOf(v.kind) === 'inf' && v.hp > 0 && dist(v, u) < STATS.titan.radius + 1) { hurt(s, v, 40, u.owner); } // шаг титана давит пехоту
   if (fac(s, u.owner) === 'ashen' && !isStruct(u.kind) && u.hp < maxHp(u.kind) && nearOwn(s, u.owner, u.x, u.y, 14)) u.hp = Math.min(maxHp(u.kind), u.hp + maxHp(u.kind) * 0.02 * dt); // Порча лечит
@@ -836,20 +865,23 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
     const d = dist(u, target) - STATS[target.kind].radius;
     u.face = Math.atan2(target.y - u.y, target.x - u.x);
     const melee = u.kind === 'guard' && isMelee('guard', fac(s, u.owner));
-    if (d <= (u.kind === 'post' && u.lvl >= 3 ? 12 : melee ? MELEE_GUARD.range : st.range) * rangeMul(s, u) + (u.lvl > 1 ? LVL2.range[u.kind] ?? 0 : 0) + ((u.kind === 'post' || u.kind === 'turret') && hasR(s, u.owner, 8) ? 3 : 0)) {
+    const mystic = u.kind === 'captain' && s.players[u.owner].arch === 'mystic'; // посох-лампа и кадило: дальше и по площади
+    if (d <= (u.kind === 'post' && u.lvl >= 3 ? 12 : melee ? MELEE_GUARD.range : mystic ? 9 : st.range) * rangeMul(s, u) + (u.lvl > 1 ? LVL2.range[u.kind] ?? 0 : 0) + ((u.kind === 'post' || u.kind === 'turret') && hasR(s, u.owner, 8) ? 3 : 0)) {
       if (u.cd === 0) {
         u.cd = melee ? MELEE_GUARD.cd : st.cd;
         const mult = u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1, armor = target.lvl > 1 ? LVL2.armor[target.kind] ?? 1 : 1;
         const smoked = !melee && st.range > 4 && s.smoke.some(c => dist(c, target) < 6 || dist(c, u) < 6); // в дыму стрельба вслепую
-        const vs = (t: Unit) => (smoked ? 0.5 : 1) * VS[u.kind === 'turret' && u.lvl > 1 ? 'heavy' : dmgOf(u.kind, fac(s, u.owner))][armorOf(t.kind)];
+        const netted = fac(s, u.owner) === 'prism' && target.mark > 0 ? 1.25 : 1; // Сеть наведения
+        if (fac(s, u.owner) === 'prism' && !melee) target.mark = 5;
+        const vs = (t: Unit) => netted * (smoked ? 0.5 : 1) * VS[u.kind === 'turret' && u.lvl > 1 ? 'heavy' : dmgOf(u.kind, fac(s, u.owner))][armorOf(t.kind)];
         const dealt = (u.kind === 'post' && u.lvl >= 3 ? 14 : melee ? MELEE_GUARD.dmg : st.dmg) * (SQUADS.has(u.kind) ? members(u.kind, u.hp) : 1) * mult * armor * dmgMul(s, u) * armorMul(s, target) * vs(target);
         hurt(s, target, dealt, u.owner);
-        const aoe = ROLES[u.kind]?.aoe ?? STRUCT_AOE[u.kind];
+        const aoe = ROLES[u.kind]?.aoe ?? STRUCT_AOE[u.kind] ?? (mystic ? 3 : undefined);
         if (aoe) for (const v of s.units) if (v !== target && v.owner !== u.owner && v.hp > 0 && dist(v, target) < aoe) { hurt(s, v, dealt * 0.6 * (vs(v) / Math.max(0.01, vs(target))), u.owner); } // взрыв по площади
         if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) { hurt(s, v, dealt * 0.5, u.owner); } // огненная буря
         const pa = s.players[u.owner];
-        if (pa.faction === 'orks' && pa.waagh <= 0) { pa.rage += dealt * 0.08 + (target.hp <= 0 ? 6 : 0); if (pa.rage >= RAGE_MAX) { pa.rage = 0; pa.waagh = WAAGH_TIME; } } // Ярость
-        if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y, attackFx(u.kind, fac(s, u.owner), u.q)]);
+        if (pa.faction === 'orks' && pa.waagh <= 0) { pa.rage += (dealt * 0.08 + (target.hp <= 0 ? 6 : 0)) * (s.units.some(w => w.kind === 'elite' && w.owner === u.owner && w.hp > 0 && dist(w, u) < 12) ? 2 : 1); /* Вожак рядом — ярость вдвое */ if (pa.rage >= RAGE_MAX) { pa.rage = 0; pa.waagh = WAAGH_TIME; } } // Ярость
+        if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y, mystic ? FX.fire : attackFx(u.kind, fac(s, u.owner), u.q)]);
       }
     } else if (st.speed) go(u, target.x, target.y, dt);
     return;
@@ -938,7 +970,7 @@ function cleanup(s: State) {
     const o = s.players[u.owner];
     if (u.kind === 'legend') s.players.forEach((q, i) => { if (i !== u.owner && q.alive) q.relics += 1; }); // убийство легенды: +1 реликвия
     if (u.kind === 'guard' && o.faction === 'clockwork') { // Перезавод: рядом капитан или штаб
-      const cap = s.units.find(c => c.owner === u.owner && c.kind === 'captain' && c.hp > 0 && dist(c, u) < 15);
+      const cap = s.units.find(c => c.owner === u.owner && (c.kind === 'captain' || c.kind === 'elite') && c.hp > 0 && dist(c, u) < 15); // капитан или Хронарх
       if (cap || nearOwn(s, u.owner, u.x, u.y, 20, ['hq'])) s.rewind.push({ owner: u.owner, x: u.x, y: u.y, t: 12 * (s.points.some(p => p.owner === u.owner) ? 0.7 : 1) });
     }
   }

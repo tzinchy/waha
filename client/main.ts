@@ -3,7 +3,7 @@ import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import type { CaptainCfg } from '../shared/sim.ts';
 import { CaptainPreview } from './captain.ts';
 import { Game, artFor, ready2d } from './game2d.ts';
-import { FACTIONS, FACTION_IDS, type FactionId } from '../shared/factions.ts';
+import { ARCH_INFO, CAPTAIN_ART, FACTIONS, FACTION_IDS, type FactionId } from '../shared/factions.ts';
 import { voice } from './voice.ts';
 import { audio } from './audio.ts';
 import { nextTheme, setTheme, themeName } from './theme.ts';
@@ -19,8 +19,9 @@ const store = {
 // ---------- капитан ----------
 const ARMOR = [0x2f6bd1, 0xb02a2a, 0x2e8b57, 0x6a3fa0, 0x4a4a4a, 0x1e90a0, 0x8b5a2b, 0xc9a227];
 const TRIM = [0xf3d36b, 0xe0e0e0, 0x22c1c3, 0xff7a1a, 0xd04a6a, 0x222222];
-let cfg: CaptainCfg = { armor: ARMOR[0], trim: TRIM[0], weapon: 'sword', banner: true };
+let cfg: CaptainCfg = { armor: ARMOR[0], trim: TRIM[0], arch: 'commander', banner: true };
 try { cfg = { ...cfg, ...JSON.parse(store.get('waha.captain') ?? '{}') }; } catch { /* битые данные: берём умолчания */ }
+if (!['assault', 'commander', 'mystic'].includes(cfg.arch)) cfg.arch = 'commander'; // старое сохранение с мечом/молотом
 const preview = new CaptainPreview($('preview'));
 
 function applyCfg() {
@@ -30,7 +31,8 @@ function applyCfg() {
   $<HTMLInputElement>('trimIn').value = hex(cfg.trim);
   document.querySelectorAll('#armorSw .sw').forEach(s => s.classList.toggle('on', (s as HTMLElement).dataset.c === String(cfg.armor)));
   document.querySelectorAll('#trimSw .sw').forEach(s => s.classList.toggle('on', (s as HTMLElement).dataset.c === String(cfg.trim)));
-  document.querySelectorAll('#weapon button').forEach(b => { const on = (b as HTMLElement).dataset.w === cfg.weapon; b.classList.toggle('lc-btn--ghost', !on); });
+  document.querySelectorAll('#arch button').forEach(b => { const on = (b as HTMLElement).dataset.a === cfg.arch; b.classList.toggle('lc-btn--ghost', !on); });
+  $('arch-info').textContent = ARCH_INFO[cfg.arch].info;
   $('banner').textContent = cfg.banner ? 'Есть' : 'Нет';
   $('banner').setAttribute('aria-pressed', String(cfg.banner));
   tx({ t: 'captain', captain: cfg });
@@ -47,7 +49,7 @@ swatches('armorSw', ARMOR, 'armor');
 swatches('trimSw', TRIM, 'trim');
 $<HTMLInputElement>('armorIn').oninput = e => { cfg.armor = parseInt((e.target as HTMLInputElement).value.slice(1), 16); applyCfg(); };
 $<HTMLInputElement>('trimIn').oninput = e => { cfg.trim = parseInt((e.target as HTMLInputElement).value.slice(1), 16); applyCfg(); };
-document.querySelectorAll<HTMLElement>('#weapon button').forEach(b => { b.onclick = () => { cfg.weapon = b.dataset.w as CaptainCfg['weapon']; applyCfg(); }; });
+document.querySelectorAll<HTMLElement>('#arch button').forEach(b => { b.onclick = () => { cfg.arch = b.dataset.a as CaptainCfg['arch']; applyCfg(); }; });
 $('banner').onclick = () => { cfg.banner = !cfg.banner; applyCfg(); };
 
 const nameIn = $<HTMLInputElement>('name');
@@ -129,9 +131,9 @@ function renderFactions(mine: FactionId) {
   $('faction-mech').textContent = FACTIONS[mine].mech;
   if (faction !== mine) { faction = mine; setTheme(FACTIONS[mine].theme); preview.setFaction(mine); paintTheme(); }
 }
-const svgFor = (f: FactionId) => (svgText.get(artFor('captain', f)) ?? '').replace('<svg ', '<svg class="lc-art lc-anim-idle" ');
+const svgFor = (f: FactionId) => (svgText.get(artFor('captain', f, 1, cfg.arch)) ?? '').replace('<svg ', '<svg class="lc-art lc-anim-idle" ');
 const svgText = new Map<string, string>();
-ready2d.then(() => Promise.all(FACTION_IDS.map(f => artFor('captain', f)).map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgText.set(p, t)))));
+ready2d.then(() => Promise.all([...new Set(Object.values(CAPTAIN_ART).flatMap(o => Object.values(o)))].map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgText.set(p, t))))); // все сборки всех фракций
 let faction: FactionId | null = null;
 
 function renderLobby() {
@@ -159,6 +161,10 @@ $('addbot').onclick = () => tx({ t: 'bot' });
 $('spec').onclick = () => { const me = lobby?.players.find(p => p.id === lobby!.you); tx({ t: 'spec', on: !me?.spec }); };
 $('start').onclick = () => tx({ t: 'start' });
 $('leave').onclick = () => tx({ t: 'leave' });
+const copyCode = () => { if (lobby) navigator.clipboard?.writeText(lobby.code).then(() => toast(`Код ${lobby!.code} скопирован`), () => toast(`Код: ${lobby!.code}`)); };
+$('copycode').onclick = copyCode;
+$('lcode').onclick = copyCode;
+$('lcode').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') copyCode(); };
 $('copy').onclick = () => {
   if (!lobby) return;
   navigator.clipboard?.writeText(`${location.origin}/?join=${lobby.code}`).then(() => toast('Ссылка скопирована'), () => toast(`Код: ${lobby!.code}`));

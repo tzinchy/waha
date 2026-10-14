@@ -65,7 +65,7 @@ test('апгрейды: тир 2 у штаба открывает укрепле
   const s = newState(2);
   const hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
   s.players[0].req = 2000; s.players[0].energy = 500;
-  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: 60, y: 60 }) ?? '', /рядом/);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: 60, y: 60 }) ?? '', /у своих построек/);
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: hq.x + 7, y: hq.y }), undefined);
   run(s, 15);
   const t = unit(s, 0, 'turret');
@@ -382,4 +382,19 @@ test('победные очки тают у того, кто держит мен
   assert.ok(snap.u.some(r => r[0] === unit(f, 0, 'hq').id), 'свой штаб виден');
   const scout = unit(f, 0, 'captain'); [scout.x, scout.y] = [far.x - 8, far.y];
   assert.ok(snapshotFor(f, 0).u.some(r => r[0] === far.id), 'разведка открыла штаб');
+});
+
+test('точки: турели вокруг своей точки, у критической точки строить нельзя; Нежить доплачивает энергию влиянием', () => {
+  const s = newState(2, ['undead', 'order']);
+  const p = s.players[0], b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq');
+  p.req = 1e4; p.tier = 1;
+  const pt = s.points[3]; pt.owner = 0;
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: pt.x + 8, y: pt.y }), undefined, 'турель у своей точки');
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: s.points[0].x + 4, y: s.points[0].y }) ?? '', /критической/);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: s.points[0].x, y: s.points[0].y }) ?? '', /критической/);
+  // Нежить: переход на тир II стоит 300 влияния + 150 энергии; энергии нет — доплата влиянием
+  spawn(s, 0, 'key1', hq.x + 12, hq.y);
+  p.energy = 0; const req = p.req;
+  assert.equal(applyCmd(s, 0, { c: 'upgrade', id: hq.id }), undefined);
+  assert.equal(req - p.req, 450);
 });

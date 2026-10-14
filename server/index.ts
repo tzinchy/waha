@@ -6,7 +6,7 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
+import { ARCHS, type Arch, applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import { botThink } from './bot.ts';
 import { FACTION_IDS, isFaction } from '../shared/factions.ts';
@@ -22,7 +22,7 @@ const send = (ws: WebSocket | undefined, m: S2C) => ws?.readyState === 1 && ws.s
 const int = (v: unknown, max: number) => (Number.isFinite(v) ? Math.max(0, Math.min(max, Math.floor(v as number))) : 0);
 const cleanCaptain = (c: Partial<CaptainCfg> | undefined): CaptainCfg => ({
   armor: int(c?.armor, 0xffffff), trim: int(c?.trim, 0xffffff),
-  weapon: c?.weapon === 'hammer' ? 'hammer' : 'sword', banner: c?.banner !== false,
+  arch: ARCHS.includes(c?.arch as Arch) ? (c!.arch as Arch) : 'commander', banner: c?.banner !== false,
 });
 const cleanName = (n: unknown) => (typeof n === 'string' && n.trim() ? n.trim().slice(0, 16) : 'Капитан');
 const pub = ({ id, name, captain, ready, bot, faction, spec }: Member): LobbyPlayer => ({ id, name, captain, ready, bot, faction, spec: !!spec });
@@ -53,7 +53,7 @@ function leave(ws: WebSocket) {
 
 function startMatch(l: Lobby) {
   const fighters = l.members.filter(m => !m.spec);
-  const state = newState(fighters.length, fighters.map(m => m.faction));
+  const state = newState(fighters.length, fighters.map(m => m.faction), fighters.map(m => m.captain.arch));
   state.dev = process.env.NODE_ENV !== 'production'; // чит F9 только в разработке
   const slots = fighters;
   const m: Match = { state, slots, timer: setInterval(() => tick(l), DT * 1000) };
@@ -120,7 +120,7 @@ function onMessage(ws: WebSocket, raw: string) {
   else if (l.host !== me.id) return err('Только хост');
   else if (m.t === 'bot') {
     if (l.members.filter(x => !x.spec).length >= MAX_PLAYERS) return err('Лобби заполнено');
-    l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({ armor: 0x8a2be2 + l.members.length * 0x300a0, trim: 0xe0e0e0, weapon: 'hammer' }), ready: true, bot: true, faction: FACTION_IDS[1 + Math.floor(Math.random() * (FACTION_IDS.length - 1))] });
+    l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({ armor: 0x8a2be2 + l.members.length * 0x300a0, trim: 0xe0e0e0, arch: ARCHS[Math.floor(Math.random() * 3)] }), ready: true, bot: true, faction: FACTION_IDS[1 + Math.floor(Math.random() * (FACTION_IDS.length - 1))] });
   } else if (m.t === 'kick') {
     const k = l.members.find(p => p.id === m.id);
     if (k && k !== me) { l.members = l.members.filter(p => p !== k); if (k.ws) { memberOf.delete(k.ws); send(k.ws, { t: 'left' }); } }
