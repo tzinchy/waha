@@ -3,7 +3,7 @@ import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import type { CaptainCfg } from '../shared/sim.ts';
 import { CaptainPreview } from './captain.ts';
 import { Game, artFor, ready2d } from './game2d.ts';
-import { ARCH_INFO, CAPTAIN_ART, FACTIONS, FACTION_IDS, type FactionId } from '../shared/factions.ts';
+import { ARCH_OPTS, archFor, CAPTAIN_ART, FACTIONS, FACTION_IDS, type FactionId } from '../shared/factions.ts';
 import { voice } from './voice.ts';
 import { MAPS, setMap } from '../shared/mapdata.ts';
 import { audio } from './audio.ts';
@@ -20,7 +20,8 @@ const store = {
 // ---------- капитан ----------
 const ARMOR = [0x2f6bd1, 0xb02a2a, 0x2e8b57, 0x6a3fa0, 0x4a4a4a, 0x1e90a0, 0x8b5a2b, 0xc9a227];
 const TRIM = [0xf3d36b, 0xe0e0e0, 0x22c1c3, 0xff7a1a, 0xd04a6a, 0x222222];
-let cfg: CaptainCfg = { armor: ARMOR[0], trim: TRIM[0], arch: 'commander', banner: true };
+let cfg: CaptainCfg = { armor: ARMOR[0], trim: TRIM[0], arch: 'commander' };
+let faction: FactionId | null = null; // выбранная в лобби фракция (до лобби — Орден)
 try { cfg = { ...cfg, ...JSON.parse(store.get('waha.captain') ?? '{}') }; } catch { /* битые данные: берём умолчания */ }
 if (!['assault', 'commander', 'mystic'].includes(cfg.arch)) cfg.arch = 'commander'; // старое сохранение с мечом/молотом
 const preview = new CaptainPreview($('preview'));
@@ -32,10 +33,7 @@ function applyCfg() {
   $<HTMLInputElement>('trimIn').value = hex(cfg.trim);
   document.querySelectorAll('#armorSw .sw').forEach(s => s.classList.toggle('on', (s as HTMLElement).dataset.c === String(cfg.armor)));
   document.querySelectorAll('#trimSw .sw').forEach(s => s.classList.toggle('on', (s as HTMLElement).dataset.c === String(cfg.trim)));
-  document.querySelectorAll('#arch button').forEach(b => { const on = (b as HTMLElement).dataset.a === cfg.arch; b.classList.toggle('lc-btn--ghost', !on); });
-  $('arch-info').textContent = ARCH_INFO[cfg.arch].info;
-  $('banner').textContent = cfg.banner ? 'Есть' : 'Нет';
-  $('banner').setAttribute('aria-pressed', String(cfg.banner));
+  renderArch();
   tx({ t: 'captain', captain: cfg });
 }
 function swatches(id: string, list: number[], key: 'armor' | 'trim') {
@@ -50,8 +48,13 @@ swatches('armorSw', ARMOR, 'armor');
 swatches('trimSw', TRIM, 'trim');
 $<HTMLInputElement>('armorIn').oninput = e => { cfg.armor = parseInt((e.target as HTMLInputElement).value.slice(1), 16); applyCfg(); };
 $<HTMLInputElement>('trimIn').oninput = e => { cfg.trim = parseInt((e.target as HTMLInputElement).value.slice(1), 16); applyCfg(); };
-document.querySelectorAll<HTMLElement>('#arch button').forEach(b => { b.onclick = () => { cfg.arch = b.dataset.a as CaptainCfg['arch']; applyCfg(); }; });
-$('banner').onclick = () => { cfg.banner = !cfg.banner; applyCfg(); };
+/** Кнопки сборок — только те, что есть у текущей фракции, с её названиями. */
+function renderArch() {
+  const f = faction ?? 'order', opts = ARCH_OPTS[f], cur = archFor(f, cfg.arch);
+  $('arch').innerHTML = (Object.entries(opts) as [CaptainCfg['arch'], { name: string; info: string }][]).map(([a, o]) => `<button class="lc-btn lc-btn--sm ${a === cur ? '' : 'lc-btn--ghost'}" data-a="${a}">${o.name}</button>`).join('');
+  $('arch-info').textContent = opts[cur]?.info ?? '';
+  $('arch').querySelectorAll<HTMLElement>('button').forEach(b => { b.onclick = () => { cfg.arch = b.dataset.a as CaptainCfg['arch']; applyCfg(); }; });
+}
 
 const nameIn = $<HTMLInputElement>('name');
 nameIn.value = store.get('waha.name') ?? '';
@@ -90,6 +93,7 @@ function show(screen: 'menu' | 'lobby' | 'game') {
   $('game').classList.toggle('hidden', screen !== 'game');
   $('menu').classList.toggle('hidden', screen !== 'menu');
   $('lobby').classList.toggle('hidden', screen !== 'lobby');
+  $('editor').classList.toggle('hidden', screen !== 'lobby'); // облик капитана выбирается в лобби, вместе с фракцией
 }
 
 function onMsg(m: S2C) {
@@ -108,9 +112,11 @@ function startGame(slot: number, players: LobbyPlayer[], map = 0) {
   ready2d.then(() => { game = new Game($('view'), slot, players, cmd => tx({ t: 'cmd', cmd }), winner => {
     $('result-title').textContent = slot < 0 ? (winner < 0 ? 'Ничья' : `Победил ${esc(players[winner].name)}`) : winner === slot ? 'Победа' : winner < 0 ? 'Ничья' : `Победил ${esc(players[winner].name)}`;
     $('result').classList.remove('hidden');
+    $('result-watch').classList.remove('hidden');
     if (winner === slot || slot < 0) audio.win(); else audio.lose();
   }); });
 }
+$('result-watch').onclick = () => { $('result').classList.add('hidden'); game?.watch(); }; // осмотреть карту без тумана
 $('result-back').onclick = () => {
   game?.destroy(); game = null;
   if (lobby) renderLobby(); else show('menu');
@@ -131,12 +137,11 @@ function renderFactions(mine: FactionId) {
   $('factions').innerHTML = FACTION_IDS.map(f => `<button class="lc-btn lc-btn--sm ${f === mine ? '' : 'lc-btn--ghost'}" data-f="${f}" title="${FACTIONS[f].mech}">${svgFor(f)}${FACTIONS[f].name}</button>`).join('');
   $('factions').querySelectorAll<HTMLElement>('[data-f]').forEach(b => { b.onclick = () => tx({ t: 'faction', f: b.dataset.f as FactionId }); });
   $('faction-mech').textContent = FACTIONS[mine].mech;
-  if (faction !== mine) { faction = mine; setTheme(FACTIONS[mine].theme); preview.setFaction(mine); paintTheme(); }
+  if (faction !== mine) { faction = mine; setTheme(FACTIONS[mine].theme); preview.setFaction(mine); paintTheme(); renderArch(); preview.set({ ...cfg, arch: archFor(mine, cfg.arch) }); }
 }
 const svgFor = (f: FactionId) => (svgText.get(artFor('captain', f, 1, cfg.arch)) ?? '').replace('<svg ', '<svg class="lc-art lc-anim-idle" ');
 const svgText = new Map<string, string>();
 ready2d.then(() => Promise.all([...new Set(Object.values(CAPTAIN_ART).flatMap(o => Object.values(o)))].map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgText.set(p, t))))); // все сборки всех фракций
-let faction: FactionId | null = null;
 
 function renderLobby() {
   if (!lobby) return;

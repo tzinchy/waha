@@ -9,7 +9,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { MAPS, setMap, ARCHS, type Arch, applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import { botThink } from './bot.ts';
-import { FACTION_IDS, isFaction } from '../shared/factions.ts';
+import { FACTION_IDS, archFor, isFaction } from '../shared/factions.ts';
 
 type Member = LobbyPlayer & { ws?: WebSocket; left?: boolean };
 type Match = { state: State; slots: Member[]; timer: NodeJS.Timeout };
@@ -22,7 +22,7 @@ const send = (ws: WebSocket | undefined, m: S2C) => ws?.readyState === 1 && ws.s
 const int = (v: unknown, max: number) => (Number.isFinite(v) ? Math.max(0, Math.min(max, Math.floor(v as number))) : 0);
 const cleanCaptain = (c: Partial<CaptainCfg> | undefined): CaptainCfg => ({
   armor: int(c?.armor, 0xffffff), trim: int(c?.trim, 0xffffff),
-  arch: ARCHS.includes(c?.arch as Arch) ? (c!.arch as Arch) : 'commander', banner: c?.banner !== false,
+  arch: ARCHS.includes(c?.arch as Arch) ? (c!.arch as Arch) : 'commander',
 });
 const cleanName = (n: unknown) => (typeof n === 'string' && n.trim() ? n.trim().slice(0, 16) : 'Капитан');
 const pub = ({ id, name, captain, ready, bot, faction, spec }: Member): LobbyPlayer => ({ id, name, captain, ready, bot, faction, spec: !!spec });
@@ -54,7 +54,7 @@ function leave(ws: WebSocket) {
 function startMatch(l: Lobby) {
   const fighters = l.members.filter(m => !m.spec);
   setMap(l.map); // карта лобби — до создания состояния
-  const state = newState(fighters.length, fighters.map(m => m.faction), fighters.map(m => m.captain.arch));
+  const state = newState(fighters.length, fighters.map(m => m.faction), fighters.map(m => archFor(m.faction, m.captain.arch)));
   state.dev = process.env.NODE_ENV !== 'production'; // чит F9 только в разработке
   const slots = fighters;
   const m: Match = { state, slots, timer: setInterval(() => tick(l), DT * 1000) };
@@ -70,7 +70,8 @@ function tick(l: Lobby) {
   step(m.state);
   const over = m.state.winner !== null;
   if (m.state.tick % 2 === 0 || over) { // симуляция 20 Гц, снимки 10 Гц; ponytail: полный JSON-снимок, дельты/бинарь если не хватит трафика
-    m.slots.forEach((p, i) => { if (p.ws) send(p.ws, { t: 'snap', s: m.state.winner !== null ? snapshot(m.state) : snapshotFor(m.state, i) }); }); // туман войны: каждому своё
+    let full: ReturnType<typeof snapshot> | null = null;
+    m.slots.forEach((p, i) => { if (p.ws) send(p.ws, { t: 'snap', s: m.state.winner !== null || !m.state.players[i].alive ? (full ??= snapshot(m.state)) : snapshotFor(m.state, i) }); }); // туман войны: каждому своё; выбывшим и после конца — вся карта
     const specs = l.members.filter(x => x.spec && x.ws);
     if (specs.length) { const full: S2C = { t: 'snap', s: snapshot(m.state) }; for (const sp of specs) send(sp.ws, full); } // зрители видят всё
     m.state.shots.length = 0; m.state.died.length = 0;

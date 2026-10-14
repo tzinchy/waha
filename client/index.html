@@ -167,6 +167,7 @@
   .w2d-aura{position:absolute;border-radius:50%;transform:scaleY(.55);pointer-events:none}
   .w2d-aura.pyre{background:radial-gradient(circle,rgba(240,120,40,.35),rgba(200,40,20,.12) 70%,transparent 72%);animation:w2d-breathe 1s ease-in-out infinite}
   .w2d-aura.bell{background:radial-gradient(circle,rgba(120,140,160,.12),rgba(60,70,90,.22) 70%,transparent 72%);border:1px dashed rgba(170,180,200,.4)}
+  #hud-out{position:absolute;left:50%;top:150px;transform:translateX(-50%);z-index:20;gap:var(--space-3)}
   .w2d-sparkline{stroke-width:2;stroke-linecap:square;animation:w2d-fade .28s steps(4) both}
   .w2d-arc{fill:none;stroke:var(--amber-300);stroke-width:3;stroke-dasharray:6 8;animation:w2d-dash .9s linear both}
   .w2d-boom{fill:rgba(240,120,40,.35);stroke:#f0a540;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:w2d-ring .6s steps(6) both}
@@ -246,7 +247,6 @@
       <div class="row"><label>Отделка</label><div class="sws" id="trimSw"></div><input type="color" id="trimIn" aria-label="Свой цвет отделки"></div>
       <div class="row"><label>Сборка</label><div class="inline" id="arch"><button class="lc-btn lc-btn--sm lc-btn--ghost" data-a="assault">Штурм</button><button class="lc-btn lc-btn--sm lc-btn--ghost" data-a="commander">Командор</button><button class="lc-btn lc-btn--sm lc-btn--ghost" data-a="mystic">Мистик</button></div></div>
       <p class="arch-info" id="arch-info"></p>
-      <div class="row"><label>Знамя</label><button class="lc-btn lc-btn--sm lc-btn--ghost" id="banner"></button></div>
     </section>
 
     <section class="lc-frame lc-frame--lg stack" id="menu">
@@ -300,6 +300,7 @@
     <section id="hud-queue" class="lc-frame hidden"></section>
     <section id="hud-players" class="lc-frame"></section>
     <section id="hud-score" class="lc-score"></section>
+    <div id="hud-out" class="lc-alert lc-alert--danger hidden" role="alert"><span class="lc-alert__text">Вы выбыли</span><button class="lc-btn lc-btn--sm" id="out-watch">Смотреть дальше</button></div>
     <div id="hud-dead" class="lc-alert lc-alert--danger hidden" role="alert"><span class="lc-alert__glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 23 21H1Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 9h2v6h-2zM11 17h2v2h-2z" fill="currentColor"/></svg></span><span class="lc-alert__text">Капитан пал</span><span class="lc-alert__meta">возродится в штабе</span></div>
     <div id="hud-bottom">
       <section id="hud-card" class="lc-frame hidden"></section>
@@ -307,7 +308,7 @@
       <section id="hud-cmd" class="lc-frame"></section>
     </div>
     <div id="hud-tip" class="lc-tip hidden" role="tooltip"></div>
-    <div id="result" class="hidden"><section class="lc-frame lc-frame--lg"><h3 id="result-title"></h3><button class="lc-btn" id="result-back">В лобби</button></section></div>
+    <div id="result" class="hidden"><section class="lc-frame lc-frame--lg"><h3 id="result-title"></h3><button class="lc-btn lc-btn--ghost hidden" id="result-watch">Осмотреть карту</button><button class="lc-btn" id="result-back">В лобби</button></section></div>
   </div>
   <div id="selbox" class="hidden"></div>
 </main>

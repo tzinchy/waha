@@ -2,7 +2,7 @@
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import type { Arch } from '../shared/sim.ts';
 import { isMelee, ROLES, GEAR, SQUADS, VEHICLES, LEGION_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
-import { CAPTAIN_ART, FACTIONS, HQ_NAME, ROSTER, type FactionId } from '../shared/factions.ts';
+import { CAPTAIN_ART, FACTIONS, HQ_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
 import { paintMap } from './mappaint.ts';
@@ -58,7 +58,7 @@ export function artFor(kind: Kind, faction: FactionId, lvl = 1, arch: Arch = 'co
   if (kind === 'legend') return FACTIONS[faction].legendArt[variant] ?? FACTIONS[faction].legendArt[0];
   if (kind === 'deity') return 'Factions/deity.svg';
   if (kind in ROSTER[faction] && typeof (ROSTER[faction] as Record<string, unknown>)[kind] === 'object') return ROSTER[faction][kind as 'sniper'].art;
-  if (kind === 'captain') return CAPTAIN_ART[faction][arch] ?? a.captain[0];
+  if (kind === 'captain') return CAPTAIN_ART[faction][archFor(faction, arch)] ?? a.captain[0];
   if (kind === 'turret') return a.turret[lvl > 1 ? 1 : 0];
   if (kind === 'post') return lvl >= 3 ? 'Defenses/point-3.svg' : lvl === 2 ? 'Defenses/point-2.svg' : 'Defenses/point-1.svg';
   if (NEUTRAL[kind]) return NEUTRAL[kind]![lvl > 1 ? 1 : 0];
@@ -170,7 +170,7 @@ export class Game {
   private ac = new AbortController();
 
   constructor(
-    private root: HTMLElement, private slot: number, private players: LobbyPlayer[],
+    private root: HTMLElement, private slot: number /* −1 — зритель, в т.ч. выбывший */, private players: LobbyPlayer[],
     private send: (c: Cmd) => void, private onEnd: (winner: number) => void,
   ) {
     root.classList.add('w2d');
@@ -198,7 +198,16 @@ export class Game {
     $('hud-players').innerHTML = players.map((p, i) => `<div id="hp${i}"><i style="background:${hex(SLOT_COLORS[i])}"></i>${p.name.replace(/[<>&]/g, '')}</div>`).join('');
   }
 
+  /** Перейти в режим зрителя: вся карта, без тумана и команд (после поражения или конца матча). */
+  watch() {
+    this.slot = -1; this.sel.clear();
+    document.body.classList.add('spectating');
+    $('hud-out').classList.add('hidden');
+    this.renderCmd();
+  }
+
   destroy() {
+    $('hud-out').classList.add('hidden');
     document.body.classList.remove('spectating');
     audio.setBattle(false);
     cancelAnimationFrame(this.raf);
@@ -491,6 +500,7 @@ export class Game {
   // ---------- HUD ----------
   private hud(s: Snap) {
     if (this.slot < 0) { this.specHud(s); return; }
+    if (!s.pl[this.slot]?.[1] && s.w === null) $('hud-out').classList.remove('hidden'); // выбыл, матч идёт: можно смотреть дальше
     const me = s.pl[this.slot];
     this.req = me[0]; this.energy = me[3] ?? 0; this.relics = me[4] ?? 0;
     const learnt = (me[8] ?? 0) & ~this.research;
@@ -876,6 +886,7 @@ export class Game {
       this.renderCmd();
     }, sig);
     addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase()), sig);
+    $('out-watch').addEventListener('click', () => this.watch(), sig);
     $('cap-port').addEventListener('click', e => { e.stopPropagation(); const v = [...this.views.values()].find(u => u.owner === this.slot && (u.kind === 'captain' || u.kind === 'deity')); if (v) this.focus(v.id); }, sig);
     $('hud-cap').addEventListener('click', () => { if (this.learnHtml) { this.lvlUpOpen = true; this.lvlUpAt = performance.now(); $('hud-levelup').classList.remove('hidden'); $('hud-cap').classList.remove('has-pts'); } }, sig);
     $('hud-levelup').addEventListener('click', e => { const a = (e.target as HTMLElement).closest<HTMLElement>('[data-learn]')?.dataset.learn; if (a) this.cmd({ c: 'learn', a: Number(a) }); }, sig);

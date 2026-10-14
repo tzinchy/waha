@@ -8,7 +8,7 @@ export const DT = 1 / 20;
 /** Сборка капитана (пресет CaptainArchetypes): Штурм — рукопашная, Командор — ауры, Мистик — урон по площади и лечение. */
 export type Arch = 'assault' | 'commander' | 'mystic';
 export const ARCHS: Arch[] = ['assault', 'commander', 'mystic'];
-export type CaptainCfg = { armor: number; trim: number; arch: Arch; banner: boolean };
+export type CaptainCfg = { armor: number; trim: number; arch: Arch };
 export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'legend' | 'wall' | 'wallgate' | 'bunker' | 'mine'
   | 'sniper' | 'heavy' | 'support' | 'elite' | 'healer' | 'lveh' | 'mveh' | 'hveh' | 'titan' | 'deity' | 'aegis' | 'rturret' | 'fturret' | 'arty' | 'battery' | 'pylon' | 'pyre' | 'bell';
 export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'key1', 'key2', 'key3', 'key4', 'gate', 'legend', 'wall', 'wallgate', 'bunker', 'mine', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'aegis', 'rturret', 'fturret', 'arty', 'battery', 'pylon', 'pyre', 'bell'];
@@ -157,9 +157,9 @@ export const SUMMON_TIME = 20;
 /** Тип атаки = форма следа (пресет AttackVFX): 0 пуля, 1 рубящий, 2 когти, 3 луч, 4 огонь, 5 укол. */
 /** 6 сварка, 7 бросок, 8 взрыв гранаты, 9 дым, 10 снайпер, 11 тяжёлое орудие, 12 снаряд осады, 13 титан, 14 очередь. */
 export const FX = { shot: 0, chop: 1, claws: 2, beam: 3, fire: 4, thrust: 5 } as const;
-const GUARD_FX: Record<FactionId, number> = { order: FX.shot, undead: FX.thrust, prism: FX.beam, clockwork: FX.shot, orks: FX.chop, ashen: FX.claws };
+const GUARD_FX: Record<FactionId, number> = { order: FX.shot, undead: FX.thrust, prism: FX.beam, clockwork: FX.beam, orks: FX.chop, ashen: FX.fire }; // Вечные — изумрудные распылители, Отступники — адострелы
 /** Рукопашные: капитаны, легенды-бойцы, пехота Орды, Нежити и Синклита. */
-export const isMelee = (k: Kind, f: FactionId) => k === 'captain' || (k === 'guard' && GUARD_FX[f] !== FX.shot && GUARD_FX[f] !== FX.beam);
+export const isMelee = (k: Kind, f: FactionId) => k === 'captain' || (k === 'guard' && (f === 'undead' || f === 'orks'));
 export function attackFx(k: Kind, f: FactionId, variant = 0) {
   if (k === 'guard') return GUARD_FX[f];
   if (k === 'captain') return f === 'ashen' || f === 'orks' ? FX.claws : FX.chop; // мистика переопределяет act
