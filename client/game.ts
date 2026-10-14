@@ -29,6 +29,7 @@ const GRADE = {
     }`,
 };
 import { audio } from './audio.ts';
+import { SpriteActor, PLAYER_FACTIONS } from './sprite-actor.ts';
 import { Actor, RigActor, captainActor, hasMeshy, meshyBuilding, model, type AnyActor, type ModelKey } from './models.ts';
 
 export const SLOT_COLORS = [0x3b82f6, 0xef4444, 0x22c55e, 0xeab308];
@@ -36,7 +37,7 @@ const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 const $ = (id: string) => document.getElementById(id)!;
 
 type View = {
-  id: number; owner: number; kind: Kind; root: THREE.Group; body: THREE.Group; actors: AnyActor[]; bar: THREE.Group; fg: THREE.Mesh; sel: THREE.Mesh; ring: THREE.Mesh;
+  id: number; owner: number; kind: Kind; root: THREE.Group; body: THREE.Group; actors: AnyActor[]; sprite?: SpriteActor; bar: THREE.Group; fg: THREE.Mesh; sel: THREE.Mesh; ring: THREE.Mesh;
   x: number; z: number; f: number; tx: number; tz: number; tf: number; hp: number; build: number; q: number; dead: boolean; lvl: number; upg: number;
 };
 
@@ -163,6 +164,7 @@ export class Game {
   destroy() {
     audio.setBattle(false);
     for (const a of this.alertMarkers) a.el.remove();
+    for (const v of this.views.values()) v.sprite?.dispose();
     cancelAnimationFrame(this.raf);
     this.ac.abort();
     this.renderer.dispose();
@@ -296,10 +298,15 @@ export class Game {
     const [w, h] = BAR[kind];
     bar.scale.set(w, 1, 1); bar.position.y = h;
     root.add(body, ov(ring), ov(sel), ov(bar));
+    let sprite: SpriteActor | undefined;
+    if (kind === 'captain' || kind === 'guard' || kind === 'builder') {
+      sprite = new SpriteActor(PLAYER_FACTIONS[owner % PLAYER_FACTIONS.length], kind, root);
+      void sprite.ready.then(ok => { if (ok && root.parent) body.visible = false; });
+    }
     this.scene.add(root);
     root.position.set(x, 0, z);
     body.rotation.y = isStruct(kind) ? 0 : -f;
-    return { id, owner, kind, root, body, actors, bar, fg, sel, ring, x, z, f, tx: x, tz: z, tf: f, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1 };
+    return { id, owner, kind, root, body, actors, sprite, bar, fg, sel, ring, x, z, f, tx: x, tz: z, tf: f, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1 };
   }
 
   onSnap(s: Snap) {
@@ -327,6 +334,7 @@ export class Game {
       this.views.delete(id); this.sel.delete(id);
       v.bar.visible = v.sel.visible = v.ring.visible = false;
       for (const a of v.actors) a.die();
+      v.sprite?.setAction('death', true);
       this.corpses.push({ root: v.root, body: v.body, actors: v.actors, until: now + (isStruct(v.kind) ? 900 : 1800), struct: isStruct(v.kind) });
       const a = this.audioAt(v.x, v.z);
       if (a && !first && gone++ < 2) isStruct(v.kind) ? audio.boom(a.pan) : audio.death(a.pan);
@@ -352,6 +360,7 @@ export class Game {
         if (d < bd) { bd = d; best = v; }
       }
       best?.actors.forEach((a, i) => a.attack(i ? Math.random() * 0.3 : 0));
+      best?.sprite?.attack();
     }
     let heard = 0;
     for (const [x1, y1] of s.sh) { const a = this.audioAt(x1 / 10, y1 / 10); if (a && heard++ < 4) audio.shot(a.pan); }
@@ -548,7 +557,7 @@ export class Game {
       this.grenadeTargeting = false; this.renderer.domElement.style.cursor = '';
       const p = this.groundAt(sx, sy);
       const unit = this.selected().find(v => v.kind === 'captain' || v.kind === 'guard');
-      if (p && unit) { this.cmd({ c: 'grenade', id: unit.id, x: p.x, y: p.z }); audio.grenadeThrow(this.audioAt(unit.x, unit.z)?.pan ?? 0); }
+      if (p && unit) { this.cmd({ c: 'grenade', id: unit.id, x: p.x, y: p.z }); unit.sprite?.grenade(); audio.grenadeThrow(this.audioAt(unit.x, unit.z)?.pan ?? 0); }
       return;
     }
     if (this.place) { // установка постройки; при неверном месте остаёмся в режиме, сервер подскажет причину
@@ -681,6 +690,7 @@ export class Game {
         const moving = Math.hypot(v.tx - v.x, v.tz - v.z) > 0.12;
         const building = !moving && v.kind === 'builder' && sites.some(s => s.owner === v.owner && Math.hypot(s.x - v.x, s.z - v.z) < STATS[s.kind].radius + 3.5);
         const n = members(v.kind, v.hp);
+        v.sprite?.update(dt, moving ? 'run' : 'idle', v.f, c.yaw, !v.dead);
         v.actors.forEach((a, i) => {
           if (i < n && !a.alive) a.revive(); // пополнение или возрождение капитана
           if (i >= n) a.die();
