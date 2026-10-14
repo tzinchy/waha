@@ -1,7 +1,7 @@
 // Текстура карты: рисуется один раз в половинном разрешении и растягивается без сглаживания — получается пиксель-арт.
 import { BLOCKS, BRIDGES, COVER, CRATERS, HQ_POS, MAP, PLATEAUS, POINTS, RELICS, RIVER, ROADS, RUINS, VENTS } from '../shared/mapdata.ts';
 
-export const TEX = 13; // текселей на метр (S = 26 px → тексель 2×2 px)
+export const TEX = 13; // текселей на метр на небольших картах (S = 26 px → тексель 2×2 px); крупные — вдвое грубее
 type C = CanvasRenderingContext2D;
 type Pt = [number, number];
 
@@ -18,9 +18,10 @@ function noiseField(w: number, h: number, cell: number, seed: number) {
 const hex = (h: string) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 
 export function paintMap(): HTMLCanvasElement {
-  const W = MAP.w * TEX, H = MAP.h * TEX, c = document.createElement('canvas');
+  const T = MAP.w * MAP.h > 260 * 260 ? TEX / 2 : TEX; // большие карты: тексель 4×4 px, чтобы текстура не съела память
+  const W = Math.round(MAP.w * T), H = Math.round(MAP.h * T), c = document.createElement('canvas');
   c.width = W; c.height = H;
-  const x = c.getContext('2d')!, P = (v: number) => v * TEX, r = rng(7);
+  const x = c.getContext('2d')!, P = (v: number) => v * T, r = rng(7);
   // 1. Почва: шум трёх масштабов → пепельная земля, бурые пятна, сухая трава
   const n1 = noiseField(W, H, 90, 1), n2 = noiseField(W, H, 22, 2), n3 = noiseField(W, H, 6, 3);
   const soil = ['#1b1714', '#24201b', '#2e2822', '#3a3229', '#463c30'].map(hex), grass = ['#25231a', '#2e2c1f', '#383524'].map(hex); // выжженная трава: ближе к почве, без «камуфляжа»

@@ -40,7 +40,16 @@ export type MapDef = {
   hq: number[][]; points: number[][]; relics: number[][]; vents: number[][];
   roads: Pt[][]; river: Pt[]; bridges: Pt[]; plateaus: Pt[][]; ruins: typeof RIFT_RUINS; craters: [number, number, number][]; cover: [number, number, number][]; blocks: Rect[];
 };
-export const MAPS: MapDef[] = [
+/** Растянуть карту: позиции ×k, радиусы и размеры ×√k. */
+function grow(m: MapDef, kx: number, ky = kx): MapDef {
+  const P = (p: number[]) => [Math.round(p[0] * kx), Math.round(p[1] * ky)] as Pt, r = Math.sqrt((kx + ky) / 2);
+  return { ...m, map: { w: Math.round(m.map.w * kx), h: Math.round(m.map.h * ky) }, hq: m.hq.map(P), points: m.points.map(P), relics: m.relics.map(P), vents: m.vents.map(P),
+    roads: m.roads.map(l => l.map(P)), river: m.river.map(P), bridges: m.bridges.map(P), plateaus: m.plateaus.map(l => l.map(P)),
+    ruins: m.ruins.map(z => ({ walls: z.walls.map(([x, y, w, h]) => [Math.round(x * kx), Math.round(y * ky), Math.round(w * r), Math.round(h * r)] as [number, number, number, number]), pillars: z.pillars.map(P) })),
+    craters: m.craters.map(([x, y, c]) => [Math.round(x * kx), Math.round(y * ky), +(c * r).toFixed(1)] as [number, number, number]), cover: m.cover.map(([x, y, c]) => [Math.round(x * kx), Math.round(y * ky), +(c * r).toFixed(1)] as [number, number, number]),
+    blocks: m.blocks.map(([x, y, w, h]) => [Math.round(x * kx), Math.round(y * ky), Math.round(w * kx), Math.round(h * ky)] as Rect) };
+}
+const BASE_MAPS: MapDef[] = [
   { id: 'rift', name: 'Разлом Святого Шпиля', info: '240×240 м, до 4 игроков: открытое поле, река, плато, 7 точек и 2 реликвария', map: RIFT_MAP,
     hq: RIFT_HQ_POS, points: RIFT_POINTS, relics: RIFT_RELICS, vents: RIFT_VENTS, roads: RIFT_ROADS, river: RIFT_RIVER, bridges: RIFT_BRIDGES,
     plateaus: RIFT_PLATEAUS, ruins: RIFT_RUINS, craters: RIFT_CRATERS, cover: RIFT_COVER, blocks: [] },
@@ -55,9 +64,10 @@ export const MAPS: MapDef[] = [
     ruins: [{ walls: [[118, 46, 10, 2], [152, 72, 10, 2]], pillars: [[130, 50], [150, 70]] }],
     blocks: [[70, 0, 140, 46], [70, 74, 140, 46]] },                  // скалы над и под тоннелем (проход y 46–74)
 ];
+export const MAPS: MapDef[] = [grow(BASE_MAPS[0], 4 / 3), grow(BASE_MAPS[1], 9 / 7, 1.25)].map(m => ({ ...m, info: m.info.replace(/^\d+×\d+ м/, `${m.map.w}×${m.map.h} м`) })); // карты крупнее: 320×320 и 360×150
 /** Текущая карта. ponytail: общая на процесс; сервер выставляет её перед каждым шагом своего лобби (расчёт синхронный). Поле State, если появится асинхронность. */
-export let MAP = RIFT_MAP, HQ_POS = RIFT_HQ_POS, POINTS = RIFT_POINTS, RELICS = RIFT_RELICS, VENTS = RIFT_VENTS;
-export let ROADS = RIFT_ROADS, RIVER = RIFT_RIVER, BRIDGES = RIFT_BRIDGES, PLATEAUS = RIFT_PLATEAUS, RUINS = RIFT_RUINS, CRATERS = RIFT_CRATERS, COVER = RIFT_COVER;
+export let MAP = MAPS[0].map, HQ_POS = MAPS[0].hq, POINTS = MAPS[0].points, RELICS = MAPS[0].relics, VENTS = MAPS[0].vents;
+export let ROADS = MAPS[0].roads, RIVER = MAPS[0].river, BRIDGES = MAPS[0].bridges, PLATEAUS = MAPS[0].plateaus, RUINS = MAPS[0].ruins, CRATERS = MAPS[0].craters, COVER = MAPS[0].cover;
 export let BLOCKS: Rect[] = [];
 export let MAP_ID = 0;
 export function setMap(i: number) {

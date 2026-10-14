@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
+import { KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -233,7 +233,7 @@ test('прокачка точки: столп → укреплённый → б�
   const p = s.players[0], b = unit(s, 0, 'builder');
   p.req = 5000; p.energy = 5000; p.tier = 2;
   applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: POINTS[1][0], y: POINTS[1][1] });
-  run(s, 25);
+  run(s, 40); // карта крупнее: строителю дальше идти
   const post = unit(s, 0, 'post');
   assert.equal(applyCmd(s, 0, { c: 'upgrade', id: post.id }), undefined);
   run(s, 13);
@@ -460,4 +460,31 @@ test('Династии: только энергия (доход с точек и
   assert.equal(p.alive, true, 'жив, пока стоит Монолит');
   mono.hp = 0; run(s, 0.1);
   assert.equal(p.alive, false);
+});
+
+test('сверхоружие и мегапостройки: сначала дорогое открытие, стройка видна всем, удар у каждой фракции свой', () => {
+  const s = newState(2, ['order', 'undead']);
+  const p = s.players[0], hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
+  p.req = 1e5; p.energy = 1e5; p.relics = 50; p.tier = 5;
+  const spot = { x: hq.x + 14, y: hq.y + 4 };
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'lighthouse', ...spot }) ?? '', /Мегапостройки/);
+  const k4 = spawn(s, 0, 'key4', hq.x - 2, hq.y + 16);
+  assert.equal(applyCmd(s, 0, { c: 'unlock', id: k4.id, u: 0 }), undefined);
+  run(s, 61);
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'lighthouse', ...spot }), undefined);
+  assert.ok(snapshotFor(s, 1).mg.some(r => KINDS[r[3]] === 'lighthouse'), 'враг видит стройку маяка');
+  // удар Ордена
+  const doom = spawn(s, 0, 'doom', hq.x + 20, hq.y + 20);
+  assert.match(applyCmd(s, 0, { c: 'strike', id: doom.id, x: 200, y: 200 }) ?? '', /Заряд/);
+  doom.prog = 180;
+  const foe = unit(s, 1, 'hq'), hp = foe.hp;
+  assert.equal(applyCmd(s, 0, { c: 'strike', id: doom.id, x: foe.x, y: foe.y }), undefined);
+  assert.equal(snapshotFor(s, 1).ss.length, 1, 'враг видит предупреждение');
+  run(s, 7);
+  assert.ok(foe.hp < hp - 2000, 'копьё Длани Лампы');
+  // Нежить: чумное облако
+  const u = s.players[1]; u.tier = 5; const d2 = spawn(s, 1, 'doom', 300, 300); d2.prog = 180;
+  const g = spawn(s, 0, 'guard', 200, 200), gh = g.hp;
+  applyCmd(s, 1, { c: 'strike', id: d2.id, x: 200, y: 200 }); run(s, 6.5); const after = g.hp; run(s, 5);
+  assert.ok(g.hp < after || !s.units.includes(g), 'облако губит со временем'); assert.ok(after < gh);
 });

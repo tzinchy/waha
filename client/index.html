@@ -168,6 +168,12 @@
   .w2d-aura.pyre{background:radial-gradient(circle,rgba(240,120,40,.35),rgba(200,40,20,.12) 70%,transparent 72%);animation:w2d-breathe 1s ease-in-out infinite}
   .w2d-aura.bell{background:radial-gradient(circle,rgba(120,140,160,.12),rgba(60,70,90,.22) 70%,transparent 72%);border:1px dashed rgba(170,180,200,.4)}
   #hud-out{position:absolute;left:50%;top:150px;transform:translateX(-50%);z-index:20;gap:var(--space-3)}
+  .w2d-strike{position:absolute;z-index:9100;pointer-events:none;border-radius:50%;transform:scaleY(.55);border:4px dashed var(--blood-300);background:radial-gradient(circle,rgba(220,30,30,.35),rgba(220,30,30,.08) 70%);animation:lc-glow .5s infinite}
+  .w2d-strike::after{content:attr(data-t);position:absolute;inset:0;display:grid;place-items:center;font:700 64px/1 var(--font-display);color:#fff;text-shadow:0 0 12px #f00}
+  .w2d-nuke{fill:rgba(255,220,160,.5);stroke:#fff2c8;stroke-width:8;transform-box:fill-box;transform-origin:center;animation:w2d-ring 1.8s ease-out both}
+  .w2d-smoke.plague{background:radial-gradient(circle,rgba(120,170,60,.55) 0,rgba(80,120,40,.4) 45%,rgba(60,90,30,0) 70%)}
+  .lc-minimap .mega{stroke:#fff;stroke-width:1;animation:lc-ping 1.2s infinite;transform-box:fill-box;transform-origin:center}
+  .lc-minimap .megat{font:700 5px/1 var(--font-label);fill:#fff;text-anchor:middle}
   .w2d-sparkline{stroke-width:2;stroke-linecap:square;animation:w2d-fade .28s steps(4) both}
   .w2d-arc{fill:none;stroke:var(--amber-300);stroke-width:3;stroke-dasharray:6 8;animation:w2d-dash .9s linear both}
   .w2d-boom{fill:rgba(240,120,40,.35);stroke:#f0a540;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:w2d-ring .6s steps(6) both}
