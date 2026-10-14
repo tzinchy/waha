@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { BattleEffect, CAPTURE_SITES, type CaptureKind } from './expansion-assets.ts';
+import { BATTLE_MAPS } from './battle-maps.ts';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { assetArchive } from './asset-archive.ts';
 import { UNIT_ROLES, BUILDING_ROLES, VEHICLE_ROLES, FACTION_ART, FactionActor, factionBuilding, ROLE_MOTIONS, type BuildingRole, type FactionId, type Motion, type UnitRole } from './faction-models.ts';
@@ -87,9 +88,10 @@ function explodeAt(x: number, z: number, radius = 1.6, depth = 0.58) {
 // Preview-only battlefield effects and capture-site monuments. These do not alter server rules.
 const battleEffects: BattleEffect[] = [];
 const captureMarkers: THREE.Group[] = [];
-const captureLocations: { kind: CaptureKind; x: number; z: number }[] = [
-  { kind: 'strategic', x: -8, z: 5 }, { kind: 'relic', x: 0, z: -7 }, { kind: 'critical', x: 9, z: 5 },
-];
+let captureLocations: { kind: CaptureKind; x: number; z: number }[] = BATTLE_MAPS[0].sites.map(site => ({ kind: site.type, x: site.x, z: site.z }));
+function buildCaptureMarkers() {
+for (const marker of captureMarkers) { marker.traverse(obj => { if (obj instanceof THREE.Mesh) { obj.geometry.dispose(); (obj.material as THREE.Material).dispose(); } }); marker.removeFromParent(); }
+captureMarkers.length = 0;
 for (const site of captureLocations) {
   const spec = CAPTURE_SITES[site.kind], marker = new THREE.Group();
   const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 1.15, 0.4, site.kind === 'critical' ? 4 : 8), new THREE.MeshStandardMaterial({ color: 0x313638, metalness: 0.65, roughness: 0.55 }));
@@ -98,9 +100,33 @@ for (const site of captureLocations) {
   beacon.position.y = 1.25; marker.add(beacon);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(1.35, 0.065, 6, 40), new THREE.MeshBasicMaterial({ color: spec.color, transparent: true, opacity: 0.85 }));
   ring.rotation.x = -Math.PI / 2; ring.position.y = 0.16; marker.add(ring);
+  // Dawn of War-style physical monument: cog-rim, faction-neutral banner mast,
+  // engraved plinth and a tall relic/critical spire, rather than a floating icon.
+  const stone = new THREE.MeshStandardMaterial({ color: 0x48443f, metalness: 0.4, roughness: 0.75 });
+  const trim = new THREE.MeshStandardMaterial({ color: 0x9a8460, metalness: 0.75, roughness: 0.4 });
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.16, site.kind === 'strategic' ? 2.2 : 3.6, 8), stone);
+  mast.position.y = site.kind === 'strategic' ? 1.3 : 2; marker.add(mast);
+  const finial = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.7, 4), trim);
+  finial.position.y = site.kind === 'strategic' ? 2.65 : 4.1; marker.add(finial);
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4;
+    const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.32, 0.42), stone);
+    tooth.position.set(Math.cos(a) * 1.02, 0.27, Math.sin(a) * 1.02);
+    tooth.rotation.y = -a; marker.add(tooth);
+  }
+  if (site.kind !== 'strategic') {
+    for (const x of [-0.8, 0.8]) {
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.5, 0.24), stone);
+      pillar.position.set(x, 1.5, 0); marker.add(pillar);
+      const tip = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.7, 4), trim);
+      tip.position.set(x, 3.1, 0); marker.add(tip);
+    }
+  }
   marker.position.set(site.x, heightAt(site.x, site.z), site.z); marker.userData.captureRing = ring; marker.userData.captureBeacon = beacon;
   scene.add(marker); captureMarkers.push(marker);
 }
+}
+buildCaptureMarkers();
 function previewEffect(kind: 'explosion' | 'splash' | 'fire' | 'nuclear') {
   const fx = new BattleEffect(kind, new THREE.Vector3(0, heightAt(0, 0) + 0.3, 0));
   scene.add(fx.root); battleEffects.push(fx);
@@ -115,6 +141,17 @@ for (const [name, kind] of [['Взрыв','explosion'],['Сплэш','splash'],[
   button.style.cssText = 'padding:8px 10px;background:#292e34;color:#f1dcb0;border:1px solid #877050;border-radius:5px;cursor:pointer';
   button.onclick = () => previewEffect(kind); previewPanel.append(button);
 }
+const mapSelect = document.createElement('select');
+mapSelect.setAttribute('aria-label', 'Выбор карты');
+mapSelect.style.cssText = 'padding:8px;background:#292e34;color:#f1dcb0;border:1px solid #877050;border-radius:5px';
+for (const map of BATTLE_MAPS) { const option = document.createElement('option'); option.value = map.id; option.textContent = map.name; mapSelect.append(option); }
+mapSelect.onchange = () => {
+  const map = BATTLE_MAPS.find(m => m.id === mapSelect.value)!;
+  captureLocations = map.sites.map(site => ({ kind: site.type, x: site.x, z: site.z }));
+  buildCaptureMarkers();
+  status(map.name + ': ' + map.description);
+};
+previewPanel.prepend(mapSelect);
 const stage = $('stage'); stage.style.position = 'relative'; stage.append(previewPanel);
 
 let batchExport=false;
