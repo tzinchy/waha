@@ -30,7 +30,7 @@ const server = createServer(async (req,res) => {
   } catch(e) {res.writeHead(400);res.end(String(e));}
 });
 await new Promise(resolve=>server.listen(4174,'127.0.0.1',resolve));
-const vite = spawn('npx',['vite','--root','client','--host','127.0.0.1','--port','4173'],{stdio:'inherit'});
+const vite = spawn('npx',['vite','client','--host','127.0.0.1','--port','4173'],{stdio:'inherit'});
 let browser;
 try {
   for(let attempt=0;attempt<90;attempt++) {
