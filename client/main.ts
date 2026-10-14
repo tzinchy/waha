@@ -21,10 +21,14 @@ const TRIM = [0xf3d36b, 0xe0e0e0, 0x22c1c3, 0xff7a1a, 0xd04a6a, 0x222222];
 let cfg: CaptainCfg = { armor: ARMOR[0], trim: TRIM[0], weapon: 'sword', banner: true };
 try { cfg = { ...cfg, ...JSON.parse(store.get('waha.captain') ?? '{}') }; } catch { /* битые данные: берём умолчания */ }
 const preview = new CaptainPreview($<HTMLCanvasElement>('preview'));
+const factionChoice = $<HTMLSelectElement>('factionChoice');
+factionChoice.value = cfg.faction ?? 'legion';
+factionChoice.onchange = () => { cfg.faction = factionChoice.value as NonNullable<CaptainCfg['faction']>; applyCfg(); };
 
 function applyCfg() {
   store.set('waha.captain', JSON.stringify(cfg));
   preview.set(cfg);
+  factionChoice.value = cfg.faction ?? 'legion';
   $<HTMLInputElement>('armorIn').value = hex(cfg.armor);
   $<HTMLInputElement>('trimIn').value = hex(cfg.trim);
   document.querySelectorAll('#armorSw .sw').forEach(s => s.classList.toggle('on', (s as HTMLElement).dataset.c === String(cfg.armor)));
