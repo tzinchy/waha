@@ -3,7 +3,7 @@
 const RIFT_MAP = { w: 240, h: 240 };
 const RIFT_HQ_POS = [[30, 30], [210, 210], [210, 30], [30, 210]];
 const RIFT_POINTS = [[120, 120], [120, 45], [120, 195], [45, 120], [195, 120], [75, 168], [165, 72]]; // [0] — критическая точка в центре
-const RIFT_RELICS = [[69, 69], [171, 171]];
+const RIFT_RELICS = [[69, 69], [171, 171], [216, 84], [24, 156], [120, 78], [120, 162], [78, 120], [162, 120]]; // по одному у каждой базы + кольцо из 4 у центра, каждый поровну между двумя соседними базами
 const RIFT_VENTS = [[66, 138], [174, 102], [93, 21], [147, 219], [24, 174], [216, 66]];
 
 type Pt = [number, number];
@@ -50,7 +50,7 @@ function grow(m: MapDef, kx: number, ky = kx): MapDef {
     blocks: m.blocks.map(([x, y, w, h]) => [Math.round(x * kx), Math.round(y * ky), Math.round(w * kx), Math.round(h * ky)] as Rect) };
 }
 const BASE_MAPS: MapDef[] = [
-  { id: 'rift', name: 'Разлом Святого Шпиля', info: '240×240 м, до 4 игроков: открытое поле, река, плато, 7 точек и 2 реликвария', map: RIFT_MAP,
+  { id: 'rift', name: 'Разлом Святого Шпиля', info: '240×240 м, до 4 игроков: открытое поле, река, плато, 7 точек и 8 реликвариев', map: RIFT_MAP,
     hq: RIFT_HQ_POS, points: RIFT_POINTS, relics: RIFT_RELICS, vents: RIFT_VENTS, roads: RIFT_ROADS, river: RIFT_RIVER, bridges: RIFT_BRIDGES,
     plateaus: RIFT_PLATEAUS, ruins: RIFT_RUINS, craters: RIFT_CRATERS, cover: RIFT_COVER, blocks: [] },
   { // Ущелье: четыре кармана-базы по сторонам, от каждого один тоннель к центральной развилке; в кармане 2 реликвария и жила
