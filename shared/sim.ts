@@ -246,7 +246,7 @@ const nearCapWith = (s: State, u: Unit, a: number, r: number) => {
 /** Три ресурса пресета: Влияние (req, с точек), Энергия (с Литейни и насосов), Реликвии (с реликтовых точек). */
 export const ENERGY_COST: Partial<Record<Kind, number>> = { motorpool: 150, yard: 800, turret: 30, aegis: 100, rturret: 20, battery: 150, pylon: 120, pyre: 60, bell: 60, lighthouse: 800, obelisk: 1200, megagun: 800, plague: 800 };
 export const ENERGY_INCOME: Partial<Record<Kind, number>> = { hq: 1, foundry: 2, pump: 4 };
-export const RELIC_RATE = 1 / 20; // реликвий в секунду с одной реликтовой точки
+export const RELIC_RATE = 1 / 30; // реликвий в секунду с одной реликтовой точки (2/мин; на обеих картах по 8 реликвариев)
 /**
  * Апгрейды (команда 'upgrade'). lvl 1 -> 2. Штаб: тир 2 открывает остальные апгрейды.
  * Пост 2 уровня: урон x2.3, дальность +3, получает вдвое меньше урона. Отряд 2 уровня: урон x1.6, получает на 20% меньше.
