@@ -49,7 +49,7 @@ export const STATS: Record<Kind, Stat> = {
   lveh: { hp: 650, n: 1, dmg: 9, range: 12, cd: 0.6, speed: 12, sight: 18, radius: 2.2, cost: 120, time: 14 },
   mveh: { hp: 1200, n: 1, dmg: 10, range: 14, cd: 0.5, speed: 7, sight: 16, radius: 2.7, cost: 160, time: 18 },
   hveh: { hp: 1900, n: 1, dmg: 95, range: 20, cd: 3, speed: 5, sight: 22, radius: 3, cost: 220, time: 24 },
-  titan: { hp: 14000, n: 1, dmg: 280, range: 26, cd: 3, speed: 3.2, sight: 30, radius: 5, cost: 0, time: 45 },
+  titan: { hp: 14000, n: 1, dmg: 280, range: 26, cd: 3, speed: 3.2, sight: 30, radius: 5, cost: 1500, time: 90 }, // титан: 1500 влияния, 2500 энергии, 10 реликвий, 90 с
   // особые механики фракций (пресет FactionSpecials)
   deity: { hp: 4200, n: 1, dmg: 95, range: 6, cd: 1, speed: 9, sight: 22, radius: 2.2, cost: 0, time: 0 },        // Бог-Механизм Династий
   aegis: { hp: 600, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.3, cost: 150, time: 14 },        // Купол-эгида Консенсуса
@@ -65,6 +65,8 @@ export const VP_START = 500;
 export const VP_RATE = 0.5; // очков в секунду за каждую точку перевеса противника (перевес в 3 точки ≈ 5.5 минуты до поражения)
 /** Туман войны: радиус обзора по умолчанию у построек и юнитов без своего обзора. */
 export const SIGHT_STRUCT = 12;
+/** Захват точки отрядом, секунд (без поста); прогресс без отряда спадает вдвое медленнее. */
+export const CAPTURE_TIME = 12;
 
 // ---------- состав армии: откуда, с какого тира, сколько Легиона, броня и тип урона ----------
 export type Armor = 'inf' | 'hinf' | 'veh' | 'titan' | 'struct';
@@ -78,10 +80,10 @@ export const ROLES: Partial<Record<Kind, Role>> = {
   support: { from: 'barracks', tier: 2, pop: 2, armor: 'inf', dmg: 'small', meters: 2.2 },
   elite: { from: 'barracks', tier: 3, pop: 4, armor: 'hinf', dmg: 'melee', energy: 80, meters: 3.1 },
   healer: { from: 'barracks', tier: 3, pop: 4, armor: 'hinf', dmg: 'small', energy: 100, heal: 0.05, meters: 3.4 },
-  lveh: { from: 'key2', tier: 2, pop: 4, armor: 'veh', dmg: 'small', energy: 40, meters: 4.5 },
-  mveh: { from: 'key2', tier: 2, pop: 6, armor: 'veh', dmg: 'small', energy: 120, aoe: 3, meters: 6 },
+  lveh: { from: 'key2', tier: 3, pop: 4, armor: 'veh', dmg: 'small', energy: 40, meters: 4.5 },
+  mveh: { from: 'key2', tier: 3, pop: 6, armor: 'veh', dmg: 'small', energy: 120, aoe: 3, meters: 6 },
   hveh: { from: 'key2', tier: 3, pop: 8, armor: 'veh', dmg: 'heavy', energy: 260, aoe: 2.5, meters: 8 },
-  titan: { from: 'hq', tier: 4, pop: 20, armor: 'titan', dmg: 'blast', energy: 600, relics: 4, aoe: 7, meters: 34, one: true },
+  titan: { from: 'hq', tier: 4, pop: 20, armor: 'titan', dmg: 'blast', energy: 2500, relics: 10, aoe: 7, meters: 34, one: true },
 };
 /** Урон по броне (как в DoW): снайпер косит пехоту, тяжёлое оружие — технику, взрывчатка — здания. */
 export const VS: Record<DmgType, Record<Armor, number>> = {
@@ -941,10 +943,10 @@ function capture(s: State, dt: number) {
     const o = present.size === 1 ? [...present][0] : -1;
     if (o >= 0 && o !== p.owner) {
       if (p.by !== o) { p.by = o; p.prog = 0; }
-      p.prog += dt / 4;
+      p.prog += dt / CAPTURE_TIME;
       if (p.prog >= 1) { p.owner = o; p.prog = 0; p.by = -1; gainXp(s, o, XP_CAPTURE); }
     } else if (p.prog > 0) {
-      p.prog = Math.max(0, p.prog - dt / 8);
+      p.prog = Math.max(0, p.prog - dt / (CAPTURE_TIME * 2));
       if (p.prog === 0) p.by = -1;
     }
   }

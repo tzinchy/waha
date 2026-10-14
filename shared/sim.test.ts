@@ -130,7 +130,7 @@ test('реликвии: реликтовая точка даёт реликви�
   const s = newState(2);
   const cap = unit(s, 0, 'captain'), ri = POINTS.length;
   [cap.x, cap.y] = RELICS[0] as [number, number];
-  run(s, 6);
+  run(s, 13); // CAPTURE_TIME 12 с
   assert.equal(s.points[ri].owner, 0);
   assert.match(applyCmd(s, 0, { c: 'upgrade', id: cap.id }) ?? '', /реликвий/);
   run(s, 40);
@@ -257,7 +257,7 @@ test('капитан: опыт за убийства и точки, уровни
   assert.ok(!s.units.includes(e), 'строитель врага убит');
   assert.equal(p.xp, 5);
   [cap.x, cap.y] = POINTS[3];
-  run(s, 6);
+  run(s, 13);
   assert.equal(s.points[3].owner, 0);
   assert.equal(p.xp, 30, 'захват точки +25');
   p.xp = 95; const ec = unit(s, 1, 'captain'); ec.by = 0; ec.hp = 0; run(s, 0.1);

@@ -128,7 +128,7 @@ export class Game {
   private sel = new Set<number>();
   private cam = { x: 50, y: 50, zoom: 1 };
   private keys = new Set<string>();
-  private points: { ring: HTMLElement; fill: HTMLElement; el: HTMLElement }[] = [];
+  private points: { ring: HTMLElement; fill: HTMLElement; el: HTMLElement; zone: HTMLElement }[] = [];
   private pointOwner: number[] = [];
   private shots: { el: SVGElement; until: number }[] = [];
   private ghost = document.createElement('div');
@@ -221,7 +221,11 @@ export class Game {
       el.classList.add('w2d-neutral');
       ring.classList.toggle('relic', relic);
       this.ground.append(ring, fill);
-      this.points.push({ ring, fill, el });
+      const zone = document.createElement('div'); zone.className = 'w2d-zone' + (i === 0 ? ' crit' : ''); // территория точки: тут ставят турели и генераторы
+      const zr = i === 0 ? 12 : 14;
+      Object.assign(zone.style, { left: (x - zr) * S + 'px', top: (y - zr) * S + 'px', width: zr * 2 * S + 'px', height: zr * 2 * S + 'px' });
+      this.ground.insertBefore(zone, ring);
+      this.points.push({ ring, fill, el, zone });
     });
   }
 
@@ -330,6 +334,7 @@ export class Game {
       const p = this.points[i], col = owner >= 0 ? hex(SLOT_COLORS[owner]) : 'var(--art-bone)';
       p.ring.style.setProperty('--team', col);
       p.ring.classList.toggle('owned', owner >= 0);
+      p.zone.style.setProperty('--team', col); p.zone.classList.toggle('owned', owner >= 0); p.zone.classList.toggle('mine', owner === this.slot);
       p.el.style.setProperty('--art-bone', col); // кристалл реликвария окрашивается по владельцу (пресет Buildings)
       p.fill.style.setProperty('--team', by >= 0 ? hex(SLOT_COLORS[by]) : 'transparent');
       p.fill.style.setProperty('--p', String(prog / 100));
@@ -421,7 +426,29 @@ export class Game {
   private pingT = 0;
 
   // ---------- капитан: опыт, уровень, дерево способностей ----------
+  /** Мини-портреты в левом верхнем углу: капитан (всегда) и титан (пока на поле). Клик — выбрать и навести камеру. */
+  private portraits() {
+    const own = (k: Kind) => [...this.views.values()].find(v => v.owner === this.slot && v.kind === k);
+    const cap = own('captain') ?? own('deity'), port = $('cap-port');
+    if (cap) {
+      const key = cap.artPath + (cap.dead ? 'd' : '');
+      if (port.dataset.k !== key) { port.dataset.k = key; port.innerHTML = miniArt(cap.artPath) + '<i></i><span class="t hidden"></span>'; if (needsTint(cap.artPath, this.fac())) (port.firstElementChild as HTMLElement).style.filter = ROSTER[this.fac()].tint; }
+      port.classList.toggle('dead', cap.dead);
+      (port.querySelector('i') as HTMLElement).style.setProperty('--v', Math.max(0, cap.hp / maxHp(cap.kind)) * 100 + '%');
+      const t = port.querySelector('.t') as HTMLElement; t.classList.toggle('hidden', !cap.dead); t.textContent = 'пал';
+    }
+    const ti = own('titan'), box = $('hud-titan');
+    box.classList.toggle('hidden', !ti);
+    if (ti) {
+      if (box.dataset.id !== String(ti.id)) { box.dataset.id = String(ti.id); box.innerHTML = `<button class="w2d-port" id="titan-port" title="Титан: клик — выбрать и навести камеру">${miniArt(ti.artPath)}<i></i></button><div><b>${this.kindName('titan', this.fac())}</b><small id="titan-hp"></small></div>`; $('titan-port').onclick = () => this.focus(ti.id); }
+      (box.querySelector('i') as HTMLElement).style.setProperty('--v', Math.max(0, ti.hp / maxHp('titan')) * 100 + '%');
+      $('titan-hp').textContent = `${Math.round(ti.hp)} / ${maxHp('titan')}`;
+    }
+  }
+  private focus(id: number) { const v = this.views.get(id); if (!v) return; this.sel.clear(); this.sel.add(id); this.cam.x = v.x; this.cam.y = v.y; this.renderCmd(); }
+
   private capHud(me: number[]) {
+    this.portraits();
     const c = this.cap;
     const [lvl, xp, pts, abil] = [me[9] ?? 1, me[10] ?? 0, me[11] ?? 0, me[12] ?? 0];
     if (lvl > c.lvl && this.snapN > 2) { audio.built(); this.alert('ok', `Ранг ${lvl}`, 'дар: клик по ромбу уровня или Alt+1–3'); const v = [...this.views.values()].find(u => u.owner === this.slot && u.kind === 'captain'); v?.el.animate([{ filter: 'drop-shadow(0 0 0 var(--gilt-300))' }, { filter: 'drop-shadow(0 0 22px var(--gilt-300))' }, { filter: 'none' }], { duration: 900 }); }
@@ -521,6 +548,7 @@ export class Game {
 
   private price(cost: number, en = 0, rel = 0) {
     if (this.fac() === 'clockwork') { en += cost; cost = 0; } // Династии платят энергией
+    if (this.fac() === 'undead' && en > this.energy) { cost += en - Math.max(0, this.energy); en = Math.max(0, this.energy); } // Нежить: недостающая энергия — влиянием
     return { cost, en, rel, ok: this.req >= cost && this.energy >= en && this.relics >= rel };
   }
 
@@ -609,6 +637,7 @@ export class Game {
     const capt = sel.find(v => v.kind === 'captain' && v.owner === this.slot);
     if (capt && this.fac() === 'clockwork') c.push({ act: 'ascend', name: 'Вознесение', hot: 'Y', icon: ICON.tier, ...this.price(0, 600), ult: true, info: 'Капитан становится Богом-Механизмом: 9 м, летает, Остановка времени. Необратимо; гибель — капитан недоступен 5 минут.', req: this.cap.lvl < 10 || this.tier < 4 ? 'Нужен 10-й уровень капитана и тир IV' : undefined, prog: capt.rise > 0 ? Math.round(100 - capt.rise * 25) : undefined });
     if (sel.some(v => v.kind === 'deity' && v.owner === this.slot)) c.push({ act: 'timestop', name: 'Остановка времени', hot: 'Y', icon: ABIL_ICON[4], ult: true, info: 'Враги в 12 м замирают на 3 с.', cd: this.stopCd, cdMax: 45 });
+    if (this.fac() === 'ashen' && sel.some(v => SQUADS.has(v.kind) && v.kind !== 'elite')) c.push({ act: 'sacrifice', name: 'Жертва', hot: 'Y', icon: ICON.reinforce, info: 'Отряд у Чёрного Алтаря (штаба, до 14 м) обращается в демона того же веса.' });
     if (this.fac() === 'orks' && sel.some(v => v.kind === 'guard')) {
       const carrying = sel.some(v => v.carry);
       c.push({ act: 'drag', name: carrying ? 'Бросить турель' : 'Тащить турель', hot: 'Y', icon: ICON.build, info: 'Рубаки утаскивают свою турель за собой (скорость −40%). Турели Орды копят Ярость.' });
@@ -647,7 +676,7 @@ export class Game {
     const undead = this.fac() === 'undead';
     const tabs: [string, ReturnType<typeof card>[]][] = [
       ['Экономика', [card('post', 'Реликварий', 'P', 'Ставится на захваченную точку: держит её и даёт +2 влияния/с.'), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своей точки или построек.', undead ? 'Нежити не нужна' : undefined), card('pump', 'Насос', 'N', '+4 энергии/с. На жилу или у своей точки.', undead ? 'Нежити не нужен' : undefined)]],
-      ['Армия', [card('barracks', 'Казарма', 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`)]],
+      ['Армия', [card('barracks', 'Казарма', 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`), { k: 'barracks' as Buildable, html: `<p class="lc-buildhint">Техника и танки — в здании «${F.keys[1]}» (ключевое здание тира II, вкладка «Святыни»); открываются с тира III. Титан — в штабе с тира IV.</p>` }]],
       ['Оборона', [card('turret', 'Турель', 'Y', 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'W', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
         ...(this.fac() === 'prism' ? [card('aegis', 'Купол-эгида', 'E', 'Купол 12 м: поглощает 1200 урона, восстанавливается за 30 с, пробитый 10 с не работает.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'orks' ? [card('rturret', 'Ракетная бочка', 'R', 'Ракеты по площади. Копит Ярость.'), card('fturret', 'Огнемётная печь', 'Q', 'Жжёт в упор. Копит Ярость.')] : [])]],
@@ -721,6 +750,7 @@ export class Game {
   private doAct(act: string) {
     const sel = this.selected();
     if (act === 'ascend') { this.cmd({ c: 'ascend' }); return; }
+    if (act === 'sacrifice') { this.cmd({ c: 'sacrifice', ids: [...this.sel] }); return; }
     if (act === 'timestop') { this.cmd({ c: 'timestop' }); return; }
     if (act === 'drag') {
       const sq = sel.find(v => v.kind === 'guard');
@@ -751,13 +781,13 @@ export class Game {
   }
 
   private startPlace(k: Buildable) {
-    this.place = k; this.amove = false;
+    this.place = k; this.amove = false; this.root.classList.add('placing');
     const r = k === 'post' ? POINT_R * 0.5 : STATS[k].radius + 0.6;
     Object.assign(this.ghost.style, { width: r * 2 * S + 'px', height: r * 1.1 * S + 'px' });
     this.root.style.cursor = 'copy';
     this.renderCmd();
   }
-  private stopPlace() { this.wallStart = null; this.wallLine?.setAttribute('visibility', 'hidden'); this.place = null; this.ghost.classList.add('hidden'); this.root.style.cursor = ''; this.cmdHtml = ''; this.renderCmd(); }
+  private stopPlace() { this.root.classList.remove('placing'); this.wallStart = null; this.wallLine?.setAttribute('visibility', 'hidden'); this.place = null; this.ghost.classList.add('hidden'); this.root.style.cursor = ''; this.cmdHtml = ''; this.renderCmd(); }
 
   // ---------- ввод ----------
   private cmd(c: Cmd) {
@@ -841,6 +871,7 @@ export class Game {
       this.renderCmd();
     }, sig);
     addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase()), sig);
+    $('cap-port').addEventListener('click', e => { e.stopPropagation(); const v = [...this.views.values()].find(u => u.owner === this.slot && (u.kind === 'captain' || u.kind === 'deity')); if (v) this.focus(v.id); }, sig);
     $('hud-cap').addEventListener('click', () => { if (this.learnHtml) { this.lvlUpOpen = true; this.lvlUpAt = performance.now(); $('hud-levelup').classList.remove('hidden'); $('hud-cap').classList.remove('has-pts'); } }, sig);
     $('hud-levelup').addEventListener('click', e => { const a = (e.target as HTMLElement).closest<HTMLElement>('[data-learn]')?.dataset.learn; if (a) this.cmd({ c: 'learn', a: Number(a) }); }, sig);
     const hc = $('hud-cmd');
@@ -931,6 +962,8 @@ export class Game {
 
   private placePoint(sx: number, sy: number): { x: number; y: number; ok: boolean } {
     const g = this.toWorld(sx, sy), vs = [...this.views.values()];
+    if (Math.hypot(POINTS[0][0] - g.x, POINTS[0][1] - g.y) < 12) return { ...g, ok: false }; // у критической точки не строят
+    const nearOwnPt = (x: number, y: number) => [...POINTS, ...RELICS].some(([px, py], i) => i !== 0 && this.pointOwner[i] === this.slot && Math.hypot(px - x, py - y) < 14);
     if (this.place === 'post') {
       const i = POINTS.findIndex(([x, y]) => Math.hypot(x - g.x, y - g.y) < 9);
       if (i < 0) return { ...g, ok: false };
@@ -941,14 +974,14 @@ export class Game {
     if (this.place === 'pump' || this.place === 'foundry') { // на жилу (насос) или рядом со своей точкой
       const v = this.place === 'pump' ? VENTS.find(([x, y]) => Math.hypot(x - g.x, y - g.y) < 6) : undefined;
       const p = v ? { x: v[0], y: v[1] } : g;
-      const nearPt = [...POINTS, ...RELICS].some(([x, y], i) => this.pointOwner[i] === this.slot && Math.hypot(x - p.x, y - p.y) < 14);
+      const nearPt = nearOwnPt(p.x, p.y);
       const nearBase = this.place === 'foundry' && vs.some(u => u.owner === this.slot && isStruct(u.kind) && u.kind !== 'turret' && Math.hypot(u.x - p.x, u.y - p.y) < 16);
       const free = !vs.some(u => isStruct(u.kind) && Math.hypot(u.x - p.x, u.y - p.y) < STATS[u.kind].radius + STATS[this.place!].radius + 1);
       return { ...p, ok: (!!v || nearPt || nearBase) && free };
     }
     if (['mine', 'wallgate', 'bunker'].includes(this.place ?? '')) return { ...g, ok: !vs.some(v => isStruct(v.kind) && v.kind !== 'mine' && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1) };
     if (this.place === 'turret' || /^key|^gate/.test(this.place ?? '')) {
-      const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16);
+      const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16) || (this.place === 'turret' && nearOwnPt(g.x, g.y));
       const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1);
       return { ...g, ok: near && free };
     }

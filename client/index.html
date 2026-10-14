@@ -148,6 +148,22 @@
   .w2d-specrow .vp{color:var(--gilt-300)}
   .w2d-specrow.out{opacity:.4;text-decoration:line-through}
   .arch-info{margin:0 0 var(--space-2);font:400 13px/18px var(--font-body);color:var(--ink-muted)}
+  .w2d-zone{position:absolute;border-radius:50%;transform:scaleY(.55);pointer-events:none;opacity:0;transition:opacity .3s}
+  .w2d-zone.owned{opacity:.55;background:radial-gradient(circle,color-mix(in srgb,var(--team) 22%,transparent) 60%,color-mix(in srgb,var(--team) 8%,transparent) 99%);border:2px dashed color-mix(in srgb,var(--team) 70%,transparent)}
+  .w2d-zone.mine{opacity:.75}
+  .w2d.placing .w2d-zone.mine{opacity:1;animation:lc-glow 1.2s infinite}
+  .w2d.placing .w2d-zone.crit{opacity:.8;background:repeating-linear-gradient(45deg,rgba(200,40,40,.35) 0 10px,transparent 10px 20px);border:2px dashed var(--blood-300)}
+  #hud-cap{grid-template-columns:auto auto 1fr!important;width:330px!important}
+  .w2d-port{position:relative;width:46px;height:54px;padding:2px;background:var(--surface-200);border:2px solid var(--gilt-500);cursor:pointer;overflow:hidden}
+  .w2d-port svg{width:100%;height:100%}
+  .w2d-port.dead svg{filter:grayscale(1) brightness(.5)}
+  .w2d-port .t{position:absolute;inset:auto 0 0 0;font:600 10px/14px var(--font-label);color:var(--blood-300);background:rgba(0,0,0,.6);text-align:center}
+  .w2d-port i{position:absolute;left:2px;right:2px;bottom:2px;height:3px;background:linear-gradient(90deg,var(--verdigris-500) var(--v,100%),var(--surface-000) var(--v,100%))}
+  #hud-titan{position:absolute;left:var(--space-4);top:154px;display:flex;gap:var(--space-2);align-items:center;padding:6px 10px}
+  #hud-titan .w2d-port{width:54px;height:64px;border-color:var(--amber-500)}
+  #hud-titan b{font:600 13px/16px var(--font-display);color:var(--gilt-300)}
+  #hud-titan small{display:block;font:400 11px/14px var(--font-mono);color:var(--ink-muted)}
+  #hud-alerts{top:236px!important}
   .w2d-sparkline{stroke-width:2;stroke-linecap:square;animation:w2d-fade .28s steps(4) both}
   .w2d-arc{fill:none;stroke:var(--amber-300);stroke-width:3;stroke-dasharray:6 8;animation:w2d-dash .9s linear both}
   .w2d-boom{fill:rgba(240,120,40,.35);stroke:#f0a540;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:w2d-ring .6s steps(6) both}
@@ -270,8 +286,9 @@
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 5.5V12c0 4.6-3.3 8-8 9.5C7.3 20 4 16.6 4 12V5.5Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9l4 3 4-3v3l-4 3-4-3Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-squads">0</span><span class="lc-res__label">Легион</span></div>
       <div class="lc-res__item"><span class="lc-res__label" id="hud-extra"></span></div>
     </div>
-    <section id="hud-cap" class="lc-frame lc-caphud"><div class="lc-capbadge"><span id="cap-lvl">1</span></div><div><div class="lc-caphud__name">Капитан</div><div class="lc-xp" id="cap-xp" style="--xp:0%"><div class="lc-xp__fill"></div></div><div class="lc-caphud__xp" id="cap-xpt"></div></div></section>
+    <section id="hud-cap" class="lc-frame lc-caphud"><button class="w2d-port" id="cap-port" title="Капитан: клик — выбрать и навести камеру"></button><div class="lc-capbadge"><span id="cap-lvl">1</span></div><div><div class="lc-caphud__name">Капитан</div><div class="lc-xp" id="cap-xp" style="--xp:0%"><div class="lc-xp__fill"></div></div><div class="lc-caphud__xp" id="cap-xpt"></div></div></section>
     <div id="hud-alerts" aria-live="polite"></div>
+    <section id="hud-titan" class="lc-frame hidden"></section>
     <section id="hud-levelup" class="lc-frame lc-levelup hidden"></section>
     <section id="hud-mini" class="lc-frame lc-minimap"><svg id="mini-svg" viewBox="0 0 100 100" aria-label="Мини-карта"></svg></section>
     <section id="hud-queue" class="lc-frame hidden"></section>
