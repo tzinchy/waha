@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { BattleEffect, CAPTURE_SITES, EQUIPMENT_UPGRADES, EXPANSION_ROSTER, type CaptureKind } from './expansion-assets.ts';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { assetArchive } from './asset-archive.ts';
 import { UNIT_ROLES, BUILDING_ROLES, VEHICLE_ROLES, FACTION_ART, FactionActor, factionBuilding, ROLE_MOTIONS, type BuildingRole, type FactionId, type Motion, type UnitRole } from './faction-models.ts';
@@ -82,6 +83,39 @@ function explodeAt(x: number, z: number, radius = 1.6, depth = 0.58) {
   }
   status(`Взрывов: ${explosions}. Кратеров на земле: ${craters.length}.`);
 }
+
+// Preview-only battlefield effects and capture-site monuments. These do not alter server rules.
+const battleEffects: BattleEffect[] = [];
+const captureMarkers: THREE.Group[] = [];
+const captureLocations: { kind: CaptureKind; x: number; z: number }[] = [
+  { kind: 'strategic', x: -8, z: 5 }, { kind: 'relic', x: 0, z: -7 }, { kind: 'critical', x: 9, z: 5 },
+];
+for (const site of captureLocations) {
+  const spec = CAPTURE_SITES[site.kind], marker = new THREE.Group();
+  const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 1.15, 0.4, site.kind === 'critical' ? 4 : 8), new THREE.MeshStandardMaterial({ color: 0x313638, metalness: 0.65, roughness: 0.55 }));
+  pedestal.position.y = 0.2; marker.add(pedestal);
+  const beacon = new THREE.Mesh(new THREE.OctahedronGeometry(site.kind === 'critical' ? 0.75 : 0.5), new THREE.MeshStandardMaterial({ color: spec.color, emissive: spec.color, emissiveIntensity: 1.5, metalness: 0.3 }));
+  beacon.position.y = 1.25; marker.add(beacon);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.35, 0.065, 6, 40), new THREE.MeshBasicMaterial({ color: spec.color, transparent: true, opacity: 0.85 }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.16; marker.add(ring);
+  marker.position.set(site.x, heightAt(site.x, site.z), site.z); marker.userData.captureRing = ring; marker.userData.captureBeacon = beacon;
+  scene.add(marker); captureMarkers.push(marker);
+}
+function previewEffect(kind: 'explosion' | 'splash' | 'fire' | 'nuclear') {
+  const fx = new BattleEffect(kind, new THREE.Vector3(0, heightAt(0, 0) + 0.3, 0));
+  scene.add(fx.root); battleEffects.push(fx);
+  if (kind === 'nuclear') explodeAt(0, 0, 5.5, 1.1);
+  else if (kind === 'explosion' || kind === 'splash') explodeAt(0, 0, kind === 'splash' ? 2.4 : 1.6, 0.35);
+  status('VFX: ' + kind + ' · только визуальное превью');
+}
+const previewPanel = document.createElement('div');
+previewPanel.style.cssText = 'position:absolute;right:12px;bottom:12px;z-index:20;display:flex;gap:5px;flex-wrap:wrap;max-width:390px';
+for (const [name, kind] of [['Взрыв','explosion'],['Сплэш','splash'],['Огонь','fire'],['Атомный взрыв','nuclear']] as const) {
+  const button = document.createElement('button'); button.textContent = name;
+  button.style.cssText = 'padding:8px 10px;background:#292e34;color:#f1dcb0;border:1px solid #877050;border-radius:5px;cursor:pointer';
+  button.onclick = () => previewEffect(kind); previewPanel.append(button);
+}
+const stage = $('stage'); stage.style.position = 'relative'; stage.append(previewPanel);
 
 let batchExport=false;
 const actors: FactionActor[] = [];
@@ -259,6 +293,16 @@ function frame(now: number) {
   // Orthographic fixed 35-degree elevation. Models remain 3D at both display resolutions.
   camera.position.copy(focus).add(new THREE.Vector3(8, 21, 29)); camera.lookAt(focus);
   for (const actor of actors) { actor.root.position.y = heightAt(actor.root.position.x, actor.root.position.z); actor.update(dt); }
+  captureMarkers.forEach((marker, i) => {
+    const beacon = marker.userData.captureBeacon as THREE.Mesh;
+    const ring = marker.userData.captureRing as THREE.Mesh;
+    beacon.position.y = 1.25 + Math.sin(now * 0.002 + i) * 0.18;
+    beacon.rotation.y += dt * 0.7;
+    ring.rotation.z += dt * 0.4;
+  });
+  for (let i = battleEffects.length - 1; i >= 0; i--) {
+    if (!battleEffects[i].update(dt)) { battleEffects[i].dispose(); battleEffects.splice(i, 1); }
+  }
   const cycle = Math.floor(now / 900);
   if (motion === 'shoot' && cycle !== previousShotCycle) { for (const actor of actors) if (ROLE_MOTIONS[actor.role].includes('shoot') && actor.root.visible && (overview || actor.faction === selected)) fire(actor); } previousShotCycle = cycle;
   for (let i = bullets.length - 1; i >= 0; i--) {
