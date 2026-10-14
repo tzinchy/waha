@@ -66,7 +66,7 @@ export function artFor(kind: Kind, faction: FactionId, lvl = 1, arch: Arch = 'co
   if (kind === 'captain') return CAPTAIN_ART[faction][archFor(faction, arch)] ?? a.captain[0];
   if (kind === 'turret') return a.turret[lvl > 1 ? 1 : 0];
   if (kind === 'post') return lvl >= 3 ? 'Defenses/point-3.svg' : lvl === 2 ? 'Defenses/point-2.svg' : 'Defenses/point-1.svg';
-  if (faction !== 'order' && FAC_BUILD.has(kind) || kind === 'motorpool' || kind === 'yard' || faction === 'undead' && (kind === 'bell' || kind === 'plague') || faction === 'clockwork' && kind === 'pylon' || faction === 'orks' && kind === 'fturret') return `Buildings/${faction}/${kind}.svg`; // свои постройки у каждой фракции
+  if (faction !== 'order' && FAC_BUILD.has(kind) || kind === 'motorpool' || kind === 'yard' || faction === 'clockwork' && kind === 'pylon' || faction === 'orks' && kind === 'fturret') return `Buildings/${faction}/${kind}.svg`; // свои постройки у каждой фракции
   if (NEUTRAL[kind]) return NEUTRAL[kind]![lvl > 1 ? 1 : 0];
   return a[kind as 'builder' | 'guard' | 'hq' | 'barracks'];
 }
@@ -78,7 +78,7 @@ const FORM: Partial<Record<Kind, [number, number][]>> = {
 
 const svgCache = new Map<string, string>();
 /** Загружает все силуэты один раз. */
-const ALL_ART = new Set([...Object.values(DOOM_OF).map(d => d.art), 'Factions/obelisk.svg', ...Object.values(CAPTAIN_ART).flatMap(o => Object.values(o)), 'Factions/deity.svg', ...Object.values(ROSTER).flatMap(r => Object.values(r).flatMap(v => (typeof v === 'object' ? [v.art] : []))), ...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), ...(['undead', 'prism', 'clockwork', 'orks', 'ashen'] as const).flatMap(f => [...FAC_BUILD, ...(f === 'undead' ? ['bell', 'plague'] : [])].map(k => `Buildings/${f}/${k}.svg`)), ...Object.keys(FACTIONS).flatMap(f => [`Buildings/${f}/motorpool.svg`, `Buildings/${f}/yard.svg`]), 'Buildings/clockwork/pylon.svg', 'Buildings/orks/fturret.svg', 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
+const ALL_ART = new Set([...Object.values(DOOM_OF).map(d => d.art), 'Factions/obelisk.svg', ...Object.values(CAPTAIN_ART).flatMap(o => Object.values(o)), 'Factions/deity.svg', ...Object.values(ROSTER).flatMap(r => Object.values(r).flatMap(v => (typeof v === 'object' ? [v.art] : []))), ...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), ...(['clockwork', 'orks', 'ashen'] as const).flatMap(f => [...FAC_BUILD].map(k => `Buildings/${f}/${k}.svg`)), ...Object.keys(FACTIONS).flatMap(f => [`Buildings/${f}/motorpool.svg`, `Buildings/${f}/yard.svg`]), 'Buildings/clockwork/pylon.svg', 'Buildings/orks/fturret.svg', 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
 export const ready2d = Promise.all([...ALL_ART]
   .map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgCache.set(p, t)))).then(() => undefined);
 
@@ -167,7 +167,6 @@ export class Game {
   private tier = 1;
   private energy = 0;
   private relics = 0;
-  private lastRemains = 0;
   private research = 0;
   private cap = { lvl: 1, xp: 0, pts: 0, abil: 0, cd: [] as number[] };
   private learnHtml = '';
@@ -538,13 +537,13 @@ export class Game {
     const learnt = (me[8] ?? 0) & ~this.research;
     if (learnt && this.snapN > 2) RESEARCH.forEach((n, i) => { if (learnt & (1 << i)) this.alert('ok', 'Исследовано', n); });
     if ((s.pl[this.slot][2] ?? 1) > this.tier && this.snapN > 2) this.alert('ok', `Тир ${['I', 'II', 'III', 'IV', 'V'][s.pl[this.slot][2] - 1]}`, 'новые постройки и войска');
-    this.lastRemains = me[7] ?? 0; this.research = me[8] ?? 0;
+    this.research = me[8] ?? 0;
     this.capHud(me);
     this.drawMini(s);
     $('hud-energy').textContent = String(this.energy); $('hud-relics').textContent = String(this.relics);
     const f = this.fac(), extra = $('hud-extra');
     extra.innerHTML = f === 'orks' ? (me[6] ? `<b class="waagh">ВААГХ ${me[6]} с</b>` : `<span class="rage"><i style="--v:${(me[5] / RAGE_MAX) * 100}%"></i></span>Ярость`)
-      : f === 'undead' ? `<b>${me[7] ?? 0}</b> останков` : f === 'clockwork' ? 'Перезавод' : f === 'prism' ? 'Сеть наведения' : f === 'ashen' ? 'Порча' : 'Свет веры';
+      : f === 'clockwork' ? 'Перезавод' : f === 'ashen' ? 'Порча' : 'Свет веры';
     extra.title = FACTIONS[f].mech;
     this.tier = s.pl[this.slot][2] ?? 1;
     $('hud-tier').textContent = ['I', 'II', 'III', 'IV', 'V'][this.tier - 1] ?? String(this.tier);
@@ -618,7 +617,6 @@ export class Game {
     const own = (k: Kind) => [...this.views.values()].some(v => v.owner === this.slot && v.kind === k);
     if (st) {
       if (st.build < 1) return [{ act: '', name: 'Возводится', hot: '', icon: ICON.build, prog: Math.round(st.build * 100), info: 'Отправьте строителей: выберите их и ПКМ по стройке.' }];
-      const free = this.fac() === 'undead' && this.lastRemains >= 5;
       const HOT = ['T', 'Z', 'X', 'C', 'V', 'B'], ROLE_INFO: Partial<Record<Kind, string>> = {
         builder: 'Строит, чинит постройки и технику.', guard: isMelee('guard', this.fac()) ? 'Линейная пехота ближнего боя.' : 'Линейная пехота, стрелки.',
         sniper: 'Снайпер: косит пехоту издалека, бессилен против техники.', heavy: 'Тяжёлое оружие: против техники, турелей и зданий.', support: 'Поддержка: союзники рядом получают −15% урона, может нести дым.',
@@ -627,7 +625,7 @@ export class Game {
       producible(st.kind).forEach((k, i) => {
         const r = ROLES[k]!, n = this.qk[st.id]?.filter(q => q === KINDS.indexOf(k)).length ?? 0, now = this.qk[st.id]?.[0] === KINDS.indexOf(k);
         const researching = /^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length;
-        c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(free && k === 'guard' ? 0 : trainCost(this.fac(), k), r.energy ?? 0, r.relics ?? 0),
+        c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k), r.energy ?? 0, r.relics ?? 0),
           info: `${ROLE_INFO[k] ?? ''} Легион: ${r.pop}.`, req: this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
       });
       if (st.kind === 'hq') {
@@ -669,7 +667,7 @@ export class Game {
     const guards = sel.filter(v => SQUADS.has(v.kind)), hurt = guards.filter(v => v.hp < maxHp(v.kind));
     if (guards.length) c.push({ act: 'reinforce', name: 'Пополнить', hot: 'R', icon: ICON.reinforce, ...this.price(hurt.reduce((n, v) => n + Math.ceil((maxHp(v.kind) - v.hp) / STATS[v.kind].hp) * Math.round(REINFORCE_COST * STATS[v.kind].cost / 100), 0)), req: hurt.length ? undefined : 'Отряды полные', info: 'Добрать бойцов в отряды. Нужно быть рядом со своей постройкой.' });
     if (guards.length) GEAR.forEach((G, g) => { // снаряжение отряда (SquadWargear): купить или бросить
-      const NAMES: Record<FactionId, string[]> = { order: ['Огненные лампады', 'Литургический заряд', 'Дымовое кадило'], undead: ['Костяная урна', 'Гробовой заряд', 'Саван'], prism: ['Фотонная граната', 'Резонансный заряд', 'Завеса'], clockwork: ['Гравитационная сфера', 'Заряд распада', 'Туман времени'], orks: ['Бахалка', 'Связка бахалок', 'Дымовуха'], ashen: ['Сосуд с серой', 'Адский заряд', 'Пепельный дым'] };
+      const NAMES: Record<FactionId, string[]> = { order: ['Огненные лампады', 'Литургический заряд', 'Дымовое кадило'], clockwork: ['Гравитационная сфера', 'Заряд распада', 'Туман времени'], orks: ['Бахалка', 'Связка бахалок', 'Дымовуха'], ashen: ['Сосуд с серой', 'Адский заряд', 'Пепельный дым'] };
       const name = NAMES[this.fac()][g], owned = guards.filter(v => v.gear & (1 << g)), ch = owned.reduce((n, v) => n + v.ch[g], 0), cd = Math.min(...owned.map(v => v.gcd), 99);
       if (owned.length) c.push({ act: 'throw:' + g, name, hot: ['G', 'H', 'J'][g], icon: GEAR_ICON[g], info: `Бросок до ${G.range} м, радиус ${G.r} м.${g === 2 ? ' Дым: стрельба в облаке и по нему — вдвое слабее.' : ' Задевает и своих.'}`, req: ch ? undefined : 'Нет зарядов', cd: cd > 0 && cd < 99 ? cd : 0, cdMax: G.cd, queue: ch, active: this.throwG === g });
       else c.push({ act: 'gear:' + g, name: 'Купить: ' + name, hot: ['G', 'H', 'J'][g], icon: GEAR_ICON[g], ...this.price(G.cost * guards.length, G.energy * guards.length), info: `${G.charges} заряд(а), перезарядка ${G.cd} с. Покупается у штаба, казарм или капитана.`, req: this.tier < 2 ? 'Нужен тир II' : undefined });
@@ -721,17 +719,14 @@ export class Game {
       const cost = req ? `<span>${req}</span>` : [p.cost ? `<span${lack(p.cost, this.req)}>◆ ${p.cost}</span>` : '', p.en ? `<span${lack(p.en, this.energy)}>ϟ ${p.en}</span>` : '', `<span>⧗ ${STATS[k].time} с</span>`].join('');
       return { k, html: `<button class="lc-bcard${req ? ' lc-bcard--locked' : ''}" data-act="${req ? '' : k}" data-tipname="${name}" data-tipinfo="${info}" ${req ? 'aria-disabled="true"' : ''} ${this.place === k ? 'aria-pressed="true"' : ''}>${miniArt(artFor(k as Kind, this.fac(), 1))}<span><span class="lc-bcard__name">${name}</span><span class="lc-bcard__cost">${cost}</span></span><kbd>${hot}</kbd></button>` };
     };
-    const undead = this.fac() === 'undead';
     const tabs: [string, ReturnType<typeof card>[]][] = [
-      ['Экономика', [card('post', 'Реликварий', 'P', 'Ставится на захваченную точку: держит её и даёт +2 влияния/с.'), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своей точки или построек.', undead ? 'Нежити не нужна' : undefined), card('pump', 'Насос', 'N', '+4 энергии/с. На жилу или у своей точки.', undead ? 'Нежити не нужен' : undefined)]],
+      ['Экономика', [card('post', 'Реликварий', 'P', 'Ставится на захваченную точку: держит её и даёт +2 влияния/с.'), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своей точки или построек.'), card('pump', 'Насос', 'N', '+4 энергии/с. На жилу или у своей точки.')]],
       ['Армия', [card('barracks', 'Казарма', 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`), card('motorpool', PROD_NAME[this.fac()].motorpool, 'T', 'Вся техника и артиллерия фракции. Тир III.', this.tier < 3 ? 'Нужен тир III' : undefined), card('yard', PROD_NAME[this.fac()].yard, 'U', 'Строит титана. Одна армия — один титан. Тир IV.', this.tier < 4 ? 'Нужен тир IV' : undefined)]],
       ['Оборона', [card('turret', 'Турель', 'Y', 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'W', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
-        ...(this.fac() === 'prism' ? [card('aegis', 'Купол-эгида', 'E', 'Купол 12 м: поглощает 1200 урона, восстанавливается за 30 с, пробитый 10 с не работает.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'orks' ? [card('rturret', 'Ракетная бочка', 'R', 'Ракеты по площади. Копит Ярость.'), card('fturret', 'Огнемётная печь', 'Q', 'Жжёт в упор. Копит Ярость.')] : []),
         ...(this.fac() === 'order' ? [card('battery', 'Орган-батарея', 'R', 'Стационарная артиллерия: 40 м, мёртвая зона 8 м, урон по площади.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
-        ...(this.fac() === 'undead' ? [card('bell', 'Колокол Скорби', 'R', 'Враги в 14 м бьют на 20% слабее и ходят на 20% медленнее.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'clockwork' ? [card('pylon', 'Гаусс-пилон', 'R', 'Дальний луч 30 м: пробивает технику и здания.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
-        ...((m => m ? [card(m as Buildable, KIND_NAME[m as Kind]!, 'M', ({ lighthouse: 'Открывает 70 м вокруг; союзники в 25 м получают на 15% меньше урона.', obelisk: 'Луч 220 на 40 м, пробивает технику и здания.', megagun: 'Снаряды 180 по площади 6 м, дальность 38 м.', plague: 'Враги в 30 м теряют 1% здоровья в секунду.' } as Record<string, string>)[m] + ' Строится 2 минуты — все игроки видят стройку.', this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в ключевом здании тира IV' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun', undead: 'plague' } as Record<string, string>)[this.fac()])),
+        ...((m => m ? [card(m as Buildable, KIND_NAME[m as Kind]!, 'M', ({ lighthouse: 'Открывает 70 м вокруг; союзники в 25 м получают на 15% меньше урона.', obelisk: 'Луч 220 на 40 м, пробивает технику и здания.', megagun: 'Снаряды 180 по площади 6 м, дальность 38 м.', plague: 'Враги в 30 м теряют 1% здоровья в секунду.' } as Record<string, string>)[m] + ' Строится 2 минуты — все игроки видят стройку.', this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в ключевом здании тира IV' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun' } as Record<string, string>)[this.fac()])),
         ...(this.fac() === 'ashen' ? [card('pyre', 'Огненная яма', 'R', 'Жжёт всех врагов в 8 м: 18 урона в секунду.', this.tier < 2 ? 'Нужен тир II' : undefined)] : [])]],
       ['Святыни', (() => { const doom = card('doom', DOOM_OF[this.fac()].name, '·', `Сверхоружие: ${DOOM_OF[this.fac()].info}. Заряд 3 минуты, удар в любую точку карты; все видят стройку и предупреждение за 6 с.`, this.tier < 5 ? 'Нужен тир V' : !(this.unlock & 2) ? 'Исследуйте «Сверхоружие» в ключевом здании тира IV' : undefined);
         const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — только когда пали все штабы.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, doom, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra, doom]; })()],

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, type Kind, type State } from './sim.ts';
+import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -154,15 +154,12 @@ test('Династии: платят энергией, влияния нет', (
   assert.equal(s.players[0].req, r, 'влияние не копится');
 });
 
-test('Нежить: генераторы нельзя, отряд из останков бесплатно', () => {
-  const s = newState(2, ['undead', 'order']);
-  const b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq');
-  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: hq.x + 8, y: hq.y + 3 }) ?? '', /Скорбь/);
-  applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: hq.x + 10, y: hq.y + 10 });
-  run(s, 30);
-  s.players[0].remains = REMAINS_PER_SQUAD; s.players[0].req = 0;
-  assert.equal(applyCmd(s, 0, { c: 'train', id: unit(s, 0, 'barracks').id }), undefined);
-  assert.equal(s.players[0].remains, 0);
+test('четыре фракции: постройки снятых Нежити и Консенсуса не строит никто', () => {
+  for (const f of ['order', 'clockwork', 'orks', 'ashen'] as const) {
+    const s = newState(2, [f, 'order']), p = s.players[0], b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq');
+    Object.assign(p, { req: 1e5, energy: 1e5, relics: 50, tier: 5 });
+    for (const kind of ['aegis', 'bell', 'plague'] as const) assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind, x: hq.x + 12, y: hq.y }) ?? '', /другой фракции/, `${f} строит ${kind}`);
+  }
 });
 
 test('Орда: ярость копится от урона и запускает ВААГХ', () => {
@@ -327,20 +324,9 @@ test('армия по ролям: найм по тиру, Легион, урон
   assert.equal(g.ch[0], 2);
 });
 
-test('особые механики: купол-эгида и дрон Консенсуса, Архангел Ордена, Бог-Механизм Династий, турели Орды', () => {
-  // Консенсус: купол поглощает урон, пробитый — 10 с отдыхает
-  const s = newState(2, ['prism', 'orks']);
+test('особые механики: Архангел Ордена, Бог-Механизм Династий, турели Орды', () => {
+  const s = newState(2, ['order', 'orks']);
   const p = s.players[0], hq = unit(s, 0, 'hq'); p.tier = 2; p.req = 1e4; p.energy = 1e4;
-  const dome = spawn(s, 0, 'aegis', hq.x + 6, hq.y);
-  const g = spawn(s, 0, 'guard', hq.x + 8, hq.y), hp = g.hp;
-  hurt(s, g, 500, 1);
-  assert.equal(g.hp, hp, 'купол забрал урон'); assert.equal(dome.sh, 700);
-  hurt(s, g, 800, 1);
-  assert.ok(dome.off > 0, 'купол пробит'); assert.ok(g.hp < hp);
-  // дрон: щит отряду
-  const sup = spawn(s, 0, 'support', g.x + 2, g.y); void sup;
-  g.hit = 9; run(s, 15);
-  assert.ok(g.sh > 200, 'дрон дал щит');
   // Орда: турели только своей фракции, Рубаки тащат турель
   assert.match(applyCmd(s, 0, { c: 'build', ids: [unit(s, 0, 'builder').id], kind: 'rturret', x: hq.x + 5, y: hq.y + 5 }) ?? '', /другой фракции/);
   const ork = s.players[1], ohq = unit(s, 1, 'hq'); ork.req = 1e4;
@@ -393,25 +379,20 @@ test('победные очки тают у того, кто держит мен
   assert.ok(snapshotFor(g, 0).u.some(r => r[0] === foe.id), 'своя точка без башни снимает туман');
 });
 
-test('точки: турели вокруг своей точки, у критической точки строить нельзя; Нежить доплачивает энергию влиянием', () => {
-  const s = newState(2, ['undead', 'order']);
+test('точки: турели вокруг своей точки, у критической точки строить нельзя', () => {
+  const s = newState(2, ['order', 'ashen']);
   const p = s.players[0], b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq');
   p.req = 1e4; p.tier = 1;
   const pt = s.points[3]; pt.owner = 0;
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: pt.x + 8, y: pt.y }), undefined, 'турель у своей точки');
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: s.points[0].x + 4, y: s.points[0].y }) ?? '', /критической/);
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: s.points[0].x, y: s.points[0].y }) ?? '', /критической/);
-  // Нежить: переход на тир II стоит 300 влияния + 150 энергии; энергии нет — доплата влиянием
-  spawn(s, 0, 'key1', hq.x + 12, hq.y);
-  p.energy = 0; const req = p.req;
-  assert.equal(applyCmd(s, 0, { c: 'upgrade', id: hq.id }), undefined);
-  assert.equal(req - p.req, 450);
 });
 
-test('здоровье по лестнице, стены укрепляются, артиллерия не бьёт в упор, яма жжёт, колокол ослабляет', () => {
+test('здоровье по лестнице, стены укрепляются, артиллерия не бьёт в упор, яма жжёт', () => {
   const tot = (k: Parameters<typeof maxHp>[0]) => maxHp(k);
   assert.ok(tot('guard') < tot('elite') && tot('elite') < tot('mveh') && tot('mveh') < tot('barracks') && tot('barracks') < tot('hq') && tot('hq') < tot('titan'), 'лестница здоровья');
-  const s = newState(2, ['ashen', 'undead']);
+  const s = newState(2, ['ashen', 'order']);
   const p = s.players[0], hq = unit(s, 0, 'hq'); p.req = 1e4; p.tier = 2;
   const w1 = spawn(s, 0, 'wall', hq.x + 15, hq.y), w2 = spawn(s, 0, 'wall', hq.x + 15, hq.y + 2);
   assert.equal(applyCmd(s, 0, { c: 'upgrade', id: w1.id }), undefined);
@@ -426,10 +407,6 @@ test('здоровье по лестнице, стены укрепляются,
   // Огненная яма Синклита
   const pyre = spawn(s, 0, 'pyre', 60, 200), foe = spawn(s, 1, 'guard', 64, 200), f0 = foe.hp; void pyre;
   run(s, 2); assert.ok(foe.hp < f0 - 20, 'яма жжёт');
-  // Колокол Нежити замедляет врага
-  const bell = spawn(s, 1, 'bell', 200, 200), me = spawn(s, 0, 'guard', 205, 200); void bell;
-  applyCmd(s, 0, { c: 'move', ids: [me.id], x: 230, y: 200 }); const x0 = me.x; run(s, 1);
-  assert.ok(me.x - x0 < 8.6 * 0.85, 'замедлен колоколом'); // одержимые Синклита бегут 8.6 м/с, колокол режет на 20%
 });
 
 test('карта «Ущелье Пепла»: на четверых, крест тоннелей, скалы непроходимы, в карманах по 2 реликвария и жила', () => {
@@ -473,7 +450,7 @@ test('Династии: только энергия (доход с точек и
 });
 
 test('сверхоружие и мегапостройки: сначала дорогое открытие, стройка видна всем, удар у каждой фракции свой', () => {
-  const s = newState(2, ['order', 'undead']);
+  const s = newState(2, ['order', 'ashen']);
   const p = s.players[0], hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
   p.req = 1e5; p.energy = 1e5; p.relics = 50; p.tier = 5;
   const spot = { x: hq.x + 14, y: hq.y + 4 };
@@ -494,28 +471,9 @@ test('сверхоружие и мегапостройки: сначала до�
   assert.ok(foe.hp < hp - 2000, 'копьё Длани Лампы');
   doom.prog = 180; p.energy = 0; p.req = 0;
   assert.match(applyCmd(s, 0, { c: 'strike', id: doom.id, x: foe.x, y: foe.y }) ?? '', /./, 'пуск стоит энергии');
-  // Нежить: чумное облако
-  const u = s.players[1]; u.tier = 5; u.req = 1e4; u.energy = 1e4; const d2 = spawn(s, 1, 'doom', 300, 300); d2.prog = 180;
-  const g = spawn(s, 0, 'guard', 200, 200), gh = g.hp;
-  applyCmd(s, 1, { c: 'strike', id: d2.id, x: 200, y: 200 }); run(s, 6.5); const after = g.hp; run(s, 5);
-  assert.ok(g.hp < after || !s.units.includes(g), 'облако губит со временем'); assert.ok(after < gh);
 });
 
-test('Нежить повышает тир без генераторов: общая цена и списание учитывают нехватку энергии', () => {
-  for (const energy of [0, 60, 150]) {
-    const s = newState(2, ['undead', 'order']), p = s.players[0], hq = unit(s, 0, 'hq');
-    spawn(s, 0, 'key1', hq.x + 12, hq.y);
-    const price = resourceCost('undead', 300, 150, energy);
-    assert.deepEqual(price, { req: 450 - energy, energy });
-    p.req = price.req - 1; p.energy = energy;
-    assert.match(applyCmd(s, 0, { c: 'upgrade', id: hq.id }) ?? '', /влияния/);
-    assert.equal(hq.upg, -1); assert.equal(p.energy, energy);
-    p.req++;
-    assert.equal(applyCmd(s, 0, { c: 'upgrade', id: hq.id }), undefined);
-    assert.equal(p.req, 0); assert.equal(p.energy, 0);
-    run(s, TIER_TIME + DT);
-    assert.equal(p.tier, 2);
-  }
+test('цена: Династии платят всё энергией, остальные — влиянием и энергией', () => {
   assert.deepEqual(resourceCost('clockwork', 300, 150, 0), { req: 0, energy: 450 });
   assert.deepEqual(resourceCost('order', 300, 150, 0), { req: 300, energy: 150 });
 });
@@ -536,7 +494,7 @@ test('захват точки длится 12 секунд, отсутствие
   assert.equal(p.owner, 0);
 });
 
-for (const faction of ['order', 'undead', 'prism', 'clockwork', 'orks', 'ashen'] as const) {
+for (const faction of ['order', 'clockwork', 'orks', 'ashen'] as const) {
   test(`техника ${faction}: три пресета нанимаются в техцехе на III тире`, () => {
     const s = newState(2, [faction, 'order']), p = s.players[0], hq = unit(s, 0, 'hq');
     const factory = spawn(s, 0, 'motorpool', hq.x + 14, hq.y);
@@ -606,7 +564,7 @@ test('отмена найма из очереди возвращает ресу�
 });
 
 test('второй герой: другой архетип с тира III, свой бонус, один на армию; легенда и титан — вместе с ним', () => {
-  const s = newState(2, ['order', 'undead'], ['commander', 'commander']), p = s.players[0];
+  const s = newState(2, ['order', 'ashen'], ['commander', 'commander']), p = s.players[0];
   Object.assign(p, { req: 1e4, energy: 1e4, relics: 50 });
   assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /тир III/);
   p.tier = 5;

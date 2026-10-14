@@ -1,8 +1,8 @@
 // Тема интерфейса = тема фракции из дизайн-системы «Латунный Собор» (data-theme на <html>). Выбор запоминается.
 const KEY = 'waha.theme';
 export const THEMES = [
-  { id: 'dark', name: 'Орден' }, { id: 'undead', name: 'Нежить' }, { id: 'prism', name: 'Консенсус' },
-  { id: 'clockwork', name: 'Династии' }, { id: 'orks', name: 'Орда' }, { id: 'ashen', name: 'Синклит' }, { id: 'light', name: 'Пергамент' },
+  { id: 'dark', name: 'Легион' }, { id: 'clockwork', name: 'Династии' },
+  { id: 'orks', name: 'Кланы' }, { id: 'ashen', name: 'Культ' }, { id: 'light', name: 'Пергамент' },
 ];
 export const theme = () => document.documentElement.dataset.theme ?? 'dark';
 export function setTheme(id: string) {
