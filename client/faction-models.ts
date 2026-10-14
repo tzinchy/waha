@@ -367,6 +367,38 @@ export class FactionActor {
   }
 }
 
+/** Necron monolith upgrades add actual geometry, not just a HUD level icon. */
+export function upgradeNecronMonolith(model: THREE.Group, level: number) {
+  const old = model.getObjectByName('NecronUpgrade');
+  if (old) {
+    old.traverse(obj => {
+      if (obj instanceof THREE.Mesh) {
+        obj.geometry.dispose();
+        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+        else obj.material.dispose();
+      }
+    });
+    model.remove(old);
+  }
+  const tier = Math.max(1, Math.min(3, Math.floor(level)));
+  const g = new THREE.Group(); g.name = 'NecronUpgrade';
+  const stone = new THREE.MeshStandardMaterial({ color: 0x354941, metalness: 0.85, roughness: 0.35 });
+  const energy = new THREE.MeshStandardMaterial({ color: 0x61d64b, emissive: 0x3bfa45, emissiveIntensity: 1.7 });
+  for (let i = 0; i < tier * 4; i++) {
+    const a = i * Math.PI * 2 / (tier * 4);
+    const radius = 1.3 + tier * 0.18;
+    const pylon = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.7 + tier * 0.3, 0.28), stone);
+    pylon.position.set(Math.cos(a) * radius, 1.8 + tier * 0.1, Math.sin(a) * radius);
+    pylon.rotation.y = a; g.add(pylon);
+    const light = new THREE.Mesh(new THREE.OctahedronGeometry(0.13 + tier * 0.04), energy);
+    light.position.set(pylon.position.x, pylon.position.y + 0.5 + tier * 0.17, pylon.position.z); g.add(light);
+  }
+  const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.4 + tier * 0.13), energy);
+  core.position.y = 3.1 + tier * 0.35; g.add(core);
+  model.add(g);
+  return g;
+}
+
 export function factionBuilding(faction: FactionId, role: BuildingRole = 'hq') {
   const m = materials(faction), g = new THREE.Group(); g.name = `${faction}_${role}`;
   const small = role === 'post' || role === 'turret', width = small ? 1.1 : role === 'hq' ? 3.8 : 2.7;
