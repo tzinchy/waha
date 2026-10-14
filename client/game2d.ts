@@ -1,7 +1,7 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import type { Arch } from '../shared/sim.ts';
-import { DOOM_SHOT, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, VEHICLES, LEGION_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { resourceCost, DOOM_SHOT, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, VEHICLES, LEGION_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { CAPTAIN_ART, DOOM_OF, FACTIONS, HQ_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -572,8 +572,7 @@ export class Game {
   private tipAct = '';
 
   private price(cost: number, en = 0, rel = 0) {
-    if (this.fac() === 'clockwork') { en += cost; cost = 0; } // Династии платят энергией
-    if (this.fac() === 'undead' && en > this.energy) { cost += en - Math.max(0, this.energy); en = Math.max(0, this.energy); } // Нежить: недостающая энергия — влиянием
+    ({ req: cost, energy: en } = resourceCost(this.fac(), cost, en, this.energy));
     return { cost, en, rel, ok: this.req >= cost && this.energy >= en && this.relics >= rel };
   }
 
@@ -607,8 +606,9 @@ export class Game {
         mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: 'Артиллерия: 45 м, по площади, в упор не стреляет — нужна разведка и прикрытие.', titan: 'Титан: один на армию, давит пехоту шагами.' };
       producible(st.kind).forEach((k, i) => {
         const r = ROLES[k]!, n = this.qk[st.id]?.filter(q => q === KINDS.indexOf(k)).length ?? 0, now = this.qk[st.id]?.[0] === KINDS.indexOf(k);
+        const researching = /^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length;
         c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(free && k === 'guard' ? 0 : trainCost(this.fac(), k), r.energy ?? 0, r.relics ?? 0),
-          info: `${ROLE_INFO[k] ?? ''} Легион: ${r.pop}.`, req: this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
+          info: `${ROLE_INFO[k] ?? ''} Легион: ${r.pop}.`, req: this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
       });
       if (st.kind === 'hq') {
         const t = TIER_UP[this.tier], keyOk = t && own(t.key) && [...this.views.values()].some(v => v.owner === this.slot && v.kind === t.key && v.build >= 1);
@@ -621,8 +621,8 @@ export class Game {
       if (/^key[1-4]$/.test(st.kind)) {
         const k = Number(st.kind[3]);
         for (let r = 0; r < 4; r++) {
-          const i = (k - 1) * 4 + r, done = !!(this.research & (1 << i)), busy = st.q > 0 && st.q - 1 !== i;
-          c.push({ act: done ? '' : 'res' + r, name: RESEARCH[i], hot: String(r + 1), icon: ICON.research, ...(done ? {} : this.price(researchCost(i).cost, researchCost(i).energy)), info: RESEARCH_INFO[i], done, req: busy ? 'Здание уже исследует' : undefined, prog: st.q - 1 === i ? st.prod : undefined });
+          const i = (k - 1) * 4 + r, done = !!(this.research & (1 << i)), training = !!this.qk[st.id]?.length, busy = st.q > 0 && st.q - 1 !== i;
+          c.push({ act: done ? '' : 'res' + r, name: RESEARCH[i], hot: String(r + 1), icon: ICON.research, ...(done ? {} : this.price(researchCost(i).cost, researchCost(i).energy)), info: RESEARCH_INFO[i], done, req: training ? 'Здание нанимает войска' : busy ? 'Здание уже исследует' : undefined, prog: !training && st.q - 1 === i ? st.prod : undefined });
         }
       }
       if (st.kind === 'key4') UNLOCKS.forEach((U, u) => { const done = !!(this.unlock & (1 << u)), busy = st.q > 0 && st.q !== 101 + u;

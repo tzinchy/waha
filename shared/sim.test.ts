@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
+import { resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -489,4 +489,90 @@ test('сверхоружие и мегапостройки: сначала до�
   const g = spawn(s, 0, 'guard', 200, 200), gh = g.hp;
   applyCmd(s, 1, { c: 'strike', id: d2.id, x: 200, y: 200 }); run(s, 6.5); const after = g.hp; run(s, 5);
   assert.ok(g.hp < after || !s.units.includes(g), 'облако губит со временем'); assert.ok(after < gh);
+});
+
+test('Нежить повышает тир без генераторов: общая цена и списание учитывают нехватку энергии', () => {
+  for (const energy of [0, 60, 150]) {
+    const s = newState(2, ['undead', 'order']), p = s.players[0], hq = unit(s, 0, 'hq');
+    spawn(s, 0, 'key1', hq.x + 12, hq.y);
+    const price = resourceCost('undead', 300, 150, energy);
+    assert.deepEqual(price, { req: 450 - energy, energy });
+    p.req = price.req - 1; p.energy = energy;
+    assert.match(applyCmd(s, 0, { c: 'upgrade', id: hq.id }) ?? '', /влияния/);
+    assert.equal(hq.upg, -1); assert.equal(p.energy, energy);
+    p.req++;
+    assert.equal(applyCmd(s, 0, { c: 'upgrade', id: hq.id }), undefined);
+    assert.equal(p.req, 0); assert.equal(p.energy, 0);
+    run(s, TIER_TIME + DT);
+    assert.equal(p.tier, 2);
+  }
+  assert.deepEqual(resourceCost('clockwork', 300, 150, 0), { req: 0, energy: 450 });
+  assert.deepEqual(resourceCost('order', 300, 150, 0), { req: 300, energy: 150 });
+});
+
+test('захват точки длится 12 секунд, отсутствие войск сбрасывает прогресс', () => {
+  const s = newState(2), p = s.points[3], cap = unit(s, 0, 'captain');
+  [cap.x, cap.y] = [p.x, p.y];
+  run(s, 6);
+  assert.equal(p.owner, -1, 'короткого присутствия уже недостаточно');
+  assert.ok(p.prog > 0.49 && p.prog < 0.51);
+  cap.x += POINTS.length * 10;
+  run(s, CAPTURE_TIME + DT);
+  assert.equal(p.owner, -1); assert.equal(p.prog, 0);
+  [cap.x, cap.y] = [p.x, p.y];
+  run(s, 12 - DT);
+  assert.equal(p.owner, -1, 'раньше 12 секунд точка не захвачена');
+  run(s, DT * 2);
+  assert.equal(p.owner, 0);
+});
+
+for (const faction of ['order', 'undead', 'prism', 'clockwork', 'orks', 'ashen'] as const) {
+  test(`техника ${faction}: три пресета нанимаются в кузне на III тире`, () => {
+    const s = newState(2, [faction, 'order']), p = s.players[0], hq = unit(s, 0, 'hq');
+    const factory = spawn(s, 0, 'key2', hq.x + 12, hq.y);
+    p.req = 1e5; p.energy = 1e5; p.tier = 2;
+    for (const k of ['lveh', 'mveh', 'hveh'] as const) assert.match(applyCmd(s, 0, { c: 'train', id: factory.id, k }) ?? '', /тир 3/);
+    assert.equal(factory.que.length, 0);
+    p.tier = 3;
+    for (const k of ['lveh', 'mveh', 'hveh'] as const) assert.equal(applyCmd(s, 0, { c: 'train', id: factory.id, k }), undefined);
+    run(s, STATS.lveh.time + STATS.mveh.time + STATS.hveh.time + 1);
+    for (const k of ['lveh', 'mveh', 'hveh'] as const) assert.ok(s.units.some(u => u.owner === 0 && u.kind === k), k + ' вышел на поле');
+  });
+}
+
+test('титан требует полную цену каждого ресурса; второй не нанимается', () => {
+  const s = newState(2), p = s.players[0], hq = unit(s, 0, 'hq'); p.tier = 4;
+  const cost = STATS.titan.cost, energyCost = ROLES.titan!.energy!, relicCost = ROLES.titan!.relics!;
+  assert.ok(cost >= 1500 && energyCost >= 2500 && relicCost >= 10, 'титан — дорогой юнит поздней игры');
+  for (const [req, energy, relics, missing] of [[cost - 1, energyCost, relicCost, 'влияния'], [cost, energyCost - 1, relicCost, 'энергии'], [cost, energyCost, relicCost - 1, 'реликвий']] as const) {
+    Object.assign(p, { req, energy, relics });
+    assert.match(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }) ?? '', new RegExp(missing));
+    assert.equal(hq.que.length, 0);
+    assert.deepEqual([p.req, p.energy, p.relics], [req, energy, relics], 'неудачный заказ ничего не списывает');
+  }
+  Object.assign(p, { req: cost, energy: energyCost, relics: relicCost });
+  assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }), undefined);
+  assert.deepEqual([p.req, p.energy, p.relics], [0, 0, 0]);
+  Object.assign(p, { req: 1e4, energy: 1e4, relics: 100 });
+  assert.match(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }) ?? '', /один/);
+});
+
+test('производство техники и исследования в одном здании не подменяют друг друга', () => {
+  const s = newState(2), p = s.players[0], hq = unit(s, 0, 'hq');
+  const factory = spawn(s, 0, 'key2', hq.x + 12, hq.y);
+  Object.assign(p, { tier: 3, req: 1e5, energy: 1e5 });
+  assert.equal(applyCmd(s, 0, { c: 'train', id: factory.id, k: 'lveh' }), undefined);
+  assert.match(applyCmd(s, 0, { c: 'research', id: factory.id, r: 0 }) ?? '', /нанимает/);
+  run(s, 13);
+  assert.equal(p.research, 0, 'очередь не запускает случайное исследование');
+  assert.ok(!s.units.some(u => u.owner === 0 && u.kind === 'lveh'));
+  run(s, 1 + DT);
+  assert.ok(s.units.some(u => u.owner === 0 && u.kind === 'lveh'));
+  assert.equal(applyCmd(s, 0, { c: 'research', id: factory.id, r: 0 }), undefined);
+  const before = [p.req, p.energy];
+  assert.match(applyCmd(s, 0, { c: 'train', id: factory.id, k: 'mveh' }) ?? '', /исследует/);
+  assert.deepEqual([p.req, p.energy], before);
+  run(s, 20 + DT);
+  assert.ok(p.research & (1 << 4));
+  assert.equal(applyCmd(s, 0, { c: 'train', id: factory.id, k: 'mveh' }), undefined);
 });

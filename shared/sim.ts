@@ -427,10 +427,17 @@ function factionArmor(f: FactionId, s: State, t: Unit) {
   return 1;
 }
 const rangeMul = (s: State, u: Unit) => (fac(s, u.owner) === 'prism' ? 1.15 : 1);
-/** Плата: Династии платят всё энергией (влияния у них нет). */
+/** Цена для сервера и интерфейса: Династии платят энергией, Нежить заменяет её нехватку влиянием. */
+export function resourceCost(faction: FactionId, req: number, energy = 0, availableEnergy = 0) {
+  if (faction === 'clockwork') return { req: 0, energy: energy + req };
+  if (faction === 'undead') {
+    const used = Math.min(energy, Math.max(0, availableEnergy));
+    return { req: req + energy - used, energy: used };
+  }
+  return { req, energy };
+}
 function pay(p: Player, req: number, energy = 0, relics = 0): string | undefined {
-  if (p.faction === 'clockwork') { energy += req; req = 0; }
-  if (p.faction === 'undead' && energy > p.energy) { req += energy - Math.max(0, p.energy); energy = Math.max(0, p.energy); } // у Нежити нет генераторов: недостающую энергию оплачивает влияние
+  ({ req, energy } = resourceCost(p.faction, req, energy, p.energy));
   if (p.req < req) return 'Не хватает влияния';
   if (p.energy < energy) return 'Не хватает энергии';
   if (p.relics < relics) return 'Не хватает реликвий';
@@ -453,6 +460,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     const r = what && ROLES[what];
     if (!what || !r) return;
     if (b.build < 1) return 'Строительство не завершено';
+    if (/^key[1-4]$/.test(b.kind) && b.q > 0 && !b.que.length) return 'Здание уже исследует';
     if (b.que.length >= QUEUE_MAX) return 'Очередь заполнена';
     if (p.tier < r.tier) return `Нужен тир ${r.tier}`;
     if (what === 'builder' && count(s, owner, 'builder') + queued(s, owner, 'builder') >= CAP.builder) return 'Достигнут лимит строителей';
@@ -549,6 +557,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (!b || !Number.isInteger(r) || r < 0 || r > 3) return;
     const i = (Number(b.kind[3]) - 1) * 4 + r;
     if (has(p, i)) return 'Уже изучено';
+    if (b.que.length) return 'Здание нанимает войска';
     if (b.q > 0) return 'Здание уже исследует';
     const c = researchCost(i), e = pay(p, c.cost, c.energy);
     if (e) return e;
@@ -839,7 +848,7 @@ const postAt = (s: State, pt: { x: number; y: number }) => s.units.find(u => u.k
 function produce(s: State, b: Unit, dt: number) {
   const p = s.players[b.owner];
   if (b.kind === 'key4' && b.q > 100) { const U = UNLOCKS[b.q - 101]; if ((b.prog += dt) >= U.time) { p.unlock |= 1 << (b.q - 101); b.q = 0; b.prog = 0; } return; }
-  if (/^key[1-4]$/.test(b.kind) && b.q > 0) { // исследование
+  if (/^key[1-4]$/.test(b.kind) && b.q > 0 && !b.que.length) { // исследование
     if ((b.prog += dt) >= researchCost(b.q - 1).time) { p.research |= 1 << (b.q - 1); b.q = 0; b.prog = 0; }
     return;
   }
@@ -1157,7 +1166,7 @@ function cleanup(s: State) {
 
 const prodPct = (u: Unit) => u.kind === 'doom' ? Math.floor((u.prog / DOOM.charge) * 100) : u.q <= 0 || u.kind === 'legend' ? 0
   : u.kind === 'key4' && u.q > 100 ? Math.floor((u.prog / UNLOCKS[u.q - 101].time) * 100)
-  : /^key/.test(u.kind) ? Math.floor((u.prog / researchCost(u.q - 1).time) * 100)
+  : /^key/.test(u.kind) && !u.que.length ? Math.floor((u.prog / researchCost(u.q - 1).time) * 100)
   : u.kind === 'gate' ? Math.floor((u.prog / SUMMON_TIME) * 100)
   : u.que[0] ? Math.floor((u.prog / STATS[u.que[0]].time) * 100) : 0;
 
