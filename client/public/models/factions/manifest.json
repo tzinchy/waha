@@ -1,0 +1,307 @@
+{
+  "version": 1,
+  "quality": "procedural prototype; art reference is the final detail target",
+  "generator": "client/faction-models.ts + client/asset-lab.ts",
+  "models": 28,
+  "animationClips": 60,
+  "spriteAtlases": 60,
+  "framesPerAtlas": 64,
+  "files": [
+    {
+      "faction": "legion",
+      "role": "captain",
+      "file": "legion/captain/model.glb",
+      "bytes": 282476,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "attack",
+        "death"
+      ],
+      "triangles": 1444
+    },
+    {
+      "faction": "legion",
+      "role": "guard",
+      "file": "legion/guard/model.glb",
+      "bytes": 257888,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ],
+      "triangles": 1216
+    },
+    {
+      "faction": "legion",
+      "role": "builder",
+      "file": "legion/builder/model.glb",
+      "bytes": 251416,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "work",
+        "death"
+      ],
+      "triangles": 1104
+    },
+    {
+      "faction": "legion",
+      "role": "hq",
+      "file": "legion/hq/model.glb",
+      "bytes": 111708,
+      "animations": [],
+      "triangles": 1048
+    },
+    {
+      "faction": "legion",
+      "role": "barracks",
+      "file": "legion/barracks/model.glb",
+      "bytes": 100172,
+      "animations": [],
+      "triangles": 928
+    },
+    {
+      "faction": "legion",
+      "role": "post",
+      "file": "legion/post/model.glb",
+      "bytes": 24968,
+      "animations": [],
+      "triangles": 144
+    },
+    {
+      "faction": "legion",
+      "role": "turret",
+      "file": "legion/turret/model.glb",
+      "bytes": 24316,
+      "animations": [],
+      "triangles": 152
+    },
+    {
+      "faction": "heretics",
+      "role": "captain",
+      "file": "heretics/captain/model.glb",
+      "bytes": 277132,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "attack",
+        "death"
+      ],
+      "triangles": 1404
+    },
+    {
+      "faction": "heretics",
+      "role": "guard",
+      "file": "heretics/guard/model.glb",
+      "bytes": 270520,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ],
+      "triangles": 1340
+    },
+    {
+      "faction": "heretics",
+      "role": "builder",
+      "file": "heretics/builder/model.glb",
+      "bytes": 264052,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "work",
+        "death"
+      ],
+      "triangles": 1228
+    },
+    {
+      "faction": "heretics",
+      "role": "hq",
+      "file": "heretics/hq/model.glb",
+      "bytes": 111716,
+      "animations": [],
+      "triangles": 1048
+    },
+    {
+      "faction": "heretics",
+      "role": "barracks",
+      "file": "heretics/barracks/model.glb",
+      "bytes": 100176,
+      "animations": [],
+      "triangles": 928
+    },
+    {
+      "faction": "heretics",
+      "role": "post",
+      "file": "heretics/post/model.glb",
+      "bytes": 24972,
+      "animations": [],
+      "triangles": 144
+    },
+    {
+      "faction": "heretics",
+      "role": "turret",
+      "file": "heretics/turret/model.glb",
+      "bytes": 24320,
+      "animations": [],
+      "triangles": 152
+    },
+    {
+      "faction": "scrap",
+      "role": "captain",
+      "file": "scrap/captain/model.glb",
+      "bytes": 270276,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "attack",
+        "death"
+      ],
+      "triangles": 1312
+    },
+    {
+      "faction": "scrap",
+      "role": "guard",
+      "file": "scrap/guard/model.glb",
+      "bytes": 277028,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ],
+      "triangles": 1396
+    },
+    {
+      "faction": "scrap",
+      "role": "builder",
+      "file": "scrap/builder/model.glb",
+      "bytes": 270568,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "work",
+        "death"
+      ],
+      "triangles": 1284
+    },
+    {
+      "faction": "scrap",
+      "role": "hq",
+      "file": "scrap/hq/model.glb",
+      "bytes": 119772,
+      "animations": [],
+      "triangles": 1132
+    },
+    {
+      "faction": "scrap",
+      "role": "barracks",
+      "file": "scrap/barracks/model.glb",
+      "bytes": 97136,
+      "animations": [],
+      "triangles": 896
+    },
+    {
+      "faction": "scrap",
+      "role": "post",
+      "file": "scrap/post/model.glb",
+      "bytes": 24968,
+      "animations": [],
+      "triangles": 144
+    },
+    {
+      "faction": "scrap",
+      "role": "turret",
+      "file": "scrap/turret/model.glb",
+      "bytes": 24316,
+      "animations": [],
+      "triangles": 152
+    },
+    {
+      "faction": "necrons",
+      "role": "captain",
+      "file": "necrons/captain/model.glb",
+      "bytes": 292492,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "attack",
+        "death"
+      ],
+      "triangles": 1588
+    },
+    {
+      "faction": "necrons",
+      "role": "guard",
+      "file": "necrons/guard/model.glb",
+      "bytes": 283080,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "shoot",
+        "death"
+      ],
+      "triangles": 1484
+    },
+    {
+      "faction": "necrons",
+      "role": "builder",
+      "file": "necrons/builder/model.glb",
+      "bytes": 274592,
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "work",
+        "death"
+      ],
+      "triangles": 1360
+    },
+    {
+      "faction": "necrons",
+      "role": "hq",
+      "file": "necrons/hq/model.glb",
+      "bytes": 33360,
+      "animations": [],
+      "triangles": 232
+    },
+    {
+      "faction": "necrons",
+      "role": "barracks",
+      "file": "necrons/barracks/model.glb",
+      "bytes": 33372,
+      "animations": [],
+      "triangles": 232
+    },
+    {
+      "faction": "necrons",
+      "role": "post",
+      "file": "necrons/post/model.glb",
+      "bytes": 24968,
+      "animations": [],
+      "triangles": 144
+    },
+    {
+      "faction": "necrons",
+      "role": "turret",
+      "file": "necrons/turret/model.glb",
+      "bytes": 24692,
+      "animations": [],
+      "triangles": 152
+    }
+  ]
+}
