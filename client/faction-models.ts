@@ -5,7 +5,7 @@ export type FactionId = 'legion' | 'heretics' | 'scrap' | 'necrons' | 'drukhari'
 export const UNIT_ROLES = ['captain','guard','builder','sniper','heavy','flamer','elite','medic','transport','tank','walker','artillery','titan'] as const;
 export type UnitRole = typeof UNIT_ROLES[number];
 export const VEHICLE_ROLES = new Set<UnitRole>(['transport','tank','walker','artillery','titan']);
-export type Motion = 'idle' | 'idle_scan' | 'idle_inspect' | 'idle_taunt' | 'walk' | 'run' | 'attack' | 'attack_slash' | 'attack_thrust' | 'attack_overhead' | 'attack_combo' | 'execute' | 'throw_grenade' | 'shoot' | 'work' | 'death';
+export type Motion = 'idle' | 'idle_scan' | 'idle_inspect' | 'idle_taunt' | 'walk' | 'run' | 'attack' | 'attack_slash' | 'attack_thrust' | 'attack_overhead' | 'attack_combo' | 'execute' | 'throw_grenade' | 'fly' | 'dash_flight' | 'teleport' | 'shoot' | 'work' | 'death';
 export const BUILDING_ROLES = ['hq','barracks','post','turret','generator','factory','armory','relic','wall','gate'] as const;
 export type BuildingRole = typeof BUILDING_ROLES[number];
 
@@ -18,13 +18,13 @@ export const FACTION_ART: Record<FactionId, { name: string; subtitle: string; pr
   daemons: { name: 'Демоны Хаоса', subtitle: 'Варп-легионы Апокалипсиса', primary: 0x8d223c, trim: 0xe6a74e, metal: 0x352139, cloth: 0x5c214a, glow: 0xff5a23, skin: 0xa43b56 },
 };
 export const ROLE_MOTIONS: Record<UnitRole, Motion[]> = {
-  captain: ['idle', 'idle_scan', 'idle_inspect', 'idle_taunt', 'walk', 'run', 'attack', 'attack_slash', 'attack_thrust', 'attack_overhead', 'attack_combo', 'execute', 'throw_grenade', 'death'],
+  captain: ['idle', 'idle_scan', 'idle_inspect', 'idle_taunt', 'walk', 'run', 'attack', 'attack_slash', 'attack_thrust', 'attack_overhead', 'attack_combo', 'execute', 'throw_grenade', 'fly', 'dash_flight', 'teleport', 'death'],
   guard: ['idle', 'walk', 'run', 'shoot', 'death'],
   builder: ['idle', 'walk', 'run', 'work', 'death'],
   sniper: ['idle','walk','run','shoot','death'],
   heavy: ['idle','walk','run','shoot','death'],
   flamer: ['idle','walk','run','shoot','death'],
-  elite: ['idle','idle_scan','idle_taunt','walk','run','attack_slash','attack_thrust','attack_combo','execute','throw_grenade','shoot','death'],
+  elite: ['idle','idle_scan','idle_taunt','walk','run','attack_slash','attack_thrust','attack_combo','execute','throw_grenade','fly','dash_flight','teleport','shoot','death'],
   medic: ['idle','walk','run','shoot','death'],
   transport: ['idle','walk','run','shoot','death'],
   tank: ['idle','walk','run','shoot','death'],
@@ -33,7 +33,7 @@ export const ROLE_MOTIONS: Record<UnitRole, Motion[]> = {
   titan: ['idle','walk','run','shoot','death'],
 
 };
-const DURATIONS: Record<Motion, number> = { idle: 2, idle_scan: 2.4, idle_inspect: 2.2, idle_taunt: 1.7, walk: 1, run: 0.65, attack: 0.7, attack_slash: 0.75, attack_thrust: 0.58, attack_overhead: 0.95, attack_combo: 1.25, execute: 1.6, throw_grenade: 1.1, shoot: 0.45, work: 1.1, death: 1.1 };
+const DURATIONS: Record<Motion, number> = { idle: 2, idle_scan: 2.4, idle_inspect: 2.2, idle_taunt: 1.7, walk: 1, run: 0.65, attack: 0.7, attack_slash: 0.75, attack_thrust: 0.58, attack_overhead: 0.95, attack_combo: 1.25, execute: 1.6, throw_grenade: 1.1, fly: 1.2, dash_flight: 0.55, teleport: 0.8, shoot: 0.45, work: 1.1, death: 1.1 };
 const geometries = new Map<string, THREE.BufferGeometry>();
 const materialCache = new Map<FactionId, Record<string, THREE.MeshStandardMaterial>>();
 const surfacePixels = new Uint8Array(64 * 64 * 4);
@@ -330,8 +330,15 @@ export class FactionActor {
     }
   }
 
-  update(dt: number) { this.time += dt; this.pose(this.mode, this.time); }
+  update(dt: number) {
+    this.time += dt; this.pose(this.mode, this.time);
+    const p = Math.min(1, this.time / DURATIONS[this.mode]);
+    this.root.position.y = this.mode === 'fly' ? 0.6 + Math.sin(this.time * 6) * 0.12 : this.mode === 'dash_flight' ? 0.75 + Math.sin(this.time * 14) * 0.08 : this.mode === 'teleport' ? Math.sin(p * Math.PI) * 0.3 : 0;
+    this.root.rotation.x = this.mode === 'dash_flight' ? -0.28 * Math.sin(p * Math.PI) : 0;
+    this.root.scale.setScalar(this.mode === 'teleport' ? Math.max(0.08, Math.abs(Math.cos(p * Math.PI))) : 1);
+  }
   setMotion(mode: Motion) { this.mode = ROLE_MOTIONS[this.role].includes(mode) ? mode : 'idle'; this.time = 0; }
+  setSpecialTravel(mode: 'fly' | 'dash_flight' | 'teleport') { this.setMotion(mode); }
   /** Cycles between distinct melee strikes, rather than repeating the same swing. */
   setMeleeStrike(index: number) {
     const moves: Motion[] = ['attack_slash', 'attack_thrust', 'attack_overhead', 'attack_combo'];
