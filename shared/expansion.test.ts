@@ -31,3 +31,14 @@ test('nuclear strike rejects non-finite coordinates and does not spend resources
   assert.equal(applyCmd(s, 0, { c: 'nuke', x: NaN, y: 40 }), 'Недопустимая цель');
   assert.equal(s.players[0].req, 2000);
 });
+
+test('grenades require owned infantry, range and cooldown', () => {
+  const s = newState(2);
+  const captain = s.units.find(u => u.owner === 0 && u.kind === 'captain')!;
+  const enemy = s.units.find(u => u.owner === 1 && u.kind === 'captain')!;
+  assert.equal(applyCmd(s, 0, { c: 'grenade', id: enemy.id, x: captain.x, y: captain.y }), 'Гранату может бросить только капитан или гвардия');
+  assert.equal(applyCmd(s, 0, { c: 'grenade', id: captain.id, x: 99, y: 99 }), 'Цель слишком далеко');
+  assert.equal(applyCmd(s, 0, { c: 'grenade', id: captain.id, x: captain.x, y: captain.y }), undefined);
+  assert.equal(snapshot(s).blasts?.[0]?.[3], 40);
+  assert.equal(applyCmd(s, 0, { c: 'grenade', id: captain.id, x: captain.x, y: captain.y }), 'Граната перезаряжается');
+});
