@@ -82,7 +82,7 @@ export class SpriteActor {
   grenade() { this.setAction('throw_grenade', true); }
   update(dt: number, desired: 'idle' | 'run' | 'walk', facing: number, cameraYaw: number, alive: boolean) {
     if (!this.sprite.visible) return;
-    if (performance.now() > this.transientUntil && (this.action !== desired || this.action === 'death')) this.setAction(alive ? desired : 'death');
+    if (performance.now() > this.transientUntil && this.action !== desired) this.setAction(alive ? desired : 'death');
     this.time += dt;
     this.direction = ((Math.round(((facing - cameraYaw) / (Math.PI * 2)) * 8) % 8) + 8) % 8;
     const frame = Math.min(7, Math.floor(((this.time % durations[this.action]) / durations[this.action]) * 8));
