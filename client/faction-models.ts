@@ -2,9 +2,12 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export type FactionId = 'legion' | 'heretics' | 'scrap' | 'necrons';
-export type UnitRole = 'captain' | 'guard' | 'builder';
+export const UNIT_ROLES = ['captain','guard','builder','sniper','heavy','flamer','elite','medic','transport','tank','walker','artillery','titan'] as const;
+export type UnitRole = typeof UNIT_ROLES[number];
+export const VEHICLE_ROLES = new Set<UnitRole>(['transport','tank','walker','artillery','titan']);
 export type Motion = 'idle' | 'walk' | 'run' | 'attack' | 'shoot' | 'work' | 'death';
-export type BuildingRole = 'hq' | 'barracks' | 'post' | 'turret';
+export const BUILDING_ROLES = ['hq','barracks','post','turret','generator','factory','armory','relic','wall','gate'] as const;
+export type BuildingRole = typeof BUILDING_ROLES[number];
 
 export const FACTION_ART: Record<FactionId, { name: string; subtitle: string; primary: number; trim: number; metal: number; cloth: number; glow: number; skin: number }> = {
   legion: { name: 'Космодесант', subtitle: 'Синий легион', primary: 0x244a91, trim: 0xb79a52, metal: 0x343c49, cloth: 0x733938, glow: 0xf2634f, skin: 0x998774 },
@@ -16,6 +19,17 @@ export const ROLE_MOTIONS: Record<UnitRole, Motion[]> = {
   captain: ['idle', 'walk', 'run', 'attack', 'death'],
   guard: ['idle', 'walk', 'run', 'shoot', 'death'],
   builder: ['idle', 'walk', 'run', 'work', 'death'],
+  sniper: ['idle','walk','run','shoot','death'],
+  heavy: ['idle','walk','run','shoot','death'],
+  flamer: ['idle','walk','run','shoot','death'],
+  elite: ['idle','walk','run','shoot','death'],
+  medic: ['idle','walk','run','shoot','death'],
+  transport: ['idle','walk','run','shoot','death'],
+  tank: ['idle','walk','run','shoot','death'],
+  walker: ['idle','walk','run','shoot','death'],
+  artillery: ['idle','walk','run','shoot','death'],
+  titan: ['idle','walk','run','shoot','death'],
+
 };
 const DURATIONS: Record<Motion, number> = { idle: 2, walk: 1, run: 0.65, attack: 0.7, shoot: 0.45, work: 1.1, death: 1.1 };
 const geometries = new Map<string, THREE.BufferGeometry>();
@@ -96,7 +110,35 @@ export class FactionActor {
   readonly joints: Record<string, THREE.Group>;
 
   constructor(readonly faction: FactionId, readonly role: UnitRole) {
-    const m = materials(faction), heavy = role === 'captain', robot = faction === 'necrons', ork = faction === 'scrap';
+    const m = materials(faction);
+    if (VEHICLE_ROLES.has(role)) {
+      const rig = joint(this.root, 'Rig', [0,0,0]);
+      const hull = joint(rig, 'Hull', [0,0.75,0]);
+      const turret = joint(hull, 'Turret', [0,0.5,0]);
+      const gun = joint(turret, 'Gun', [0,0.15,0.3]);
+      const left = joint(rig, 'Drive_L', [-0.8,0.45,0]), right = joint(rig, 'Drive_R', [0.8,0.45,0]);
+      const walking = role === 'walker' || role === 'titan';
+      box(hull,[1.45,walking ? 1.05 : 0.65,1.9],[0,0,0],m.primary);
+      for (const sign of [-1,1]) {
+        box(hull,[0.08,0.45,1.65],[sign*0.74,0,0],m.trim);
+        if (faction==='heretics') for(let i=0;i<4;i++) cylinder(hull,0,0.08,0.35,[sign*0.65,0.5,-0.6+i*0.4],m.trim);
+      }
+      for (const drive of [left,right]) {
+        if (walking) { box(drive,[0.38,0.9,0.42],[0,0,0],m.metal); box(drive,[0.6,0.24,0.9],[0,-0.32,0.18],m.primary); }
+        else if(faction==='necrons') {box(drive,[0.3,0.25,2.1],[0,0,0],m.glow);}
+        else { box(drive,[0.45,0.55,2.1],[0,0,0],m.metal); for(let i=0;i<5;i++) cylinder(drive,0.2,0.2,0.48,[0,0,-0.8+i*0.4],m.trim,[0,0,Math.PI/2]); for(let i=0;i<9;i++) box(drive,[0.49,0.06,0.13],[0,0.3,-0.9+i*0.22],m.metal); }
+      }
+      if(role==='transport') { box(turret,[1.2,0.6,1.2],[0,0,0],m.primary); for(let i=0;i<4;i++)box(hull,[0.12,0.18,0.05],[-0.45+i*0.3,0.25,0.98],m.glow); }
+      else {box(turret,[1.05,0.55,0.95],[0,0,0],m.primary); cylinder(turret,0.24,0.24,0.12,[0,0.38,-0.15],m.trim);}
+      const length=role==='artillery'?1.8:role==='tank'?1.35:0.8;
+      for(const x of role==='heavy'||role==='titan'?[-0.35,0.35]:[0]) {cylinder(gun,0.095,0.13,length,[x,0,length/2],m.metal,[Math.PI/2,0,0]); cylinder(gun,0.13,0.13,0.15,[x,0,length],faction==='necrons'?m.glow:m.trim,[Math.PI/2,0,0]);}
+      if(role==='artillery') gun.rotation.x=-0.35;
+      if(role==='titan') {rig.scale.setScalar(1.55); box(hull,[0.55,0.6,0.4],[0,1,0.2],m.primary); for(const x of [-0.13,0.13])box(hull,[0.09,0.05,0.05],[x,1.1,0.43],m.glow);}
+      if(faction==='scrap')for(let i=0;i<3;i++)cylinder(hull,0.09,0.09,0.7+i*0.2,[-0.45+i*0.4,0.65,-0.75],m.metal);
+      this.muzzle=joint(gun,'Muzzle',[0,0,length+0.1]);
+      this.joints={hull,turret,gun,left,right}; compact(rig); this.pose('idle',0); return;
+    }
+    const heavy = role === 'captain' || role === 'elite', robot = faction === 'necrons', ork = faction === 'scrap';
     const width = ork ? 1.23 : robot ? 0.85 : 1;
     const rig = joint(this.root, 'Rig', [0, 0, 0]);
     rig.scale.setScalar((heavy ? (ork ? 2.5 : 2.2) : role === 'builder' ? 1.65 : 1.9) / 2.05);
@@ -155,6 +197,7 @@ export class FactionActor {
 
     for (const [arm, elbow, sign] of [[armL, elbowL, -1], [armR, elbowR, 1]] as const) {
       box(arm, [robot ? 0.11 : 0.24 * width, 0.31, robot ? 0.11 : 0.25], [0, -0.17, 0], ork ? m.skin : m.metal);
+      cylinder(elbow, 0.095, 0.095, robot ? 0.14 : 0.25, [0, 0, 0], m.trim, [0,0,Math.PI/2]);
       box(elbow, [robot ? 0.11 : 0.22 * width, 0.29, robot ? 0.11 : 0.23], [0, -0.15, 0], robot ? m.metal : m.primary);
       box(elbow, [robot ? 0.12 : 0.17, 0.12, 0.16], [0, -0.33, 0], ork ? m.skin : m.metal);
       box(arm, [heavy ? 0.41 : 0.33, robot ? 0.13 : 0.27, 0.37], [sign * 0.04, 0, 0], m.primary, [0, 0, sign * -0.12]);
@@ -176,7 +219,7 @@ export class FactionActor {
       if (!robot) box(torso, [0.57, 0.65, 0.035], [0, 0.02, -0.5], m.cloth, [0.12, 0, 0]);
     }
     const weapon = joint(elbowR, 'Weapon', [0, -0.35, 0.02]);
-    if (role === 'guard') {
+    if (role !== 'captain' && role !== 'builder') {
       box(weapon, [0.2, 0.45, 0.24], [0, -0.18, 0], m.metal);
       box(weapon, [0.22, 0.21, 0.045], [0, -0.15, 0.145], m.primary);
       cylinder(weapon, 0.055, 0.055, 0.29, [0, -0.51, 0], m.metal);
@@ -198,32 +241,47 @@ export class FactionActor {
         for (const x of [-0.22, 0.22]) box(elbowL, [0.035, 0.59, 0.085], [x, -0.26, 0.2], m.trim);
       }
     }
+    if(role==='sniper') { cylinder(weapon,0.035,0.035,0.65,[0,-0.9,0],m.metal); box(weapon,[0.08,0.12,0.22],[0,-0.15,0.23],m.trim); }
+    if(role==='heavy') { for(const x of [-0.08,0.08])cylinder(weapon,0.04,0.04,0.6,[x,-0.65,0],m.metal); box(torso,[0.7,0.6,0.25],[0,0.3,-0.5],m.primary); }
+    if(role==='flamer') {for(const x of [-0.2,0.2])cylinder(torso,0.12,0.12,0.55,[x,0.35,-0.55],m.trim); cylinder(weapon,0.1,0.1,0.15,[0,-0.65,0],m.glow);}
+    if(role==='medic') {box(torso,[0.22,0.07,0.05],[0,0.35,0.3],m.glow); box(torso,[0.07,0.22,0.05],[0,0.35,0.3],m.glow); box(elbowL,[0.28,0.22,0.2],[0,-0.3,0],m.trim);}
+    if(role==='elite') { box(torso,[0.78,0.7,0.1],[0,0.25,0.24],m.primary); box(head,[0.25,0.08,0.37],[0,0.17,0],m.trim); }
     this.muzzle = joint(weapon, 'Muzzle', [0, -0.67, 0]);
     compact(rig);
     this.pose('idle', 0);
   }
 
   pose(mode: Motion, time: number) {
-    const j = this.joints, duration = DURATIONS[mode], p = mode === 'death' ? Math.min(1, time / duration) : (time % duration) / duration;
+    const j = this.joints;
+    if(VEHICLE_ROLES.has(this.role)) {
+      const p=mode==='death'?Math.min(1,time/1.1):(time%DURATIONS[mode])/DURATIONS[mode], w=Math.sin(p*Math.PI*2);
+      j.hull.position.set(0,0.75,0); j.hull.rotation.set(0,0,0); j.turret.rotation.y=mode==='idle'?w*0.1:0; j.gun.position.z=0.3; j.gun.rotation.x=this.role==='artillery'?-0.35:0;
+      j.left.rotation.x=j.right.rotation.x=0;
+      if(mode==='walk'||mode==='run'){j.hull.position.y+=Math.abs(w)*0.035;if(this.role==='walker'||this.role==='titan'){j.left.rotation.x=w*0.3;j.right.rotation.x=-w*0.3;}}
+      if(mode==='shoot'||mode==='attack'){const kick=Math.max(0,1-Math.abs(p-0.23)*6);j.gun.position.z-=kick*0.25;j.hull.rotation.x=-kick*0.06;}
+      if(mode==='death'){j.hull.rotation.z=p*0.3;j.hull.position.y-=p*0.45;j.turret.rotation.y=p*0.7;}return;
+    }
+    j.pelvis.position.z=0;
+    const duration = DURATIONS[mode], p = mode === 'death' ? Math.min(1, time / duration) : (time % duration) / duration;
     const wave = Math.sin(p * Math.PI * 2);
     for (const g of Object.values(j)) g.rotation.set(0, 0, 0);
     j.pelvis.position.set(0, 0.93, 0);
     j.head.rotation.y = wave * 0.04;
-    if (this.role === 'guard') { j.armR.rotation.x = -1.35; j.armL.rotation.set(-1.22, -0.22, -0.26); j.elbowL.rotation.x = -0.22; }
+    if (this.role !== 'captain' && this.role !== 'builder') { j.armR.rotation.set(-0.65,0,-0.4); j.elbowR.rotation.set(-0.75,0,0.1); }
     if (mode === 'walk' || mode === 'run') {
       const speed = mode === 'run' ? 0.82 : 0.48;
       j.legL.rotation.x = wave * speed; j.legR.rotation.x = -wave * speed;
       j.kneeL.rotation.x = Math.max(0, -wave) * speed; j.kneeR.rotation.x = Math.max(0, wave) * speed;
       j.pelvis.position.y += Math.abs(wave) * (mode === 'run' ? 0.055 : 0.025);
       j.torso.rotation.x = mode === 'run' ? 0.13 : 0.04; j.torso.rotation.z = wave * 0.04;
-      if (this.role !== 'guard') { j.armL.rotation.x = -wave * speed; j.armR.rotation.x = wave * speed; }
+      if ((this.role === 'captain' || this.role === 'builder')) { j.armL.rotation.x = -wave * speed; j.armR.rotation.x = wave * speed; }
     } else if (mode === 'attack') {
       j.armR.rotation.x = p < 0.4 ? -2.7 * p / 0.4 : -2.7 + 2.7 * Math.min(1, (p - 0.4) / 0.5);
       j.torso.rotation.y = Math.sin(p * Math.PI * 2) * 0.2;
       j.torso.rotation.x = Math.sin(p * Math.PI) * 0.18;
     } else if (mode === 'shoot') {
       const recoil = Math.max(0, 1 - Math.abs(p - 0.23) * 5);
-      j.armR.rotation.x = -1.4 + recoil * 0.13; j.armL.rotation.x = -1.3 + recoil * 0.08;
+      j.armR.rotation.x = -0.65 + recoil * 0.08; j.elbowR.rotation.x = -0.75 + recoil * 0.05;
       j.torso.rotation.x = -recoil * 0.1;
     } else if (mode === 'work') {
       j.armR.rotation.x = -1.15 - (wave * 0.5 + 0.5) * 1.2; j.torso.rotation.x = (wave * 0.5 + 0.5) * 0.14;
@@ -233,6 +291,19 @@ export class FactionActor {
       j.pelvis.position.z = -e * 0.22; j.armL.rotation.z = e * 0.32; j.armR.rotation.z = -e * 0.4;
       j.kneeL.rotation.x = e * 0.25;
     } else j.torso.rotation.x = wave * 0.013;
+    if(this.role !== 'captain' && this.role !== 'builder' && mode !== 'death') {
+      // Solve the supporting arm toward the foregrip after recoil, in torso coordinates.
+      const weapon=this.muzzle.parent!; this.root.updateMatrixWorld(true);
+      const target=j.torso.worldToLocal(weapon.localToWorld(new THREE.Vector3(-0.1,0.15,0)));
+      const shoulder=j.armL.position.clone(), delta=target.sub(shoulder);
+      const length=0.35, distance=Math.min(length*2-0.001,delta.length()), direction=delta.normalize();
+      const bend=new THREE.Vector3(-1,-0.6,0).addScaledVector(direction,-new THREE.Vector3(-1,-0.6,0).dot(direction)).normalize();
+      const elbow=shoulder.clone().addScaledVector(direction,distance/2).addScaledVector(bend,Math.sqrt(length*length-distance*distance/4));
+      const down=new THREE.Vector3(0,-1,0);
+      j.armL.quaternion.setFromUnitVectors(down,elbow.clone().sub(shoulder).normalize());
+      const wrist=shoulder.clone().addScaledVector(direction,distance);
+      j.elbowL.quaternion.setFromUnitVectors(down,wrist.sub(elbow).normalize().applyQuaternion(j.armL.quaternion.clone().invert()));
+    }
   }
 
   update(dt: number) { this.time += dt; this.pose(this.mode, this.time); }
@@ -264,7 +335,13 @@ export function factionBuilding(faction: FactionId, role: BuildingRole = 'hq') {
   const m = materials(faction), g = new THREE.Group(); g.name = `${faction}_${role}`;
   const small = role === 'post' || role === 'turret', width = small ? 1.1 : role === 'hq' ? 3.8 : 2.7;
   box(g, [width + 0.4, 0.22, width + 0.4], [0, 0.11, 0], m.metal);
-  if (role === 'turret') {
+  if (role === 'wall' || role === 'gate') {
+    box(g,[role==='gate'?3.4:2.8,1.3,0.55],[0,0.85,0],m.primary); for(const x of [-1.3,1.3])box(g,[0.45,1.9,0.75],[x,1.05,0],m.metal); for(let i=0;i<6;i++)box(g,[0.24,0.25,0.65],[-1.15+i*0.46,1.65,0],m.trim); if(role==='gate')box(g,[1.8,1.25,0.08],[0,0.8,0.33],m.metal);
+  } else if (role === 'generator') {
+    for(const x of [-0.7,0,0.7]){cylinder(g,0.28,0.38,1.4,[x,1,0],m.metal);for(let i=0;i<4;i++)cylinder(g,0.31,0.31,0.08,[x,0.5+i*0.3,0],m.glow);} box(g,[2.1,0.3,1],[0,0.4,0],m.primary);
+  } else if (role === 'relic') {
+    for(let i=0;i<3;i++)box(g,[2-i*0.5,0.25,2-i*0.5],[0,0.3+i*0.25,0],m.primary); cylinder(g,0,0.45,1.1,[0,1.5,0],m.glow,undefined,4);for(const x of [-0.85,0.85])box(g,[0.2,1.9,0.2],[x,1,0],m.trim);
+  } else if (role === 'turret') {
     cylinder(g, 0.35, 0.47, 0.6, [0, 0.48, 0], m.metal);
     const head = joint(g, 'TurretHead', [0, 0.8, 0]);
     box(head, [0.8, 0.38, 0.65], [0, 0, 0], m.primary);
@@ -305,6 +382,8 @@ export function factionBuilding(faction: FactionId, role: BuildingRole = 'hq') {
       for (const x of [-0.33, 0, 0.33]) box(g, [0.09, 0.27, 0.05], [x, 1.97, 0.3], m.glow);
     }
   }
+  if(role==='factory'){box(g,[2.1,0.8,1.2],[0,1.8,-0.2],m.metal);for(const x of [-0.8,0.8])cylinder(g,0.15,0.2,1.5,[x,2.2,-0.6],m.trim);box(g,[1.7,0.9,0.08],[0,0.75,1.12],m.metal);}
+  if(role==='armory'){for(const x of [-0.6,0,0.6])box(g,[0.25,0.8,0.3],[x,1.8,0],m.trim);box(g,[1.8,0.12,0.4],[0,2.25,0],m.primary);}
   compact(g);
   return g;
 }

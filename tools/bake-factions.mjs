@@ -1,7 +1,7 @@
 // Bake the deterministic procedural prototype through the same renderer as the art lab.
 // Requires the running dev server, Chromium and Playwright Core; no paid APIs.
 import { createRequire } from 'node:module';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 import { FACTIONS, getFactionUnits } from './faction-presets.mjs';
@@ -30,6 +30,7 @@ try {
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto((process.env.WAHA_DEV_URL || 'http://127.0.0.1:5173') + '/asset-lab.html');
   await page.waitForFunction(() => window.assetLab);
+  await page.evaluate(() => window.assetLab.batch(true));
   const files = [];
   for (const faction of Object.keys(FACTIONS)) for (const [role, preset] of Object.entries(getFactionUnits(faction))) {
     const encoded = await page.evaluate(async ({ faction, role }) => {
@@ -47,6 +48,7 @@ try {
     files.push({ faction, role, file: `${faction}/${role}/model.glb`, bytes: data.length, animations: preset.animations, triangles: json.meshes.reduce((total, mesh) => total + mesh.primitives.reduce((n, p) => n + json.accessors[p.indices ?? p.attributes.POSITION].count / 3, 0), 0) });
     console.log(`GLB ${faction}/${role}: ${data.length} bytes`);
     for (const motion of preset.animations) {
+      if (process.env.WAHA_RESUME_BAKE && !['captain','guard','builder','sniper','heavy','flamer','elite','medic'].includes(role) && existsSync(new URL(`sprites/${motion}.png`, dir)) && existsSync(new URL(`sprites/${motion}.json`, dir))) continue;
       const atlas = await page.evaluate(async ({ faction, role, motion }) => {
         const a = await window.assetLab.spriteAtlas(faction, role, motion);
         const b = new Uint8Array(await a.blob.arrayBuffer());
@@ -62,7 +64,7 @@ try {
   }
   assert.deepEqual(errors, []);
   // Ensure atlas baking did not exhaust contexts or break the primary scene renderer.
-  const info = await page.evaluate(() => window.assetLab.inspect()); assert.equal(info.actors, 12); assert.equal(info.contextLost, false);
+  const info = await page.evaluate(() => window.assetLab.inspect()); assert.equal(info.actors, 52); assert.equal(info.contextLost, false);
   const animationClips = files.reduce((n, f) => n + f.animations.length, 0);
   writeFileSync(new URL('manifest.json', root), JSON.stringify({ version: 1, quality: 'procedural prototype; art reference is the final detail target', generator: 'client/faction-models.ts + client/asset-lab.ts', models: files.length, animationClips, spriteAtlases: animationClips, framesPerAtlas: 64, files }, null, 2) + '\n');
   console.log(`Saved ${files.length} models, ${animationClips} clips, ${animationClips} atlases to ${fileURLToPath(root)}`);

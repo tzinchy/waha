@@ -109,6 +109,19 @@ export const FACTIONS = {
   },
 };
 
+
+for (const faction of Object.values(FACTIONS)) {
+  for (const role of ['sniper','heavy','flamer','elite','medic','transport','tank','walker','artillery','titan']) {
+    const vehicle = ['transport','tank','walker','artillery','titan'].includes(role);
+    ROLES[role] = { ...ROLES.guard, rig: !vehicle, vehicle, targetPolycount: vehicle ? 16000 : 8000, animations: ['idle','walk','run','shoot','death'] };
+    faction.units[role] = { label: role, prompt: `${role}: distinctive equipment and silhouette, articulated weapon recoil, faction-specific armor.` };
+  }
+  for (const role of ['generator','factory','armory','relic','wall','gate']) {
+    ROLES[role] = { ...ROLES.barracks, animations: [] };
+    faction.units[role] = { label: role, prompt: `${role}: functional military architecture with faction-specific materials and silhouette.` };
+  }
+}
+
 export function getFactionUnits(factionId) {
   const faction = FACTIONS[factionId];
   if (!faction) throw new Error(`Unknown faction ${factionId}; choose ${Object.keys(FACTIONS).join(', ')}`);
@@ -116,9 +129,9 @@ export function getFactionUnits(factionId) {
     ...ROLES[kind],
     ...unit,
     textureResolution: ROLES[kind].rig ? ART_DIRECTION.production.characterTextureResolution : ART_DIRECTION.production.buildingTextureResolution,
-    prompt: `${unit.prompt} Faction identity: ${faction.identity}. ${ROLES[kind].rig ? CHARACTER_STYLE : BUILDING_STYLE}`,
+    prompt: `${unit.prompt} Faction identity: ${faction.identity}. ${ROLES[kind].vehicle ? 'Isolated RTS military vehicle; separate articulated turret, gun, wheels or legs; no human auto-rig, no baked firing effects.' : ROLES[kind].rig ? CHARACTER_STYLE : BUILDING_STYLE}`,
     outputDirectory: `client/public/models/factions/${factionId}/${kind}/`,
-    qualityGate: ROLES[kind].rig
+    qualityGate: ROLES[kind].vehicle ? ['Separate turret and recoil nodes', 'No humanoid autorig', 'Articulated rigid-part animation', 'Feet or tracks rest on y=0'] : ROLES[kind].rig
       ? ['Humanoid joints rig correctly', 'Weapon and hands do not drift during clips', 'Animation track targets exist on the model rig', 'No root-motion translation', 'Feet rest on y=0', 'Team-color material regions remain identifiable']
       : ['Base rests on y=0', 'Footprint matches role', 'For turret: rotating head and barrel nodes are separate', 'Roof silhouette remains readable from RTS camera'],
   }]));
