@@ -30,6 +30,7 @@ const GRADE = {
 };
 import { audio } from './audio.ts';
 import { SpriteActor, PLAYER_FACTIONS } from './sprite-actor.ts';
+import { factionBuilding, upgradeFactionBuilding } from './faction-models.ts';
 import { Actor, RigActor, captainActor, hasMeshy, meshyBuilding, model, type AnyActor, type ModelKey } from './models.ts';
 
 export const SLOT_COLORS = [0x3b82f6, 0xef4444, 0x22c55e, 0xeab308];
@@ -285,7 +286,15 @@ export class Game {
         a.root.position.set(ox, 0, oz);
         body.add(a.root); actors.push(a);
       }
-    } else body.add(hasMeshy(kind) ? meshyBuilding(kind, STATS[kind].radius) : building(kind, color));
+    } else {
+      const race = this.players[owner]?.captain.faction ?? PLAYER_FACTIONS[owner % PLAYER_FACTIONS.length];
+      const buildingRole = kind === 'hq' ? 'hq' : kind === 'barracks' ? 'barracks' : kind === 'post' ? 'post' : 'turret';
+      const structure = factionBuilding(race, buildingRole);
+      structure.name = 'FactionBuilding';
+      structure.scale.setScalar(kind === 'hq' ? 2 : kind === 'barracks' ? 1.75 : 1.25);
+      upgradeFactionBuilding(structure, race, 1);
+      body.add(structure);
+    }
     const root = new THREE.Group();
     const r = STATS[kind].radius;
     const ring = flat(new THREE.Mesh(ringGeo(r * 1.15), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })), 0.07);
@@ -322,6 +331,13 @@ export class Game {
         if (v.build < 1 && bp >= 100) audio.built();
         if (kind === 'captain' && v.hp > 0 && hp <= 0) audio.alarm();
         else if (hp < v.hp && now - this.lastAlert > 5000) { this.lastAlert = now; audio.alarm(); this.addAttackAlert(v.tx, v.tz); }
+      }
+      if (isStruct(kind) && v.lvl !== lvl) {
+        const model = v.body.getObjectByName('FactionBuilding');
+        if (model instanceof THREE.Group) {
+          const race = this.players[owner]?.captain.faction ?? PLAYER_FACTIONS[owner % PLAYER_FACTIONS.length];
+          upgradeFactionBuilding(model, race, lvl);
+        }
       }
       v.tx = x / 10; v.tz = y / 10; v.tf = face / 100; v.hp = hp; v.q = q; v.build = bp / 100; v.dead = hp <= 0; v.lvl = lvl; v.upg = upg;
       if (kind === 'hq' && owner === this.slot && !this.centered) {
