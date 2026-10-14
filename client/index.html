@@ -174,6 +174,8 @@
   .w2d-smoke.plague{background:radial-gradient(circle,rgba(120,170,60,.55) 0,rgba(80,120,40,.4) 45%,rgba(60,90,30,0) 70%)}
   .lc-minimap .mega{stroke:#fff;stroke-width:1;animation:lc-ping 1.2s infinite;transform-box:fill-box;transform-origin:center}
   .lc-minimap .megat{font:700 5px/1 var(--font-label);fill:#fff;text-anchor:middle}
+  /* в игре падение проигрывается один раз и тело остаётся лежать (в дизайн-системе анимация зациклена для превью) */
+  .w2d .lc-anim-death > g:not(.fx),.w2d .lc-anim-death .ash1,.w2d .lc-anim-death .ash2,.w2d .lc-anim-death .ash3,.w2d .lc-anim-death .ash4{animation-iteration-count:1!important;animation-fill-mode:forwards!important}
   .w2d-sparkline{stroke-width:2;stroke-linecap:square;animation:w2d-fade .28s steps(4) both}
   .w2d-arc{fill:none;stroke:var(--amber-300);stroke-width:3;stroke-dasharray:6 8;animation:w2d-dash .9s linear both}
   .w2d-boom{fill:rgba(240,120,40,.35);stroke:#f0a540;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:w2d-ring .6s steps(6) both}
