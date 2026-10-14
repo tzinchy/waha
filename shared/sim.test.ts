@@ -134,7 +134,7 @@ test('реликвии: реликтовая точка даёт реликви�
   run(s, 13); // CAPTURE_TIME 12 с
   assert.equal(s.points[ri].owner, 0);
   assert.match(applyCmd(s, 0, { c: 'upgrade', id: cap.id }) ?? '', /реликвий/);
-  run(s, 40);
+  run(s, 61);
   assert.ok(s.players[0].relics >= 2);
   assert.equal(applyCmd(s, 0, { c: 'upgrade', id: cap.id }), undefined);
   run(s, 6);

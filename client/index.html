@@ -84,8 +84,12 @@
   #hud-cmd .lc-buildhead{display:flex;align-items:center;gap:var(--space-3)}
   #hud-cmd .lc-buildhead svg.lc-art{width:40px;height:48px}
   #hud-cmd .lc-buildhead .lc-btn{margin-left:auto}
-  #hud-cmd .lc-build{max-width:640px}
-  #hud-cmd .lc-bcard svg.lc-art{width:56px;height:56px}
+  #hud-cmd .lc-build{grid-template-columns:repeat(3,minmax(0,1fr));width:540px;max-height:40vh;overflow-y:auto} /* компактные плитки: длинные подписи не растягивают колонки */
+  #hud-cmd .lc-bcard{grid-template-columns:40px minmax(0,1fr);gap:var(--space-1);padding:var(--space-1) 14px var(--space-1) var(--space-1)}
+  #hud-cmd .lc-bcard svg.lc-art{width:40px;height:40px}
+  #hud-cmd .lc-bcard__name{font-size:14px;line-height:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #hud-cmd .lc-bcard__cost{flex-wrap:wrap;column-gap:6px;font-size:11px;line-height:14px}
+  #hud-cmd .lc-bcard--locked .lc-bcard__cost span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* полный текст — в подсказке */
   #hud-cmd>.lc-buildhint{max-width:420px;margin:0}
   #hud-tip{position:fixed;z-index:20;max-width:300px;pointer-events:none}
   #hud-alerts{position:absolute;left:var(--space-4);top:150px;display:grid;gap:var(--space-1);width:300px}
@@ -182,6 +186,7 @@
   .w2d-nuke{fill:rgba(255,220,160,.5);stroke:#fff2c8;stroke-width:8;transform-box:fill-box;transform-origin:center;animation:w2d-ring 1.8s ease-out both}
   .w2d-smoke.plague{background:radial-gradient(circle,rgba(120,170,60,.55) 0,rgba(80,120,40,.4) 45%,rgba(60,90,30,0) 70%)}
   .lc-minimap .mega{stroke:#fff;stroke-width:1;animation:lc-ping 1.2s infinite;transform-box:fill-box;transform-origin:center}
+  .lc-minimap .rel{stroke:var(--gilt-300);stroke-width:1.2}
   .lc-minimap .megat{font:700 5px/1 var(--font-label);fill:#fff;text-anchor:middle}
   /* в игре падение проигрывается один раз и тело остаётся лежать (в дизайн-системе анимация зациклена для превью) */
   .w2d .lc-anim-death > g:not(.fx),.w2d .lc-anim-death .ash1,.w2d .lc-anim-death .ash2,.w2d .lc-anim-death .ash3,.w2d .lc-anim-death .ash4{animation-iteration-count:1!important;animation-fill-mode:forwards!important}

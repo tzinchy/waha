@@ -436,7 +436,7 @@ export class Game {
 
   private drawMini(s: Snap) {
     const k = 100 / MAP.w, own = (o: number) => (o === this.slot ? 'ally' : 'enemy');
-    let h = s.p.map(([o], i) => { const [x, y] = [...POINTS, ...RELICS][i] ?? [0, 0]; return `<path class="${o < 0 ? 'pt' : o === this.slot ? 'pt-ally' : 'pt-enemy'}" d="M${x * k} ${y * k - 3}l3 3-3 3-3-3z"/>`; }).join('');
+    let h = s.p.map(([o], i) => { const [x, y] = [...POINTS, ...RELICS][i] ?? [0, 0]; const c = o < 0 ? 'pt' : o === this.slot ? 'pt-ally' : 'pt-enemy'; return i >= POINTS.length ? `<path class="${c} rel" d="M${x * k - 3} ${y * k + 3}v-4l3-3 3 3v4z"/>` : `<path class="${c}" d="M${x * k} ${y * k - 3}l3 3-3 3-3-3z"/>`; }).join(''); // реликварий — домик с золотой каймой
     for (const [, o, ki, x, y, hp] of s.u) {
       const kind = KINDS[ki], X = (x / 10) * k, Y = (y / 10) * k;
       if (hp <= 0 || (kind === 'mine' && o !== this.slot)) continue;
@@ -721,7 +721,7 @@ export class Game {
     const card = (k: Buildable, name: string, hot: string, info: string, req?: string) => {
       const p = this.price(STATS[k].cost, ENERGY_COST[k] ?? 0), lack = (n: number, have: number) => (n > have ? ' class="lack"' : '');
       const cost = req ? `<span>${req}</span>` : [p.cost ? `<span${lack(p.cost, this.req)}>◆ ${p.cost}</span>` : '', p.en ? `<span${lack(p.en, this.energy)}>ϟ ${p.en}</span>` : '', `<span>⧗ ${STATS[k].time} с</span>`].join('');
-      return { k, html: `<button class="lc-bcard${req ? ' lc-bcard--locked' : ''}" data-act="${req ? '' : k}" data-tipname="${name}" data-tipinfo="${info}" ${req ? 'aria-disabled="true"' : ''} ${this.place === k ? 'aria-pressed="true"' : ''}>${miniArt(artFor(k as Kind, this.fac(), 1))}<span><span class="lc-bcard__name">${name}</span><span class="lc-bcard__cost">${cost}</span></span><kbd>${hot}</kbd></button>` };
+      return { k, html: `<button class="lc-bcard${req ? ' lc-bcard--locked' : ''}" data-act="${req ? '' : k}" data-tipname="${name}" data-tipinfo="${info}${req ? ` ${req}.` : ''}" ${req ? 'aria-disabled="true"' : ''} ${this.place === k ? 'aria-pressed="true"' : ''}>${miniArt(artFor(k as Kind, this.fac(), 1))}<span><span class="lc-bcard__name">${name}</span><span class="lc-bcard__cost">${cost}</span></span><kbd>${hot}</kbd></button>` };
     };
     const undead = this.fac() === 'undead';
     const tabs: [string, ReturnType<typeof card>[]][] = [
