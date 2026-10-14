@@ -398,3 +398,27 @@ test('точки: турели вокруг своей точки, у крити
   assert.equal(applyCmd(s, 0, { c: 'upgrade', id: hq.id }), undefined);
   assert.equal(req - p.req, 450);
 });
+
+test('здоровье по лестнице, стены укрепляются, артиллерия не бьёт в упор, яма жжёт, колокол ослабляет', () => {
+  const tot = (k: Parameters<typeof maxHp>[0]) => maxHp(k);
+  assert.ok(tot('guard') < tot('elite') && tot('elite') < tot('mveh') && tot('mveh') < tot('barracks') && tot('barracks') < tot('hq') && tot('hq') < tot('titan'), 'лестница здоровья');
+  const s = newState(2, ['ashen', 'undead']);
+  const p = s.players[0], hq = unit(s, 0, 'hq'); p.req = 1e4; p.tier = 2;
+  const w1 = spawn(s, 0, 'wall', hq.x + 15, hq.y), w2 = spawn(s, 0, 'wall', hq.x + 15, hq.y + 2);
+  assert.equal(applyCmd(s, 0, { c: 'upgrade', id: w1.id }), undefined);
+  run(s, 7);
+  assert.equal(w1.lvl, 2); assert.equal(w2.lvl, 2, 'укрепились все стены');
+  // артиллерия: цель в 6 м — не стреляет, в 30 м — стреляет
+  const art = spawn(s, 0, 'arty', 120, 150), near = spawn(s, 1, 'guard', 126, 150), hp0 = near.hp;
+  run(s, 3);
+  assert.equal(near.hp, hp0, 'мёртвая зона');
+  near.x = 155; near.y = 150; spawn(s, 0, 'sniper', 150, 156); run(s, 6); // корректировщик рядом с целью
+  assert.ok(near.hp < hp0, 'достаёт издалека'); void art;
+  // Огненная яма Синклита
+  const pyre = spawn(s, 0, 'pyre', 60, 200), foe = spawn(s, 1, 'guard', 64, 200), f0 = foe.hp; void pyre;
+  run(s, 2); assert.ok(foe.hp < f0 - 20, 'яма жжёт');
+  // Колокол Нежити замедляет врага
+  const bell = spawn(s, 1, 'bell', 200, 200), me = spawn(s, 0, 'guard', 205, 200); void bell;
+  applyCmd(s, 0, { c: 'move', ids: [me.id], x: 230, y: 200 }); const x0 = me.x; run(s, 1);
+  assert.ok(me.x - x0 < 8.6 * 0.85, 'замедлен колоколом'); // одержимые Синклита бегут 8.6 м/с, колокол режет на 20%
+});
