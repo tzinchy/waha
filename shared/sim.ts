@@ -145,7 +145,34 @@ export const producible = (b: Kind) => (Object.keys(ROLES) as Kind[]).filter(k =
 export const TURRET_CAP = 12;
 /** Постройки держат удар: пехота и капитаны наносят им 40% урона (как в DoW — здания ломают техникой и тяжёлым оружием). */
 export const STRUCT_ARMOR = 0.4;
-export const WALL_STEP = 2.4;
+/** Сетка построек: клетки BCELL×BCELL м. Здание занимает квадрат foot×foot клеток (сторона ≈ диаметр), стена и мина — одну клетку. */
+export const BCELL = 2;
+export const foot = (k: Kind) => Math.max(1, Math.floor(STATS[k].radius));
+/** След постройки k с центром (x, y): клетки [x0, x0+n) × [y0, y0+n). */
+export const footRect = (k: Kind, x: number, y: number) => { const n = foot(k); return { x0: Math.round(x / BCELL - n / 2), y0: Math.round(y / BCELL - n / 2), n }; };
+/** Центр постройки, привязанный к сетке. */
+export const snapB = (k: Kind, x: number, y: number) => { const f = footRect(k, x, y); return { x: (f.x0 + f.n / 2) * BCELL, y: (f.y0 + f.n / 2) * BCELL }; };
+/** Свободна ли земля под след (центр уже на сетке): не скалы и не чужие следы; вплотную по клеткам можно. */
+export function footFree(structs: Iterable<{ kind: Kind; x: number; y: number }>, k: Kind, x: number, y: number) {
+  const a = footRect(k, x, y);
+  if (blocked(x, y, (a.n * BCELL) / 2)) return false;
+  for (const u of structs) {
+    const b = footRect(u.kind, u.x, u.y);
+    if (a.x0 < b.x0 + b.n && b.x0 < a.x0 + a.n && a.y0 < b.y0 + b.n && b.y0 < a.y0 + a.n) return false;
+  }
+  return true;
+}
+/** Клетки протяжки стены от (x1, y1) до (x2, y2): по клетке, только по сторонам (без диагональных дыр), не больше 16. */
+export function wallCells(x1: number, y1: number, x2: number, y2: number) {
+  const a = footRect('wall', x1, y1), b = footRect('wall', x2, y2), dx = Math.abs(b.x0 - a.x0), dy = Math.abs(b.y0 - a.y0);
+  let cx = a.x0, cy = a.y0;
+  const out = [{ x: (cx + 0.5) * BCELL, y: (cy + 0.5) * BCELL }];
+  for (let ix = 0, iy = 0; (ix < dx || iy < dy) && out.length < 16;) {
+    if ((0.5 + ix) / dx < (0.5 + iy) / dy) { cx += Math.sign(b.x0 - a.x0); ix++; } else { cy += Math.sign(b.y0 - a.y0); iy++; }
+    out.push({ x: (cx + 0.5) * BCELL, y: (cy + 0.5) * BCELL });
+  }
+  return out;
+}
 /** Прокачка реликвария (пресет PointUpgrades): индекс = текущий уровень. Критическую точку в центре не укрепить. */
 export const POST_UP: Record<number, { cost: number; energy: number; tier: number; name: string }> = {
   1: { cost: 120, energy: 0, tier: 2, name: 'Укреплённый столп' },
@@ -714,21 +741,17 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     for (const u of mine) if (u.kind === 'builder') u.order = { t: 'build', id: t.id };
     return;
   }
-  if (cmd.c === 'wall') { // протяжка стены: сегменты каждые WALL_STEP вдоль линии, не больше 16
+  if (cmd.c === 'wall') { // протяжка стены: по клетке сетки вдоль линии, занятые клетки пропускаем
     const bs = mine.filter(u => u.kind === 'builder');
     if (!bs.length) return 'Нужны строители';
     if (![cmd.x1, cmd.y1, cmd.x2, cmd.y2].every(Number.isFinite)) return;
-    const a = { x: clamp(cmd.x1, 2, MAP.w - 2), y: clamp(cmd.y1, 2, MAP.h - 2) }, b = { x: clamp(cmd.x2, 2, MAP.w - 2), y: clamp(cmd.y2, 2, MAP.h - 2) };
-    const n = Math.min(16, Math.floor(dist(a, b) / WALL_STEP) + 1);
-    let first: Unit | undefined, built = 0;
-    for (let i = 0; i < n; i++) {
-      const x = a.x + ((b.x - a.x) * i) / Math.max(1, n - 1), y = a.y + ((b.y - a.y) * i) / Math.max(1, n - 1);
-      if (s.units.some(u => isStruct(u.kind) && u.hp > 0 && dist(u, { x, y }) < (u.kind === 'wall' ? 1 : STATS[u.kind].radius + STATS.wall.radius))) continue;
-      if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) continue;
-      if (dist(s.points[0], { x, y }) < CRIT_NOBUILD) continue; // не у критической точки
+    let first: Unit | undefined;
+    const structs = s.units.filter(u => isStruct(u.kind) && u.hp > 0);
+    for (const { x, y } of wallCells(clamp(cmd.x1, 2, MAP.w - 2), clamp(cmd.y1, 2, MAP.h - 2), clamp(cmd.x2, 2, MAP.w - 2), clamp(cmd.y2, 2, MAP.h - 2))) {
+      if (!wallOk(structs, owner, x, y)) continue;
       if (pay(p, STATS.wall.cost)) break;
       const site = spawn(s, owner, 'wall', x, y);
-      site.build = 0.05; site.hp = STATS.wall.hp * 0.05; first ??= site; built++;
+      site.build = 0.05; site.hp = STATS.wall.hp * 0.05; first ??= site;
     }
     if (!first) return 'Здесь нельзя вести стену';
     for (const b2 of bs) b2.order = { t: 'build', id: first.id };
@@ -744,9 +767,9 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (FACTION_ONLY[cmd.kind] && FACTION_ONLY[cmd.kind] !== p.faction) return 'Постройка другой фракции';
     if (MEGA.has(cmd.kind) && !(p.unlock & 1)) return `Сначала исследуйте «${UNLOCKS[0].name}» в штабе`;
     { const probe = { ...p }; const e = pay(probe, c.cost, ENERGY_COST[cmd.kind] ?? 0); if (e) return e; } // проверка цены теми же правилами, что и оплата
-    let x = clamp(cmd.x, 4, MAP.w - 4), y = clamp(cmd.y, 4, MAP.h - 4);
+    let { x, y } = snapB(cmd.kind, clamp(cmd.x, 4, MAP.w - 4), clamp(cmd.y, 4, MAP.h - 4)); // встаёт по клеткам сетки
     if (dist(s.points[0], { x, y }) < CRIT_NOBUILD) return 'У критической точки строить нельзя — за неё сражаются';
-    if (blocked(x, y, STATS[cmd.kind].radius)) return 'На скалах строить нельзя';
+    if (blocked(x, y, (foot(cmd.kind) * BCELL) / 2)) return 'На скалах строить нельзя';
     if (cmd.kind === 'hq') { // ещё один штаб (у Династий — Монолит): у своей точки или построек, не у чужой базы, не больше трёх
       if (count(s, owner, 'hq') >= 3) return 'Штабов не больше трёх';
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 50)) return 'Слишком близко к чужому штабу';
@@ -776,7 +799,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
       if (d < 8 || d > 32) return 'Казармы строятся рядом со штабом';
     }
     if (/turret$/.test(cmd.kind) && count(s, owner, 'turret') + count(s, owner, 'rturret') + count(s, owner, 'fturret') >= (p.faction === 'orks' ? 30 : TURRET_CAP)) return 'Лимит турелей';
-    if (s.units.some(u => isStruct(u.kind) && u.hp > 0 && dist(u, { x, y }) < STATS[u.kind].radius + c.radius + (cmd.kind === 'mine' ? 0 : 1))) return 'Место занято';
+    if (!footFree(s.units.filter(u => isStruct(u.kind) && u.hp > 0), cmd.kind, x, y)) return 'Место занято';
     if (s.players.some((q, i) => i !== owner && q.faction === 'ashen' && nearOwn(s, i, x, y, 14))) return 'Земля осквернена Порчей';
     pay(p, c.cost, ENERGY_COST[cmd.kind] ?? 0);
     const site = spawn(s, owner, cmd.kind, x, y);
@@ -882,6 +905,9 @@ export const GEN_R = 14;
 export const nearOwnPoint = (s: State, owner: number, x: number, y: number) => s.points.some((p, i) => i !== 0 && p.owner === owner && dist(p, { x, y }) < GEN_R); // критическая точка не в счёт
 /** У критической точки (центр) строить нельзя ничего: за неё только сражаются. */
 export const CRIT_NOBUILD = 12;
+/** Клетка стены годится: свободна от скал и построек, не у критической точки, не ближе 20 м к чужому штабу. Та же проверка в подсказке клиента. */
+export const wallOk = (structs: { kind: Kind; x: number; y: number; owner: number }[], owner: number, x: number, y: number) =>
+  footFree(structs, 'wall', x, y) && dist({ x: POINTS[0][0], y: POINTS[0][1] }, { x, y }) >= CRIT_NOBUILD && !structs.some(u => u.kind === 'hq' && u.owner !== owner && dist(u, { x, y }) < 20);
 /** Уникальные оборонительные постройки ставятся как турели: у своих построек или вокруг своей точки. */
 export const DEFENSE = new Set<Kind>(['battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague']);
 const postAt = (s: State, pt: { x: number; y: number }) => s.units.find(u => u.kind === 'post' && u.build >= 1 && u.hp > 0 && dist(u, pt) < 2);
@@ -920,23 +946,29 @@ function reinforce(s: State, u: Unit, dt: number) {
   u.hp = Math.min(maxHp(u.kind), u.hp + STATS[u.kind].hp);
 }
 
-// ---------- поиск пути: A* по сетке 4×4 м вокруг скал и стен (на открытой карте — прямо) ----------
-const CELL = 4;
+// ---------- поиск пути: A* по той же сетке, что и постройки, вокруг скал и следов построек (на открытой карте — прямо) ----------
+const CELL = BCELL;
 type Grid = { w: number; h: number; b: Uint8Array; any: boolean };
-let gridCache: { s: State; tick: number; g: Grid } | null = null;
-function grid(s: State): Grid {
-  if (gridCache && gridCache.s === s && gridCache.tick === s.tick) return gridCache.g;
-  const w = Math.ceil(MAP.w / CELL), h = Math.ceil(MAP.h / CELL), b = new Uint8Array(w * h);
-  let any = false;
-  for (let cy = 0; cy < h; cy++) for (let cx = 0; cx < w; cx++) if (blocked(cx * CELL + CELL / 2, cy * CELL + CELL / 2, 0.5)) { b[cy * w + cx] = 1; any = true; }
-  for (const u of s.units) if (u.kind === 'wall' && u.hp > 0) { const i = Math.floor(u.y / CELL) * w + Math.floor(u.x / CELL); if (i >= 0 && i < b.length) { b[i] = 1; any = true; } }
-  const g = { w, h, b, any };
-  gridCache = { s, tick: s.tick, g };
-  return g;
+let rocks: { blocks: typeof BLOCKS; b: Uint8Array } | null = null;
+let gridCache: { s: State; tick: number; g: Grid[] } | null = null;
+function grid(s: State, owner: number): Grid { // у каждого игрока своя: через свои ворота можно
+  if (!gridCache || gridCache.s !== s || gridCache.tick !== s.tick) gridCache = { s, tick: s.tick, g: [] };
+  if (gridCache.g[owner]) return gridCache.g[owner];
+  const w = Math.ceil(MAP.w / CELL), h = Math.ceil(MAP.h / CELL);
+  if (!rocks || rocks.blocks !== BLOCKS) { // скалы не меняются: считаем раз на карту
+    rocks = { blocks: BLOCKS, b: new Uint8Array(w * h) };
+    for (let cy = 0; cy < h; cy++) for (let cx = 0; cx < w; cx++) if (blocked(cx * CELL + CELL / 2, cy * CELL + CELL / 2, 0.5)) rocks.b[cy * w + cx] = 1;
+  }
+  const b = rocks.b.slice();
+  for (const u of s.units) if (isStruct(u.kind) && u.hp > 0 && u.kind !== 'mine' && u.kind !== 'aegis' && !u.carry && !(u.kind === 'wallgate' && u.owner === owner)) { // след постройки закрывает свои клетки
+    const f = footRect(u.kind, u.x, u.y);
+    for (let cy = Math.max(0, f.y0); cy < Math.min(h, f.y0 + f.n); cy++) for (let cx = Math.max(0, f.x0); cx < Math.min(w, f.x0 + f.n); cx++) b[cy * w + cx] = 1;
+  }
+  return (gridCache.g[owner] = { w, h, b, any: b.includes(1) });
 }
 const cellFree = (g: Grid, x: number, y: number) => { const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL); return cx >= 0 && cy >= 0 && cx < g.w && cy < g.h && !g.b[cy * g.w + cx]; };
 function lineClear(g: Grid, ax: number, ay: number, bx: number, by: number) {
-  const n = Math.ceil(Math.hypot(bx - ax, by - ay));
+  const n = Math.ceil(Math.hypot(bx - ax, by - ay) * 2); // шаг 0,5 м: не перескакиваем угол клетки
   for (let i = 1; i <= n; i++) if (!cellFree(g, ax + ((bx - ax) * i) / n, ay + ((by - ay) * i) / n)) return false;
   return true;
 }
@@ -944,13 +976,18 @@ function findPath(g: Grid, ax: number, ay: number, bx: number, by: number): { x:
   const W = g.w, start = Math.floor(ay / CELL) * W + Math.floor(ax / CELL);
   let goal = Math.floor(by / CELL) * W + Math.floor(bx / CELL);
   if (g.b[goal]) { let best = -1, bd = 1e9; for (let i = 0; i < g.b.length; i++) if (!g.b[i]) { const d = Math.hypot((i % W) - (goal % W), Math.floor(i / W) - Math.floor(goal / W)); if (d < bd) { bd = d; best = i; } } goal = best; }
-  const gs = new Float32Array(g.b.length).fill(Infinity), from = new Int32Array(g.b.length).fill(-1), open: number[] = [start];
+  const gs = new Float32Array(g.b.length).fill(Infinity), from = new Int32Array(g.b.length).fill(-1);
   const hh = (i: number) => Math.hypot((i % W) - (goal % W), Math.floor(i / W) - Math.floor(goal / W));
-  const fs = new Float32Array(g.b.length).fill(Infinity); gs[start] = 0; fs[start] = hh(start);
-  const closed = new Uint8Array(g.b.length);
-  while (open.length) { // ponytail: открытый список массивом, O(n²) на 2–4 тыс. клеток ок; куча, если карты вырастут
-    let k = 0; for (let i = 1; i < open.length; i++) if (fs[open[i]] < fs[open[k]]) k = i;
-    const c = open.splice(k, 1)[0];
+  const closed = new Uint8Array(g.b.length), open: [number, number][] = [[hh(start), start]]; gs[start] = 0;
+  const push = (e: [number, number]) => { open.push(e); for (let i = open.length - 1, p = (i - 1) >> 1; i && open[p][0] > open[i][0]; i = p, p = (i - 1) >> 1) [open[p], open[i]] = [open[i], open[p]]; };
+  const pop = () => { // двоичная куча по f; устаревшие записи отсекает closed
+    const top = open[0], last = open.pop()!;
+    if (open.length) { open[0] = last; for (let i = 0; ;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < open.length && open[l][0] < open[m][0]) m = l; if (r < open.length && open[r][0] < open[m][0]) m = r; if (m === i) break; [open[m], open[i]] = [open[i], open[m]]; i = m; } }
+    return top[1];
+  };
+  while (open.length) {
+    const c = pop();
+    if (closed[c]) continue;
     if (c === goal) break;
     closed[c] = 1;
     const cx = c % W, cy = Math.floor(c / W);
@@ -960,7 +997,7 @@ function findPath(g: Grid, ax: number, ay: number, bx: number, by: number): { x:
       if (nx < 0 || ny < 0 || nx >= W || ny >= g.h || g.b[n] || closed[n]) continue;
       if (dx && dy && (g.b[cy * W + nx] || g.b[ny * W + cx])) continue; // не срезаем угол скалы
       const t = gs[c] + (dx && dy ? 1.414 : 1);
-      if (t < gs[n]) { gs[n] = t; fs[n] = t + hh(n); from[n] = c; if (!open.includes(n)) open.push(n); }
+      if (t < gs[n]) { gs[n] = t; from[n] = c; push([t + hh(n) * 1.5, n]); } // взвешенная эвристика: путь чуть длиннее, перебор в разы меньше
     }
   }
   if (from[goal] < 0 && goal !== start) return null;
@@ -972,12 +1009,16 @@ function findPath(g: Grid, ax: number, ay: number, bx: number, by: number): { x:
   return out;
 }
 
+let budget = { s: null as State | null, tick: -1, n: 0 };
 function go(s: State, u: Unit, x: number, y: number, dt: number) {
-  const g = grid(s);
+  const g = grid(s, u.owner);
   if (g.any && !flies(u.kind, fac(s, u.owner)) && !lineClear(g, u.x, u.y, x, y)) { // путь загорожен: идём по точкам A*
-    if (!u.path || Math.hypot(u.path.to.x - x, u.path.to.y - y) > 3 || s.tick - u.path.at > 60) u.path = { to: { x, y }, at: s.tick, pts: findPath(g, u.x, u.y, x, y) ?? [] };
-    while (u.path.pts.length && Math.hypot(u.path.pts[0].x - u.x, u.path.pts[0].y - u.y) < 1.5) u.path.pts.shift();
-    if (u.path.pts.length) ({ x, y } = u.path.pts[0]);
+    if (!u.path || Math.hypot(u.path.to.x - x, u.path.to.y - y) > 3 || s.tick - u.path.at > 60) {
+      if (budget.s !== s || budget.tick !== s.tick) budget = { s, tick: s.tick, n: 0 };
+      u.path = budget.n++ < 12 ? { to: { x, y }, at: s.tick, pts: findPath(g, u.x, u.y, x, y) ?? [] } : undefined; // ponytail: не больше 12 A* за тик, остальные ждут очереди (поле потоков, если толпы вырастут)
+    }
+    while (u.path?.pts.length && Math.hypot(u.path.pts[0].x - u.x, u.path.pts[0].y - u.y) < 1.5) u.path.pts.shift();
+    if (u.path?.pts.length) ({ x, y } = u.path.pts[0]);
   } else u.path = undefined;
   const dx = x - u.x, dy = y - u.y, d = Math.hypot(dx, dy);
   if (d < 1e-6) return;
@@ -1112,16 +1153,18 @@ function separate(s: State) { // ponytail: O(n²) по парам, на сотн
       const b = mob[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), min = (STATS[a.kind].radius + STATS[b.kind].radius) * 0.8;
       if (d < min && d > 1e-3) { const p = ((min - d) * 0.5) / d; a.x -= dx * p; a.y -= dy * p; b.x += dx * p; b.y += dy * p; }
     }
-    for (const h of structs) {
-      if (h.kind === 'mine' || h.kind === 'aegis' || (h.kind === 'wallgate' && h.owner === a.owner) || h.carry === a.id || flies(a.kind, fac(s, a.owner))) continue;
-      const dx = a.x - h.x, dy = a.y - h.y, d = Math.hypot(dx, dy), min = STATS[h.kind].radius + STATS[a.kind].radius * 0.6;
-      if (d < min && d > 1e-3) { a.x = h.x + (dx / d) * min; a.y = h.y + (dy / d) * min; }
-    }
-    if (!flies(a.kind, fac(s, a.owner))) for (const [bx, by, bw, bh] of BLOCKS) { // скалы: выталкиваем к ближайшему краю
-      const r = STATS[a.kind].radius * 0.6;
-      if (a.x <= bx - r || a.x >= bx + bw + r || a.y <= by - r || a.y >= by + bh + r) continue;
+    const r = STATS[a.kind].radius * 0.6, out = (bx: number, by: number, bw: number, bh: number) => { // из прямоугольника — к ближайшему краю
+      if (a.x <= bx - r || a.x >= bx + bw + r || a.y <= by - r || a.y >= by + bh + r) return;
       const opts = [[bx - r - a.x, 0], [bx + bw + r - a.x, 0], [0, by - r - a.y], [0, by + bh + r - a.y]].sort((p, q) => Math.abs(p[0] + p[1]) - Math.abs(q[0] + q[1]))[0];
       a.x += opts[0]; a.y += opts[1];
+    };
+    if (!flies(a.kind, fac(s, a.owner))) {
+      for (const h of structs) { // постройки — квадратные следы на сетке
+        if (h.kind === 'mine' || h.kind === 'aegis' || (h.kind === 'wallgate' && h.owner === a.owner) || h.carry === a.id) continue;
+        const f = footRect(h.kind, h.x, h.y);
+        out(f.x0 * BCELL, f.y0 * BCELL, f.n * BCELL, f.n * BCELL);
+      }
+      for (const [bx, by, bw, bh] of BLOCKS) out(bx, by, bw, bh); // скалы
     }
     a.x = clamp(a.x, 0.5, MAP.w - 0.5); a.y = clamp(a.y, 0.5, MAP.h - 0.5);
   }

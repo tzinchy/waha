@@ -1,7 +1,7 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import { ARCHS, HERO, type Arch } from '../shared/sim.ts';
-import { resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, HQ_NAME, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -9,7 +9,6 @@ import { paintMap } from './mappaint.ts';
 import { voice } from './voice.ts';
 
 const S = 26; // пикселей мира на единицу симуляции
-const GRID = 2; // шаг сетки размещения построек, м
 const $ = (id: string) => document.getElementById(id)!;
 
 /** Ячейка сетки команд (пресет CommandGrid) и её подсказка (Tooltip). */
@@ -142,6 +141,8 @@ export class Game {
   private pointOwner: number[] = [];
   private shots: { el: SVGElement; until: number }[] = [];
   private ghost = document.createElement('div');
+  private wallGhost = document.createElement('div'); // клетки протяжки стены
+  private wallGhostHtml = '';
   private wallLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   private place: Buildable | null = null;
   private drag: { x0: number; y0: number; x1: number; y1: number } | null = null;
@@ -202,7 +203,7 @@ export class Game {
     this.fogCv.width = this.fogCv.height = 320; this.fogCv.className = 'w2d-fog';
     Object.assign(this.fogCv.style, { width: MAP.w * S + 'px', height: MAP.h * S + 'px' });
     this.aimRing.className = 'w2d-aim'; this.aimRing.style.display = 'none';
-    this.world.append(this.ground, this.fogCv, this.fx, this.ghost, this.aimRing);
+    this.world.append(this.ground, this.fogCv, this.fx, this.ghost, this.wallGhost, this.aimRing);
     root.prepend(this.world);
     this.buildMap();
     this.buildMini();
@@ -840,8 +841,8 @@ export class Game {
 
   private startPlace(k: Buildable) {
     this.place = k; this.amove = false; this.root.classList.add('placing');
-    const r = k === 'post' ? POINT_R * 0.5 : STATS[k].radius + 0.6;
-    Object.assign(this.ghost.style, { width: r * 2 * S + 'px', height: r * 1.1 * S + 'px' });
+    const a = foot(k) * BCELL * S; // квадратный след по клеткам сетки
+    Object.assign(this.ghost.style, { width: a + 'px', height: a + 'px' });
     this.root.style.cursor = 'copy';
     this.renderCmd();
   }
@@ -1027,8 +1028,8 @@ export class Game {
   }
 
   private placePoint(sx: number, sy: number): { x: number; y: number; ok: boolean } {
-    const w = this.toWorld(sx, sy), vs = [...this.views.values()];
-    const g = { x: Math.round(w.x / GRID) * GRID, y: Math.round(w.y / GRID) * GRID }; // постройки встают по клеткам сетки
+    const w = this.toWorld(sx, sy), vs = [...this.views.values()], structs = vs.filter(v => isStruct(v.kind) && !v.dead);
+    const g = snapB(this.place!, w.x, w.y); // постройки встают по клеткам сетки, как на сервере
     if (Math.hypot(POINTS[0][0] - g.x, POINTS[0][1] - g.y) < 12) return { ...g, ok: false }; // у критической точки не строят
     const nearOwnPt = (x: number, y: number) => [...POINTS, ...RELICS].some(([px, py], i) => i !== 0 && this.pointOwner[i] === this.slot && Math.hypot(px - x, py - y) < 14);
     if (this.place === 'post') {
@@ -1043,24 +1044,21 @@ export class Game {
       const p = v ? { x: v[0], y: v[1] } : g;
       const nearPt = nearOwnPt(p.x, p.y);
       const nearBase = this.place === 'foundry' && vs.some(u => u.owner === this.slot && isStruct(u.kind) && u.kind !== 'turret' && Math.hypot(u.x - p.x, u.y - p.y) < 16);
-      const free = !vs.some(u => isStruct(u.kind) && Math.hypot(u.x - p.x, u.y - p.y) < STATS[u.kind].radius + STATS[this.place!].radius + 1);
-      return { ...p, ok: (!!v || nearPt || nearBase) && free };
+      return { ...p, ok: (!!v || nearPt || nearBase) && footFree(structs, this.place, p.x, p.y) };
     }
-    if (['mine', 'wallgate', 'bunker'].includes(this.place ?? '')) return { ...g, ok: !vs.some(v => isStruct(v.kind) && v.kind !== 'mine' && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1) };
+    if (this.place === 'wall') return { ...g, ok: wallOk(structs, this.slot, g.x, g.y) };
+    if (['mine', 'wallgate', 'bunker'].includes(this.place ?? '')) return { ...g, ok: footFree(structs, this.place!, g.x, g.y) && !vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 20) };
     if (this.place === 'turret' || ['battery', 'pylon', 'pyre', 'bell', 'aegis', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') || /^key|^gate/.test(this.place ?? '')) {
       const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16) || (['turret', 'battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague'].includes(this.place ?? '') && nearOwnPt(g.x, g.y));
-      const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS[this.place!].radius + 1);
-      return { ...g, ok: near && free };
+      return { ...g, ok: near && footFree(structs, this.place!, g.x, g.y) };
     }
     if (this.place === 'hq') { // ещё один штаб: у своей точки или построек, не ближе 50 м к чужому штабу
       const nearOwn = nearOwnPt(g.x, g.y) || vs.some(v => v.owner === this.slot && isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < 30);
       const foeHq = vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 50);
-      const free = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS.hq.radius + 1);
-      return { ...g, ok: nearOwn && !foeHq && free };
+      return { ...g, ok: nearOwn && !foeHq && footFree(structs, 'hq', g.x, g.y) };
     }
     const hq = vs.find(v => v.kind === 'hq' && v.owner === this.slot), d = hq ? Math.hypot(hq.x - g.x, hq.y - g.y) : 99;
-    const clear = !vs.some(v => isStruct(v.kind) && Math.hypot(v.x - g.x, v.y - g.y) < STATS[v.kind].radius + STATS.barracks.radius + 1);
-    return { ...g, ok: d >= 8 && d <= 32 && clear };
+    return { ...g, ok: d >= 8 && d <= 32 && footFree(structs, this.place!, g.x, g.y) };
   }
 
   private order(sx: number, sy: number) {
@@ -1236,8 +1234,11 @@ export class Game {
       this.aimRing.classList.toggle('bad', d > G.range);
       $('hud-sel').textContent = d > G.range ? `вне дальности — ${Math.round(d)} м (подойдут и бросят)` : `${Math.round(d)} м · радиус ${G.r} м`;
     }
-    if (this.place === 'wall' && this.mouse && this.wallStart) { // пунктир протяжки и итоговая цена
-      const p = this.toWorld(this.mouse.x, this.mouse.y), n = Math.min(16, Math.floor(Math.hypot(p.x - this.wallStart.x, p.y - this.wallStart.y) / WALL_STEP) + 1);
+    let wg = '';
+    if (this.place === 'wall' && this.mouse && this.wallStart) { // протяжка: клетки сегментов (красные — занято) и итоговая цена
+      const p = this.toWorld(this.mouse.x, this.mouse.y), structs = [...this.views.values()].filter(v => isStruct(v.kind) && !v.dead);
+      const cells = wallCells(this.wallStart.x, this.wallStart.y, p.x, p.y).map(c => ({ ...c, ok: wallOk(structs, this.slot, c.x, c.y) })), n = cells.filter(c => c.ok).length;
+      wg = cells.map(c => `<div class="w2d-ghost${c.ok ? '' : ' bad'}" style="width:${BCELL * S}px;height:${BCELL * S}px;transform:translate(${c.x * S}px,${c.y * S}px)"></div>`).join('');
       for (const [k, v] of [['x1', this.wallStart.x], ['y1', this.wallStart.y], ['x2', p.x], ['y2', p.y]] as const) this.wallLine.setAttribute(k, String(v * S));
       this.wallLine.setAttribute('visibility', 'visible');
       this.ghost.classList.add('hidden');
@@ -1248,6 +1249,7 @@ export class Game {
       this.ghost.classList.toggle('bad', !g.ok);
       this.ghost.style.transform = `translate(${g.x * S}px, ${g.y * S}px)`;
     }
+    if (wg !== this.wallGhostHtml) this.wallGhost.innerHTML = this.wallGhostHtml = wg;
 
     const a = 1 - Math.exp(-dt * 14);
     const sites = [...this.views.values()].filter(v => isStruct(v.kind) && v.build < 1);

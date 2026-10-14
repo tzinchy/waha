@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, type Kind, type State } from './sim.ts';
+import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, BCELL, footRect, wallCells, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -228,6 +228,44 @@ test('укрепления: стена строится по сегментам 
   run(s, 0.2);
   assert.ok(enemy.hp <= hp - 170, 'мина сработала');
   assert.ok(!s.units.some(u => u.kind === 'mine'), 'мина исчезла');
+});
+
+test('сетка построек: стена встаёт на любой свободной земле, клетка за клеткой без дыр', () => {
+  const s = newState(2), b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq'), foe = unit(s, 1, 'hq');
+  s.players[0].req = 1e6;
+  for (let x = 6; x < 400; x += 22) for (let y = 6; y < 400; y += 22) {
+    const far = (q: { x: number; y: number }, d: number) => Math.hypot(q.x - x, q.y - y) > d;
+    if (far({ x: POINTS[0][0], y: POINTS[0][1] }, 14) && far(foe, 22) && far(hq, 8)) assert.equal(applyCmd(s, 0, { c: 'wall', ids: [b.id], x1: x, y1: y, x2: x + 3, y2: y }), undefined, `${x},${y}`);
+  }
+  assert.ok(s.units.filter(u => u.kind === 'wall').every(w => w.x % BCELL === 1 && w.y % BCELL === 1), 'сегменты по центрам клеток');
+  const cells = wallCells(101, 301, 120, 290); // косая протяжка: соседние клетки — по стороне
+  assert.ok(cells.length <= 16 && cells.every((c, i) => !i || Math.abs(c.x - cells[i - 1].x) + Math.abs(c.y - cells[i - 1].y) === BCELL), 'без диагональных дыр');
+  assert.match(applyCmd(s, 0, { c: 'wall', ids: [b.id], x1: POINTS[0][0], y1: POINTS[0][1], x2: POINTS[0][0] + 4, y2: POINTS[0][1] }) ?? '', /нельзя/, 'не у критической точки');
+  assert.match(applyCmd(s, 0, { c: 'wall', ids: [b.id], x1: foe.x + 10, y1: foe.y, x2: foe.x + 12, y2: foe.y }) ?? '', /нельзя/, 'не у чужого штаба');
+  setMap(1);
+  try {
+    const r = newState(2), rb = unit(r, 0, 'builder'); r.players[0].req = 1e4;
+    assert.match(applyCmd(r, 0, { c: 'wall', ids: [rb.id], x1: 156, y1: 156, x2: 160, y2: 156 }) ?? '', /нельзя/, 'не на скалах');
+  } finally { setMap(0); }
+});
+
+test('сетка построек: здание привязано к клеткам, занятость по квадратным следам, юниты обходят', () => {
+  const s = newState(2), b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq');
+  s.players[0].req = 1e4;
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: hq.x + 13.3, y: hq.y + 0.7 }), undefined);
+  const bar = unit(s, 0, 'barracks'), f = footRect('barracks', bar.x, bar.y);
+  assert.deepEqual([bar.x, bar.y], [(f.x0 + f.n / 2) * BCELL, (f.y0 + f.n / 2) * BCELL], 'центр на сетке');
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: bar.x, y: bar.y + (f.n - 1) * BCELL }), 'Место занято', 'следы пересекаются');
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: bar.x, y: bar.y + f.n * BCELL }), undefined, 'вплотную по клеткам можно');
+  const cap = unit(s, 0, 'captain'), w = spawn(s, 0, 'barracks', 200, 120), g = footRect('barracks', w.x, w.y);
+  [cap.x, cap.y] = [w.x - 12, w.y];
+  applyCmd(s, 0, { c: 'move', ids: [cap.id], x: w.x + 12, y: w.y });
+  for (let i = 0; i < 6 / DT; i++) {
+    step(s);
+    const inside = cap.x > g.x0 * BCELL && cap.x < (g.x0 + g.n) * BCELL && cap.y > g.y0 * BCELL && cap.y < (g.y0 + g.n) * BCELL;
+    assert.ok(!inside, 'не проходит сквозь здание');
+  }
+  assert.ok(Math.hypot(cap.x - (w.x + 12), cap.y - w.y) < 1, 'обошёл и дошёл');
 });
 
 test('прокачка точки: столп → укреплённый → бастион, центр не укрепить', () => {
