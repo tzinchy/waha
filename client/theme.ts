@@ -9,4 +9,4 @@ export function setTheme(t: 'deco' | 'ascii') {
 
 let saved: string | null = null;
 try { saved = localStorage.getItem(KEY); } catch { /* приватный режим */ }
-setTheme(saved === 'deco' ? 'deco' : 'ascii'); // по умолчанию ASCII dark fantasy
+setTheme(saved === 'ascii' ? 'ascii' : 'deco'); // Новый посетитель видит художественное оформление.

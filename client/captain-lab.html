@@ -18,17 +18,17 @@ button,select{border:1px solid #776b53;background:#292d2e;color:#f0e6d3;padding:
 .slot{background:#101619;border:1px solid #494940;border-radius:5px;padding:10px;min-height:68px}.slot b{display:block;color:#e2c183;font-size:12px}.slot span{font-size:12px;color:#ddd}
 .note{line-height:1.55;color:#bcbab0;font-size:12px;margin:10px 0 0}
 @media(max-width:1080px){main{grid-template-columns:1fr 1fr}#preview{grid-column:1/-1;grid-row:1}}@media(max-width:680px){main{grid-template-columns:1fr}#preview{grid-column:auto;grid-row:auto}}
-</style></head><body>
+</style><link rel="stylesheet" href="/beauty.css"></head><body class="beauty">
 <header><div><h1>WAHA / Капитан</h1><div class="sub">Интерактивная HTML-лаборатория · внутренние уровни, экипировка, способности и анимации</div></div><div><span class="pill">6 уровней</span><span class="pill">8 предметов</span><span class="pill">5 боевых анимаций</span></div></header>
 <main>
 <section><h2>Прогресс героя</h2><div class="stat"><span>Уровень</span><strong id="level" class="value">1</strong></div><div class="stat"><span>Опыт</span><span id="xpText">0 / 100</span></div><div class="progress"><div id="xpBar" style="width:0%"></div></div><div class="stat"><span>Очки навыков</span><strong id="points" class="value">0</strong></div><div class="stat"><span>Requisition</span><strong id="money" class="value">700</strong></div><div class="stat"><span>Урон</span><strong id="damage">35</strong></div><div class="stat"><span>Броня</span><strong id="armor">10</strong></div><div class="stat"><span>Здоровье</span><strong id="health">600</strong></div>
 <div class="controls"><button id="earn">+150 XP (бой)</button><button id="fund">+500 ресурсов</button><button id="reset">Сброс</button></div>
 <h3>Внутренние навыки</h3><div id="skills" class="stack"></div><p class="note">Уровни открываются за боевой опыт. Очки навыков расходуются отдельно от ресурсов, за которые приобретаются физические предметы.</p>
 </section>
-<section id="preview"><h2>Внешний вид и анимации</h2><canvas id="stage" width="720" height="640"></canvas><div class="controls"><label for="facing">Ракурс</label><select id="facing"><option value="0">Спереди</option><option value="1">3/4 справа</option><option value="2">Справа</option><option value="3">Сзади</option><option value="4">3/4 слева</option></select><label><input type="checkbox" id="loop" checked> Повторять анимацию</label></div>
+<section id="preview"><h2>Капитан легиона</h2><figure class="captain-key-art"><img src="/art/factions/legion/captain.png" alt="Капитан легиона с силовым мечом и щитом"><figcaption>СТАЛЬ. ЗОЛОТО. ВОЛЯ. <a href="/art-gallery.html#legion">Рассмотреть арт ↗</a></figcaption></figure><details class="captain-motion"><summary>Примерить снаряжение и проверить движения</summary><canvas id="stage" width="720" height="640"></canvas><div class="controls"><label for="facing">Ракурс</label><select id="facing"><option value="0">Спереди</option><option value="1">3/4 справа</option><option value="2">Справа</option><option value="3">Сзади</option><option value="4">3/4 слева</option></select><label><input type="checkbox" id="loop" checked> Повторять анимацию</label></div>
 <div class="actions"><button data-action="idle" class="active">Спокойная стойка</button><button data-action="slash">Силовой удар</button><button data-action="hammer">Удар молотом</button><button data-action="charge">Рывок / таран</button><button data-action="execute">Добивание</button><button data-action="grenade">Бросок гранаты</button></div>
 <p id="animInfo" class="note">Выберите способность: движения корпуса, оружия и визуальные эффекты анимируются в реальном времени.</p>
-<h3>Боевой журнал</h3><div id="log" aria-live="polite"></div></section>
+</details><h3>Боевой журнал</h3><div id="log" aria-live="polite"></div></section>
 <section><h2>Арсенал</h2><p class="note">Покупка предмета меняет характеристики и вид героя: оружие, шлем, наплечники, щит, ранец и свечение реликвии.</p><h3>Надетое снаряжение</h3><div id="inventory"></div><h3>Магазин предметов</h3><div id="shop" class="stack"></div></section>
 </main>
 <script>

@@ -154,8 +154,8 @@
   html.ascii #hud-cmd button i{border-color:var(--gold-dim)}
   html.ascii #result h3{font:700 40px/1 var(--sans);letter-spacing:.1em;text-shadow:0 0 20px #c8352b}
 </style>
-</head>
-<body>
+<link rel="stylesheet" href="/beauty.css"></head>
+<body class="beauty">
 <main id="home">
   <button id="theme" title="Сменить стиль"></button>
   <header>
@@ -181,11 +181,11 @@
         <option value="drukhari">Тёмные Эльдар</option>
         <option value="daemons">Демоны</option>
       </select></div>
-      <canvas id="preview" width="320" height="380"></canvas>
+      <figure class="commander-art"><img id="commanderPortrait" src="/art/factions/legion/captain.png" alt="Капитан выбранной фракции"><figcaption id="commanderFaction">КОСМОДЕСАНТ // КАПИТАН</figcaption></figure><details><summary>Настроить экипировку</summary><canvas id="preview" width="320" height="380"></canvas>
       <div class="row"><label>Броня</label><div class="sws" id="armorSw"></div><input type="color" id="armorIn"></div>
       <div class="row"><label>Отделка</label><div class="sws" id="trimSw"></div><input type="color" id="trimIn"></div>
       <div class="row"><label>Оружие</label><div class="seg" id="weapon"><button data-w="sword">Меч</button><button data-w="hammer">Молот</button></div></div>
-      <div class="row"><label>Знамя</label><button id="banner"></button></div>
+      <div class="row"><label>Знамя</label><button id="banner"></button></div></details>
     </section>
 
     <section class="panel stack" id="menu">

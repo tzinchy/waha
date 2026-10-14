@@ -29,6 +29,8 @@ factionChoice.value = cfg.faction ?? 'legion';
 factionChoice.onchange = () => { cfg.faction = factionChoice.value as NonNullable<CaptainCfg['faction']>; applyCfg(); };
 
 function applyCfg() {
+  $<HTMLImageElement>('commanderPortrait').src = '/art/factions/' + (cfg.faction ?? 'legion') + '/captain.png';
+  $('commanderFaction').textContent = (factionChoice.options[factionChoice.selectedIndex]?.textContent ?? 'Капитан') + ' // ПОЛКОВОДЕЦ';
   store.set('waha.captain', JSON.stringify(cfg));
   preview.set(cfg);
   factionChoice.value = cfg.faction ?? 'legion';
@@ -163,7 +165,7 @@ addEventListener('keydown', e => { if (e.key.toLowerCase() === 'm' && !(e.target
 paintMute();
 
 const themeBtn = $('theme');
-const paintTheme = () => { themeBtn.textContent = isAscii() ? 'Стиль: ASCII' : 'Стиль: Art Deco'; };
+const paintTheme = () => { themeBtn.textContent = isAscii() ? 'Стиль: ASCII' : 'Стиль: Grimdark'; };
 themeBtn.onclick = () => { setTheme(isAscii() ? 'deco' : 'ascii'); paintTheme(); };
 paintTheme();
 
