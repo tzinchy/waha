@@ -152,11 +152,35 @@ mapSelect.onchange = () => {
   status(map.name + ': ' + map.description);
 };
 previewPanel.prepend(mapSelect);
+const productionButton = document.createElement('button');
+productionButton.textContent = 'Производство в здании';
+productionButton.style.cssText = 'padding:8px 10px;background:#292e34;color:#f1dcb0;border:1px solid #877050;border-radius:5px;cursor:pointer';
+productionButton.onclick = () => { startProduction(selected); status('Производство: здание подсвечено на 6 секунд'); };
+previewPanel.append(productionButton);
 const stage = $('stage'); stage.style.position = 'relative'; stage.append(previewPanel);
 
 let batchExport=false;
 const actors: FactionActor[] = [];
 const buildings = new Map<FactionId, THREE.Group>();
+const productionGlows = new Map<FactionId, { light: THREE.PointLight; activeUntil: number; mats: THREE.MeshStandardMaterial[] }>();
+function startProduction(faction: FactionId, duration = 6) {
+  const building = buildings.get(faction);
+  if (!building) return;
+  let entry = productionGlows.get(faction);
+  if (!entry) {
+    const light = new THREE.PointLight(FACTION_ART[faction].glow, 0, 6);
+    light.position.set(0, 3, 0); building.add(light);
+    const mats: THREE.MeshStandardMaterial[] = [];
+    building.traverse(o => {
+      if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshStandardMaterial) {
+        const mat = o.material.clone(); o.material = mat; mats.push(mat);
+      }
+    });
+    entry = { light, activeUntil: 0, mats }; productionGlows.set(faction, entry);
+  }
+  entry.activeUntil = performance.now() + duration * 1000;
+}
+
 const centerX = (id: FactionId) => ids.indexOf(id) * 8 - 12;
 const rubble = new THREE.Group(); scene.add(rubble);
 const stone = new THREE.MeshStandardMaterial({ color: 0x5a5950, roughness: 1 });
@@ -214,7 +238,7 @@ const bloodMaterial=new THREE.MeshBasicMaterial({color:0x791e22,depthWrite:false
 function hit(actor:FactionActor,death=false){if(VEHICLE_ROLES.has(actor.role)||actor.faction==='necrons'){explodeAt(actor.root.position.x,actor.root.position.z,0.45,0.03);return;}for(let i=0;i<(death?16:7);i++){const particle=new THREE.Mesh(particleGeometry,bloodMaterial);particle.position.copy(actor.root.position).add(new THREE.Vector3(0,1,0));particle.scale.setScalar(0.4);scene.add(particle);particles.push({mesh:particle,velocity:new THREE.Vector3((Math.random()-.5)*3,1+Math.random()*2,(Math.random()-.5)*3),ttl:0.6,age:0,spin:2,kind:'blood'});const drop=new THREE.Mesh(new THREE.CircleGeometry(0.04+Math.random()*0.1,6),bloodMaterial);drop.rotation.x=-Math.PI/2;const x=actor.root.position.x+(Math.random()-.5)*1.4,z=actor.root.position.z+(Math.random()-.5)*1.4;drop.position.set(x,heightAt(x,z)+0.025,z);stains.add(drop);}while(stains.children.length>300){const old=stains.children[0];stains.remove(old);if(old instanceof THREE.Mesh)old.geometry.dispose();}}
 $('hit').onclick=()=>{for(const a of actors)if(a.faction===selected&&a.root.visible)hit(a);status('Попадание: кровь у живых бойцов, искры у машин и некронов.');};
 
-const motionLabels: Record<Motion, string> = { idle: 'Стойка', walk: 'Ходьба', run: 'Бег', attack: 'Удар', shoot: 'Огонь', work: 'Работа', death: 'Гибель' };
+const motionLabels: Record<Motion, string> = { idle: 'Стойка', idle_scan: 'Осмотр', idle_inspect: 'Оружие', idle_taunt: 'Провокация', walk: 'Ходьба', run: 'Бег', attack: 'Удар', attack_slash: 'Рубящий', attack_thrust: 'Выпад', attack_overhead: 'Сверху', attack_combo: 'Комбо', execute: 'Добивание', shoot: 'Огонь', work: 'Работа', death: 'Гибель' };
 function setMotion(next: Motion) {
   motion = next;
   for (const actor of actors) {
@@ -330,6 +354,12 @@ function frame(now: number) {
   // Orthographic fixed 35-degree elevation. Models remain 3D at both display resolutions.
   camera.position.copy(focus).add(new THREE.Vector3(8, 21, 29)); camera.lookAt(focus);
   for (const actor of actors) { actor.root.position.y = heightAt(actor.root.position.x, actor.root.position.z); actor.update(dt); }
+  productionGlows.forEach(({ light, activeUntil, mats }) => {
+    const active = now < activeUntil;
+    const pulse = active ? 0.6 + 0.4 * Math.sin(now * 0.012) : 0;
+    light.intensity = active ? 4 * pulse : 0;
+    mats.forEach(mat => { mat.emissive.setHex(light.color.getHex()); mat.emissiveIntensity = active ? pulse * 0.65 : 0; });
+  });
   captureMarkers.forEach((marker, i) => {
     const beacon = marker.userData.captureBeacon as THREE.Mesh;
     const ring = marker.userData.captureRing as THREE.Mesh;
