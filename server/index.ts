@@ -6,7 +6,7 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { MAPS, setMap, ARCHS, type Arch, applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
+import { MAPS, setMap, applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import { botThink } from './bot.ts';
 import { FACTION_IDS, archFor, isFaction } from '../shared/factions.ts';
@@ -21,7 +21,7 @@ const send = (ws: WebSocket | undefined, m: S2C) => ws?.readyState === 1 && ws.s
 
 const int = (v: unknown, max: number) => (Number.isFinite(v) ? Math.max(0, Math.min(max, Math.floor(v as number))) : 0);
 const cleanCaptain = (c: Partial<CaptainCfg> | undefined): CaptainCfg => ({
-  arch: ARCHS.includes(c?.arch as Arch) ? (c!.arch as Arch) : 'commander',
+  arch: 'commander', // сборки в лобби нет: главный герой — командир, остальные архетипы заказываются в казармах
 });
 const cleanName = (n: unknown) => (typeof n === 'string' && n.trim() ? n.trim().slice(0, 16) : 'Капитан');
 const pub = ({ id, name, captain, ready, bot, faction, spec }: Member): LobbyPlayer => ({ id, name, captain, ready, bot, faction, spec: !!spec });
@@ -90,6 +90,7 @@ function onMessage(ws: WebSocket, raw: string) {
   const ctx = memberOf.get(ws);
   const err = (msg: string) => send(ws, { t: 'error', msg });
 
+  if (m.t === 'list') return send(ws, { t: 'lobbies', list: [...lobbies.values()].filter(l => l.members.some(x => x.ws)).map(l => ({ code: l.code, host: l.members.find(x => x.id === l.host)?.name ?? '—', players: (l.match ? l.match.slots : l.members.filter(x => !x.spec)).length, max: Math.min(MAX_PLAYERS, MAPS[l.map]?.hq.length ?? MAX_PLAYERS), map: l.map, live: !!l.match })) });
   if (m.t === 'create' || m.t === 'join') {
     if (ctx) return err('Вы уже в лобби');
     let l: Lobby | undefined;
@@ -124,7 +125,7 @@ function onMessage(ws: WebSocket, raw: string) {
   else if (m.t === 'map') { if (Number.isInteger(m.m) && MAPS[m.m]) l.map = m.m; }
   else if (m.t === 'bot') {
     if (l.members.filter(x => !x.spec).length >= MAX_PLAYERS) return err('Лобби заполнено');
-    l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({ arch: ARCHS[Math.floor(Math.random() * 3)] }), ready: true, bot: true, faction: FACTION_IDS[1 + Math.floor(Math.random() * (FACTION_IDS.length - 1))] });
+    l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({}), ready: true, bot: true, faction: FACTION_IDS[1 + Math.floor(Math.random() * (FACTION_IDS.length - 1))] });
   } else if (m.t === 'kick') {
     const k = l.members.find(p => p.id === m.id);
     if (k && k !== me) { l.members = l.members.filter(p => p !== k); if (k.ws) { memberOf.delete(k.ws); send(k.ws, { t: 'left' }); } }

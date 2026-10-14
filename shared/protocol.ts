@@ -15,11 +15,16 @@ export type C2S =
   | { t: 'kick'; id: string }
   | { t: 'start' }
   | { t: 'cmd'; cmd: Cmd }
-  | { t: 'leave' };
+  | { t: 'leave' }
+  | { t: 'list' }; // открытые лобби для меню
 
 export type S2C =
   | { t: 'lobby'; code: string; you: string; host: string; players: LobbyPlayer[]; map: number }
   | { t: 'start'; slot: number; players: LobbyPlayer[]; map: number } // players в порядке слотов: индекс = owner в симуляции
   | { t: 'snap'; s: Snap }
   | { t: 'left' }
-  | { t: 'error'; msg: string };
+  | { t: 'error'; msg: string }
+  | { t: 'lobbies'; list: LobbyInfo[] };
+
+/** Строка списка лобби в меню: идущий матч — вход зрителем. */
+export type LobbyInfo = { code: string; host: string; players: number; max: number; map: number; live: boolean };

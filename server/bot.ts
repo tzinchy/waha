@@ -1,16 +1,19 @@
-import { ABILITIES, canLearn, applyCmd, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
+import { ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
 
 /** Бот играет по тем же правилам: казармы, второй строитель, посты на точках, гвардия с пополнением, атака на штаб. */
 export function botThink(s: State, me: number): void {
   const pl = s.players[me];
-  if (pl.pts > 0) { const a = ABILITIES.findIndex((_, i) => !canLearn(pl, i)); if (a >= 0) applyCmd(s, me, { c: 'learn', a }); }
+  for (const h of heroesOf(s, me)) { // у каждого героя своё дерево: учит первое доступное, в ближнем бою жмёт готовые способности
+    if (h.hero!.pts > 0) { const a = ABILITIES.findIndex((_, i) => !canLearn(h.hero!, pl.tier, i)); if (a >= 0) applyCmd(s, me, { c: 'learn', a, id: h.id }); }
+    if (s.units.some(u => u.owner !== me && u.hp > 0 && Math.hypot(h.x - u.x, h.y - u.y) < 6))
+      for (const a of [4, 1, 7, 5]) if (h.hero!.abil & (1 << a) && !h.hero!.acd[a]) applyCmd(s, me, { c: 'ability', a, id: h.id });
+  }
   const cap = s.units.find(c => c.owner === me && c.kind === 'captain' && c.hp > 0);
-  if (cap && s.units.some(u => u.owner !== me && u.hp > 0 && Math.hypot(cap.x - u.x, cap.y - u.y) < 6))
-    for (const a of [4, 1, 7, 5]) if (pl.abil & (1 << a) && !pl.acd[a]) applyCmd(s, me, { c: 'ability', a });
   if (s.tick % 20 !== (me * 7) % 20) return; // раз в секунду, со сдвигом, чтобы боты не думали в один тик
   const mine = s.units.filter(u => u.owner === me && u.hp > 0);
   const hq = mine.find(u => u.kind === 'hq');
   if (!hq) return;
+  if (!cap) applyCmd(s, me, { c: 'hero', a: pl.arch }); // капитана заказывают в штабе — и павшего тоже (в очереди второй раз не встанет)
   const of = (k: Kind) => mine.filter(u => u.kind === k);
   const builders = of('builder'), guards = of('guard'), barracks = of('barracks');
   const req = s.players[me].req;

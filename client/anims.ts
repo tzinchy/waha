@@ -13,7 +13,7 @@ await ready2d;
 
 const $ = (id: string) => document.getElementById(id)!;
 const ATK: Record<number, string> = { 1: 'chop', 2: 'claw', 5: 'thrust', 3: 'beam', 11: 'beam', 13: 'beam', 4: 'cast' };
-const NAMES: Partial<Record<Kind, string>> = { barracks: 'Казарма', turret: 'Турель', post: 'Столп на точке', foundry: 'Литейня', pump: 'Насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Бункер', mine: 'Мина', aegis: 'Купол-эгида', rturret: 'Ракетная бочка', fturret: 'Огнемётная печь', battery: 'Орган-батарея', bell: 'Колокол Скорби', pylon: 'Гаусс-пилон', pyre: 'Огненная яма', lighthouse: 'Великий Маяк', obelisk: 'Обелиск Вечности', megagun: 'Мега-Пушка', plague: 'Чумной шпиль' };
+const NAMES: Partial<Record<Kind, string>> = { barracks: 'Казарма', turret: 'Турель', post: 'Столп на точке', foundry: 'Литейня', pump: 'Насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Бункер', mine: 'Мина', aegis: 'Купол-эгида', rturret: 'Ракетная бочка', fturret: 'Огнемётная печь', battery: 'Батарея «Громобой»', bell: 'Колокол Скорби', pylon: 'Гаусс-пилон', pyre: 'Огненная яма', lighthouse: 'Вокс-маяк', obelisk: 'Обелиск Вечности', megagun: 'Мега-Пушка', plague: 'Чумной шпиль' };
 const ROLE: Partial<Record<Kind, string>> = { builder: 'строитель', guard: 'линейная пехота', sniper: 'снайпер', heavy: 'тяжёлое оружие', support: 'поддержка', elite: 'тяжёлая элита', healer: 'целитель', lveh: 'лёгкая техника', mveh: 'средняя техника', hveh: 'тяжёлая техника', arty: 'артиллерия', titan: 'титан' };
 
 function figure(path: string, f: FactionId, anim: string, cap: string, width: number, tint: boolean) {

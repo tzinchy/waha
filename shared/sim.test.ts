@@ -4,6 +4,8 @@ import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, sn
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
+/** Капитана теперь заказывают в штабе: тестам, которым он нужен с первой секунды, ставим его у штаба явно. */
+const captainAt = (s: State, owner: number) => s.units.find(u => u.owner === owner && u.kind === 'captain') ?? spawn(s, owner, 'captain', unit(s, owner, 'hq').x + 8, unit(s, owner, 'hq').y + 8);
 
 /** Строим казармы и нанимаем отряд гвардии: общий путь для нескольких тестов. */
 function withGuard(s: State) {
@@ -17,10 +19,21 @@ function withGuard(s: State) {
   return unit(s, 0, 'guard');
 }
 
-test('старт: штаб, капитан и строители, requisition по умолчанию', () => {
-  const s = newState(2);
-  for (const k of ['hq', 'captain', 'builder'] as Kind[]) assert.ok(unit(s, 0, k), k);
-  assert.equal(s.players[0].req, START_REQ);
+test('старт: штаб и строители, капитан заказывается в штабе и после гибели сам не встаёт (как в Soulstorm)', () => {
+  const s = newState(2), p = s.players[0];
+  for (const k of ['hq', 'builder'] as Kind[]) assert.ok(unit(s, 0, k), k);
+  assert.ok(!s.units.some(u => u.kind === 'captain'), 'капитана на старте нет');
+  assert.equal(p.req, START_REQ);
+  assert.equal(applyCmd(s, 0, { c: 'hero', a: p.arch }), undefined, 'заказ в штабе');
+  assert.match(applyCmd(s, 0, { c: 'hero', a: p.arch }) ?? '', /уже/, 'второй раз в очередь не встаёт');
+  run(s, STATS.captain.time + 1);
+  const c = unit(s, 0, 'captain');
+  assert.ok(c && c.hp > 0, 'капитан вышел из штаба');
+  c.hero!.lvl = 4; c.hp = 0; run(s, 60);
+  assert.ok(c.hp <= 0, 'павший сам не возрождается');
+  assert.equal(applyCmd(s, 0, { c: 'hero', a: p.arch }), undefined, 'павшего заказывают заново');
+  run(s, STATS.captain.time + 1);
+  assert.ok(c.hp > 0 && unit(s, 0, 'captain') === c && c.hero!.lvl === 4, 'встаёт тот же герой, уровень сохранён');
 });
 
 test('штаб нанимает строителя за requisition', () => {
@@ -91,20 +104,20 @@ test('найм в недостроенном здании отклоняется
 
 test('команды: чужими юнитами управлять нельзя, кривая постройка отклоняется', () => {
   const s = newState(2);
-  const enemy = unit(s, 1, 'captain');
+  const enemy = captainAt(s, 1);
   applyCmd(s, 0, { c: 'move', ids: [enemy.id], x: 50, y: 50 });
   assert.equal(enemy.order, null);
   const b = unit(s, 0, 'builder');
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: 90, y: 90 }) ?? '', /рядом со штабом/);
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: 30, y: 30 }) ?? '', /точки/);
-  assert.equal(applyCmd(s, 0, { c: 'move', ids: [unit(s, 0, 'captain').id], x: NaN, y: 1 }), undefined);
-  assert.equal(unit(s, 0, 'captain').order, null);
+  assert.equal(applyCmd(s, 0, { c: 'move', ids: [captainAt(s, 0).id], x: NaN, y: 1 }), undefined);
+  assert.equal(captainAt(s, 0).order, null);
 });
 
 test('бой: капитан добивает вражескую базу, игра заканчивается победой', () => {
   const s = newState(2);
-  const cap = unit(s, 0, 'captain'), hq = unit(s, 1, 'hq');
-  s.units = s.units.filter(u => u !== unit(s, 1, 'captain')); // без защитника, иначе капитан не переживёт
+  const cap = captainAt(s, 0), hq = unit(s, 1, 'hq');
+  s.units = s.units.filter(u => u !== captainAt(s, 1)); // без защитника, иначе капитан не переживёт
   [cap.x, cap.y] = [hq.x - 5, hq.y];
   hq.hp = 400; // уже побитая база: по зданиям пехота бьёт слабо (STRUCT_ARMOR)
   applyCmd(s, 0, { c: 'attack', ids: [cap.id], id: hq.id });
@@ -129,7 +142,7 @@ test('энергия: литейня и насос на жиле дают эне
 
 test('реликвии: реликтовая точка даёт реликвии, капитан берёт реликвийный доспех', () => {
   const s = newState(2);
-  const cap = unit(s, 0, 'captain'), ri = POINTS.length;
+  const cap = captainAt(s, 0), ri = POINTS.length;
   [cap.x, cap.y] = RELICS[0] as [number, number];
   run(s, 13); // CAPTURE_TIME 12 с
   assert.equal(s.points[ri].owner, 0);
@@ -164,8 +177,8 @@ test('четыре фракции: постройки снятых Нежити 
 
 test('Орда: ярость копится от урона и запускает ВААГХ', () => {
   const s = newState(2, ['orks', 'order']);
-  const cap = unit(s, 0, 'captain'), hq = unit(s, 1, 'hq');
-  s.units = s.units.filter(u => u !== unit(s, 1, 'captain'));
+  const cap = captainAt(s, 0), hq = unit(s, 1, 'hq');
+  s.units = s.units.filter(u => u !== captainAt(s, 1));
   [cap.x, cap.y] = [hq.x - 5, hq.y];
   s.players[0].rage = RAGE_MAX * 0.7;
   applyCmd(s, 0, { c: 'attack', ids: [cap.id], id: hq.id });
@@ -213,14 +226,14 @@ test('укрепления: стена строится по сегментам 
   assert.ok(walls.length >= 5, 'сегменты заложены');
   run(s, 45);
   assert.ok(walls.every(w => w.build === 1), 'строитель обошёл все сегменты');
-  const cap = unit(s, 0, 'captain');
+  const cap = captainAt(s, 0);
   [cap.x, cap.y] = [66, 56];
   applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 76, y: 56 });
   for (let i = 0; i < 20 * 8; i++) { const x0 = cap.x; run(s, 0.05); if ((x0 - 70) * (cap.x - 70) <= 0) assert.ok(cap.y < 49.5 || cap.y > 62.5, 'сквозь стену не прошёл'); } // обходит, а не проходит насквозь
   assert.ok(cap.x > 70, 'обошёл стену и дошёл');
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'mine', x: 58, y: 76 }), undefined);
   run(s, 15); // по эту сторону стены: обхода препятствий у юнитов нет
-  const enemy = unit(s, 1, 'captain'), hp = enemy.hp;
+  const enemy = captainAt(s, 1), hp = enemy.hp;
   [enemy.x, enemy.y] = [58, 77];
   run(s, 0.2);
   assert.ok(enemy.hp <= hp - 170, 'мина сработала');
@@ -254,7 +267,7 @@ test('сетка построек: здание привязано к клетк
   assert.deepEqual([bar.x, bar.y], [(f.x0 + f.n / 2) * BCELL, (f.y0 + f.n / 2) * BCELL], 'центр на сетке');
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: bar.x, y: bar.y + (f.n - 1) * BCELL }), 'Место занято', 'следы пересекаются');
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: bar.x, y: bar.y + f.n * BCELL }), undefined, 'вплотную по клеткам можно');
-  const cap = unit(s, 0, 'captain'), w = spawn(s, 0, 'barracks', 200, 120), g = footRect('barracks', w.x, w.y);
+  const cap = captainAt(s, 0), w = spawn(s, 0, 'barracks', 200, 120), g = footRect('barracks', w.x, w.y);
   [cap.x, cap.y] = [w.x - 12, w.y];
   applyCmd(s, 0, { c: 'move', ids: [cap.id], x: w.x + 12, y: w.y });
   for (let i = 0; i < 6 / DT; i++) {
@@ -283,8 +296,8 @@ test('прокачка точки: столп → укреплённый → б�
 
 test('капитан: опыт за убийства и точки, уровни, дерево способностей и Вихрь', () => {
   const s = newState(2);
-  const p = s.players[0], cap = unit(s, 0, 'captain');
-  assert.equal(p.clvl, 1); assert.equal(p.pts, 1);
+  const p = s.players[0], cap = captainAt(s, 0), h = cap.hero!;
+  assert.equal(h.lvl, 1); assert.equal(h.pts, 1);
   assert.match(applyCmd(s, 0, { c: 'learn', a: 4 }) ?? '', /предыдущая|уровень/);
   assert.equal(applyCmd(s, 0, { c: 'learn', a: 3 }), undefined);
   assert.match(applyCmd(s, 0, { c: 'learn', a: 0 }) ?? '', /очков/);
@@ -292,18 +305,23 @@ test('капитан: опыт за убийства и точки, уровни
   [e.x, e.y] = [cap.x + 1, cap.y];
   run(s, 10);
   assert.ok(!s.units.includes(e), 'строитель врага убит');
-  assert.equal(p.xp, 5);
+  assert.equal(h.xp, 5);
   [cap.x, cap.y] = POINTS[3];
   run(s, 13);
   assert.equal(s.points[3].owner, 0);
-  assert.equal(p.xp, 30, 'захват точки +25');
-  p.xp = 95; const ec = unit(s, 1, 'captain'); ec.by = 0; ec.hp = 0; run(s, 0.1);
-  assert.equal(p.clvl, 2); assert.equal(p.xp, 35); assert.equal(p.pts, 1, 'новый уровень — очко');
-  p.clvl = 4; p.tier = 2;
-  assert.equal(applyCmd(s, 0, { c: 'learn', a: 4 }), undefined);
+  assert.equal(h.xp, 30, 'захват точки +25');
+  h.xp = 95; const ec = captainAt(s, 1); [ec.x, ec.y] = [cap.x + 3, cap.y]; ec.by = 0; ec.hp = 0; run(s, 0.1);
+  assert.equal(h.lvl, 2); assert.equal(h.xp, 35); assert.equal(h.pts, 1, 'новый уровень — очко');
+  const far = spawn(s, 0, 'captain', 20, 20); far.arch = 'assault';
+  const ec2 = spawn(s, 1, 'guard', cap.x + 2, cap.y); ec2.by = 0; ec2.hp = 0; run(s, 0.1);
+  assert.equal(far.hero!.xp, 0, 'опыт — героям рядом с боем, у каждого свой');
+  assert.equal(applyCmd(s, 0, { c: 'learn', a: 0, id: far.id }), undefined, 'своё дерево у каждого героя');
+  assert.ok(far.hero!.abil & 1 && !(h.abil & 1));
+  h.lvl = 4; p.tier = 2;
+  assert.equal(applyCmd(s, 0, { c: 'learn', a: 4, id: cap.id }), undefined);
   const foe = unit(s, 1, 'hq'), hp = foe.hp;
   [cap.x, cap.y] = [foe.x + 5, foe.y];
-  assert.equal(applyCmd(s, 0, { c: 'ability', a: 4 }), undefined);
+  assert.equal(applyCmd(s, 0, { c: 'ability', a: 4, id: cap.id }), undefined);
   assert.ok(foe.hp <= hp - 150, 'Вихрь ранит');
   assert.match(applyCmd(s, 0, { c: 'ability', a: 4 }) ?? '', /Перезарядка/);
 });
@@ -375,19 +393,19 @@ test('особые механики: Архангел Ордена, Бог-Ме�
   assert.ok(Math.hypot(t.x - choppa.x, t.y - choppa.y) < 3, 'турель едет за Рубаками');
   // Династии: Вознесение на 10-м уровне и тире IV, Остановка времени
   const c = newState(2, ['clockwork', 'order']), cp = c.players[0];
-  cp.energy = 1e4; cp.tier = 4;
+  cp.energy = 1e4; cp.tier = 4; captainAt(c, 0);
   assert.match(applyCmd(c, 0, { c: 'ascend' }) ?? '', /уровень/);
-  cp.clvl = 10;
+  captainAt(c, 0).hero!.lvl = 10;
   assert.equal(applyCmd(c, 0, { c: 'ascend' }), undefined);
   run(c, 5);
   const god = c.units.find(u => u.owner === 0 && u.kind === 'deity')!;
   assert.ok(god, 'Бог-Механизм явился');
-  const foe = unit(c, 1, 'captain'); [foe.x, foe.y] = [god.x + 5, god.y];
+  const foe = captainAt(c, 1); [foe.x, foe.y] = [god.x + 5, god.y];
   assert.equal(applyCmd(c, 0, { c: 'timestop' }), undefined);
   const fx = foe.x; applyCmd(c, 1, { c: 'move', ids: [foe.id], x: foe.x + 20, y: foe.y }); run(c, 2);
   assert.equal(foe.x, fx, 'время остановлено');
   god.hp = 0; run(c, 0.1);
-  const back = unit(c, 0, 'captain');
+  const back = captainAt(c, 0);
   assert.ok(back && back.hp <= 0 && back.dead < 0, 'гибель бога: капитан недоступен надолго');
   // Орден: Архангел поднимает павшего бойца
   const o = newState(2, ['order', 'orks']), oh = unit(o, 0, 'hq');
@@ -409,7 +427,7 @@ test('победные очки тают у того, кто держит мен
   const snap = snapshotFor(f, 0);
   assert.ok(!snap.u.some(r => r[0] === far.id), 'чужой штаб в тумане');
   assert.ok(snap.u.some(r => r[0] === unit(f, 0, 'hq').id), 'свой штаб виден');
-  const scout = unit(f, 0, 'captain'); [scout.x, scout.y] = [far.x - 8, far.y];
+  const scout = captainAt(f, 0); [scout.x, scout.y] = [far.x - 8, far.y];
   assert.ok(snapshotFor(f, 0).u.some(r => r[0] === far.id), 'разведка открыла штаб');
   const g = newState(2), pt = g.points[3], foe = spawn(g, 1, 'guard', pt.x + 5, pt.y);
   assert.ok(!snapshotFor(g, 0).u.some(r => r[0] === foe.id), 'чужая точка не светит');
@@ -454,7 +472,7 @@ test('карта «Ущелье Пепла»: на четверых, крест 
     assert.equal(s.players.length, 4);
     assert.equal(s.points.filter(p => p.relic).length, 8);
     const K = MAPS[1].map.w / 320; // координаты исходной схемы 320×320, карта растянута
-    const cap = unit(s, 0, 'captain'), b = unit(s, 0, 'builder');
+    const cap = captainAt(s, 0), b = unit(s, 0, 'builder');
     [cap.x, cap.y] = [40 * K, 120 * K]; // западный карман, у скалы
     applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 120 * K, y: 120 * K }); // приказ прямо в скалу
     run(s, 8);
@@ -510,7 +528,7 @@ test('сверхоружие и мегапостройки: открытия в 
   assert.equal(applyCmd(s, 0, { c: 'strike', x: foe.x, y: foe.y }), undefined);
   assert.equal(snapshotFor(s, 1).ss.length, 1, 'враг видит предупреждение');
   run(s, 7);
-  assert.ok(foe.hp < hp - 2000, 'копьё Длани Лампы');
+  assert.ok(foe.hp < hp - 2000, 'орбитальный удар');
   p.doom = 180; const own = hq.hp;
   assert.equal(applyCmd(s, 0, { c: 'strike', x: hq.x, y: hq.y }), undefined); run(s, 7);
   assert.equal(hq.hp, own, 'своих не задевает');
@@ -529,7 +547,7 @@ test('цена: Династии платят всё энергией, оста�
 });
 
 test('захват точки длится 12 секунд, отсутствие войск сбрасывает прогресс', () => {
-  const s = newState(2), p = s.points[3], cap = unit(s, 0, 'captain');
+  const s = newState(2), p = s.points[3], cap = captainAt(s, 0);
   [cap.x, cap.y] = [p.x, p.y];
   run(s, 6);
   assert.equal(p.owner, -1, 'короткого присутствия уже недостаточно');
@@ -613,14 +631,18 @@ test('отмена найма из очереди возвращает ресу�
   assert.ok(p.req >= 1000, 'влияние вернулось (плюс доход за 2 с)');
 });
 
-test('второй герой: другой архетип с тира III, свой бонус, один на армию; легенда и титан — вместе с ним', () => {
+test('второй герой: другой архетип — в казармах с тира II, свой бонус, один на армию; легенда и титан — вместе с ним', () => {
   const s = newState(2, ['order', 'ashen'], ['commander', 'commander']), p = s.players[0];
   Object.assign(p, { req: 1e4, energy: 1e4, relics: 50 });
-  assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /тир III/);
+  captainAt(s, 0);
+  assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /тир II/);
   p.tier = 5;
-  assert.equal(applyCmd(s, 0, { c: 'hero', a: 'commander' }), undefined, 'свой архетип — молча нет');
-  assert.equal(s.units.filter(u => u.owner === 0 && u.kind === 'captain').length, 1);
+  assert.match(applyCmd(s, 0, { c: 'hero', a: 'commander' }) ?? '', /уже/, 'главный уже в армии');
+  assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /казармы/, 'второго героя заказывают в казармах');
+  const bar = spawn(s, 0, 'barracks', unit(s, 0, 'hq').x + 14, unit(s, 0, 'hq').y);
   assert.equal(applyCmd(s, 0, { c: 'hero', a: 'assault' }), undefined);
+  assert.deepEqual(bar.que, ['captain']);
+  run(s, STATS.captain.time + 1);
   const heroes = s.units.filter(u => u.owner === 0 && u.kind === 'captain');
   assert.equal(heroes.length, 2);
   assert.equal(archOf(s, heroes[1]), 'assault');
