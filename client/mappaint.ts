@@ -45,7 +45,7 @@ export function paintMap(): HTMLCanvasElement {
   }
   // 3. Река: глубина, берег-грязь, блики
   stroke(x, RIVER, P, 7.5, '#2b241c'); stroke(x, RIVER, P, 6, '#0f1a1d'); stroke(x, RIVER, P, 4, '#15262a'); stroke(x, RIVER, P, 1.6, '#1c3338');
-  for (let i = 0; i < 260; i++) { const [a, b] = along(RIVER, r()); x.fillStyle = r() > 0.7 ? '#3e6168' : '#24414a'; x.fillRect(P(a) + (r() - 0.5) * 40, P(b) + (r() - 0.5) * 20, 6 + r() * 10, 1); }
+  for (let i = 0; i < (RIVER.length ? 260 : 0); i++) { const [a, b] = along(RIVER, r()); x.fillStyle = r() > 0.7 ? '#3e6168' : '#24414a'; x.fillRect(P(a) + (r() - 0.5) * 40, P(b) + (r() - 0.5) * 20, 6 + r() * 10, 1); }
   // 4. Дороги: подложка, брусчатка, раствор
   for (const road of ROADS) { stroke(x, road, P, 5, '#1d1915'); stroke(x, road, P, 4.2, '#3b342c'); }
   for (const road of ROADS) for (let i = 0; i < 1400; i++) {
@@ -108,6 +108,10 @@ export function paintMap(): HTMLCanvasElement {
       if (Y > 0) { x.fillStyle = '#5a4c3e'; x.fillRect(xx, bot - 2 - r() * 4, 6, 4); }
       if (Y + Hd < H) { x.fillStyle = '#6b5a48'; x.fillRect(xx, top - 3, 6, 3); x.fillStyle = '#0a0807'; x.fillRect(xx, top, 6, 6 + r() * 6); }
     }
+    x.strokeStyle = '#9a8468'; x.lineWidth = 3; x.strokeRect(X + 1.5, Y + 1.5, Wd - 3, Hd - 3); // светлая кромка: граница непроходимого видна и под туманом
+    x.save(); x.beginPath(); x.rect(X, Y, Wd, Hd); x.clip(); x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = 2; // штриховка скалы
+    for (let d = -Hd; d < Wd; d += 14) { x.beginPath(); x.moveTo(X + d, Y + Hd); x.lineTo(X + d + Hd, Y); x.stroke(); }
+    x.restore();
   }
   // 12. Виньетка по краю карты
   const v = x.createRadialGradient(W / 2, H / 2, W * 0.35, W / 2, H / 2, W * 0.72);

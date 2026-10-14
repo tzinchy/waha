@@ -21,7 +21,6 @@ const send = (ws: WebSocket | undefined, m: S2C) => ws?.readyState === 1 && ws.s
 
 const int = (v: unknown, max: number) => (Number.isFinite(v) ? Math.max(0, Math.min(max, Math.floor(v as number))) : 0);
 const cleanCaptain = (c: Partial<CaptainCfg> | undefined): CaptainCfg => ({
-  armor: int(c?.armor, 0xffffff), trim: int(c?.trim, 0xffffff),
   arch: ARCHS.includes(c?.arch as Arch) ? (c!.arch as Arch) : 'commander',
 });
 const cleanName = (n: unknown) => (typeof n === 'string' && n.trim() ? n.trim().slice(0, 16) : 'Капитан');
@@ -125,7 +124,7 @@ function onMessage(ws: WebSocket, raw: string) {
   else if (m.t === 'map') { if (Number.isInteger(m.m) && MAPS[m.m]) l.map = m.m; }
   else if (m.t === 'bot') {
     if (l.members.filter(x => !x.spec).length >= MAX_PLAYERS) return err('Лобби заполнено');
-    l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({ armor: 0x8a2be2 + l.members.length * 0x300a0, trim: 0xe0e0e0, arch: ARCHS[Math.floor(Math.random() * 3)] }), ready: true, bot: true, faction: FACTION_IDS[1 + Math.floor(Math.random() * (FACTION_IDS.length - 1))] });
+    l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({ arch: ARCHS[Math.floor(Math.random() * 3)] }), ready: true, bot: true, faction: FACTION_IDS[1 + Math.floor(Math.random() * (FACTION_IDS.length - 1))] });
   } else if (m.t === 'kick') {
     const k = l.members.find(p => p.id === m.id);
     if (k && k !== me) { l.members = l.members.filter(p => p !== k); if (k.ws) { memberOf.delete(k.ws); send(k.ws, { t: 'left' }); } }

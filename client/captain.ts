@@ -5,7 +5,6 @@ import { captainSvg, needsTint, ready2d } from './game2d.ts';
 import { CAPTAIN_ART, ROSTER, archFor } from '../shared/factions.ts';
 import type { FactionId } from '../shared/factions.ts';
 
-const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 
 export class CaptainPreview {
   private faction: FactionId = 'order';
@@ -26,8 +25,6 @@ export class CaptainPreview {
       const f = this.faction ?? 'order', arch = archFor(f, cfg.arch), path = CAPTAIN_ART[f][arch];
       this.el.innerHTML = captainSvg(arch, f);
       this.el.style.filter = needsTint(path, f) ? ROSTER[f].tint : '';
-      this.el.style.setProperty('--art-brass', hex(cfg.armor));
-      this.el.style.setProperty('--art-brass-lit', hex(cfg.trim));
       this.el.querySelector('svg')?.classList.add('lc-art', 'lc-anim-idle');
     });
   }

@@ -10,7 +10,6 @@ import { audio } from './audio.ts';
 import { nextTheme, setTheme, themeName } from './theme.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
-const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 const esc = (s: string) => s.replace(/[<>&"]/g, '');
 const store = {
   get: (k: string) => { try { return localStorage.getItem(k); } catch { return null; } },
@@ -18,36 +17,18 @@ const store = {
 };
 
 // ---------- капитан ----------
-const ARMOR = [0x2f6bd1, 0xb02a2a, 0x2e8b57, 0x6a3fa0, 0x4a4a4a, 0x1e90a0, 0x8b5a2b, 0xc9a227];
-const TRIM = [0xf3d36b, 0xe0e0e0, 0x22c1c3, 0xff7a1a, 0xd04a6a, 0x222222];
-let cfg: CaptainCfg = { armor: ARMOR[0], trim: TRIM[0], arch: 'commander' };
+let cfg: CaptainCfg = { arch: 'commander' };
 let faction: FactionId | null = null; // выбранная в лобби фракция (до лобби — Орден)
-try { cfg = { ...cfg, ...JSON.parse(store.get('waha.captain') ?? '{}') }; } catch { /* битые данные: берём умолчания */ }
+try { cfg = { arch: JSON.parse(store.get('waha.captain') ?? '{}').arch ?? cfg.arch }; } catch { /* битые данные: берём умолчания */ }
 if (!['assault', 'commander', 'mystic'].includes(cfg.arch)) cfg.arch = 'commander'; // старое сохранение с мечом/молотом
 const preview = new CaptainPreview($('preview'));
 
 function applyCfg() {
   store.set('waha.captain', JSON.stringify(cfg));
   preview.set(cfg);
-  $<HTMLInputElement>('armorIn').value = hex(cfg.armor);
-  $<HTMLInputElement>('trimIn').value = hex(cfg.trim);
-  document.querySelectorAll('#armorSw .sw').forEach(s => s.classList.toggle('on', (s as HTMLElement).dataset.c === String(cfg.armor)));
-  document.querySelectorAll('#trimSw .sw').forEach(s => s.classList.toggle('on', (s as HTMLElement).dataset.c === String(cfg.trim)));
   renderArch();
   tx({ t: 'captain', captain: cfg });
 }
-function swatches(id: string, list: number[], key: 'armor' | 'trim') {
-  for (const c of list) {
-    const s = document.createElement('span');
-    s.className = 'sw'; s.dataset.c = String(c); s.style.background = hex(c);
-    s.onclick = () => { cfg[key] = c; applyCfg(); };
-    $(id).appendChild(s);
-  }
-}
-swatches('armorSw', ARMOR, 'armor');
-swatches('trimSw', TRIM, 'trim');
-$<HTMLInputElement>('armorIn').oninput = e => { cfg.armor = parseInt((e.target as HTMLInputElement).value.slice(1), 16); applyCfg(); };
-$<HTMLInputElement>('trimIn').oninput = e => { cfg.trim = parseInt((e.target as HTMLInputElement).value.slice(1), 16); applyCfg(); };
 /** Кнопки сборок — только те, что есть у текущей фракции, с её названиями. */
 function renderArch() {
   const f = faction ?? 'order', opts = ARCH_OPTS[f], cur = archFor(f, cfg.arch);
@@ -150,7 +131,6 @@ function renderLobby() {
   renderFactions(me.faction);
   $('lcode').textContent = lobby.code;
   $('plist').innerHTML = lobby.players.map(p => `<li>
-    <span class="dot" style="background:${hex(p.captain.armor)}"></span>
     <span class="name">${esc(p.name)}<br><small class="tag">${FACTIONS[p.faction]?.name ?? ''}</small></span>
     ${p.id === lobby!.host ? '<span class="tag">хост</span>' : ''}
     <span class="tag ${p.ready ? 'ready' : ''}">${p.spec ? 'зритель' : p.bot ? 'бот' : p.ready ? 'готов' : 'не готов'}</span>

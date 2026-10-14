@@ -66,7 +66,7 @@ const BASE_MAPS: MapDef[] = [
     // скалы: угол карты и выступ к развилке; проходы — тоннели шириной 32 м (x или y 144–176)
     blocks: [[0, 0, 72, 72], [64, 64, 80, 80], [248, 0, 72, 72], [176, 64, 80, 80], [0, 248, 72, 72], [64, 176, 80, 80], [248, 248, 72, 72], [176, 176, 80, 80]] },
 ];
-export const MAPS: MapDef[] = [grow(BASE_MAPS[0], 4 / 3), grow(BASE_MAPS[1], 9 / 8)].map(m => ({ ...m, info: m.info.replace(/^\d+×\d+ м/, `${m.map.w}×${m.map.h} м`) })); // карты крупнее: 320×320 и 360×360
+export const MAPS: MapDef[] = [grow(BASE_MAPS[0], 5 / 3), grow(BASE_MAPS[1], 3 / 2)].map(m => ({ ...m, info: m.info.replace(/^\d+×\d+ м/, `${m.map.w}×${m.map.h} м`) })); // карты крупнее: 400×400 и 480×480 — до первой стычки дольше
 /** Текущая карта. ponytail: общая на процесс; сервер выставляет её перед каждым шагом своего лобби (расчёт синхронный). Поле State, если появится асинхронность. */
 export let MAP = MAPS[0].map, HQ_POS = MAPS[0].hq, POINTS = MAPS[0].points, RELICS = MAPS[0].relics, VENTS = MAPS[0].vents;
 export let ROADS = MAPS[0].roads, RIVER = MAPS[0].river, BRIDGES = MAPS[0].bridges, PLATEAUS = MAPS[0].plateaus, RUINS = MAPS[0].ruins, CRATERS = MAPS[0].craters, COVER = MAPS[0].cover;

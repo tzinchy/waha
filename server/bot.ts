@@ -53,7 +53,8 @@ export function botThink(s: State, me: number): void {
     applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'turret', x: hq.x + Math.cos(dir) * 9, y: hq.y + Math.sin(dir) * 9 });
   }
   if (s.players[me].tier > 1) for (const u of [...of('post'), ...of('turret'), ...guards]) if (u.lvl < 2 && u.upg < 0 && s.players[me].req >= 150) applyCmd(s, me, { c: 'upgrade', id: u.id });
-  for (const b of [...barracks, ...of('motorpool')]) if (b.build >= 1 && b.que.length < 2) { // смешанный состав: всё, что открыто тиром
+  const saving = P.tier <= 3 && (!of(key).length || hq.upg < 0 && of(key).some(k => k.build >= 1)) && guards.length >= 3 && req < 400; // копим на ключевое здание и тир, а не только на пехоту
+  if (!saving) for (const b of [...barracks, ...of('motorpool')]) if (b.build >= 1 && b.que.length < 2) { // смешанный состав: всё, что открыто тиром
     const opts = producible(b.kind).filter(k => ROLES[k]!.tier <= s.players[me].tier);
     if (opts.length) applyCmd(s, me, { c: 'train', id: b.id, k: opts[Math.floor(Math.random() * opts.length)] });
   }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
+import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -56,7 +56,7 @@ test('пост: строитель ставит на ничьей точке, п
   s.points[2].owner = 1;
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: POINTS[2][0], y: POINTS[2][1] }) ?? '', /врагом/);
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: px + 2, y: py }), undefined);
-  run(s, 30);
+  run(s, 60); // карта крупная: строителю идти до точки
   assert.equal(s.units.find(u => u.kind === 'post')!.build, 1);
   assert.equal(s.points[1].owner, 0);
 });
@@ -65,7 +65,7 @@ test('апгрейды: тир 2 у штаба открывает укрепле
   const s = newState(2);
   const hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
   s.players[0].req = 2000; s.players[0].energy = 500;
-  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: 60, y: 60 }) ?? '', /у своих построек/);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: hq.x + 60, y: hq.y + 60 }) ?? '', /у своих построек/);
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: hq.x + 7, y: hq.y }), undefined);
   run(s, 15);
   const t = unit(s, 0, 'turret');
@@ -115,6 +115,7 @@ test('бой: капитан добивает вражескую базу, иг�
 test('энергия: литейня и насос на жиле дают энергию; турель стоит энергию', () => {
   const s = newState(2);
   const b = unit(s, 0, 'builder'), hq = unit(s, 0, 'hq');
+  s.players[0].energy = 0;
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: hq.x + 7, y: hq.y }) ?? '', /энергии/);
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: hq.x + 8, y: hq.y + 3 }), undefined);
   run(s, 20);
@@ -143,10 +144,11 @@ test('реликвии: реликтовая точка даёт реликви�
 test('Династии: платят энергией, влияния нет', () => {
   const s = newState(2, ['clockwork', 'order']);
   const hq = unit(s, 0, 'hq');
+  s.players[0].energy = 0;
   assert.match(applyCmd(s, 0, { c: 'train', id: hq.id }) ?? '', /энергии/);
   s.players[0].energy = 100;
   assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id }), undefined);
-  assert.equal(s.players[0].energy, 100 - STATS.builder.cost);
+  assert.equal(s.players[0].energy, 100 - STATS.builder.cost - ROLES.builder!.energy!, 'Династии платят обе цены энергией');
   const r = s.players[0].req;
   run(s, 2);
   assert.equal(s.players[0].req, r, 'влияние не копится');
@@ -274,7 +276,7 @@ test('капитан: опыт за убийства и точки, уровни
 test('Рубаки Орды бьют в упор, Стражники Ордена стреляют издалека', () => {
   const s = newState(2, ['orks', 'order']);
   const hq0 = unit(s, 0, 'hq'), hq1 = unit(s, 1, 'hq');
-  const choppa = spawn(s, 0, 'guard', 50, 50), target = spawn(s, 1, 'guard', 57, 50);
+  const choppa = spawn(s, 0, 'guard', 120, 60), target = spawn(s, 1, 'guard', 127, 60); // вдали от штабов
   void hq0; void hq1;
   run(s, 0.2);
   assert.ok(s.shots.length === 0 || s.shots.every(sh => sh[4] !== 1), 'с 7 м Рубаки ещё не бьют');
@@ -371,20 +373,24 @@ test('особые механики: купол-эгида и дрон Конс�
   assert.ok(sq.hp >= STATS.guard.hp * 3, 'боец поднят');
 });
 
-test('победные очки тают у того, кто держит меньше точек; туман войны прячет далёких врагов', () => {
+test('победные очки тают у того, кто держит меньше точек, но не убивают; туман войны прячет далёких врагов', () => {
   const s = newState(2);
   s.points.forEach((p, i) => { if (!p.relic) p.owner = i === 0 ? 1 : i % 2; }); // у игрока 1 больше точек и центр
   const vp0 = s.vp[0];
   run(s, 10);
   assert.ok(s.vp[0] < vp0 - 10, 'очки игрока 0 тают'); // VP_RATE 0.5 × перевес ≥ 2 точек × 10 с assert.equal(s.vp[1], 500);
-  s.vp[0] = 1; run(s, 1);
-  assert.equal(s.players[0].alive, false); assert.equal(s.winner, 1);
+  s.vp[0] = 1; run(s, 5);
+  assert.equal(s.vp[0], 0); assert.equal(s.players[0].alive, true, 'без очков не проигрывают: только когда пали все штабы'); assert.equal(s.winner, null);
   const f = newState(2), far = unit(f, 1, 'hq');
   const snap = snapshotFor(f, 0);
   assert.ok(!snap.u.some(r => r[0] === far.id), 'чужой штаб в тумане');
   assert.ok(snap.u.some(r => r[0] === unit(f, 0, 'hq').id), 'свой штаб виден');
   const scout = unit(f, 0, 'captain'); [scout.x, scout.y] = [far.x - 8, far.y];
   assert.ok(snapshotFor(f, 0).u.some(r => r[0] === far.id), 'разведка открыла штаб');
+  const g = newState(2), pt = g.points[3], foe = spawn(g, 1, 'guard', pt.x + 5, pt.y);
+  assert.ok(!snapshotFor(g, 0).u.some(r => r[0] === foe.id), 'чужая точка не светит');
+  pt.owner = 0;
+  assert.ok(snapshotFor(g, 0).u.some(r => r[0] === foe.id), 'своя точка без башни снимает туман');
 });
 
 test('точки: турели вокруг своей точки, у критической точки строить нельзя; Нежить доплачивает энергию влиянием', () => {
@@ -432,15 +438,16 @@ test('карта «Ущелье Пепла»: на четверых, крест 
     const s = newState(4);
     assert.equal(s.players.length, 4);
     assert.equal(s.points.filter(p => p.relic).length, 8);
+    const K = MAPS[1].map.w / 320; // координаты исходной схемы 320×320, карта растянута
     const cap = unit(s, 0, 'captain'), b = unit(s, 0, 'builder');
-    [cap.x, cap.y] = [40, 120]; // западный карман, у скалы
-    applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 120, y: 120 }); // приказ прямо в скалу
+    [cap.x, cap.y] = [40 * K, 120 * K]; // западный карман, у скалы
+    applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 120 * K, y: 120 * K }); // приказ прямо в скалу
     run(s, 8);
-    assert.ok(cap.x <= 72 + 1.2 || cap.y >= 162 - 1.2, 'в скалу не залез');
-    applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 290, y: 180 }); run(s, 45);
-    assert.ok(cap.x > 270, 'прошёл тоннелем через развилку к восточному карману');
+    assert.ok(cap.x <= 72 * K + 1.2 || cap.y >= 162 * K - 1.2, 'в скалу не залез');
+    applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 290 * K, y: 180 * K }); run(s, 45 * K);
+    assert.ok(cap.x > 270 * K, 'прошёл тоннелем через развилку к восточному карману');
     s.players[0].req = 1e4; s.players[0].energy = 1e4; s.players[0].tier = 2; s.points[1].owner = 0;
-    assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: 110, y: 110 }) ?? '', /скалах/);
+    assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: 110 * K, y: 110 * K }) ?? '', /скалах/);
   } finally { setMap(0); }
 });
 
@@ -613,4 +620,23 @@ test('второй герой: другой архетип с тира III, св
   const hq = unit(s, 0, 'hq'), yard = spawn(s, 0, 'yard', hq.x - 20, hq.y), gate = spawn(s, 0, 'gate', hq.x + 20, hq.y);
   assert.equal(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }), undefined);
   assert.equal(applyCmd(s, 0, { c: 'summon', id: gate.id, v: 0 }), undefined, 'легенда вместе с титаном и героями');
+});
+
+test('баланс: огонь на марше, гранаты не бьют своих, пулемёты не берут танк, лимиты пехоты и техники раздельно', () => {
+  const s = newState(2, ['orks', 'order']);
+  const a = spawn(s, 1, 'guard', 120, 60), foe = spawn(s, 0, 'guard', 126, 60), hp = foe.hp; // стрелки Ордена
+  applyCmd(s, 1, { c: 'move', ids: [a.id], x: 120, y: 140 });
+  run(s, 0.5);
+  assert.ok(foe.hp < hp, 'на марше стреляют по врагу в досягаемости');
+  const own = spawn(s, 0, 'guard', 200, 100), ownHp = own.hp;
+  s.blasts.push({ x: 200, y: 100, t: 0, g: 0, owner: 0 }); run(s, 0.1);
+  assert.equal(own.hp, ownHp, 'граната своих не задевает');
+  const tank = spawn(s, 1, 'hveh', 300, 300), mg = spawn(s, 0, 'heavy', 312, 300), t0 = tank.hp;
+  void mg; run(s, 10);
+  assert.ok(t0 - tank.hp < maxHp('hveh') * 0.05, 'шуты Орды почти не царапают тяжёлую технику');
+  const p = s.players[0], hq = unit(s, 0, 'hq'); Object.assign(p, { tier: 4, req: 1e5, energy: 1e5 });
+  const bar = spawn(s, 0, 'barracks', hq.x + 12, hq.y), pool = spawn(s, 0, 'motorpool', hq.x - 14, hq.y);
+  for (let i = 0; i < 5; i++) applyCmd(s, 0, { c: 'train', id: bar.id, k: 'elite' });
+  for (let i = 0; i < 6; i++) spawn(s, 0, 'elite', 20, 20 + i * 3); // пехотный Легион почти полон
+  assert.equal(applyCmd(s, 0, { c: 'train', id: pool.id, k: 'hveh' }), undefined, 'пехота не съедает лимит техники');
 });

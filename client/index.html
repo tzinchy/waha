@@ -26,9 +26,6 @@
   #preview svg{height:92%;width:auto;overflow:visible;filter:drop-shadow(0 10px 8px rgba(0,0,0,.6))}
   .row{display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-4);flex-wrap:wrap}
   .row>label{width:76px;font:500 12px/16px var(--font-label);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted)}
-  .sws{display:flex;gap:var(--space-2)}
-  .sw{width:20px;height:20px;cursor:pointer;clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px),0 4px)}
-  .sw.on{outline:2px solid var(--focus-ring);outline-offset:2px}
   input[type=color]{width:30px;height:30px;padding:0;border:1px solid var(--gilt-700);background:var(--surface-000);cursor:pointer}
   input[type=text]{width:100%;height:44px;padding:0 var(--space-3);background:var(--surface-000);border:1px solid var(--gilt-700);color:var(--ink);font:400 16px/20px var(--font-body)}
   input[type=text]:focus{outline:2px solid var(--focus-ring);outline-offset:2px}
@@ -38,7 +35,6 @@
   .code{margin:0 0 var(--space-3);font:700 44px/1 var(--font-display);letter-spacing:.3em;color:var(--gilt-300)}
   #plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-2)}
   #plist li{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--surface-300);border:1px solid var(--hairline)}
-  #plist .dot{width:14px;height:14px;transform:rotate(45deg)}
   #plist .name{flex:1;font:500 15px/20px var(--font-label);letter-spacing:.06em}
   #plist .tag{font:400 12px/16px var(--font-mono);color:var(--ink-muted)}
   #plist .ready{color:var(--verdigris-300)}
@@ -96,7 +92,8 @@
   #hud-alerts .lc-alert{animation:lc-rise-in .18s var(--ease-settle) both}
   #toast{position:fixed;left:50%;bottom:var(--space-6);transform:translateX(-50%);z-index:50;min-width:320px}
   #mute{position:fixed;left:var(--space-4);bottom:var(--space-4);z-index:60}
-  #fullscreen{position:fixed;left:calc(var(--space-4) + 190px);bottom:var(--space-4);z-index:60}
+  #fullscreen{position:fixed;right:calc(var(--space-4) + 150px);top:var(--space-4);z-index:60}
+  body:has(#game:not(.hidden)) #fullscreen{right:var(--space-4);top:84px} /* в матче — под списком игроков, не на карточке юнита */
 
   /* игра */
   #game{position:fixed;inset:0}
@@ -152,6 +149,7 @@
   .w2d-zone{position:absolute;border-radius:50%;transform:scaleY(.55);pointer-events:none;opacity:0;transition:opacity .3s}
   .w2d-zone.owned{opacity:.55;background:radial-gradient(circle,color-mix(in srgb,var(--team) 22%,transparent) 60%,color-mix(in srgb,var(--team) 8%,transparent) 99%);border:2px dashed color-mix(in srgb,var(--team) 70%,transparent)}
   .w2d-zone.mine{opacity:.75}
+  .w2d.placing .w2d-ground::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;background-image:linear-gradient(rgba(243,230,196,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(243,230,196,.09) 1px,transparent 1px);background-size:52px 52px;background-position:-26px -26px} /* сетка размещения: клетка 2 м (GRID × S) */
   .w2d.placing .w2d-zone.mine{opacity:1;animation:lc-glow 1.2s infinite}
   .w2d.placing .w2d-zone.crit{opacity:.8;background:repeating-linear-gradient(45deg,rgba(200,40,40,.35) 0 10px,transparent 10px 20px);border:2px dashed var(--blood-300)}
   #hud-cap{grid-template-columns:auto auto 1fr!important;width:330px!important}
@@ -270,8 +268,6 @@
     <section class="lc-frame lc-frame--lg" id="editor">
       <h3 class="lc-frame__head"><span>Капитан</span></h3>
       <div id="preview"></div>
-      <div class="row"><label>Броня</label><div class="sws" id="armorSw"></div><input type="color" id="armorIn" aria-label="Свой цвет брони"></div>
-      <div class="row"><label>Отделка</label><div class="sws" id="trimSw"></div><input type="color" id="trimIn" aria-label="Свой цвет отделки"></div>
       <div class="row"><label>Сборка</label><div class="inline" id="arch"><button class="lc-btn lc-btn--sm lc-btn--ghost" data-a="assault">Штурм</button><button class="lc-btn lc-btn--sm lc-btn--ghost" data-a="commander">Командор</button><button class="lc-btn lc-btn--sm lc-btn--ghost" data-a="mystic">Мистик</button></div></div>
       <p class="arch-info" id="arch-info"></p>
     </section>
@@ -317,6 +313,7 @@
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 22V13h2v-3h2V7h3V4h4v3h3v3h2v3h2v9h-7v-6h-4v6Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-tier" style="font-family:var(--font-display)">I</span><span class="lc-res__label">Тир</span></div>
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21h20v-3h-3v-3h-3v-3h-2V3h-4v9H8v3H5v3H2Z" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="lc-res__value" id="hud-builders">0</span><span class="lc-res__label">Строители</span></div>
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 5.5V12c0 4.6-3.3 8-8 9.5C7.3 20 4 16.6 4 12V5.5Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9l4 3 4-3v3l-4 3-4-3Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-squads">0</span><span class="lc-res__label">Легион</span></div>
+      <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 5.5V12c0 4.6-3.3 8-8 9.5C7.3 20 4 16.6 4 12V5.5Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9l4 3 4-3v3l-4 3-4-3Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-motor">0</span><span class="lc-res__label">Техника</span></div>
       <div class="lc-res__item"><span class="lc-res__label" id="hud-extra"></span></div>
     </div>
     <section id="hud-cap" class="lc-frame lc-caphud"><button class="w2d-port" id="cap-port" title="Капитан: клик — выбрать и навести камеру"></button><div class="lc-capbadge"><span id="cap-lvl">1</span></div><div><div class="lc-caphud__name">Капитан</div><div class="lc-xp" id="cap-xp" style="--xp:0%"><div class="lc-xp__fill"></div></div><div class="lc-caphud__xp" id="cap-xpt"></div></div><div id="hud-heroes"></div></section>
