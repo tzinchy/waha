@@ -582,7 +582,8 @@ export class Game {
     $('hud-tier').textContent = ['I', 'II', 'III', 'IV', 'V'][this.tier - 1] ?? String(this.tier);
     let builders = 0, guards = 0, dead = false;
     for (const u of s.u) if (u[1] === this.slot) { if (u[2] === 1) builders++; else if (u[2] === 2) guards++; else if (u[2] === 0 && u[5] <= 0) dead = true; }
-    $('hud-req').textContent = this.fac() === 'clockwork' ? '—' : String(this.req);
+    $('hud-req').textContent = String(this.req);
+    $('hud-req').parentElement!.classList.toggle('hidden', this.fac() === 'clockwork'); // у Некронов влияния нет — ячейку не показываем
     $('hud-builders').textContent = `${builders}/${CAP.builder}`;
     const pop = [0, 0], add = (k: Kind) => { pop[VEHICLES.has(k) || k === 'arty' ? 1 : 0] += ROLES[k]?.pop ?? 0; }; // пехота и техника — раздельные лимиты
     for (const u of s.u) if (u[1] === this.slot) add(KINDS[u[2]]);
@@ -622,6 +623,8 @@ export class Game {
   }
 
 
+  /** Чем платит доход с точек: у Некронов (Династий) влияния нет — всё идёт в энергию. */
+  private incomeRes() { return this.fac() === 'clockwork' ? 'энергии' : 'влияния'; }
   /** Сколько сегментов стены можно оплатить сейчас (Династии платят энергией). */
   private wallBudget() { const one = this.price(STATS.wall.cost); return Math.floor(Math.min(one.cost ? this.req / one.cost : Infinity, one.en ? this.energy / one.en : Infinity)); }
   /** Секунд до выхода юнита из здания по проценту готовности. */
@@ -732,7 +735,7 @@ export class Game {
       }
       if (st.kind === 'post') {
         const up = POST_UP[st.lvl];
-        if (up) c.push({ act: 'upgrade', name: up.name, hot: 'U', icon: ICON.tier, ...this.price(up.cost, up.energy), req: this.tier < up.tier ? 'Нужен тир II' : undefined, prog: st.upg >= 0 ? st.upg : undefined, info: st.lvl === 1 ? '+12 влияния / 10 с, броня, захват дольше.' : 'Бастион: своя турель 12 м.' });
+        if (up) c.push({ act: 'upgrade', name: up.name, hot: 'U', icon: ICON.tier, ...this.price(up.cost, up.energy), req: this.tier < up.tier ? 'Нужен тир II' : undefined, prog: st.upg >= 0 ? st.upg : undefined, info: st.lvl === 1 ? `Доход точки +1 ${this.incomeRes()}/с, броня, захват дольше.` : 'Бастион: своя турель 12 м.' });
       }
       const up = UPGRADES[st.kind];
       if (up) c.push({ act: st.lvl >= 2 ? '' : 'upgrade', name: up.name, hot: 'U', icon: ICON.tier, ...(st.lvl >= 2 ? {} : this.price(up.cost, up.energy, up.relics)), done: st.lvl >= 2, req: this.tier < up.tier ? `Нужен тир ${up.tier}` : undefined, prog: st.upg >= 0 ? st.upg : undefined, info: 'Больше урона, брони и дальности.' });
@@ -801,7 +804,7 @@ export class Game {
       return { k, html: `<button class="lc-bcard${req ? ' lc-bcard--locked' : ''}" data-act="${req ? '' : k}" data-tipname="${name}" data-tipinfo="${info}${req ? ` ${req}.` : ''}" ${req ? 'aria-disabled="true"' : ''} ${this.place === k ? 'aria-pressed="true"' : ''}>${miniArt(artFor(k as Kind, this.fac(), 1))}<span><span class="lc-bcard__name">${name}</span><span class="lc-bcard__cost">${cost}</span></span><kbd>${hot}</kbd></button>` };
     };
     const tabs: [string, ReturnType<typeof card>[]][] = [
-      ['Экономика', [card('post', 'Реликварий', 'P', 'Ставится на захваченную точку: держит её и даёт +2 влияния/с.'), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своей точки или построек.'), card('pump', 'Насос', 'N', '+4 энергии/с. На жилу или у своей точки.')]],
+      ['Экономика', [card('post', 'Реликварий', 'P', `Ставится на захваченную точку: держит её и даёт +2 ${this.incomeRes()}/с.`), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своей точки или построек.'), card('pump', 'Насос', 'N', '+4 энергии/с. На жилу или у своей точки.')]],
       ['Армия', [card('barracks', 'Казарма', 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`), card('motorpool', PROD_NAME[this.fac()].motorpool, 'T', 'Вся техника и артиллерия фракции. Тир III.', this.tier < 3 ? 'Нужен тир III' : undefined), card('yard', PROD_NAME[this.fac()].yard, 'U', 'Строит титана. Одна армия — один титан. Тир IV.', this.tier < 4 ? 'Нужен тир IV' : undefined)]],
       ['Оборона', [card('turret', 'Турель', 'Y', 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'L', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
         ...(this.fac() === 'orks' ? [card('rturret', 'Ракетная бочка', 'R', 'Ракеты по площади. Копит Ярость.'), card('fturret', 'Огнемётная печь', 'O', 'Жжёт в упор. Копит Ярость.')] : []),
