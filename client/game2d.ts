@@ -79,19 +79,20 @@ export const ready2d = Promise.all([...ALL_ART]
   .map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgCache.set(p, t)))).then(() => undefined);
 
 /** Вставляет силуэт как живой SVG: класс lc-art красит его палитрой, lc-anim-* анимирует. */
-function art(path: string, widthPx: number) {
+export function art(path: string, widthPx: number) {
   const wrap = document.createElement('div');
   wrap.className = 'art';
   wrap.innerHTML = svgCache.get(path) ?? '';
   const svg = wrap.querySelector('svg')!;
   svg.removeAttribute('width'); svg.removeAttribute('height');
   svg.classList.add('lc-art', 'lc-anim-idle');
+  if (!svg.querySelector('.legL, .arm, .body')) svg.classList.add('norig'); // без разметки частей — анимируем фигуру целиком
   svg.style.width = widthPx + 'px';
   svg.style.animationDelay = svg.style.getPropertyValue('--d');
   for (const el of svg.querySelectorAll<SVGElement>('*')) el.style.animationDelay = `${-Math.random() * 2}s`; // отряды не дышат в унисон
   return wrap;
 }
-const setAnim = (svg: SVGElement, a: string) => {
+export const setAnim = (svg: SVGElement, a: string) => {
   if (svg.dataset.anim === a) return;
   svg.classList.remove('lc-anim-' + (svg.dataset.anim ?? 'idle'));
   svg.classList.add('lc-anim-' + a);
@@ -120,7 +121,7 @@ function mapSvg() {
 type View = {
   id: number; owner: number; kind: Kind; el: HTMLElement; body: HTMLElement; svgs: SVGElement[]; bar: HTMLElement; fg: HTMLElement; sel: HTMLElement;
   x: number; y: number; tx: number; ty: number; f: number; hp: number; build: number; q: number; dead: boolean; lvl: number; upg: number;
-  atkUntil: number; melee?: boolean; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; prog: number; prod: number;
+  atkUntil: number; melee?: boolean; atkFx?: number; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; prog: number; prod: number;
 };
 
 export class Game {
@@ -370,7 +371,7 @@ export class Game {
     let best: View | undefined, bd = 2.2;
     for (const v of this.views.values()) { const d = Math.hypot(v.tx - x1, v.ty - y1); if (d < bd && !v.dead) { bd = d; best = v; } }
     const melee = fx === 1 || fx === 2 || fx === 5;
-    if (best) { best.atkUntil = now + (melee ? 1300 : 700); best.melee = melee; }
+    if (best) { best.atkUntil = now + (melee ? 1300 : 700); best.melee = melee; best.atkFx = fx; }
     if (this.shots.length > 120) return;
     const ns = 'http://www.w3.org/2000/svg', g = document.createElementNS(ns, 'g');
     const h = best && !isStruct(best.kind) ? 1.2 : 2.2, X1 = x1 * S, Y1 = (y1 - h) * S, X2 = x2 * S, Y2 = (y2 - 1) * S;
@@ -381,6 +382,8 @@ export class Game {
     else if (fx === 3) g.innerHTML = `<line class="w2d-beam" x1="${X1}" y1="${Y1}" x2="${X2}" y2="${Y2}"/><circle class="w2d-hitring" cx="${X2}" cy="${Y2}" r="8"/>`;
     else if (fx === 4) g.innerHTML = `<path class="w2d-fire" d="M${X1} ${Y1} Q${(X1 + X2) / 2} ${Math.min(Y1, Y2) - 50} ${X2} ${Y2}"/><circle class="w2d-blast" cx="${X2}" cy="${Y2}" r="14"/>`;
     else if (fx === 5) g.innerHTML = [-5, 5].map(o => `<line class="w2d-thrust" x1="${X2 - 26 * dir}" y1="${Y2 + o}" x2="${X2 + 6 * dir}" y2="${Y2 + o}"/>`).join('') + `<circle class="w2d-spark" cx="${X2 + 4 * dir}" cy="${Y2}" r="3"/>`;
+    else if (fx === 19) { const d = `M${X1} ${Y1 - 30} Q${(X1 + X2) / 2} ${Math.min(Y1, Y2) - 70} ${X2} ${Y2}`; // три огненных шара очередью
+      g.innerHTML = [0, 1, 2].map(i => `<circle class="w2d-orb" r="${6 - i}" opacity="0"><set attributeName="opacity" to="1" begin="${i * 0.13}s"/><animateMotion dur=".45s" begin="${i * 0.13}s" fill="freeze" path="${d}"/><set attributeName="opacity" to="0" begin="${0.45 + i * 0.13}s"/></circle>`).join('') + `<circle class="w2d-blast late" cx="${X2}" cy="${Y2}" r="16"/>` + this.sparks(X2, Y2, 8, '#ff7a3a', 2 * S, 450); }
     else if (fx === 6) g.innerHTML = this.sparks(X2, Y2 - 10, 5, '#ffd38a', 10); // сварка: ремонт
     else if (fx === 18) g.innerHTML = `<circle class="w2d-nuke" cx="${X1}" cy="${Y1 + S}" r="${16 * S}"/><circle class="w2d-boomcore" cx="${X1}" cy="${Y1 + S}" r="${6 * S}"/>` + this.sparks(X1, Y1 + S, 40, '#fff2c8', 14 * S); // сверхоружие
     else if (fx === 15) { const hx = X1 + (X2 - X1) * 0.85, hy = (y1 - 2) * S + ((y2 - 1) * S - (y1 - 2) * S) * 0.85; g.innerHTML = `<path class="w2d-hex" d="M${hx - 10} ${hy}l5 -9h10l5 9l-5 9h-10z"/>`; } // попадание по куполу: вспышка гексагона
@@ -1229,7 +1232,9 @@ export class Game {
         v.body.classList.toggle('flip', Math.cos(v.f) < -0.1); // силуэты смотрят вправо
         const building = !moving && v.kind === 'builder' && sites.some(s => s.owner === v.owner && Math.hypot(s.x - v.x, s.y - v.y) < STATS[s.kind].radius + 3.5);
         const n = members(v.kind, v.hp);
-        const anim = v.dead ? 'death' : building ? 'work' : now < v.atkUntil ? (v.kind === 'guard' && !v.melee ? 'recoil' : 'attack') : moving ? 'walk' : 'idle';
+        const atk = ({ 1: 'chop', 2: 'claw', 5: 'thrust', 3: 'beam', 11: 'beam', 13: 'beam', 4: 'cast' } as Record<number, string>)[v.atkFx ?? -1] ?? (v.kind === 'guard' && !v.melee ? 'recoil' : 'attack'); // анимация по оружию
+        const heavyWalk = v.kind === 'titan' || v.kind === 'hveh', flyer = v.kind === 'deity' || (v.kind === 'healer' && this.fac(v.owner) === 'order');
+        const anim = v.dead ? 'death' : v.rise > 0 ? 'ritual' : building ? 'work' : now < v.atkUntil ? atk : moving ? (heavyWalk ? 'stride' : flyer ? 'hover' : 'walk') : flyer ? 'hover' : 'idle';
         v.svgs.forEach((sv, i) => {
           const alive = i < n;
           setAnim(sv, alive ? anim : 'death');

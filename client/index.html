@@ -176,10 +176,12 @@
   .lc-minimap .megat{font:700 5px/1 var(--font-label);fill:#fff;text-anchor:middle}
   /* в игре падение проигрывается один раз и тело остаётся лежать (в дизайн-системе анимация зациклена для превью) */
   .w2d .lc-anim-death > g:not(.fx),.w2d .lc-anim-death .ash1,.w2d .lc-anim-death .ash2,.w2d .lc-anim-death .ash3,.w2d .lc-anim-death .ash4{animation-iteration-count:1!important;animation-fill-mode:forwards!important}
+  .w2d-orb{fill:#ffd08a;stroke:#ff5a1e;stroke-width:3;filter:drop-shadow(0 0 7px #ff5a1e) drop-shadow(0 0 14px #c8321a)}
   .w2d-sparkline{stroke-width:2;stroke-linecap:square;animation:w2d-fade .28s steps(4) both}
   .w2d-arc{fill:none;stroke:var(--amber-300);stroke-width:3;stroke-dasharray:6 8;animation:w2d-dash .9s linear both}
   .w2d-boom{fill:rgba(240,120,40,.35);stroke:#f0a540;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:w2d-ring .6s steps(6) both}
   .w2d-boom.late{animation-delay:.5s}
+  .w2d-blast.late{animation-delay:.6s;animation-fill-mode:both}
   .w2d-boomcore{fill:#fff2c8;transform-box:fill-box;transform-origin:center;animation:w2d-ring .35s steps(4) both}
   .w2d-puff{fill:rgba(150,150,140,.55);transform-box:fill-box;transform-origin:center;animation:w2d-puff 1.4s ease-out both}
   .w2d-snipe{stroke:#ffffff;stroke-width:2;filter:drop-shadow(0 0 4px #9fe8ff);animation:w2d-fade .26s steps(3) both}

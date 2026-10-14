@@ -423,21 +423,21 @@ test('здоровье по лестнице, стены укрепляются,
   assert.ok(me.x - x0 < 8.6 * 0.85, 'замедлен колоколом'); // одержимые Синклита бегут 8.6 м/с, колокол режет на 20%
 });
 
-test('карта «Ущелье Пепла»: тоннель, скалы непроходимы, в карманах по 2 реликвария и жила', () => {
+test('карта «Ущелье Пепла»: на четверых, крест тоннелей, скалы непроходимы, в карманах по 2 реликвария и жила', () => {
   setMap(1);
   try {
-    const s = newState(2);
-    assert.equal(s.points.filter(p => p.relic).length, 4);
+    const s = newState(4);
+    assert.equal(s.players.length, 4);
+    assert.equal(s.points.filter(p => p.relic).length, 8);
     const cap = unit(s, 0, 'captain'), b = unit(s, 0, 'builder');
-    [cap.x, cap.y] = [60, 30]; // в кармане, у скалы
-    applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 140, y: 30 }); // приказ прямо в скалу
+    [cap.x, cap.y] = [40, 120]; // западный карман, у скалы
+    applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 120, y: 120 }); // приказ прямо в скалу
     run(s, 8);
-    assert.ok(cap.y >= 46 - 1.2 || cap.x <= 70, 'в скалу не залез');
-    applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 200, y: 60 }); run(s, 20);
-    assert.ok(cap.x > 190, 'прошёл тоннелем');
-    assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: 40, y: 10 }) ?? '', /./); // далеко/нельзя — хоть какая-то причина
+    assert.ok(cap.x <= 72 + 1.2 || cap.y >= 162 - 1.2, 'в скалу не залез');
+    applyCmd(s, 0, { c: 'move', ids: [cap.id], x: 290, y: 180 }); run(s, 45);
+    assert.ok(cap.x > 270, 'прошёл тоннелем через развилку к восточному карману');
     s.players[0].req = 1e4; s.players[0].energy = 1e4; s.players[0].tier = 2; s.points[1].owner = 0;
-    assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: 100, y: 40 }) ?? '', /скалах/);
+    assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: 110, y: 110 }) ?? '', /скалах/);
   } finally { setMap(0); }
 });
 

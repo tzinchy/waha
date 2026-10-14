@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><title>Пламенный идол</title>
+<defs>
+<linearGradient id="aiStone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6b5a52"/><stop offset=".55" stop-color="#3f322e"/><stop offset="1" stop-color="#231b19"/></linearGradient>
+<linearGradient id="aiBlood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8e2a22"/><stop offset="1" stop-color="#4a1410"/></linearGradient>
+<radialGradient id="aiFire" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff2c0"/><stop offset=".45" stop-color="#ff9a3a"/><stop offset="1" stop-color="#c8321a" stop-opacity="0"/></radialGradient>
+</defs>
+<ellipse cx="100" cy="188" rx="70" ry="9" fill="#000" opacity=".45"/>
+<!-- постамент -->
+<path d="M44 186L52 158H148L156 186Z" fill="url(#aiStone)" stroke="#1a1412" stroke-width="2"/>
+<path d="M56 158L62 140H138L144 158Z" fill="url(#aiStone)" stroke="#1a1412" stroke-width="2"/>
+<path d="M66 166H134M60 176H140" stroke="#1a1412" stroke-width="1.5" opacity=".7"/>
+<path d="M92 164l8 -6l8 6l-8 6z" fill="#c8321a" class="glowpulse"/>
+<!-- шипы-жаровни по бокам -->
+<path d="M40 186L46 120L54 186Z" fill="#2b211e" stroke="#1a1412" stroke-width="1.5"/>
+<path d="M146 186L154 120L160 186Z" fill="#2b211e" stroke="#1a1412" stroke-width="1.5"/>
+<circle cx="46" cy="116" r="9" fill="url(#aiFire)" class="glowpulse"/>
+<circle cx="154" cy="116" r="9" fill="url(#aiFire)" class="glowpulse"/>
+<!-- статуя: торс и сложенные лапы -->
+<g class="body">
+<path d="M70 140L74 96Q100 84 126 96L130 140Z" fill="url(#aiStone)" stroke="#1a1412" stroke-width="2"/>
+<path d="M78 104L90 132M122 104L110 132" stroke="#1a1412" stroke-width="2" opacity=".6"/>
+<path d="M64 112Q60 128 76 138L84 132Q72 126 76 112Z" fill="url(#aiStone)" stroke="#1a1412" stroke-width="1.5"/>
+<path d="M136 112Q140 128 124 138L116 132Q128 126 124 112Z" fill="url(#aiStone)" stroke="#1a1412" stroke-width="1.5"/>
+<path d="M90 98L100 116L110 98" fill="none" stroke="#c8321a" stroke-width="2" opacity=".8"/>
+<!-- голова с рогами -->
+<g class="head">
+<path d="M78 72Q56 50 50 22Q66 40 84 56Z" fill="#2b211e" stroke="#1a1412" stroke-width="2"/>
+<path d="M122 72Q144 50 150 22Q134 40 116 56Z" fill="#2b211e" stroke="#1a1412" stroke-width="2"/>
+<path d="M76 58Q100 44 124 58L120 90Q100 100 80 90Z" fill="url(#aiStone)" stroke="#1a1412" stroke-width="2"/>
+<path d="M82 66L94 70M118 66L106 70" stroke="#1a1412" stroke-width="3"/>
+<circle cx="90" cy="72" r="3.2" fill="#ffb347" class="glowpulse"/>
+<circle cx="110" cy="72" r="3.2" fill="#ffb347" class="glowpulse"/>
+<!-- пасть: отсюда летят шары -->
+<path d="M88 82Q100 96 112 82Q100 86 88 82Z" fill="url(#aiBlood)" stroke="#1a1412" stroke-width="1.5"/>
+<circle cx="100" cy="86" r="7" fill="url(#aiFire)" class="glowpulse"/>
+<path d="M90 82l2 4M96 84l1 4M104 84l-1 4M110 82l-2 4" stroke="#e8dcc0" stroke-width="1.5"/>
+</g>
+</g>
+</svg>
