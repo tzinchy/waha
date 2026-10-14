@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BattleEffect, CAPTURE_SITES, EQUIPMENT_UPGRADES, EXPANSION_ROSTER, type CaptureKind } from './expansion-assets.ts';
+import { BattleEffect, CAPTURE_SITES, type CaptureKind } from './expansion-assets.ts';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { assetArchive } from './asset-archive.ts';
 import { UNIT_ROLES, BUILDING_ROLES, VEHICLE_ROLES, FACTION_ART, FactionActor, factionBuilding, ROLE_MOTIONS, type BuildingRole, type FactionId, type Motion, type UnitRole } from './faction-models.ts';
