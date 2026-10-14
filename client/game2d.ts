@@ -1,8 +1,8 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
-import type { Arch } from '../shared/sim.ts';
+import { ARCHS, HERO, type Arch } from '../shared/sim.ts';
 import { resourceCost, DOOM_SHOT, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, VEHICLES, LEGION_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, WALL_STEP, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
-import { CAPTAIN_ART, DOOM_OF, FACTIONS, HQ_NAME, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
+import { ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, HQ_NAME, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
 import { paintMap } from './mappaint.ts';
@@ -126,7 +126,7 @@ function mapSvg() {
 type View = {
   id: number; owner: number; kind: Kind; el: HTMLElement; body: HTMLElement; svgs: SVGElement[]; bar: HTMLElement; fg: HTMLElement; sel: HTMLElement;
   x: number; y: number; tx: number; ty: number; f: number; hp: number; build: number; q: number; dead: boolean; lvl: number; upg: number;
-  atkUntil: number; melee?: boolean; atkFx?: number; respawn?: number; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; prog: number; prod: number;
+  atkUntil: number; melee?: boolean; atkFx?: number; respawn?: number; arch?: Arch; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; prog: number; prod: number;
 };
 
 export class Game {
@@ -262,7 +262,7 @@ export class Game {
   }
 
   // ---------- юниты ----------
-  private mk(id: number, owner: number, kind: Kind, x: number, y: number, variant = 0): View {
+  private mk(id: number, owner: number, kind: Kind, x: number, y: number, variant = 0, arch?: Arch): View {
     const el = document.createElement('div');
     el.className = 'w2d-unit ' + (owner === this.slot ? 'ally' : 'enemy');
     el.style.setProperty('--team', owner === this.slot ? 'var(--verdigris-500)' : 'var(--blood-300)'); // союзник патина, враг кровь (пресет)
@@ -275,7 +275,7 @@ export class Game {
     const ring = document.createElement('div'); ring.className = 'w2d-ring';
     for (const e of [sel, ring]) Object.assign(e.style, { width: r * 2.4 * S + 'px', height: r * 1.3 * S + 'px' });
     const body = document.createElement('div'); body.className = 'w2d-body';
-    const pl = this.players[owner], artPath = artFor(kind, pl.faction ?? 'order', 1, pl.captain.arch, variant);
+    const pl = this.players[owner], artPath = artFor(kind, pl.faction ?? 'order', 1, arch ?? pl.captain.arch, variant);
     const svgs: SVGElement[] = [];
     for (const [ox, oy] of FORM[kind] ?? [[0, 0]]) {
       const a = art(artPath, widthOf(kind, pl.faction ?? 'order') * S);
@@ -292,7 +292,7 @@ export class Game {
     if (kind === 'titan') { bar.style.bottom = widthOf(kind, pl.faction ?? 'order') * 1.36 * S + 'px'; el.classList.add('titan'); } // полоса над головой титана
     el.append(ring, sel, body, bar);
     this.place2(el, x, y);
-    return { id, owner, kind, el, body, svgs, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0, prod: 0, gear: 0, ch: [0, 0, 0], gcd: 0, sh: 0, frozen: 0, carry: 0, rise: 0, off: false };
+    return { id, owner, kind, el, body, svgs, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0, prod: 0, gear: 0, ch: [0, 0, 0], gcd: 0, sh: 0, frozen: 0, carry: 0, rise: 0, off: false, arch: kind === 'captain' ? arch ?? pl.captain.arch : undefined };
   }
 
   onSnap(s: Snap) {
@@ -302,14 +302,14 @@ export class Game {
     this.drawSmoke(s.sm ?? []);
     this.stopCd = s.ps?.[this.slot]?.[0] ?? 0; this.unlock = s.ps?.[this.slot]?.[1] ?? 0;
     this.drawStrikes(s); this.megaWatch(s);
-    for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog, gear, c0, c1, c2, gcd, sh, frozen, carry, rise, off, respawn] of s.u) {
+    for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog, gear, c0, c1, c2, gcd, sh, frozen, carry, rise, off, respawn, archI] of s.u) {
       const kind = KINDS[ki];
       if (kind === 'mine' && owner !== this.slot) continue; // чужие мины невидимы
       seen.add(id);
       let v = this.views.get(id);
       v?.el.classList.remove('ghost');
       if (!v) {
-        this.views.set(id, (v = this.mk(id, owner, kind, x / 10, y / 10, q)));
+        this.views.set(id, (v = this.mk(id, owner, kind, x / 10, y / 10, q, ARCHS[archI ?? -1])));
         if (kind === 'legend') v.el.classList.add('legend');
         if (!first && owner === this.slot && !isStruct(kind)) { audio.trained(); voice.say(this.fac(), kind, 'ready'); }
         if (!first && kind === 'titan') { voice.announce(owner === this.slot ? 'Титан вышел на поле боя.' : 'Внимание! Вражеский титан!'); this.alert(owner === this.slot ? 'ok' : 'danger', 'Титан на поле', this.kindName('titan', this.fac(owner)), x / 10, y / 10); this.shakeBy(12); }
@@ -319,7 +319,7 @@ export class Game {
         else if (hp < v.hp && now - this.lastAlert > 8000) { this.lastAlert = now; audio.alarm(); if (isStruct(kind)) voice.announce('Наша база атакована.'); else voice.say(this.fac(), kind, 'hurt'); this.pingMini(x / 10, y / 10); this.alert('danger', 'Нас атакуют', this.nameOf(v), x / 10, y / 10); }
       }
       v.tx = x / 10; v.ty = y / 10; v.f = face / 100; v.hp = hp; v.q = q; v.build = bp / 100; v.dead = hp <= 0;
-      const lvlArt = artFor(kind, this.players[owner].faction ?? 'order', lvl, this.players[owner].captain.arch, kind === 'legend' ? q : 0);
+      const lvlArt = artFor(kind, this.players[owner].faction ?? 'order', lvl, ARCHS[archI ?? -1] ?? this.players[owner].captain.arch, kind === 'legend' ? q : 0);
       if (lvl !== v.lvl && lvlArt !== v.artPath) { // апгрейд: новый силуэт уровня 2
         v.artPath = lvlArt;
         const a = art(lvlArt, widthOf(kind, this.players[owner].faction ?? 'order') * S * 1.1);
@@ -458,7 +458,20 @@ export class Game {
   /** Мини-портреты в левом верхнем углу: капитан (всегда) и титан (пока на поле). Клик — выбрать и навести камеру. */
   private portraits() {
     const own = (k: Kind) => [...this.views.values()].find(v => v.owner === this.slot && v.kind === k);
-    const cap = own('captain') ?? own('deity'), port = $('cap-port');
+    const main = archFor(this.fac(), this.players[this.slot]?.captain.arch ?? 'commander');
+    const cap = [...this.views.values()].find(v => v.owner === this.slot && v.kind === 'captain' && (v.arch ?? main) === main) ?? own('deity'), port = $('cap-port');
+    // ячейка героев: второй герой фракции (призыв с тира III) и легенды на поле
+    const slots: string[] = [];
+    for (const a of Object.keys(ARCH_OPTS[this.fac()]) as Arch[]) {
+      if (a === main) continue;
+      const o = ARCH_OPTS[this.fac()][a]!, h = [...this.views.values()].find(v => v.owner === this.slot && v.kind === 'captain' && v.arch === a);
+      const p = this.price(HERO.cost, HERO.energy, HERO.relics);
+      slots.push(h ? `<button class="w2d-port w2d-hero${h.dead ? ' dead' : ''}" data-focus="${h.id}" title="${o.name}: клик — выбрать">${portrait(h.artPath)}<i style="--v:${Math.max(0, h.hp / maxHp('captain')) * 100}%"></i>${h.dead ? `<span class="t">${h.respawn ? h.respawn + ' с' : 'пал'}</span>` : ''}</button>`
+        : `<button class="w2d-port w2d-hero summon${this.tier < HERO.tier ? ' locked' : ''}" data-hero="${a}" title="Призвать героя «${o.name}» — ${o.info} Цена: ◆ ${p.cost}${p.en ? ` ϟ ${p.en}` : ''} ✦ ${HERO.relics}.${this.tier < HERO.tier ? ' Нужен тир III.' : ''}">${portrait(artFor('captain', this.fac(), 1, a))}<b>+</b></button>`);
+    }
+    for (const l of [...this.views.values()].filter(v => v.owner === this.slot && v.kind === 'legend' && !v.dead)) slots.push(`<button class="w2d-port w2d-hero legend" data-focus="${l.id}" title="${FACTIONS[this.fac()].legends[l.q] ?? 'Легенда'}: клик — выбрать">${portrait(l.artPath)}<i style="--v:${Math.max(0, l.hp / maxHp('legend')) * 100}%"></i></button>`);
+    const heroes = $('hud-heroes'), hh = slots.join('');
+    if (heroes.innerHTML !== hh) heroes.innerHTML = hh;
     if (cap) {
       const key = cap.artPath + (cap.dead ? 'd' : '');
       if (port.dataset.k !== key) { port.dataset.k = key; port.innerHTML = portrait(cap.artPath) + '<i></i><span class="t hidden"></span>'; if (needsTint(cap.artPath, this.fac())) (port.firstElementChild as HTMLElement).style.filter = ROSTER[this.fac()].tint; }
@@ -918,6 +931,7 @@ export class Game {
     $('out-watch').addEventListener('click', () => this.watch(), sig);
     $('cap-port').addEventListener('click', e => { e.stopPropagation(); const v = [...this.views.values()].find(u => u.owner === this.slot && (u.kind === 'captain' || u.kind === 'deity')); if (v) this.focus(v.id); }, sig);
     $('hud-cap').addEventListener('click', () => { if (this.learnHtml) { this.lvlUpOpen = true; this.lvlUpAt = performance.now(); $('hud-levelup').classList.remove('hidden'); $('hud-cap').classList.remove('has-pts'); } }, sig);
+    $('hud-heroes').addEventListener('click', e => { e.stopPropagation(); const t = (e.target as HTMLElement).closest<HTMLElement>('[data-focus],[data-hero]'); if (!t) return; if (t.dataset.focus) this.focus(Number(t.dataset.focus)); else this.cmd({ c: 'hero', a: t.dataset.hero as Arch }); }, sig);
     $('hud-queue').addEventListener('click', e => { const t = (e.target as HTMLElement).closest<HTMLElement>('[data-b]'); if (t) this.cmd({ c: 'cancel', id: Number(t.dataset.b), i: Number(t.dataset.i) }); }, sig); // отмена найма
     $('hud-levelup').addEventListener('click', e => { const a = (e.target as HTMLElement).closest<HTMLElement>('[data-learn]')?.dataset.learn; if (a) this.cmd({ c: 'learn', a: Number(a) }); }, sig);
     const hc = $('hud-cmd');

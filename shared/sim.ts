@@ -1,4 +1,4 @@
-import type { FactionId } from './factions.ts';
+import { ARCH_OPTS, type FactionId } from './factions.ts';
 
 // Вся игровая логика. Чистые функции без DOM и сети: сервер гонит step(), клиент только рисует snapshot().
 import { MAP, HQ_POS, POINTS, RELICS, VENTS, BLOCKS, blocked, setMap, MAPS } from './mapdata.ts';
@@ -220,7 +220,11 @@ export function canLearn(p: Player, a: number) {
   if (t > 0 && !(p.abil & (1 << (a - 1)))) return 'Сначала предыдущая способность ветки';
 }
 /** Рядом со своим капитаном нужной сборки (аура Командора — 12 м). */
-const nearArch = (s: State, u: Unit, a: Arch) => { if (s.players[u.owner].arch !== a) return false; const c = s.units.find(v => v.owner === u.owner && v.kind === 'captain' && v.hp > 0); return !!c && dist(c, u) < 12; };
+/** Архетип героя: у призванного — свой, у первого капитана — выбранный в лобби. */
+export const archOf = (s: State, u: Unit): Arch => u.arch ?? s.players[u.owner].arch;
+const nearArch = (s: State, u: Unit, a: Arch) => s.units.some(c => c.owner === u.owner && c.kind === 'captain' && c.hp > 0 && archOf(s, c) === a && dist(c, u) < 12);
+/** Второй герой (другой архетип фракции) — с тира III из ячейки героя. */
+export const HERO = { cost: 400, energy: 250, relics: 2, tier: 3 };
 const capOf = (s: State, owner: number) => s.units.find(u => u.owner === owner && (u.kind === 'captain' || u.kind === 'deity'));
 /** Летают: Бог-Механизм и Архангел Ордена — здания их не останавливают. */
 export const flies = (k: Kind, f: FactionId) => k === 'deity' || (k === 'healer' && f === 'order');
@@ -282,6 +286,7 @@ export type Unit = {
   q: number; prog: number;      // счётчик: исследование/призыв; у найма — длина que
   que: Kind[];                  // очередь найма (штаб, казармы, кузня)
   paid: number[][];             // что списано за каждое место очереди: [влияние, энергия, реликвии, останки] — возврат при отмене
+  arch?: Arch;                  // архетип призванного героя (у первого капитана — из лобби)
   gear: number; ch: number[]; gcd: number; // снаряжение отряда: биты купленного, заряды, перезарядка броска
   sh: number; off: number;      // щит: личный (дрон) или пул купола-эгиды; off — купол пробит, секунд до включения
   frozen: number;               // Остановка времени: секунд неподвижности
@@ -325,6 +330,7 @@ export type Cmd =
   | { c: 'stop'; ids: number[] }
   | { c: 'train'; id: number; k?: Kind }
   | { c: 'cancel'; id: number; i: number }
+  | { c: 'hero'; a: Arch }
   | { c: 'build'; ids: number[]; kind: Buildable; x: number; y: number }
   | { c: 'assist'; ids: number[]; id: number }
   | { c: 'reinforce'; ids: number[] }
@@ -404,12 +410,12 @@ const fac = (s: State, owner: number) => s.players[owner].faction;
 const nearOwn = (s: State, owner: number, x: number, y: number, r: number, kinds?: Kind[]) =>
   s.units.some(u => u.owner === owner && u.hp > 0 && u.build >= 1 && isStruct(u.kind) && (!kinds || kinds.includes(u.kind)) && dist(u, { x, y }) < r + STATS[u.kind].radius);
 /** Множитель скорости: Орден медленнее, Орда в ВААГХ быстрее. */
-const speedMul = (s: State, u: Unit) => { const p = s.players[u.owner]; return (s.units.some(w => w.kind === 'bell' && w.owner !== u.owner && w.build >= 1 && w.hp > 0 && dist(w, u) < BELL.r) ? BELL.speed : 1) * (u.kind === 'captain' && p.arch === 'assault' ? 1.15 : 1) * (u.carry ? 0.6 : 1) * (u.kind === 'guard' && isMelee('guard', p.faction) ? MELEE_GUARD.speed / STATS.guard.speed : 1) * (p.faction === 'order' ? 0.9 : p.faction === 'orks' && p.waagh > 0 ? 1.3 : 1) * (has(p, 7) ? 1.1 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 2 : 1); };
+const speedMul = (s: State, u: Unit) => { const p = s.players[u.owner]; return (s.units.some(w => w.kind === 'bell' && w.owner !== u.owner && w.build >= 1 && w.hp > 0 && dist(w, u) < BELL.r) ? BELL.speed : 1) * (u.kind === 'captain' && archOf(s, u) === 'assault' ? 1.15 : 1) * (u.carry ? 0.6 : 1) * (u.kind === 'guard' && isMelee('guard', p.faction) ? MELEE_GUARD.speed / STATS.guard.speed : 1) * (p.faction === 'order' ? 0.9 : p.faction === 'orks' && p.waagh > 0 ? 1.3 : 1) * (has(p, 7) ? 1.1 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 2 : 1); };
 /** Урон атакующего: ВААГХ +30%, Синклит вне Порчи −10%, ближний бой Консенсуса −40%. */
 function dmgMul(s: State, u: Unit) {
   const p = s.players[u.owner];
   const fear = (s.units.some(w => w.kind === 'elite' && w.owner !== u.owner && fac(s, w.owner) === 'undead' && w.hp > 0 && dist(w, u) < 10) ? 0.8 : 1) * (s.units.some(w => w.kind === 'bell' && w.owner !== u.owner && w.build >= 1 && w.hp > 0 && dist(w, u) < BELL.r) ? BELL.dmg : 1); // Плакальщица и Колокол Скорби
-  const capA = (u.kind === 'captain' && p.arch === 'assault' ? 1.3 : 1) * fear, cmdA = !isStruct(u.kind) && u.kind !== 'captain' && nearArch(s, u, 'commander') ? 1.1 : 1;
+  const capA = (u.kind === 'captain' && archOf(s, u) === 'assault' ? 1.3 : 1) * fear, cmdA = !isStruct(u.kind) && u.kind !== 'captain' && nearArch(s, u, 'commander') ? 1.1 : 1;
   const r = capA * cmdA * (u.kind === 'guard' ? (has(p, 2) ? 1.1 : 1) * (has(p, 9) ? 1.1 : 1) : 1) * (u.kind === 'turret' && has(p, 5) ? 1.25 : 1) * (u.kind === 'captain' && has(p, 10) ? 1.2 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 1.5 : 1) * (u.kind === 'guard' && nearCapWith(s, u, 6, 12) ? 1.15 : 1);
   return r * factionDmg(s, u, p);
 }
@@ -424,7 +430,7 @@ function armorMul(s: State, t: Unit) {
   const f = fac(s, t.owner), p = s.players[t.owner];
   if (isStruct(t.kind)) return (has(p, 4) ? 0.8 : 1) * (t.kind === 'post' && t.lvl >= 2 ? 0.5 : 1) * (t.kind === 'wall' ? 0.6 : 1);
   if (s.units.some(b => b.kind === 'bunker' && b.owner === t.owner && b.build >= 1 && b.hp > 0 && dist(b, t) < STATS.bunker.radius + 3)) return 0.5; // крипта-бункер
-  const res = (s.units.some(l => l.kind === 'lighthouse' && l.owner === t.owner && l.build >= 1 && l.hp > 0 && dist(l, t) < LIGHTHOUSE.r) ? LIGHTHOUSE.armor : 1) * (t.kind === 'captain' && p.arch === 'assault' ? 0.9 : 1) * (t.kind !== 'captain' && nearArch(s, t, 'commander') ? 0.9 : 1) * (s.units.some(a => a.kind === 'support' && a.owner === t.owner && a.hp > 0 && dist(a, t) < 10) ? (f === 'order' ? 0.75 : 0.85) : 1) // Кадильщица Ордена: Свет веры * (nearCapWith(s, t, 0, 12) ? 0.85 : 1) * (t.kind === 'guard' && has(p, 0) ? 0.9 : 1) * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
+  const res = (s.units.some(l => l.kind === 'lighthouse' && l.owner === t.owner && l.build >= 1 && l.hp > 0 && dist(l, t) < LIGHTHOUSE.r) ? LIGHTHOUSE.armor : 1) * (t.kind === 'captain' && archOf(s, t) === 'assault' ? 0.9 : 1) * (t.kind !== 'captain' && nearArch(s, t, 'commander') ? 0.9 : 1) * (s.units.some(a => a.kind === 'support' && a.owner === t.owner && a.hp > 0 && dist(a, t) < 10) ? (f === 'order' ? 0.75 : 0.85) : 1) // Кадильщица Ордена: Свет веры * (nearCapWith(s, t, 0, 12) ? 0.85 : 1) * (t.kind === 'guard' && has(p, 0) ? 0.9 : 1) * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
   return res * factionArmor(f, s, t);
 }
 function factionArmor(f: FactionId, s: State, t: Unit) {
@@ -477,6 +483,18 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     const e = pay(p, trainCost(p.faction, what), r.energy ?? 0, r.relics ?? 0);
     if (e) return e;
     b.que.push(what); b.paid.push([c.req, c.energy, r.relics ?? 0, 0]);
+    return;
+  }
+  if (cmd.c === 'hero') { // призыв второго героя у штаба
+    const a = cmd.a;
+    if (!ARCHS.includes(a) || !ARCH_OPTS[p.faction][a] || a === p.arch) return;
+    if (s.units.some(u => u.owner === owner && u.kind === 'captain' && archOf(s, u) === a)) return 'Этот герой уже в армии';
+    if (p.tier < HERO.tier) return 'Нужен тир III';
+    const hq = s.units.find(u => u.owner === owner && u.kind === 'hq' && u.hp > 0 && u.build >= 1);
+    if (!hq) return 'Нужен штаб';
+    const e = pay(p, HERO.cost, HERO.energy, HERO.relics);
+    if (e) return e;
+    spawn(s, owner, 'captain', ...nearHq(hq.x, hq.y, STATS.hq.radius + 3)).arch = a;
     return;
   }
   if (cmd.c === 'cancel') { // отмена места в очереди: ресурсы возвращаются полностью
@@ -977,7 +995,7 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
       if (sq) { p.revive = 0; sq.hp = Math.min(maxHp(sq.kind), sq.hp + STATS[sq.kind].hp); if (s.shots.length < 200) s.shots.push([sq.x, sq.y, sq.x, sq.y - 0.1, 16]); }
     }
   }
-  if (u.kind === 'captain' && s.players[u.owner].arch === 'mystic') for (const v of s.units) if (v.owner === u.owner && v !== u && !isStruct(v.kind) && !VEHICLES.has(v.kind) && v.hp > 0 && dist(v, u) < 10) v.hp = Math.min(maxHp(v.kind), v.hp + maxHp(v.kind) * 0.015 * dt); // Мистик: лампа лечит
+  if (u.kind === 'captain' && archOf(s, u) === 'mystic') for (const v of s.units) if (v.owner === u.owner && v !== u && !isStruct(v.kind) && !VEHICLES.has(v.kind) && v.hp > 0 && dist(v, u) < 10) v.hp = Math.min(maxHp(v.kind), v.hp + maxHp(v.kind) * 0.015 * dt); // Мистик: лампа лечит
   if (u.kind === 'plague' && u.build >= 1 && s.tick % 20 === 0) for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && !isStruct(v.kind) && dist(v, u) < PLAGUE.r) hurt(s, v, maxHp(v.kind) * PLAGUE.pct, u.owner); // Чумной шпиль: −1%/с
   if (u.kind === 'pyre' && u.build >= 1 && s.tick % 4 === 0) for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && !isStruct(v.kind) && dist(v, u) < PYRE.r) { hurt(s, v, PYRE.dps * dt * 4, u.owner); if (s.shots.length < 200 && Math.random() < 0.3) s.shots.push([u.x, u.y, v.x, v.y, FX.fire]); } // Огненная яма
   if (u.kind === 'healer') for (const v of s.units) if (v.owner === u.owner && v !== u && !isStruct(v.kind) && !VEHICLES.has(v.kind) && v.hp > 0 && dist(v, u) < 15) v.hp = Math.min(maxHp(v.kind), v.hp + maxHp(v.kind) * ROLES.healer!.heal! * dt); // целитель: 5%/с
@@ -1042,7 +1060,7 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
     const d = dist(u, target) - STATS[target.kind].radius;
     u.face = Math.atan2(target.y - u.y, target.x - u.x);
     const melee = u.kind === 'guard' && isMelee('guard', fac(s, u.owner));
-    const mystic = u.kind === 'captain' && s.players[u.owner].arch === 'mystic'; // посох-лампа и кадило: дальше и по площади
+    const mystic = u.kind === 'captain' && archOf(s, u) === 'mystic'; // посох-лампа и кадило: дальше и по площади
     const tooClose = (MIN_RANGE[u.kind] ?? 0) > d; // артиллерия не бьёт в упор
     if (!tooClose && d <= (u.kind === 'post' && u.lvl >= 3 ? 12 : melee ? MELEE_GUARD.range : mystic ? 9 : st.range) * rangeMul(s, u) + (u.lvl > 1 ? LVL2.range[u.kind] ?? 0 : 0) + ((u.kind === 'post' || u.kind === 'turret') && hasR(s, u.owner, 8) ? 3 : 0)) {
       if (u.cd === 0) {
@@ -1200,7 +1218,7 @@ export function snapshot(s: State): Snap {
     vp: s.vp.map(Math.ceil), d: [...s.died], mg: s.units.filter(u => MEGA.has(u.kind) && u.hp > 0).map(u => [u.id, Math.round(u.x * 10), Math.round(u.y * 10), KINDS.indexOf(u.kind), u.owner, Math.floor(u.build * 100)]), /* мегапостройки видят все */ ss: s.strikes.map(st => [Math.round(st.x * 10), Math.round(st.y * 10), Math.ceil(st.t), st.owner]),
     tick: s.tick,
     // [id, owner, kind, x*10, y*10, hp, face*100, очередь, стройка %, пополняется, уровень, апгрейд %, найм текущего %]
-    u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), (u.hp > 0 ? Math.max(1, Math.round(u.hp)) : 0), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : u.kind === 'post' ? 12 : UPGRADES[u.kind]!.time)) * 100), prodPct(u), u.gear, ...u.ch, Math.ceil(u.gcd), Math.round(u.sh), Math.ceil(u.frozen * 10), u.carry, Math.ceil(u.rise * 10), u.off > 0 ? 1 : 0, u.kind === 'captain' && u.hp <= 0 ? Math.max(0, Math.ceil(CAPTAIN_RESPAWN + 2 * (s.players[u.owner]?.clvl ?? 1) - u.dead)) : 0]), // 23 — секунд до возрождения капитана // 18 щит, 19 заморозка, 20 тащит/тащат, 21 вознесение, 22 купол пробит
+    u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), (u.hp > 0 ? Math.max(1, Math.round(u.hp)) : 0), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : u.kind === 'post' ? 12 : UPGRADES[u.kind]!.time)) * 100), prodPct(u), u.gear, ...u.ch, Math.ceil(u.gcd), Math.round(u.sh), Math.ceil(u.frozen * 10), u.carry, Math.ceil(u.rise * 10), u.off > 0 ? 1 : 0, u.kind === 'captain' && u.hp <= 0 ? Math.max(0, Math.ceil(CAPTAIN_RESPAWN + 2 * (s.players[u.owner]?.clvl ?? 1) - u.dead)) : 0, u.kind === 'captain' ? ARCHS.indexOf(archOf(s, u)) : -1]), // 24 — архетип героя // 23 — секунд до возрождения капитана // 18 щит, 19 заморозка, 20 тащит/тащат, 21 вознесение, 22 купол пробит
     ps: s.players.map(p => [Math.ceil(p.stopCd), p.unlock]), // 13 снаряжение, 14–16 заряды, 17 перезарядка броска
     qk: Object.fromEntries(s.units.filter(u => u.que.length).map(u => [u.id, u.que.map(k => KINDS.indexOf(k))])),
     sm: [...s.smoke.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), Math.ceil(c.t)]), ...s.plagues.map(c => [Math.round(c.x * 10), Math.round(c.y * 10), Math.ceil(c.t), c.fire ? 2 : 1])],

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
+import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, REMAINS_PER_SQUAD, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -596,4 +596,21 @@ test('отмена найма из очереди возвращает ресу�
   assert.equal(b.que.length, 0);
   assert.equal(b.prog, 0);
   assert.ok(p.req >= 1000, 'влияние вернулось (плюс доход за 2 с)');
+});
+
+test('второй герой: другой архетип с тира III, свой бонус, один на армию; легенда и титан — вместе с ним', () => {
+  const s = newState(2, ['order', 'undead'], ['commander', 'commander']), p = s.players[0];
+  Object.assign(p, { req: 1e4, energy: 1e4, relics: 50 });
+  assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /тир III/);
+  p.tier = 5;
+  assert.equal(applyCmd(s, 0, { c: 'hero', a: 'commander' }), undefined, 'свой архетип — молча нет');
+  assert.equal(s.units.filter(u => u.owner === 0 && u.kind === 'captain').length, 1);
+  assert.equal(applyCmd(s, 0, { c: 'hero', a: 'assault' }), undefined);
+  const heroes = s.units.filter(u => u.owner === 0 && u.kind === 'captain');
+  assert.equal(heroes.length, 2);
+  assert.equal(archOf(s, heroes[1]), 'assault');
+  assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /уже/);
+  const hq = unit(s, 0, 'hq'), yard = spawn(s, 0, 'yard', hq.x - 20, hq.y), gate = spawn(s, 0, 'gate', hq.x + 20, hq.y);
+  assert.equal(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }), undefined);
+  assert.equal(applyCmd(s, 0, { c: 'summon', id: gate.id, v: 0 }), undefined, 'легенда вместе с титаном и героями');
 });
