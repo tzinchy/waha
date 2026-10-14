@@ -3,7 +3,7 @@ import { BattleEffect, CAPTURE_SITES, type CaptureKind } from './expansion-asset
 import { BATTLE_MAPS } from './battle-maps.ts';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { assetArchive } from './asset-archive.ts';
-import { UNIT_ROLES, BUILDING_ROLES, VEHICLE_ROLES, FACTION_ART, FactionActor, factionBuilding, ROLE_MOTIONS, type BuildingRole, type FactionId, type Motion, type UnitRole } from './faction-models.ts';
+import { UNIT_ROLES, BUILDING_ROLES, VEHICLE_ROLES, FACTION_ART, FactionActor, factionBuilding, upgradeFactionBuilding, ROLE_MOTIONS, type BuildingRole, type FactionId, type Motion, type UnitRole } from './faction-models.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const ids = Object.keys(FACTION_ART) as FactionId[];
@@ -162,6 +162,7 @@ const stage = $('stage'); stage.style.position = 'relative'; stage.append(previe
 let batchExport=false;
 const actors: FactionActor[] = [];
 const buildings = new Map<FactionId, THREE.Group>();
+const buildingTiers = new Map<FactionId, number>();
 const productionGlows = new Map<FactionId, { light: THREE.PointLight; activeUntil: number; mats: THREE.MeshStandardMaterial[] }>();
 function startProduction(faction: FactionId, duration = 6) {
   const building = buildings.get(faction);
@@ -197,10 +198,23 @@ for (let i = 0; i < 11; i++) {
   const wall = new THREE.Mesh(new THREE.BoxGeometry(2.5, h * 0.36, 0.4), stone); wall.position.set(x + 1.35, h * 0.18, -8); wall.castShadow = true; ruins.add(wall);
   const cap = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.5, 4), stone); cap.position.set(x, h + 0.25, -8); ruins.add(cap);
 }
+function upgradeSelectedBuilding() {
+  const tier = Math.min(3, (buildingTiers.get(selected) ?? 1) + 1);
+  buildingTiers.set(selected, tier);
+  const model = buildings.get(selected);
+  if (model) upgradeFactionBuilding(model, selected, tier);
+  startProduction(selected, 2);
+  status(FACTION_ART[selected].name + ': здание улучшено до уровня ' + tier);
+}
+const tierButton = document.createElement('button');
+tierButton.textContent = 'Улучшить здание / изменить модель';
+tierButton.style.cssText = 'padding:8px 10px;background:#292e34;color:#f1dcb0;border:1px solid #877050;border-radius:5px;cursor:pointer';
+tierButton.onclick = upgradeSelectedBuilding;
+previewPanel.append(tierButton);
 function populateBuildings() {
   for (const id of ids) {
     const old = buildings.get(id); if (old) scene.remove(old);
-    const g = factionBuilding(id); g.position.set(centerX(id), 0, -2.6); g.rotation.y = 0.12; buildings.set(id, g); scene.add(g);
+    const g = factionBuilding(id); upgradeFactionBuilding(g, id, buildingTiers.get(id) ?? 1); g.position.set(centerX(id), 0, -2.6); g.rotation.y = 0.12; buildings.set(id, g); scene.add(g);
   }
 }
 populateBuildings();
