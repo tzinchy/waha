@@ -1,0 +1,16 @@
+<!-- @dsCard group="Unreal Engine 5" height=560 subtitle="как перенести систему в UE5: таблицы данных, UMG, GAS, Niagara" -->
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>UnrealEngine5</title>
+<style>
+  html, body { margin: 0; }
+  body { background: var(--surface-100); color: var(--ink); font-family: var(--font-body); padding: 24px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .cap { font: 500 11px/14px var(--font-label); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-muted); margin: 0 0 8px; }
+  .note { font: 400 13px/18px var(--font-body); color: var(--ink-muted); margin: 12px 0 0; max-width: 760px; }
+</style>
+</head>
+<body>
+<table class="lc-timing"><thead><tr><th>Часть системы</th><th>В UE5</th><th>Как</th></tr></thead><tbody><tr><td><b>Цвета-токены</b></td><td>Data Table по фракции</td><td>exports/ue5/DT_UI_*.csv — цвета уже в линейном пространстве (FLinearColor)</td></tr><tr><td><b>Палитра мира и поверхности моделей</b></td><td>Data Table + Material Parameter Collection</td><td>exports/ue5/DT_ArtPalette.csv, DT_Surfaces.csv: цвет, metallic, roughness, свечение</td></tr><tr><td><b>Шрифты</b></td><td>Font Face + Composite Font</td><td>Cormorant SC, Oswald, Spectral, PT Mono — лицензия OFL, встраиваются; проверьте кириллицу в Composite Font</td></tr><tr><td><b>HUD и меню</b></td><td>UMG + Common UI</td><td>Common UI даёт навигацию с геймпада и фокус: стиль фокуса = focus-ring</td></tr><tr><td><b>Фаски и рамки</b></td><td>UI Material (SDF) + 9-slice Brush</td><td>параметр Chamfer = chamfer-md; двойная рамка — 9-slice текстура</td></tr><tr><td><b>Способности, тиры, уровни капитана</b></td><td>Gameplay Ability System</td><td>Abilities — способности, Gameplay Effects — снаряжение и тиры, Attributes — опыт и уровень</td></tr><tr><td><b>Ресурсы</b></td><td>Attribute Set игрока / Subsystem</td><td>событие изменения → всплывающее число и .is-tick в панели</td></tr><tr><td><b>Массовая пехота</b></td><td>Mass Entity + Animation to Texture</td><td>тысячи пехотинцев на вершинных анимациях; скелет — только для капитанов и титанов</td></tr><tr><td><b>Сочность</b></td><td>Anim Montage + Notifies, Camera Shake</td><td>стоп-кадр: Custom Time Dilation ≈0.05 на 60–90 мс; тряска по массе</td></tr><tr><td><b>Частицы</b></td><td>Niagara</td><td>искры, пыль, пепел, дым; цвета из DT_ArtPalette</td></tr><tr><td><b>Здания и стройка</b></td><td>Nanite + материал с dissolve</td><td>параметр Progress 0–1 режет модель по высоте; кромка art-brass-lit</td></tr><tr><td><b>Декали на земле</b></td><td>Decal Material</td><td>кольца выделения, сетка стройки, зоны захвата — цвета из UI-токенов</td></tr><tr><td><b>Карты</b></td><td>Landscape + PCG</td><td>разброс руин и укрытий по правилам MapExample</td></tr></tbody></table>
+</body>
+</html>

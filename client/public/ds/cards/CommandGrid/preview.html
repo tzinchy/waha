@@ -1,0 +1,35 @@
+<!-- @dsCard group="HUD" height=230 subtitle="lc-cmd — команды и способности 4×3" -->
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>CommandGrid</title>
+<style>
+  html, body { margin: 0; }
+  body { background: var(--surface-100); color: var(--ink); font-family: var(--font-body); padding: 24px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .col { display: grid; gap: 16px; }
+  .cap { font: 500 11px/14px var(--font-label); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-muted); margin: 0 0 8px; }
+</style>
+</head>
+<body>
+<div class="row" style="align-items:flex-start; gap:24px">
+  <div class="lc-cmd" role="toolbar" aria-label="Команды">
+    <button class="lc-cmd__cell "><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l7 7-7 7M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="lc-cmd__key">M</span></button>
+    <button class="lc-cmd__cell "><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11h8v2H8z" fill="currentColor"/></svg><span class="lc-cmd__key">S</span></button>
+    <button class="lc-cmd__cell "><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v8c0 4-3 7-7 8.5C8 19 5 16 5 12Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 7h2v9h-2zM8 10h8v2H8z" fill="currentColor"/></svg><span class="lc-cmd__key">H</span></button>
+    <button class="lc-cmd__cell lc-cmd__cell--active" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 17.5 6.5M14 4h6v6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 14l6 6-2 2-6-6Z" fill="currentColor"/></svg><span class="lc-cmd__key">A</span></button>
+    <button class="lc-cmd__cell "><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21h20v-3h-3v-3h-3v-3h-2V3h-4v9H8v3H5v3H2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/></svg><span class="lc-cmd__key">B</span><span class="lc-cmd__cost">150</span></button>
+    <button class="lc-cmd__cell lc-cmd__cell--cooldown" style="--cd:62%"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 1.5-4.5 3-6 0 2 1 3 2 3 0-3 0-6 1-9Z" fill="currentColor"/></svg><span class="lc-cmd__key">F</span><span class="lc-cmd__timer">12</span></button>
+    <button class="lc-cmd__cell lc-cmd__cell--locked" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 15 7H9Z" fill="currentColor"/><path d="M7 9h10l-2 9H9Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 21h12" stroke="currentColor" stroke-width="2"/></svg><span class="lc-cmd__key">L</span><span class="lc-cmd__cost">2</span></button>
+    <span class="lc-cmd__cell lc-cmd__cell--empty"></span>
+    <span class="lc-cmd__cell lc-cmd__cell--empty"></span>
+    <span class="lc-cmd__cell lc-cmd__cell--empty"></span>
+    <span class="lc-cmd__cell lc-cmd__cell--empty"></span>
+    <span class="lc-cmd__cell lc-cmd__cell--empty"></span>
+  </div>
+  <div style="max-width:230px; font:400 13px/18px var(--font-body); color:var(--ink-muted)">
+    <p class="cap">Состояния</p>
+    A — активная команда · B — с ценой · F — перезарядка, 12 с · L — нет ресурса (цена <span style="color:var(--blood-300)">кровью</span>) · пустые слоты
+  </div>
+</div>
+</body>
+</html>

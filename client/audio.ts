@@ -106,14 +106,6 @@ class Sound {
   shot(pan = 0) { this.burst(0.09, 'bandpass', rnd(1700, 2600), { gain: 0.16, pan }); this.tone(rnd(150, 200), 0.09, { gain: 0.14, to: 60, pan }); }
   hit(pan = 0) { this.burst(0.12, 'lowpass', 700, { gain: 0.22, pan }); this.tone(95, 0.14, { gain: 0.25, to: 40, pan }); }
   death(pan = 0) { this.tone(rnd(200, 260), 0.35, { type: 'sawtooth', gain: 0.12, to: 50, pan }); this.burst(0.2, 'lowpass', 500, { gain: 0.15, pan }); }
-  grenadeThrow(pan = 0) {
-    this.burst(0.12, 'bandpass', 1800, { gain: 0.17, pan });
-    this.tone(560, 0.19, { type: 'triangle', gain: 0.12, to: 240, pan });
-  }
-  grenadeImpact(pan = 0) {
-    this.burst(0.52, 'lowpass', 450, { gain: 0.46, pan, wet: 0.3 });
-    this.tone(115, 0.42, { gain: 0.4, to: 35, pan });
-  }
   boom(pan = 0) { this.burst(0.9, 'lowpass', 300, { gain: 0.5, pan, wet: 0.5 }); this.tone(70, 0.9, { gain: 0.5, to: 28, pan, wet: 0.4 }); }
   built() { this.tone(392, 0.9, { gain: 0.22, wet: 0.5 }); this.tone(523, 0.8, { type: 'triangle', gain: 0.16, delay: 0.12, wet: 0.5 }); }
   trained() { this.tone(330, 0.12, { type: 'triangle', gain: 0.18 }); this.tone(495, 0.18, { type: 'triangle', gain: 0.16, delay: 0.1 }); }

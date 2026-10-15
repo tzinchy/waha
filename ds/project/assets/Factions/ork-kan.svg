@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -12 120 164" width="120" height="164"><title>Банка-шагун</title><defs><linearGradient id="okIron" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a7a5a"/><stop offset=".5" stop-color="#5e5038"/><stop offset="1" stop-color="#3a3020"/></linearGradient><linearGradient id="okRust" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a04e24"/><stop offset="1" stop-color="#5a2810"/></linearGradient><linearGradient id="okSkin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7f9e44"/><stop offset="1" stop-color="#435a1e"/></linearGradient><linearGradient id="okYel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0b030"/><stop offset="1" stop-color="#8a6010"/></linearGradient></defs>
+<ellipse cx="60" cy="150" rx="34" ry="4" fill="#000" opacity=".45"/>
+<g class="legL" style="transform-origin:44px 104px"><path d="M40 104L30 128L36 130L48 108Z" fill="url(#okIron)" stroke="#1a140c" stroke-width="1.5"/><path d="M22 130H44L46 140L18 150H20Z" fill="url(#okRust)" stroke="#1a140c" stroke-width="1.5"/></g>
+<g class="legR" style="transform-origin:76px 104px"><path d="M80 104L90 128L84 130L72 108Z" fill="url(#okIron)" stroke="#1a140c" stroke-width="1.5"/><path d="M76 130H98L102 150H74Z" fill="url(#okRust)" stroke="#1a140c" stroke-width="1.5"/></g>
+<g class="body">
+<path d="M34 108L30 40Q60 28 90 40L86 108Z" fill="url(#okIron)" stroke="#1a140c" stroke-width="2"/>
+<path d="M32 60H88M33 84H87" stroke="#1a140c" stroke-width="1.5"/>
+<path d="M36 64l4 0M80 64l4 0M36 88l4 0M80 88l4 0" stroke="#c8b070" stroke-width="2"/>
+<path d="M46 44H74V56H46Z" fill="#1a140c" stroke="#c8b070" stroke-width="1.5"/>
+<circle cx="54" cy="50" r="3" fill="#ffd040" class="glowpulse"/><circle cx="66" cy="50" r="2.4" fill="#ff5a3a" class="glowpulse"/>
+<path d="M44 66H76L74 82H46Z" fill="url(#okYel)" stroke="#1a140c"/><path d="M50 66l4 8l4 -8l4 8l4 -8l4 8" fill="none" stroke="#1a140c" stroke-width="1.5"/>
+<path d="M60 32V8" stroke="#2a2010" stroke-width="2"/><path d="M61 8l12 4l-12 4z" fill="#b8322a"/>
+<g class="arm" style="transform-origin:32px 54px"><path d="M32 50L14 62L12 84L22 84L22 66L34 60Z" fill="url(#okIron)" stroke="#1a140c" stroke-width="1.5"/><path d="M6 82L12 100L16 88Z M16 86L22 102L22 88Z" fill="url(#okRust)" stroke="#1a140c"/></g>
+<g class="arm" style="transform-origin:88px 54px"><path d="M88 50L104 60L104 74H94L94 64L86 60Z" fill="url(#okIron)" stroke="#1a140c" stroke-width="1.5"/><path d="M98 74V98M103 74V96" stroke="#2a2214" stroke-width="4"/></g>
+</g>
+</svg>

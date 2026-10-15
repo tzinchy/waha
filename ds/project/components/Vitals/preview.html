@@ -1,0 +1,31 @@
+<!-- @dsCard group="HUD" height=140 subtitle="lc-vitals — щит и здоровье, насечки по 10%" -->
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Vitals</title>
+<style>
+  html, body { margin: 0; }
+  body { background: var(--surface-100); color: var(--ink); font-family: var(--font-body); padding: 24px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .col { display: grid; gap: 16px; }
+  .cap { font: 500 11px/14px var(--font-label); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-muted); margin: 0 0 8px; }
+</style>
+</head>
+<body>
+<div class="row" style="gap:32px; align-items:flex-start">
+  <div class="lc-vitals" style="width:200px">
+    <div class="lc-vitals__bar lc-vitals__bar--shield" style="--v:70%"></div>
+    <div class="lc-vitals__bar" style="--v:92%"></div>
+    <div class="lc-vitals__nums"><span>Щит <b>140</b></span><span>Здоровье <b>460/500</b></span></div>
+  </div>
+  <div class="lc-vitals" style="width:200px">
+    <div class="lc-vitals__bar lc-vitals__bar--shield" style="--v:0%"></div>
+    <div class="lc-vitals__bar lc-vitals__bar--worn" style="--v:45%"></div>
+    <div class="lc-vitals__nums"><span>Щит <b>0</b></span><span>Здоровье <b>225/500</b></span></div>
+  </div>
+  <div class="lc-vitals lc-vitals--critical" style="width:200px">
+    <div class="lc-vitals__bar lc-vitals__bar--critical" style="--v:18%"></div>
+    <div class="lc-vitals__nums"><span>Здоровье</span><b>90/500</b></div>
+  </div>
+</div>
+</body>
+</html>

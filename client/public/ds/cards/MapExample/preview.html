@@ -1,0 +1,38 @@
+<!-- @dsCard group="Карта" height=600 subtitle="карта 1×1 «Разлом Святого Шпиля»: точки, жилы, укрытия, высоты" -->
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>MapExample</title>
+<style>
+  html, body { margin: 0; }
+  body { background: var(--surface-100); color: var(--ink); font-family: var(--font-body); padding: 24px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .cap { font: 500 11px/14px var(--font-label); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-muted); margin: 0 0 8px; }
+  .note { font: 400 13px/18px var(--font-body); color: var(--ink-muted); margin: 12px 0 0; max-width: 760px; }
+</style>
+</head>
+<body>
+<svg class="lc-bigmap" viewBox="0 0 760 460" role="img" aria-label="Карта Разлом Святого Шпиля">
+<defs><pattern id="cov-h" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="hatch" x1="0" y1="0" x2="0" y2="6"/></pattern>
+<pattern id="cov-l" width="8" height="8" patternUnits="userSpaceOnUse"><circle class="dots" cx="4" cy="4" r="1.2"/></pattern></defs>
+<rect class="low" width="760" height="460"/>
+<path class="plateau" d="M0 300L120 280L210 330L230 460L0 460Z"/><path class="plateau" d="M760 160L640 180L550 130L530 0L760 0Z"/>
+<path class="road" d="M110 400C220 360 300 300 380 230S560 110 650 60"/><path class="road" d="M40 120C140 150 240 200 380 230S620 320 720 340"/>
+<path class="water" d="M300 0C330 70 300 140 340 200S420 260 420 320 450 420 470 460H500C480 420 450 360 450 310S400 230 370 190 360 80 330 0Z"/>
+<path class="bridge" d="M330 214H382V236H330Z"/><path class="bridge" d="M378 224H430V246H378Z" style="display:none"/>
+
+<path class="high" d="M250 300L300 270L330 300L300 340L260 340Z"/><path class="high" d="M510 160L460 190L430 160L460 120L500 120Z"/><path class="high" d="M340 40L420 30L430 70L380 90L340 80Z"/><path class="high" d="M420 420L340 430L330 390L380 370L420 380Z"/>
+<rect class="cover-h" x="150" y="180" width="40" height="26"/><rect class="cover-h" x="570" y="254" width="40" height="26"/><rect class="cover-h" x="300" y="200" width="30" height="30"/><rect class="cover-h" x="430" y="230" width="30" height="30"/><rect class="cover-h" x="440" y="130" width="50" height="24"/><rect class="cover-h" x="270" y="306" width="50" height="24"/>
+<circle class="cover-l" cx="90" cy="210" r="46"/><circle class="cover-l" cx="670" cy="250" r="46"/><circle class="cover-l" cx="230" cy="120" r="40"/><circle class="cover-l" cx="530" cy="340" r="40"/>
+<circle class="start" cx="60" cy="410" r="44"/><rect class="base-a" x="44" y="394" width="32" height="32"/>
+<circle class="start-b" cx="700" cy="50" r="44"/><path class="base-b" d="M700 32L720 66H680Z"/>
+<circle class="vent" cx="70" cy="330" r="6"/><circle class="vent" cx="690" cy="130" r="6"/><circle class="vent" cx="330" cy="160" r="6"/><circle class="vent" cx="430" cy="300" r="6"/>
+<path class="pt-inf" d="M150 368L162 380L150 392L138 380Z"/><text class="t" x="150" y="384">А</text><path class="pt-inf" d="M610 68L622 80L610 92L598 80Z"/><text class="t" x="610" y="84">Г</text><path class="pt-inf" d="M90 128L102 140L90 152L78 140Z"/><text class="t" x="90" y="144">Б</text><path class="pt-inf" d="M670 308L682 320L670 332L658 320Z"/><text class="t" x="670" y="324">Д</text><path class="pt-inf" d="M300 388L312 400L300 412L288 400Z"/><text class="t" x="300" y="404">В</text><path class="pt-inf" d="M460 48L472 60L460 72L448 60Z"/><text class="t" x="460" y="64">Е</text>
+<path class="pt-rel" d="M239 239V229h3v-3h3v-3h3v-3h4v3h3v3h3v3h3v10h-7v-6h-6v6Z"/><path class="pt-rel" d="M499 239V229h3v-3h3v-3h3v-3h4v3h3v3h3v3h3v10h-7v-6h-6v6Z"/>
+<path class="pt-crit" d="M380.0 214.0L383.4 221.9L391.3 218.7L388.1 226.6L396.0 230.0L388.1 233.4L391.3 241.3L383.4 238.1L380.0 246.0L376.6 238.1L368.7 241.3L371.9 233.4L364.0 230.0L371.9 226.6L368.7 218.7L376.6 221.9Z"/><text class="t t-on" x="380" y="234">II</text>
+<path class="pt-crit" d="M180.0 56.0L182.9 62.9L189.9 60.1L187.1 67.1L194.0 70.0L187.1 72.9L189.9 79.9L182.9 77.1L180.0 84.0L177.1 77.1L170.1 79.9L172.9 72.9L166.0 70.0L172.9 67.1L170.1 60.1L177.1 62.9Z"/><text class="t t-on" x="180" y="74">I</text><path class="pt-crit" d="M580.0 376.0L582.9 382.9L589.9 380.1L587.1 387.1L594.0 390.0L587.1 392.9L589.9 399.9L582.9 397.1L580.0 404.0L577.1 397.1L570.1 399.9L572.9 392.9L566.0 390.0L572.9 387.1L570.1 380.1L577.1 382.9Z"/><text class="t t-on" x="580" y="394">III</text>
+<text class="lbl" x="350" y="16">Разлом</text><text class="lbl" x="130" y="262">Руины собора</text><text class="lbl" x="550" y="192">Руины собора</text>
+<text class="lbl" x="112" y="446">База А</text><text class="lbl" x="560" y="20">База Б</text>
+<path class="scale" d="M640 444H720M640 440V448M720 440V448"/><text class="lbl" x="650" y="436">100 м</text>
+</svg><div class="lc-maplegend"><span><svg viewBox="0 0 24 24" class="lc-bigmap" style="background:none"><rect class="base-a" x="5" y="5" width="14" height="14"/></svg>база игрока А</span><span><svg viewBox="0 0 24 24" class="lc-bigmap" style="background:none"><path class="pt-inf" d="M12 2L22 12L12 22L2 12Z"/></svg>стратегическая точка · влияние</span><span><svg viewBox="0 0 24 24" class="lc-bigmap" style="background:none"><path class="pt-rel" d="M3 21V12h2V9h2V6h3V3h4v3h3v3h2v3h2v9h-7v-6h-4v6Z"/></svg>реликварий · реликвии</span><span><svg viewBox="0 0 24 24" class="lc-bigmap" style="background:none"><path class="pt-crit" d="M12.0 2.0L14.1 6.9L19.1 4.9L17.1 9.9L22.0 12.0L17.1 14.1L19.1 19.1L14.1 17.1L12.0 22.0L9.9 17.1L4.9 19.1L6.9 14.1L2.0 12.0L6.9 9.9L4.9 4.9L9.9 6.9Z"/></svg>критическая точка · победа</span><span><svg viewBox="0 0 24 24" class="lc-bigmap" style="background:none"><circle class="vent" cx="12" cy="12" r="6"/></svg>жила · глубинный насос</span><span><svg viewBox="0 0 24 24" class="lc-bigmap" style="background:none"><rect class="cover-h" x="3" y="6" width="18" height="12"/></svg>тяжёлое укрытие</span><span><svg viewBox="0 0 24 24" class="lc-bigmap" style="background:none"><circle class="cover-l" cx="12" cy="12" r="8"/></svg>лёгкое укрытие</span><span><svg viewBox="0 0 24 24" class="lc-bigmap" style="background:none"><path class="high" d="M3 8L12 3L21 9L17 20L5 19Z"/></svg>скалы · непроходимо</span></div>
+</body>
+</html>

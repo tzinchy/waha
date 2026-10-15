@@ -1,0 +1,638 @@
+{
+  "v": 3,
+  "assetGroups": {
+    "Units": {
+      "name": "Units",
+      "tile": "m",
+      "order": [
+        "guard.svg",
+        "mason.svg",
+        "censer.svg",
+        "gunner.svg",
+        "spire.svg",
+        "chancellor.svg",
+        "herald.svg",
+        "liturgic.svg",
+        "colossus.svg",
+        "captain-spire.svg",
+        "captain-crown.svg",
+        "captain-hood.svg",
+        "legend-irena.svg",
+        "legend-magister.svg",
+        "legend-seraph.svg",
+        "archangel.svg",
+        "cathguard.svg",
+        "sniper.svg"
+      ],
+      "files": {
+        "guard.svg": {
+          "name": "guard.svg",
+          "blob": "07120b001d313f315802c537d3d9828d",
+          "size": 8225,
+          "type": "image/svg+xml"
+        },
+        "mason.svg": {
+          "name": "mason.svg",
+          "blob": "7638a6fc535aec51b77a597f820c694f",
+          "size": 5895,
+          "type": "image/svg+xml"
+        },
+        "censer.svg": {
+          "name": "censer.svg",
+          "blob": "d71e41f7665059ed7b49902ef391757d",
+          "size": 5542,
+          "type": "image/svg+xml"
+        },
+        "gunner.svg": {
+          "name": "gunner.svg",
+          "blob": "0fe44f14af915d092250c8bfe9322635",
+          "size": 6217,
+          "type": "image/svg+xml"
+        },
+        "spire.svg": {
+          "name": "spire.svg",
+          "blob": "d7ad4f740ae656f18ea69e73af7b1c30",
+          "size": 4366,
+          "type": "image/svg+xml"
+        },
+        "chancellor.svg": {
+          "name": "chancellor.svg",
+          "blob": "23b1ed3e67386b8e5c9943eb1690b3cf",
+          "size": 2965,
+          "type": "image/svg+xml"
+        },
+        "herald.svg": {
+          "name": "herald.svg",
+          "blob": "61ca0b2560edadd33bd5f1dc56615466",
+          "size": 3466,
+          "type": "image/svg+xml"
+        },
+        "liturgic.svg": {
+          "name": "liturgic.svg",
+          "blob": "e8a861c24bd5efc4ece460e80676a886",
+          "size": 4300,
+          "type": "image/svg+xml"
+        },
+        "colossus.svg": {
+          "name": "colossus.svg",
+          "blob": "c888c086c03a2c0e7dd7092dc5e6ab5a",
+          "size": 7362,
+          "type": "image/svg+xml"
+        },
+        "captain-spire.svg": {
+          "name": "captain-spire.svg",
+          "blob": "daa5c63ff063546847ff2156829f699b",
+          "size": 5163,
+          "type": "image/svg+xml"
+        },
+        "captain-crown.svg": {
+          "name": "captain-crown.svg",
+          "blob": "db0e9f50a749c35f6a3b535f7c53b18a",
+          "size": 6953,
+          "type": "image/svg+xml"
+        },
+        "captain-hood.svg": {
+          "name": "captain-hood.svg",
+          "blob": "9292dcb5c72d3329e0fd774fb9e3d03f",
+          "size": 4907,
+          "type": "image/svg+xml"
+        },
+        "legend-irena.svg": {
+          "name": "legend-irena.svg",
+          "blob": "e819f588ad3dcea094bf86b578b9f3ef",
+          "size": 5095,
+          "type": "image/svg+xml"
+        },
+        "legend-magister.svg": {
+          "name": "legend-magister.svg",
+          "blob": "e914de32f808bc5a33b5073c576d7f4b",
+          "size": 4575,
+          "type": "image/svg+xml"
+        },
+        "legend-seraph.svg": {
+          "name": "legend-seraph.svg",
+          "blob": "f52aae9778ee85223a8b42ef1d325216",
+          "size": 4906,
+          "type": "image/svg+xml"
+        },
+        "archangel.svg": {
+          "name": "archangel.svg",
+          "blob": "41a466b07c0487476a4546bb75a87160",
+          "size": 4867,
+          "type": "image/svg+xml"
+        },
+        "cathguard.svg": {
+          "name": "cathguard.svg",
+          "blob": "0e34e3858e6929e4c155fb7681b8caa3",
+          "size": 7772,
+          "type": "image/svg+xml"
+        },
+        "sniper.svg": {
+          "name": "sniper.svg",
+          "blob": "78bb0303f5a99ff672e4c901f1ba6f3e",
+          "size": 4977,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Buildings": {
+      "name": "Buildings",
+      "tile": "m",
+      "order": [
+        "cathedral.svg",
+        "barracks.svg",
+        "foundry.svg",
+        "pump.svg",
+        "beacon.svg",
+        "reliquary.svg",
+        "banner.svg",
+        "scriptorium.svg",
+        "forge.svg",
+        "observatory.svg",
+        "reliqhall.svg",
+        "gate.svg"
+      ],
+      "files": {
+        "cathedral.svg": {
+          "name": "cathedral.svg",
+          "blob": "d3c5cfabaca684d31b84f1ea2c1b95cf",
+          "size": 6510,
+          "type": "image/svg+xml"
+        },
+        "barracks.svg": {
+          "name": "barracks.svg",
+          "blob": "aa3266481592122008aac397beac7780",
+          "size": 4894,
+          "type": "image/svg+xml"
+        },
+        "foundry.svg": {
+          "name": "foundry.svg",
+          "blob": "7204e524a9244239cea5d364ea9d9540",
+          "size": 4763,
+          "type": "image/svg+xml"
+        },
+        "pump.svg": {
+          "name": "pump.svg",
+          "blob": "7ea7aec567e4cdb150c9cb2e5f1e6ec3",
+          "size": 4099,
+          "type": "image/svg+xml"
+        },
+        "beacon.svg": {
+          "name": "beacon.svg",
+          "blob": "7daae1c46723896639c5d038520e8f48",
+          "size": 3553,
+          "type": "image/svg+xml"
+        },
+        "reliquary.svg": {
+          "name": "reliquary.svg",
+          "blob": "0c1bbf574117d90544ff37cd2d4615c5",
+          "size": 2965,
+          "type": "image/svg+xml"
+        },
+        "banner.svg": {
+          "name": "banner.svg",
+          "blob": "75aa170aa4fdb7dd428524dd111b7fe2",
+          "size": 2972,
+          "type": "image/svg+xml"
+        },
+        "scriptorium.svg": {
+          "name": "scriptorium.svg",
+          "blob": "0cf43cd42eb1d3617000eba59af0b2a2",
+          "size": 3061,
+          "type": "image/svg+xml"
+        },
+        "forge.svg": {
+          "name": "forge.svg",
+          "blob": "f8b7901e444ac56dd62688697bb98170",
+          "size": 2975,
+          "type": "image/svg+xml"
+        },
+        "observatory.svg": {
+          "name": "observatory.svg",
+          "blob": "a61c96c05472c427ed2dad40cb933ec9",
+          "size": 4051,
+          "type": "image/svg+xml"
+        },
+        "reliqhall.svg": {
+          "name": "reliqhall.svg",
+          "blob": "f26963932c60eb2a60ca86a2c5d0d2e1",
+          "size": 3391,
+          "type": "image/svg+xml"
+        },
+        "gate.svg": {
+          "name": "gate.svg",
+          "blob": "f6ab9692486980cc69940934d361a8e4",
+          "size": 4898,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Factions": {
+      "name": "Factions",
+      "tile": "m",
+      "order": [
+        "digger.svg",
+        "boneknight.svg",
+        "wailer.svg",
+        "ossuary.svg",
+        "undead-hq.svg",
+        "tender.svg",
+        "lensman.svg",
+        "strider.svg",
+        "prismark.svg",
+        "prism-hq.svg",
+        "warden.svg",
+        "legionary.svg",
+        "chronarch.svg",
+        "pendulum.svg",
+        "clockwork-hq.svg",
+        "tinker.svg",
+        "choppa.svg",
+        "warboss.svg",
+        "idol.svg",
+        "orks-hq.svg",
+        "ashen-chancellor.svg",
+        "ashen-hq.svg",
+        "ashen-rift.svg",
+        "deity.svg",
+        "devourer.svg",
+        "possessed.svg",
+        "servant.svg"
+      ],
+      "files": {
+        "digger.svg": {
+          "name": "digger.svg",
+          "blob": "1e8d21c6fb78c358ffc2bb00cae1da5e",
+          "size": 3843,
+          "type": "image/svg+xml"
+        },
+        "boneknight.svg": {
+          "name": "boneknight.svg",
+          "blob": "261d8d96e0a086a59fe476f5c0ce51ef",
+          "size": 5155,
+          "type": "image/svg+xml"
+        },
+        "wailer.svg": {
+          "name": "wailer.svg",
+          "blob": "2a4b5e119779b9f60097fb54b110a377",
+          "size": 3899,
+          "type": "image/svg+xml"
+        },
+        "ossuary.svg": {
+          "name": "ossuary.svg",
+          "blob": "2414bd5f7723d77ab66f298f3a76dab2",
+          "size": 4658,
+          "type": "image/svg+xml"
+        },
+        "undead-hq.svg": {
+          "name": "undead-hq.svg",
+          "blob": "4d6892e924a7032a6b47006c66e2b049",
+          "size": 3281,
+          "type": "image/svg+xml"
+        },
+        "tender.svg": {
+          "name": "tender.svg",
+          "blob": "6c3c7f523c5bfa50e3306e1e99bd54f4",
+          "size": 3369,
+          "type": "image/svg+xml"
+        },
+        "lensman.svg": {
+          "name": "lensman.svg",
+          "blob": "2c82be0561ace7603595d1dc54bcf021",
+          "size": 4526,
+          "type": "image/svg+xml"
+        },
+        "strider.svg": {
+          "name": "strider.svg",
+          "blob": "4a7e6b1d862bd12e98cda2572a987655",
+          "size": 4525,
+          "type": "image/svg+xml"
+        },
+        "prismark.svg": {
+          "name": "prismark.svg",
+          "blob": "972b2aa219bd1de7a99752ad1d79fff9",
+          "size": 2731,
+          "type": "image/svg+xml"
+        },
+        "prism-hq.svg": {
+          "name": "prism-hq.svg",
+          "blob": "275fa2ab0aa00e057421c8e3e7a698ff",
+          "size": 2990,
+          "type": "image/svg+xml"
+        },
+        "warden.svg": {
+          "name": "warden.svg",
+          "blob": "a9a7415ee3ff98fb87744be9d77f01ef",
+          "size": 3852,
+          "type": "image/svg+xml"
+        },
+        "legionary.svg": {
+          "name": "legionary.svg",
+          "blob": "8c9d383b1dfb3e065edb132daba787e2",
+          "size": 5089,
+          "type": "image/svg+xml"
+        },
+        "chronarch.svg": {
+          "name": "chronarch.svg",
+          "blob": "81df4eb18d48a85429f9c27870d43b61",
+          "size": 4560,
+          "type": "image/svg+xml"
+        },
+        "pendulum.svg": {
+          "name": "pendulum.svg",
+          "blob": "3cf21ceb03461744ea4e38df28e84983",
+          "size": 3703,
+          "type": "image/svg+xml"
+        },
+        "clockwork-hq.svg": {
+          "name": "clockwork-hq.svg",
+          "blob": "08d4ca1485a19ecbc257d96c3da133d6",
+          "size": 3931,
+          "type": "image/svg+xml"
+        },
+        "tinker.svg": {
+          "name": "tinker.svg",
+          "blob": "b1d5f4ccf9abc61a0b85007b3031104c",
+          "size": 4122,
+          "type": "image/svg+xml"
+        },
+        "choppa.svg": {
+          "name": "choppa.svg",
+          "blob": "f05ece97887d35a6660a0da6cca9fa4b",
+          "size": 5540,
+          "type": "image/svg+xml"
+        },
+        "warboss.svg": {
+          "name": "warboss.svg",
+          "blob": "98fc282650b50fcd09f06ed9266f69ab",
+          "size": 5394,
+          "type": "image/svg+xml"
+        },
+        "idol.svg": {
+          "name": "idol.svg",
+          "blob": "6c11da16ca35571ece7a6ccceb98ec37",
+          "size": 4736,
+          "type": "image/svg+xml"
+        },
+        "orks-hq.svg": {
+          "name": "orks-hq.svg",
+          "blob": "ef513d4214809ab1c912545298c9c610",
+          "size": 3889,
+          "type": "image/svg+xml"
+        },
+        "ashen-chancellor.svg": {
+          "name": "ashen-chancellor.svg",
+          "blob": "013e1c7d01c6ddc17ab8a5c513864bba",
+          "size": 2439,
+          "type": "image/svg+xml"
+        },
+        "ashen-hq.svg": {
+          "name": "ashen-hq.svg",
+          "blob": "3e710a07a393f31ef2d6899b0fb21e42",
+          "size": 2824,
+          "type": "image/svg+xml"
+        },
+        "ashen-rift.svg": {
+          "name": "ashen-rift.svg",
+          "blob": "2efc497dfaa305d0927dfb6fb04c866a",
+          "size": 2564,
+          "type": "image/svg+xml"
+        },
+        "deity.svg": {
+          "name": "deity.svg",
+          "blob": "6dd74de305731a7a181c965e151bc59d",
+          "size": 6081,
+          "type": "image/svg+xml"
+        },
+        "devourer.svg": {
+          "name": "devourer.svg",
+          "blob": "a39b8714c400964d6b744ca8009d343b",
+          "size": 4316,
+          "type": "image/svg+xml"
+        },
+        "possessed.svg": {
+          "name": "possessed.svg",
+          "blob": "cd34b4ad4a7a2740f69ba82242cd47ed",
+          "size": 4018,
+          "type": "image/svg+xml"
+        },
+        "servant.svg": {
+          "name": "servant.svg",
+          "blob": "eb9f4fc9e109c53ac21135ad2e602cf2",
+          "size": 3732,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Defenses": {
+      "name": "Defenses",
+      "tile": "m",
+      "order": [
+        "battery.svg",
+        "bunker.svg",
+        "gate.svg",
+        "mine.svg",
+        "point-1.svg",
+        "point-2.svg",
+        "point-3.svg",
+        "rocketbarrel.svg",
+        "scrapgun.svg",
+        "shieldgen.svg",
+        "turret.svg",
+        "wall.svg"
+      ],
+      "files": {
+        "battery.svg": {
+          "name": "battery.svg",
+          "blob": "2a12878ba550ec54a0183067419026b5",
+          "size": 3768,
+          "type": "image/svg+xml"
+        },
+        "bunker.svg": {
+          "name": "bunker.svg",
+          "blob": "b67764c547ab011613ecd72511d45058",
+          "size": 2195,
+          "type": "image/svg+xml"
+        },
+        "gate.svg": {
+          "name": "gate.svg",
+          "blob": "88a1ed4b57f4aa54849814508bc5be1a",
+          "size": 2944,
+          "type": "image/svg+xml"
+        },
+        "mine.svg": {
+          "name": "mine.svg",
+          "blob": "2ae99683775acd63455c05aaa62f9550",
+          "size": 2014,
+          "type": "image/svg+xml"
+        },
+        "point-1.svg": {
+          "name": "point-1.svg",
+          "blob": "19be68faebe344569f7ceef81fe8fa4b",
+          "size": 2955,
+          "type": "image/svg+xml"
+        },
+        "point-2.svg": {
+          "name": "point-2.svg",
+          "blob": "29232808971bfb5461452c74010a6a84",
+          "size": 3499,
+          "type": "image/svg+xml"
+        },
+        "point-3.svg": {
+          "name": "point-3.svg",
+          "blob": "22f1a1a7f9c0d9c77677d49623b99c89",
+          "size": 3909,
+          "type": "image/svg+xml"
+        },
+        "rocketbarrel.svg": {
+          "name": "rocketbarrel.svg",
+          "blob": "cea50e1f33b7b551032275bec2b9ee76",
+          "size": 3423,
+          "type": "image/svg+xml"
+        },
+        "scrapgun.svg": {
+          "name": "scrapgun.svg",
+          "blob": "0a490b60953fe002f55f9a466afc9981",
+          "size": 4127,
+          "type": "image/svg+xml"
+        },
+        "shieldgen.svg": {
+          "name": "shieldgen.svg",
+          "blob": "487ef5fa741871cf3363cb46be3ec5ad",
+          "size": 2739,
+          "type": "image/svg+xml"
+        },
+        "turret.svg": {
+          "name": "turret.svg",
+          "blob": "ff1cdeed78f87845b6089c115d4bb679",
+          "size": 2672,
+          "type": "image/svg+xml"
+        },
+        "wall.svg": {
+          "name": "wall.svg",
+          "blob": "ef9d7304062b33fef7e641775b4f073f",
+          "size": 2754,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Turrets": {
+      "name": "Turrets",
+      "tile": "m",
+      "order": [
+        "order-t1.svg",
+        "order-t2.svg",
+        "undead-t1.svg",
+        "undead-t2.svg",
+        "prism-t1.svg",
+        "prism-t2.svg",
+        "clockwork-t1.svg",
+        "clockwork-t2.svg",
+        "orks-t1.svg",
+        "orks-t2.svg",
+        "ashen-t1.svg",
+        "ashen-t2.svg"
+      ],
+      "files": {
+        "order-t1.svg": {
+          "name": "order-t1.svg",
+          "blob": "eb572416001f68eb23ca938df18fc23a",
+          "size": 3010,
+          "type": "image/svg+xml"
+        },
+        "order-t2.svg": {
+          "name": "order-t2.svg",
+          "blob": "94372b75f00d64f5d2a3d944befa0593",
+          "size": 3595,
+          "type": "image/svg+xml"
+        },
+        "undead-t1.svg": {
+          "name": "undead-t1.svg",
+          "blob": "e3c673bf157da3863a2f1b236d04a507",
+          "size": 2968,
+          "type": "image/svg+xml"
+        },
+        "undead-t2.svg": {
+          "name": "undead-t2.svg",
+          "blob": "4da4425c1987b3726968776ee68e421f",
+          "size": 2995,
+          "type": "image/svg+xml"
+        },
+        "prism-t1.svg": {
+          "name": "prism-t1.svg",
+          "blob": "447bf75f2d89923ed21a9142388ce840",
+          "size": 3012,
+          "type": "image/svg+xml"
+        },
+        "prism-t2.svg": {
+          "name": "prism-t2.svg",
+          "blob": "c06979bf73b14b4b9945be03fc8b945c",
+          "size": 2912,
+          "type": "image/svg+xml"
+        },
+        "clockwork-t1.svg": {
+          "name": "clockwork-t1.svg",
+          "blob": "4ccd91991d47e013e058a867dca2dc5d",
+          "size": 4086,
+          "type": "image/svg+xml"
+        },
+        "clockwork-t2.svg": {
+          "name": "clockwork-t2.svg",
+          "blob": "84528db486324c9909685ae12c412e22",
+          "size": 3914,
+          "type": "image/svg+xml"
+        },
+        "orks-t1.svg": {
+          "name": "orks-t1.svg",
+          "blob": "11f1e4bb616d08afafa337b42dc543c2",
+          "size": 4157,
+          "type": "image/svg+xml"
+        },
+        "orks-t2.svg": {
+          "name": "orks-t2.svg",
+          "blob": "e40e7adf8c162b1bdd6846bf3e7ea086",
+          "size": 4219,
+          "type": "image/svg+xml"
+        },
+        "ashen-t1.svg": {
+          "name": "ashen-t1.svg",
+          "blob": "e014bbcb12aaa568684e9b7e58086394",
+          "size": 3295,
+          "type": "image/svg+xml"
+        },
+        "ashen-t2.svg": {
+          "name": "ashen-t2.svg",
+          "blob": "88a8fc2aa1a0562dfc719fb8f2612e3f",
+          "size": 3195,
+          "type": "image/svg+xml"
+        }
+      }
+    }
+  },
+  "blobs": {},
+  "createdOnFiles": {
+    "at": "2026-10-13T08:27:53Z",
+    "v": 1
+  },
+  "docs": {
+    "sections": []
+  },
+  "groups": [
+    "Units",
+    "Buildings",
+    "Factions",
+    "Defenses",
+    "Turrets"
+  ],
+  "lastChange": {
+    "by": "Claude",
+    "at": "2026-10-13T11:51:37Z",
+    "via": "Claude",
+    "note": "Фактуры всех фракций, разнообразные атаки и эффекты, турели фракций по тирам, живые отряды в покое."
+  },
+  "layout": "files",
+  "libraries": [],
+  "namespace": "LatunnySobor",
+  "sections": {},
+  "title": "Латунный Собор"
+}

@@ -1,0 +1,50 @@
+<!-- @dsCard height=300 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Латунный Собор</title>
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--surface-100); color:var(--ink); font-family:var(--font-body); overflow:hidden; }
+  .cover { position:relative; height:300px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:300px; overflow:hidden; }
+  .art svg { display:block; width:480px; height:300px; }
+  .gilt { fill:var(--gilt-500); }
+  .deep { fill:var(--gilt-700); }
+  .bright { fill:var(--gilt-300); }
+  .blood { fill:var(--blood-600); }
+  .ver { fill:var(--verdigris-500); }
+  .cut { fill:none; stroke:var(--surface-100); stroke-width:var(--space-2); stroke-linejoin:miter; }
+  .cut-deep { fill:none; stroke:var(--gilt-500); stroke-width:var(--stroke-frame); }
+  .words { position:absolute; left:var(--space-8); bottom:var(--space-8); max-width:440px; }
+  .name { margin:0; font-family:var(--font-display); font-size:96px; line-height:.95; font-weight:700; letter-spacing:.01em; color:var(--ink); }
+  .tag { margin:var(--space-3) 0 0 4px; font-size:14px; line-height:20px; color:var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 300" width="480" height="300">
+<!--
+  blocks      gilt-500 stepped spire 192 wide × 284 tall (the identity, largest) · gilt-700 slab 152×236 bleeding right · blood-600 96×164 bleeding top · verdigris-500 96×112 · gilt-300 tint band 152×24 — ≈35% of 960×300
+  arrangement one ziggurat spire with satellites, bottoms on one line space-6 above the edge, space-4 gutters; slab corners cut by chamfer-md / chamfer-lg
+  pattern     chevrons, from "ступень и шеврон — главный мотив": four space-2-thick chevrons at a space-6 pitch cut into the spire in the ground colour, three stroke-frame chevrons in gilt-500 on the deep slab
+  scales      steps of space-4 and space-6; gutters space-4; chamfers chamfer-md 8px, chamfer-lg 16px; strokes space-2 and stroke-frame
+-->
+<path class="gilt" d="M24 276V128H40V104H64V80H88V56H108V24L120-8 132 24V56H152V80H176V104H200V128H216V276Z"/>
+<path class="cut" d="M80 172 120 148 160 172M80 196 120 172 160 196M80 220 120 196 160 220M80 244 120 220 160 244"/>
+<path class="blood" d="M232-16H328V140L320 148H240L232 140Z"/>
+<path class="ver" d="M240 164H320L328 172V268L320 276H240L232 268V172Z"/>
+<path class="bright" d="M344 0H496V24H344Z"/>
+<path class="deep" d="M360 40H496V276H344V56Z"/>
+<path class="cut-deep" d="M376 120 420 96 464 120M376 144 420 120 464 144M376 168 420 144 464 168"/>
+</svg>
+</div>
+<div class="words">
+  <h1 class="name">Латунный<br>Собор</h1>
+  <p class="tag">Готика и ар-деко для RTS: латунь на обсидиане.</p>
+</div>
+</div>
+</body>
+</html>

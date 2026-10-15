@@ -1,0 +1,34 @@
+<!-- @dsCard group="Карта" height=320 subtitle="мини-карта: рельеф, туман, юниты, точки, камера, сигнал" -->
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Minimap</title>
+<style>
+  html, body { margin: 0; }
+  body { background: var(--surface-100); color: var(--ink); font-family: var(--font-body); padding: 24px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .cap { font: 500 11px/14px var(--font-label); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-muted); margin: 0 0 8px; }
+  .note { font: 400 13px/18px var(--font-body); color: var(--ink-muted); margin: 12px 0 0; max-width: 720px; }
+</style>
+</head>
+<body>
+<div class="row" style="gap:24px"><div class="lc-minimap"><svg viewBox="0 0 224 224" role="img" aria-label="Мини-карта">
+<rect class="ground" width="224" height="224"/>
+<path class="cliff" d="M0 92L34 86L52 104L44 128L0 132Z"/><path class="cliff" d="M224 120L184 116L170 136L182 160L224 156Z"/>
+<path class="cliff" d="M92 0H132L128 22L104 28L94 18Z"/><path class="cliff" d="M96 224L104 198L128 194L136 224Z"/>
+<path class="river" d="M0 168C40 160 70 132 112 112S184 64 224 56"/>
+<path class="fog" d="M140 0H224V100C196 104 176 92 160 70S140 30 140 0Z"/><path class="fog" d="M180 224V180L224 176V224Z"/>
+<rect class="base-ally" x="16" y="180" width="22" height="22"/>
+<path class="base-enemy" d="M197 22L208 44H186Z"/><path class="base-enemy" d="M200 16L213 42H187Z" style="display:none"/>
+<path class="pt" d="M60 56l7 7-7 7-7-7Z"/><path class="pt-ally" d="M70 150l7 7-7 7-7-7Z"/><path class="pt-ally" d="M112 105l7 7-7 7-7-7Z"/>
+<path class="pt-enemy" d="M160 120l7 7-7 7-7-7Z"/><path class="pt" d="M150 186l7 7-7 7-7-7Z" style="stroke:var(--amber-500)"/>
+<rect class="ally" x="46" y="168" width="4" height="4"/><rect class="ally" x="52" y="170" width="4" height="4"/><rect class="ally" x="48" y="176" width="4" height="4"/>
+<rect class="ally" x="100" y="128" width="4" height="4"/><rect class="ally" x="106" y="124" width="4" height="4"/><rect class="ally" x="96" y="122" width="4" height="4"/>
+<rect class="ally" x="140" y="180" width="4" height="4"/>
+<path class="enemy" d="M150 108l3-5 3 5Z"/><path class="enemy" d="M158 104l3-5 3 5Z"/><path class="enemy" d="M146 100l3-5 3 5Z"/><path class="enemy" d="M156 186l3-5 3 5Z"/>
+<path class="cam" d="M76 102H150L160 160H66Z"/>
+<circle class="ping lc-ping" cx="157" cy="188" r="8"/>
+</svg></div>
+<div class="lc-minimap__side"><p class="cap">Обозначения</p><div class="lc-gen__row" style="justify-content:flex-start;gap:8px"><svg width="14" height="14" viewBox="0 0 14 14" class="lc-minimap" style="padding:0;box-shadow:none;background:none"><rect class="ally" x="3" y="3" width="8" height="8"/></svg><span>союзники — квадраты</span></div><div class="lc-gen__row" style="justify-content:flex-start;gap:8px"><svg width="14" height="14" viewBox="0 0 14 14" class="lc-minimap" style="padding:0;box-shadow:none;background:none"><path class="enemy" d="M7 2l6 10H1Z"/></svg><span>противник — треугольники</span></div><div class="lc-gen__row" style="justify-content:flex-start;gap:8px"><svg width="14" height="14" viewBox="0 0 14 14" class="lc-minimap" style="padding:0;box-shadow:none;background:none"><path class="pt-ally" d="M7 1l6 6-6 6-6-6Z"/></svg><span>точки захвата — ромбы</span></div><div class="lc-gen__row" style="justify-content:flex-start;gap:8px"><svg width="14" height="14" viewBox="0 0 14 14" class="lc-minimap" style="padding:0;box-shadow:none;background:none"><rect class="base-ally" x="2" y="2" width="10" height="10"/></svg><span>база — крупная фигура</span></div><div class="lc-gen__row" style="justify-content:flex-start;gap:8px"><svg width="14" height="14" viewBox="0 0 14 14" class="lc-minimap" style="padding:0;box-shadow:none;background:none"><circle class="ping" cx="7" cy="7" r="5"/></svg><span>сигнал тревоги</span></div><div class="lc-gen__row" style="justify-content:flex-start;gap:8px"><svg width="14" height="14" viewBox="0 0 14 14" class="lc-minimap" style="padding:0;box-shadow:none;background:none"><rect class="fog" width="14" height="14"/></svg><span>туман войны</span></div>
+<div class="row" style="gap:8px;margin-top:12px"><button class="lc-btn lc-btn--sm lc-btn--ghost">Сигнал</button><button class="lc-btn lc-btn--sm lc-btn--ghost">Рельеф</button></div></div></div>
+</body>
+</html>
