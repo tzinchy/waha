@@ -300,8 +300,8 @@ export class Game {
 
   // ---------- карта ----------
   private buildMap() {
-    const tex = (this.mapTex = paintMap()); // пиксельная текстура земли, растянутая вдвое без сглаживания
-    Object.assign(tex.style, { position: 'absolute', left: '0', top: '0', width: MAP.w * S + 'px', height: MAP.h * S + 'px', imageRendering: 'pixelated' });
+    const tex = (this.mapTex = paintMap()); // текстура земли масштабируется браузером со сглаживанием
+    Object.assign(tex.style, { position: 'absolute', left: '0', top: '0', width: MAP.w * S + 'px', height: MAP.h * S + 'px', imageRendering: 'auto' });
     this.ground.append(tex);
     this.ground.insertAdjacentHTML('beforeend', mapSvg());
     // Three distinct capture-site silhouettes and a command/capture animation layer.

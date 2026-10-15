@@ -1,3 +1,3 @@
 import { defineConfig } from 'vite';
-// две страницы: игра и галерея анимаций/юнитов
-export default defineConfig({ build: { rollupOptions: { input: { main: 'index.html', anims: 'anims.html' } } } });
+// Игра, галерея и справочник живых 3D-моделей доступны в production-сборке.
+export default defineConfig({ build: { rollupOptions: { input: { main: 'index.html', anims: 'anims.html', units: 'units.html' } } } });
