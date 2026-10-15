@@ -90,6 +90,7 @@ function onMessage(ws: WebSocket, raw: string) {
   const ctx = memberOf.get(ws);
   const err = (msg: string) => send(ws, { t: 'error', msg });
 
+  if (m.t === 'ping') return send(ws, { t: 'pong', at: Number(m.at) || 0 });
   if (m.t === 'list') return send(ws, { t: 'lobbies', list: [...lobbies.values()].filter(l => l.members.some(x => x.ws)).map(l => ({ code: l.code, host: l.members.find(x => x.id === l.host)?.name ?? '—', players: (l.match ? l.match.slots : l.members.filter(x => !x.spec)).length, max: Math.min(MAX_PLAYERS, MAPS[l.map]?.hq.length ?? MAX_PLAYERS), map: l.map, live: !!l.match })) });
   if (m.t === 'create' || m.t === 'join') {
     if (ctx) return err('Вы уже в лобби');

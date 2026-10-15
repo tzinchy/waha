@@ -48,7 +48,7 @@ export function botThink(s: State, me: number): void {
   const F = s.players[me].faction; // особые постройки фракции
   if (F === 'orks' && of('rturret').length < 2 && !site && idle.length && req >= 160) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'rturret', x: hq.x + Math.cos(dir + 0.5) * 12, y: hq.y + Math.sin(dir + 0.5) * 12 });
   if (F === 'clockwork') applyCmd(s, me, { c: 'ascend' });
-  const uniq = ({ order: 'battery', clockwork: 'pylon', ashen: 'pyre' } as const)[F as 'order'];
+  const uniq = ({ order: 'battery', clockwork: 'pylon', ashen: 'pyre', eldar: 'aegis', daemons: 'bell' } as const)[F as 'order'];
   if (uniq && P.tier >= 2 && !of(uniq).length && !site && idle.length) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: uniq, x: hq.x + Math.cos(dir - 0.5) * 12, y: hq.y + Math.sin(dir - 0.5) * 12 });
   if (of('deity').length && s.units.some(e => e.owner !== me && e.hp > 0 && of('deity').some(g => Math.hypot(g.x - e.x, g.y - e.y) < 10))) applyCmd(s, me, { c: 'timestop' });
   if (!of('turret').length && !site && idle.length && req >= 180) {

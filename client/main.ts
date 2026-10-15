@@ -68,6 +68,7 @@ function onMsg(m: S2C) {
   else if (m.t === 'snap') game?.onSnap(m.s);
   else if (m.t === 'left') { lobby = null; show('menu'); }
   else if (m.t === 'lobbies') renderLobbies(m.list);
+  else if (m.t === 'pong') showPing(performance.now() - m.at);
   else if (m.t === 'error') { if (game) game.alert('warn', m.msg); else toast(m.msg); audio.error(); }
 }
 
@@ -103,6 +104,12 @@ function renderLobbies(list: LobbyInfo[]) {
   $('lobbies').innerHTML = list.length ? list.map(l => `<li><span class="name">${esc(l.host)}<br><small class="tag">${MAPS[l.map]?.name ?? ''} · ${l.players}/${l.max}${l.live ? ' · идёт бой' : ''}</small></span><button class="lc-btn lc-btn--sm${l.live ? ' lc-btn--ghost' : ''}" data-code="${l.code}" ${!l.live && l.players >= l.max ? 'disabled' : ''}>${l.live ? 'Смотреть' : 'Войти'}</button></li>`).join('') : '<li class="empty">Открытых лобби нет — созовите своё</li>';
   $('lobbies').querySelectorAll<HTMLElement>('[data-code]').forEach(b => { b.onclick = () => joinCode(b.dataset.code!); });
 }
+/** Значок пинга: задержка до сервера, цвет — по качеству связи. */
+function showPing(ms: number) {
+  const el = $('ping'), v = Math.round(ms);
+  el.textContent = `${v} мс`; el.dataset.q = v < 80 ? 'good' : v < 180 ? 'mid' : 'bad'; el.classList.remove('hidden');
+}
+setInterval(() => { if (ws?.readyState === 1) tx({ t: 'ping', at: performance.now() }); }, 2000);
 setInterval(() => { if (!$('menu').classList.contains('hidden') && !document.hidden && ws?.readyState !== 0) connect(() => tx({ t: 'list' })); }, 3000); // readyState 0: сокет ещё подключается — второй не открываем
 connect(() => tx({ t: 'list' }));
 

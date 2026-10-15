@@ -670,3 +670,15 @@ test('баланс: огонь на марше, гранаты не бьют с�
   for (let i = 0; i < 6; i++) spawn(s, 0, 'elite', 20, 20 + i * 3); // пехотный Легион почти полон
   assert.equal(applyCmd(s, 0, { c: 'train', id: pool.id, k: 'hveh' }), undefined, 'пехота не съедает лимит техники');
 });
+
+test('очередь приказов (Shift): юнит выполняет приказы по порядку, обычный приказ очередь сбрасывает', () => {
+  const s = newState(2), b = unit(s, 0, 'builder'), [x0, y0] = [b.x, b.y];
+  applyCmd(s, 0, { c: 'move', ids: [b.id], x: x0 + 10, y: y0 });
+  applyCmd(s, 0, { c: 'move', ids: [b.id], x: x0 + 10, y: y0 + 10, q: true });
+  assert.equal(b.queue?.length, 1, 'второй приказ — в очереди');
+  run(s, 6);
+  assert.ok(Math.hypot(b.x - (x0 + 10), b.y - (y0 + 10)) < 1.5, 'дошёл до второй точки через первую');
+  applyCmd(s, 0, { c: 'move', ids: [b.id], x: x0, y: y0 }); applyCmd(s, 0, { c: 'move', ids: [b.id], x: x0 + 5, y: y0, q: true });
+  applyCmd(s, 0, { c: 'move', ids: [b.id], x: x0 + 3, y: y0 + 3 });
+  assert.equal(b.queue, undefined, 'приказ без Shift очищает очередь');
+});
