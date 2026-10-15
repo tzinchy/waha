@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { buildVehicle, type VehicleRole } from './vehicle-models.ts';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-export type FactionId = 'legion' | 'heretics' | 'scrap' | 'necrons' | 'drukhari' | 'daemons' | 'tyranids' | 'khorne' | 'nurgle' | 'tzeentch' | 'slaanesh';
+export type FactionId = 'legion' | 'heretics' | 'scrap' | 'necrons' | 'drukhari' | 'daemons' | 'tyranids' | 'khorne' | 'nurgle' | 'tzeentch' | 'slaanesh' | 'nightbringer' | 'deceiver';
 /** Голое чудовищное тело (без брони и ранца): демоны, демоны четырёх богов Хаоса и тираниды. */
 export const daemonic = (f: FactionId) => f === 'daemons' || f === 'tyranids' || f === 'khorne' || f === 'nurgle' || f === 'tzeentch' || f === 'slaanesh';
 export const UNIT_ROLES = ['captain','guard','builder','sniper','heavy','flamer','elite','medic','transport','tank','walker','artillery','titan','scout','flyer','aircraft'] as const;
@@ -28,6 +28,8 @@ export const FACTION_ART: Record<FactionId, { name: string; subtitle: string; pr
   nurgle: { name: 'Нургл', subtitle: 'Чумоносцы', primary: 0x6b7a35, trim: 0xb9a86a, metal: 0x3d3a22, cloth: 0x4a5a28, glow: 0xc8e04a, skin: 0x8a9a5a },
   tzeentch: { name: 'Тзинч', subtitle: 'Розовые ужасы', primary: 0x2a5bd7, trim: 0xf2c94c, metal: 0x2a2450, cloth: 0x3a2a8a, glow: 0x4ae8ff, skin: 0xe07ac8 },
   slaanesh: { name: 'Слаанеш', subtitle: 'Демонетки', primary: 0x9a4ad0, trim: 0xf0d8f0, metal: 0x3a2040, cloth: 0xc060a0, glow: 0xff8ae0, skin: 0xd8a0d0 },
+  nightbringer: { name: 'Несущий Ночь', subtitle: "К'тан смерти", primary: 0x1c2126, trim: 0x8a9aa0, metal: 0x2b3034, cloth: 0x0d1013, glow: 0x62f0ff, skin: 0x4a555a },
+  deceiver: { name: 'Обманщик', subtitle: "Золотой К'тан", primary: 0xc9a227, trim: 0xf3d36b, metal: 0xb8902a, cloth: 0x6a4b12, glow: 0xfff2a8, skin: 0xd9b44a },
 };
 export const ROLE_MOTIONS: Record<UnitRole, Motion[]> = {
   captain: ['idle', 'idle_scan', 'idle_inspect', 'idle_taunt', 'walk', 'run', 'attack', 'attack_slash', 'attack_thrust', 'attack_overhead', 'attack_combo', 'execute', 'throw_grenade', 'fly', 'dash_flight', 'teleport', 'death'],
@@ -329,7 +331,8 @@ export class FactionActor {
       this.addThrowPayload(v.rig, m);
       compact(v.rig); this.rememberBindPose(); this.pose('idle', 0); return;
     }
-    const heavy = role === 'captain' || role === 'elite', robot = faction === 'necrons', ork = faction === 'scrap';
+    const ctan = faction === 'nightbringer' || faction === 'deceiver'; // К'таны: тела из некродермиса, как у некронов
+    const heavy = role === 'captain' || role === 'elite', robot = faction === 'necrons' || ctan, ork = faction === 'scrap';
     const width = (ork ? 1.23 : robot ? 0.85 : faction==='drukhari'?0.76:daemonic(faction)?1.1:1) * (role === 'scout' ? 0.82 : 1);
     const rig = joint(this.root, 'Rig', [0, 0, 0]);
     rig.scale.setScalar((heavy ? (ork ? 2.5 : 2.2) : role === 'builder' || role === 'scout' ? 1.65 : role === 'heavy' ? 2.08 : role === 'sniper' ? 1.82 : 1.9) / 2.05); // тяжёлые крупнее, снайперы стройнее
@@ -424,6 +427,11 @@ export class FactionActor {
         for (let i = 0; i < 3; i++) cylinder(weapon, 0.1, 0.1, 0.03, [0, -0.32 - i * len / 3, 0.05], m.trim);
         cylinder(weapon, 0.07, 0.05, 0.08, [0, -0.32 - len, 0.05], m.glow);
       }
+    } else if (faction === 'nightbringer') { // Несущий Ночь: коса выше роста, лезвие светится
+      cylinder(weapon, 0.04, 0.04, 2.1, [0, 0.3, 0], m.metal); // древко вверх от кисти
+      box(weapon, [0.95, 0.2, 0.05], [0.42, 1.25, 0], m.trim, [0, 0, -0.35]); box(weapon, [0.9, 0.05, 0.06], [0.42, 1.17, 0], m.glow, [0, 0, -0.35]);
+    } else if (faction === 'deceiver') { // Обманщик: в ладонях — сгустки звёздного огня
+      piece(weapon, new THREE.IcosahedronGeometry(0.17, 1), m.glow, [0, -0.2, 0.05]); piece(elbowL, new THREE.IcosahedronGeometry(0.17, 1), m.glow, [0, -0.42, 0.05]);
     } else if (daemonBlade) { // адский клинок: длинное лезвие, светящаяся кромка
       cylinder(weapon, 0.03, 0.03, 0.22, [0, -0.05, 0], m.metal);
       box(weapon, [0.12, 0.95, 0.04], [0, -0.62, 0], m.trim); box(weapon, [0.03, 0.9, 0.045], [0.05, -0.62, 0], m.glow); box(weapon, [0.3, 0.05, 0.08], [0, -0.15, 0], m.metal);
@@ -487,8 +495,21 @@ export class FactionActor {
       cylinder(tail,0,0.07,0.21,[0,-0.18,-0.7],m.trim,[Math.PI/2,0,0]);
       for(let i=0;i<3;i++)cylinder(torso,0,0.06,0.23,[0,0.24+i*0.13,-0.46],m.trim,[Math.PI/2-0.3,0,0]);
     }
-    // ---- демоны четырёх богов: у каждого свой силуэт, не только цвет ----
     const sheet = (parent: THREE.Object3D, pts: number[], mat: THREE.Material) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); g.computeVertexNormals(); return piece(parent, g, mat, [0, 0, 0]); };
+    if (faction === 'nightbringer') { // капюшон, рваный плащ до земли, вместо ног — подол: К'тан парит
+      const hood = piece(head, new THREE.ConeGeometry(0.3, 0.55, 6), m.cloth, [0, 0.12, -0.04]); hood.scale.set(1, 1, 1.15);
+      for (const x of [-0.08, 0.08]) box(head, [0.06, 0.04, 0.03], [x, 0.02, 0.17], m.glow);
+      sheet(torso, [-0.45, 0.6, -0.22, 0.45, 0.6, -0.22, 0.6, -1.0, -0.55, -0.45, 0.6, -0.22, 0.6, -1.0, -0.55, -0.6, -1.0, -0.55], m.cloth);
+      cylinder(pelvis, 0.28, 0.5, 0.95, [0, -0.45, 0], m.cloth, undefined, 7);
+      for (const leg of [legL, legR]) leg.visible = false;
+    }
+    if (faction === 'deceiver') { // корона из лучей, звезда в груди, осколки вокруг
+      for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2; cylinder(head, 0, 0.04, 0.32, [Math.sin(a) * 0.2, 0.3, Math.cos(a) * 0.2], m.glow, [Math.cos(a) * 0.5, 0, -Math.sin(a) * 0.5]); }
+      piece(torso, new THREE.SphereGeometry(0.13, 10, 8), m.glow, [0, 0.35, 0.2]);
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; piece(torso, new THREE.OctahedronGeometry(0.09), m.trim, [Math.sin(a) * 0.75, 0.2 + (i % 2) * 0.35, Math.cos(a) * 0.55]); }
+      sheet(torso, [-0.35, 0.55, -0.2, 0.35, 0.55, -0.2, 0.25, -0.6, -0.4], m.cloth);
+    }
+    // ---- демоны четырёх богов: у каждого свой силуэт, не только цвет ----
     if (faction === 'khorne') { // крылатый демон Кхорна: огромные перепончатые крылья, бронзовый ошейник, двуручный топор, рога назад
       for (const sg of [-1, 1]) {
         const w = joint(torso, `KhorneWing_${sg < 0 ? 'L' : 'R'}`, [sg * 0.18, 0.55, -0.28]); this.joints[sg < 0 ? 'godWingL' : 'godWingR'] = w;
@@ -568,7 +589,7 @@ export class FactionActor {
       if (role === 'elite') { for (const [a, sg] of [[armL, -1], [armR, 1]] as const) { box(a, [0.62, 0.42, 0.56], [sg * 0.06, 0.05, 0], m.primary, [0, 0, sg * -0.15]); box(a, [0.64, 0.06, 0.58], [sg * 0.06, -0.15, 0], m.trim); } box(elbowL, [0.34, 0.34, 0.34], [0, -0.42, 0.02], m.metal); box(elbowL, [0.36, 0.08, 0.36], [0, -0.3, 0.02], m.glow); } // наплечники и силовой кулак
       if (role === 'builder') { const arm = joint(torso, 'ServoArm', [0.18, 0.62, -0.4]); cylinder(arm, 0.05, 0.05, 0.6, [0, 0.25, 0.1], m.metal, [0.4, 0, 0]); cylinder(arm, 0.04, 0.04, 0.55, [0, 0.45, 0.45], m.metal, [1.4, 0, 0]); for (const sg of [-1, 1]) box(arm, [0.04, 0.18, 0.05], [sg * 0.06, 0.38, 0.73], extra.hazard, [0.4, 0, 0]); box(head, [0.34, 0.08, 0.34], [0, 0.17, 0], extra.hazard); } // механическая рука и каска
     }
-    if (role === 'captain') { // сборки героя различаются силуэтом: штурм — ранец и молот, командор — знамя, мистик — капюшон и посох с огнём
+    if (role === 'captain' && !ctan) { // сборки героя различаются силуэтом: штурм — ранец и молот, командор — знамя, мистик — капюшон и посох с огнём
       if (variant === 'assault') {
         for (const x of [-0.14, 0.14]) { cylinder(torso, 0.09, 0.11, 0.5, [x, 0.42, -0.5], m.metal); cylinder(torso, 0.07, 0.03, 0.18, [x, 0.08, -0.5], m.glow); }
         cylinder(weapon, 0.03, 0.03, 0.75, [0, -0.32, 0], m.metal); box(weapon, [0.34, 0.24, 0.24], [0, -0.72, 0], m.trim);

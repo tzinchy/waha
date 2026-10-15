@@ -5,13 +5,14 @@
 import * as THREE from 'three';
 import { FactionActor, ROLE_MOTIONS, motionDuration, type Motion, type UnitRole, type FactionId as Pack } from './models3d/faction-models.ts';
 import { StructureActor, STRUCTURE_ROLE_MOTIONS, structureMotionDuration, type StructureMotion, type StructureRole } from './models3d/structure-models.ts';
+import { NuclearBlastActor } from './models3d/effect-models.ts';
 import type { Kind } from '../shared/sim.ts';
 
 /** Вид юнита → роль модели. Чего здесь нет (мины), рисуется по-старому. */
 export const UNIT_ROLE: Partial<Record<Kind, UnitRole>> = { captain: 'captain', deity: 'captain', legend: 'elite', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', support: 'scout', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan', air: 'flyer', jet: 'aircraft', khorne: 'elite', nurgle: 'elite', tzeentch: 'sniper', slaanesh: 'scout' };
 /** Демоны четырёх богов: тело демона в цветах своего бога, у какой бы фракции ни были. */
 export const GOD_PACK: Partial<Record<Kind, Pack>> = { khorne: 'khorne', nurgle: 'nurgle', tzeentch: 'tzeentch', slaanesh: 'slaanesh' };
-export const STRUCT_ROLE: Partial<Record<Kind, StructureRole>> = { hq: 'hq', barracks: 'barracks', bunker: 'barracks', motorpool: 'factory', yard: 'factory', key1: 'armory', key2: 'armory', key3: 'armory', key4: 'armory', foundry: 'generator', pump: 'generator', post: 'post', turret: 'turret', rturret: 'turret', fturret: 'turret', battery: 'turret', pylon: 'turret', pyre: 'turret', wall: 'wall', wallgate: 'gate', gate: 'relic', aegis: 'relic', bell: 'relic', plague: 'relic', lighthouse: 'relic', obelisk: 'relic', megagun: 'turret', warpgate: 'relic', portal: 'relic' };
+export const STRUCT_ROLE: Partial<Record<Kind, StructureRole>> = { hq: 'hq', barracks: 'barracks', bunker: 'barracks', motorpool: 'factory', yard: 'factory', key1: 'armory', key2: 'armory', key3: 'armory', key4: 'armory', foundry: 'generator', pump: 'generator', post: 'post', turret: 'turret', rturret: 'turret', fturret: 'turret', battery: 'turret', pylon: 'turret', pyre: 'turret', wall: 'wall', wallgate: 'gate', gate: 'relic', aegis: 'relic', bell: 'relic', plague: 'relic', lighthouse: 'relic', obelisk: 'relic', megagun: 'turret', warpgate: 'relic', portal: 'relic', spire: 'turret' };
 export const has3d = (k: Kind) => k in UNIT_ROLE || k in STRUCT_ROLE;
 
 /** Наклон высоты: сколько экранных пикселей даёт метр высоты относительно метра земли. */
@@ -45,6 +46,7 @@ export class World3D {
   add(id: number, pack: Pack, kind: Kind, widthM: number, offs: [number, number][] = [[0, 0]], variant?: 'assault' | 'commander' | 'mystic', level = 1) {
     this.remove(id);
     pack = GOD_PACK[kind] ?? pack;
+    if (kind === 'deity') pack = variant === 'assault' ? 'nightbringer' : 'deceiver'; // К'тан по сборке капитана: штурм — Несущий Ночь с косой, иначе золотой Обманщик
     const ur = UNIT_ROLE[kind], sr = STRUCT_ROLE[kind];
     if (!ur && !sr) return;
     const group = new THREE.Group(), actors: Actor[] = [];
@@ -101,6 +103,14 @@ export class World3D {
     else p.a.pose('capture', (owned ? 1 - prog : prog) * structureMotionDuration('capture') * 0.8); // флаг ползёт вверх при захвате и вниз, когда чужие сбивают
   }
 
+  /** Сверхоружие: ядерный гриб на r метров (пыль модели расходится примерно на 4.3 своих единицы). */
+  private blasts: { a: NuclearBlastActor; t0: number }[] = [];
+  blast(x: number, y: number, r: number, now: number) {
+    const a = new NuclearBlastActor(); a.root.position.set(x, 0, y); a.root.scale.setScalar(r / 4.3);
+    a.root.traverse(o => { o.frustumCulled = false; });
+    this.scene.add(a.root); this.blasts.push({ a, t0: now });
+  }
+
   /** Гибель: проигрываем смерть и убираем модель. */
   kill(id: number, now: number) {
     const e = this.entries.get(id);
@@ -123,6 +133,7 @@ export class World3D {
       e.actors.forEach(a => a.pose(e.mode as never, Math.min(t, e.structure ? 1.2 : 1.6)));
       if (t > 1.8) this.remove(id);
     }
+    this.blasts = this.blasts.filter(b => { const t = (now - b.t0) / 1000; if (t > b.a.duration) { this.scene.remove(b.a.root); return false; } b.a.pose('explode', t); return true; });
     const sx = (2 * S * zoom) / w, sy = (2 * S * zoom) / h, dz = 2 / (mapH + 120);
     // x → вправо; y экрана = (z − cy − HEIGHT·высота); глубина: ближе к зрителю тот, у кого больше z и выше точка
     this.camera.projectionMatrix.set(

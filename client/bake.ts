@@ -8,7 +8,7 @@ const CELL = 256, LOW = 128; // рендер в 128 и увеличение бе
 const ROLES: Record<string, string[]> = {
   captain: ['idle', 'walk', 'run', 'attack', 'death'], builder: ['idle', 'walk', 'run', 'work', 'death'],
   flyer: ['idle', 'walk', 'run', 'shoot', 'death'], aircraft: ['idle', 'walk', 'run', 'shoot', 'death'],
-  ...Object.fromEntries(['guard', 'sniper', 'heavy', 'flamer', 'elite', 'medic', 'transport', 'tank', 'walker', 'artillery', 'titan'].map(r => [r, ['idle', 'walk', 'run', 'shoot', 'death']])),
+  ...Object.fromEntries(['guard', 'sniper', 'heavy', 'flamer', 'elite', 'scout', 'medic', 'transport', 'tank', 'walker', 'artillery', 'titan'].map(r => [r, ['idle', 'walk', 'run', 'shoot', 'death']])),
 };
 const MOTION: Record<string, Motion> = { attack: 'attack_slash' };
 const FLYER: Record<string, Motion> = { idle: 'fly', walk: 'fly', run: 'dash_flight' }; // у летуна нет ног-шагов: висит и рвётся вперёд

@@ -732,3 +732,14 @@ test('каждая фракция может заказать каждого ю�
     }
   }
 });
+
+test('мегапостройка бьёт на 200 м и засвечивает место удара', () => {
+  const s = newState(2), hq = unit(s, 0, 'hq'), foe = unit(s, 1, 'hq');
+  const d = Math.hypot(hq.x - foe.x, hq.y - foe.y), m = spawn(s, 0, 'spire', foe.x + (hq.x - foe.x) * 150 / d, foe.y + (hq.y - foe.y) * 150 / d); m.build = 1;
+  for (const u of s.units) if (u.owner === 1 && u !== foe) u.hp = 0; // цель одна — вражеский штаб
+  assert.ok(Math.hypot(foe.x - m.x, foe.y - m.y) < 200, 'штаб врага в досягаемости');
+  const hp = foe.hp;
+  run(s, 26);
+  assert.ok(foe.hp < hp, 'удар дошёл');
+  assert.ok(snapshotFor(s, 0).u.some(r => r[0] === foe.id), 'место удара засвечено');
+});

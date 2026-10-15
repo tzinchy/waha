@@ -11,11 +11,11 @@ export const ARCHS: Arch[] = ['assault', 'commander', 'mystic'];
 export type CaptainCfg = { arch: Arch };
 export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'legend' | 'wall' | 'wallgate' | 'bunker' | 'mine'
   | 'sniper' | 'heavy' | 'support' | 'elite' | 'healer' | 'lveh' | 'mveh' | 'hveh' | 'titan' | 'deity' | 'aegis' | 'rturret' | 'fturret' | 'arty' | 'battery' | 'pylon' | 'pyre' | 'bell' | 'doom' | 'lighthouse' | 'obelisk' | 'megagun' | 'plague' | 'motorpool' | 'yard'
-  | 'air' | 'warpgate' | 'khorne' | 'nurgle' | 'tzeentch' | 'slaanesh' | 'jet' | 'portal';
-export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'key1', 'key2', 'key3', 'key4', 'gate', 'legend', 'wall', 'wallgate', 'bunker', 'mine', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'aegis', 'rturret', 'fturret', 'arty', 'battery', 'pylon', 'pyre', 'bell', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague', 'motorpool', 'yard', 'air', 'warpgate', 'khorne', 'nurgle', 'tzeentch', 'slaanesh', 'jet', 'portal']; // новые — только в конец: индексы идут в снимки
+  | 'air' | 'warpgate' | 'khorne' | 'nurgle' | 'tzeentch' | 'slaanesh' | 'jet' | 'portal' | 'spire';
+export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'key1', 'key2', 'key3', 'key4', 'gate', 'legend', 'wall', 'wallgate', 'bunker', 'mine', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'aegis', 'rturret', 'fturret', 'arty', 'battery', 'pylon', 'pyre', 'bell', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague', 'motorpool', 'yard', 'air', 'warpgate', 'khorne', 'nurgle', 'tzeentch', 'slaanesh', 'jet', 'portal', 'spire']; // новые — только в конец: индексы идут в снимки
 const MOBILE = new Set<Kind>(['captain', 'builder', 'guard', 'legend', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'arty', 'air', 'khorne', 'nurgle', 'tzeentch', 'slaanesh', 'jet']);
 export const isStruct = (k: Kind) => !MOBILE.has(k);
-export type Buildable = 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'wall' | 'wallgate' | 'bunker' | 'mine' | 'aegis' | 'rturret' | 'fturret' | 'battery' | 'pylon' | 'pyre' | 'bell' | 'lighthouse' | 'obelisk' | 'megagun' | 'plague' | 'motorpool' | 'yard' | 'warpgate' | 'portal';
+export type Buildable = 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'wall' | 'wallgate' | 'bunker' | 'mine' | 'aegis' | 'rturret' | 'fturret' | 'battery' | 'pylon' | 'pyre' | 'bell' | 'lighthouse' | 'obelisk' | 'megagun' | 'plague' | 'motorpool' | 'yard' | 'warpgate' | 'portal' | 'spire';
 
 // hp: у отрядов хп ОДНОЙ модели (общий пул = hp * n), у остальных общий. dmg: урон одной модели.
 type Stat = { hp: number; n: number; dmg: number; range: number; cd: number; speed: number; sight: number; radius: number; cost: number; time: number };
@@ -52,7 +52,7 @@ export const STATS: Record<Kind, Stat> = {
   lveh: { hp: 700, n: 1, dmg: 9, range: 12, cd: 0.6, speed: 12, sight: 18, radius: 2.2, cost: 100, time: 14 },
   mveh: { hp: 1200, n: 1, dmg: 10, range: 14, cd: 0.5, speed: 7, sight: 16, radius: 2.7, cost: 130, time: 18 },
   hveh: { hp: 2600, n: 1, dmg: 95, range: 20, cd: 3, speed: 5, sight: 22, radius: 3, cost: 180, time: 24 },
-  titan: { hp: 15000, n: 1, dmg: 280, range: 26, cd: 3, speed: 3.2, sight: 45, radius: 5, cost: 3000, time: 240 }, // титан: 3000 влияния, 5000 энергии, 15 реликвий, 4 минуты
+  titan: { hp: 15000, n: 1, dmg: 280, range: 26, cd: 3, speed: 3.2, sight: 80, radius: 5, cost: 4500, time: 240 }, // титан: 4500 влияния, 7000 энергии, 20 реликвий, 4 минуты; видит с высоты 80 м
   // особые механики фракций (пресет FactionSpecials)
   deity: { hp: 4200, n: 1, dmg: 95, range: 6, cd: 1, speed: 9, sight: 22, radius: 2.2, cost: 0, time: 0 },        // Бог-Механизм Династий
   aegis: { hp: 700, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.3, cost: 150, time: 14 },        // Купол-эгида Консенсуса
@@ -72,6 +72,7 @@ export const STATS: Record<Kind, Stat> = {
   fturret: { hp: 700, n: 1, dmg: 9, range: 6, cd: 0.4, speed: 0, sight: 8, radius: 1.3, cost: 90, time: 10 },     // Огнемётная печь Орды
   air: { hp: 120, n: 3, dmg: 9, range: 10, cd: 1, speed: 11, sight: 18, radius: 1.6, cost: 160, time: 14 },        // авиация: крылатые/прыжковые отряды, летят над скалами и стенами
   jet: { hp: 900, n: 1, dmg: 24, range: 14, cd: 0.6, speed: 17, sight: 24, radius: 2.4, cost: 260, time: 24 },      // самолёт: быстрый, летит над всем, техцех
+  spire: { hp: 3500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 30, radius: 3, cost: 1300, time: 150 },     // Башня Кабала / Око Ужаса: мегапостройка Тёмных эльдар и Хаоса
   portal: { hp: 1500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 2.4, cost: 200, time: 20 },     // Теневой портал Тёмных эльдар
   // Врата Варпа Хаоса и демоны четырёх богов
   warpgate: { hp: 2200, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 3, cost: 300, time: 30 },
@@ -94,7 +95,9 @@ export const UNLOCKS = [
 export const DOOM_SHOT = 800;
 /** Пожар от зажигательного снаряда: радиус, урон в секунду (и по зданиям), длительность. */
 export const FIRE = { r: 4, dps: 25, t: 6 };
-export const MEGA = new Set<Kind>(['lighthouse', 'obelisk', 'megagun', 'plague']);
+export const MEGA = new Set<Kind>(['lighthouse', 'obelisk', 'megagun', 'plague', 'spire']);
+/** Дальний удар любой мегапостройки: раз в cd с бьёт ближайшего врага в range м (туман не мешает) и засвечивает место попадания. */
+export const MEGA_SHOT = { range: 200, cd: 25, dmg: 450, aoe: 8, reveal: 25, t: 10 };
 export const LIGHTHOUSE = { r: 25, armor: 0.85 }, PLAGUE = { r: 30, pct: 0.01 };
 export const PYRE = { r: 8, dps: 18 }, BELL = { r: 14, dmg: 0.8, speed: 0.8 };
 export const AEGIS = { pool: 1200, r: 12, regen: 1200 / 30, broken: 10 };   // щит купола: 1200 урона, полностью за 30 с, после пробоя 10 с не работает
@@ -124,7 +127,7 @@ export const ROLES: Partial<Record<Kind, Role>> = {
   mveh: { from: 'motorpool', tier: 3, pop: 6, armor: 'veh', dmg: 'small', energy: 160, aoe: 3, meters: 6 },
   hveh: { from: 'motorpool', tier: 3, pop: 8, armor: 'veh', dmg: 'heavy', energy: 260, aoe: 2.5, meters: 8 },
   arty: { from: 'motorpool', tier: 3, pop: 6, armor: 'veh', dmg: 'blast', energy: 200, aoe: 5, meters: 6 },
-  titan: { from: 'yard', tier: 4, pop: 20, armor: 'titan', dmg: 'blast', energy: 5000, relics: 15, aoe: 7, meters: 34, one: true },
+  titan: { from: 'yard', tier: 4, pop: 20, armor: 'titan', dmg: 'blast', energy: 7000, relics: 20, aoe: 7, meters: 34, one: true },
   jet: { from: 'motorpool', tier: 3, pop: 6, armor: 'light', dmg: 'heavy', energy: 180, meters: 7 },
   air: { from: 'barracks', tier: 2, pop: 3, armor: 'inf', dmg: 'small', energy: 80, meters: 2.6 },
   khorne: { from: 'warpgate', tier: 3, pop: 4, armor: 'hinf', dmg: 'melee', energy: 90, meters: 2.6 },
@@ -159,7 +162,7 @@ export const UNIT_FAC: Partial<Record<FactionId, Partial<Record<Kind, UnitMod>>>
   order: { arty: { info: 'Зажигательные ракеты: земля в точке удара горит.', fire: true }, hveh: { info: 'Спаренные лазпушки: +4 м дальности.', range: 4 }, titan: { info: 'Вулкан-мегаболтер: урон по площади 9 м.', aoe: 9 }, jet: { info: 'Штормовой коготь: штурмовая пушка — быстрые очереди.', cd: 0.7, dmg: 0.8 } },
   clockwork: { hveh: { info: 'Ковчег Судного дня: орудие во всю длину — 32 м, медленно, бьёт почти вдвое.', range: 12, cd: 1.7, dmg: 1.8 }, titan: { info: 'Монолит: попадание останавливает время цели на 2 с.', freeze: 2 }, arty: { info: 'Ковчег Аннигиляции: разряд по площади 7 м.', aoe: 7 }, jet: { info: 'Ночной серп: гаусс-излучатели — время цели замирает на 1 с.', freeze: 1 } },
   orks: { titan: { info: 'Стомпа: огнемёты и снаряды — земля горит, площадь 9 м.', aoe: 9, fire: true }, arty: { info: 'Большая пушка: площадь 7 м, но ближе (−6 м).', aoe: 7, range: -6 }, hveh: { info: 'Боевой фургон: таран и дакка — +20% урона.', dmg: 1.2 }, jet: { info: 'Дакка-джет: сбрасывает динамит — взрыв по площади 4 м, но реже.', aoe: 4, type: 'blast', cd: 1.8, dmg: 2.4 } },
-  ashen: { titan: { info: 'Кровожад: кровь для Кровавого бога — каждый удар лечит его на 20% урона.', leech: 0.2 }, mveh: { info: 'Печь-колесница: поджигает землю.', fire: true }, jet: { info: 'Адский дракон: пламя из пасти — площадь 3 м, земля горит, но вблизи (−6 м).', fire: true, aoe: 3, range: -6 } },
+  ashen: { titan: { info: 'Кровожад: кровь для Кровавого бога — каждый удар лечит его на 8% урона.', leech: 0.08 }, mveh: { info: 'Печь-колесница: поджигает землю.', fire: true }, jet: { info: 'Адский дракон: пламя из пасти — площадь 3 м, земля горит, но вблизи (−6 м).', fire: true, aoe: 3, range: -6 } },
   eldar: { titan: { info: 'Помост разрушения: питается болью — 15% урона лечит.', leech: 0.15 }, hveh: { info: 'Тёмные копья: +6 м дальности.', range: 6 }, jet: { info: 'Бритвокрыл: ракеты-иглы — площадь 3 м, +4 м дальности.', aoe: 3, range: 4 } },
   tyranids: { titan: { info: 'Иерофант: кислотный ливень — площадь 8 м, земля разъедается.', aoe: 8, fire: true }, arty: { info: 'Экзокрин: плазма по площади 6 м, +20% урона.', aoe: 6, dmg: 1.2 }, lveh: { info: 'Равенер: рвёт добычу — 20% урона лечит.', leech: 0.2 }, jet: { info: 'Гарпия: споровые мины — кислота по площади 4 м.', aoe: 4, fire: true, cd: 1.5 } },
 };
@@ -186,7 +189,7 @@ export const SYNAPSE = { r: 20, on: 1.1, off: 0.85 };       // Тираниды:
 const SYNAPSE_KINDS = new Set<Kind>(['captain', 'healer', 'legend', 'hq']);
 export const armorOf = (k: Kind): Armor => (isStruct(k) ? 'struct' : ROLES[k]?.armor ?? (k === 'legend' || k === 'captain' ? 'hinf' : 'inf'));
 export const dmgOf = (k: Kind, f: FactionId): DmgType => (k === 'guard' && isMelee('guard', f)) || k === 'captain' || k === 'legend' || k === 'deity' ? 'melee' : k === 'heavy' && HEAVY_SMALL.has(f) ? 'small' : ROLES[k]?.dmg ?? STRUCT_DMG[k] ?? 'small';
-export const LEGION_CAP = 40, MOTOR_CAP = 30; // пехота и техника считаются отдельно
+export const LEGION_CAP = 60, MOTOR_CAP = 45; // пехота и техника считаются отдельно
 export const SQUADS = new Set<Kind>(['guard', 'sniper', 'heavy', 'support', 'elite', 'air', 'khorne', 'nurgle', 'tzeentch', 'slaanesh']); // пополняются бойцами
 export const VEHICLES = new Set<Kind>(['lveh', 'mveh', 'hveh', 'titan', 'jet']);          // не лечатся — их чинят строители
 /** Снаряжение отряда (пресет SquadWargear): 0 — граната, 1 — заряд против техники и зданий, 2 — дым. */
@@ -338,7 +341,7 @@ function gainXp(s: State, owner: number, xp: number, at: { x: number; y: number 
 /** Рядом герой своего игрока, изучивший способность a (ауры дерева). */
 const nearCapWith = (s: State, u: Unit, a: number, r: number) => s.units.some(c => c.owner === u.owner && c.hero && c.hp > 0 && c.hero.abil & (1 << a) && dist(c, u) < r);
 /** Три ресурса пресета: Влияние (req, с точек), Энергия (с Литейни и насосов), Реликвии (с реликтовых точек). */
-export const ENERGY_COST: Partial<Record<Kind, number>> = { motorpool: 150, yard: 800, turret: 30, aegis: 100, rturret: 20, battery: 150, pylon: 120, pyre: 60, bell: 60, lighthouse: 800, obelisk: 1200, megagun: 800, plague: 800, warpgate: 150, portal: 120 };
+export const ENERGY_COST: Partial<Record<Kind, number>> = { motorpool: 150, yard: 800, turret: 30, aegis: 100, rturret: 20, battery: 150, pylon: 120, pyre: 60, bell: 60, lighthouse: 800, obelisk: 1200, megagun: 800, plague: 800, warpgate: 150, portal: 120, spire: 800 };
 export const ENERGY_INCOME: Partial<Record<Kind, number>> = { hq: 1, foundry: 2, pump: 4 };
 export const RELIC_RATE = 1 / 30; // реликвий в секунду с одной реликтовой точки (2/мин; на обеих картах по 8 реликвариев)
 /**
@@ -355,7 +358,7 @@ export const UPGRADES: Partial<Record<Kind, Upgrade>> = {
   lveh: { cost: 60, energy: 40, relics: 0, time: 8, tier: 3, name: 'Гранатомёт' }, // только Багги Орды: выстрел по площади 3 м
 };
 const LVL2 = { dmg: { post: 1, turret: 1.8, guard: 1.6, captain: 1.5 } as Partial<Record<Kind, number>>, armor: { post: 1, turret: 0.6, guard: 0.8, captain: 0.7, wall: 0.5, wallgate: 0.5 } as Partial<Record<Kind, number>>, range: { post: 0, turret: 3 } as Partial<Record<Kind, number>> };
-export const BUILD_TIER: Record<Buildable, number> = { hq: 2, barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1, key1: 1, key2: 2, key3: 3, key4: 4, gate: 5, motorpool: 3, yard: 4, wall: 1, wallgate: 1, bunker: 2, mine: 1, aegis: 2, rturret: 1, fturret: 1, battery: 2, pylon: 2, pyre: 2, bell: 2, lighthouse: 4, obelisk: 4, megagun: 4, plague: 4, warpgate: 3, portal: 2 };
+export const BUILD_TIER: Record<Buildable, number> = { hq: 2, barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1, key1: 1, key2: 2, key3: 3, key4: 4, gate: 5, motorpool: 3, yard: 4, wall: 1, wallgate: 1, bunker: 2, mine: 1, aegis: 2, rturret: 1, fturret: 1, battery: 2, pylon: 2, pyre: 2, bell: 2, lighthouse: 4, obelisk: 4, megagun: 4, plague: 4, warpgate: 3, portal: 2, spire: 4 };
 /** Постройки только своей фракции. */
 /** null — постройка снятых фракций (Консенсус, Нежить): вид остаётся в KINDS ради стабильных индексов, строить нельзя. */
 export const FACTION_ONLY: Partial<Record<Buildable, FactionId | null>> = { aegis: 'eldar', rturret: 'orks', fturret: 'orks', battery: 'order', bell: 'tyranids', pylon: 'clockwork', pyre: 'ashen', lighthouse: 'order', obelisk: 'clockwork', megagun: 'orks', plague: 'tyranids', warpgate: 'ashen', portal: 'eldar' }; // Эльдар — Теневое поле (купол), Демоны — Алтарь ужаса и Чумная башня
@@ -422,7 +425,8 @@ export type State = {
   died: number[]; // кто погиб с прошлого снимка (чтобы отличать смерть от ухода в туман)
   rewind: { owner: number; x: number; y: number; t: number }[]; // Перезавод Династий: отряды, которые встанут
   blasts: { x: number; y: number; t: number; g: number; owner: number }[]; // летящие гранаты
-  strikes: { x: number; y: number; t: number; owner: number }[];          // удары сверхоружия: предупреждение всем
+  strikes: { x: number; y: number; t: number; owner: number }[];
+  scans: { x: number; y: number; t: number; owner: number }[];            // засвет от дальнего удара мегапостройки          // удары сверхоружия: предупреждение всем
   plagues: { x: number; y: number; t: number; owner: number; fire?: boolean }[]; // чумные облака Колокола Конца и пожары зажигательных снарядов
   smoke: { x: number; y: number; t: number }[];
 };
@@ -462,7 +466,7 @@ const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
 export function newState(n: number, factions: FactionId[] = [], archs: Arch[] = []): State {
-  const s: State = { tick: 0, units: [], points: [...POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), ...RELICS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1, relic: true }))], players: [], nextId: 1, winner: null, shots: [], rewind: [], blasts: [], smoke: [], vp: [], died: [], strikes: [], plagues: [] };
+  const s: State = { tick: 0, units: [], points: [...POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), ...RELICS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1, relic: true }))], players: [], nextId: 1, winner: null, shots: [], rewind: [], blasts: [], smoke: [], vp: [], died: [], strikes: [], scans: [], plagues: [] };
   for (let i = 0; i < n; i++) {
     s.players.push({ req: START_REQ, energy: START_ENERGY, relics: 0, alive: true, tier: 1, faction: factions[i] ?? 'order', arch: archs[i] ?? 'commander', rage: 0, waagh: 0, remains: 0, research: 0, unlock: 0, stopCd: 0, revive: 0, doom: 0, kills: 0 });
     s.vp.push(VP_START);
@@ -853,7 +857,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (!(cmd.kind in BUILD_TIER) || !Number.isFinite(cmd.x) || !Number.isFinite(cmd.y)) return;
     if (p.tier < BUILD_TIER[cmd.kind]) return `Нужен тир ${BUILD_TIER[cmd.kind]}`;
     const c = STATS[cmd.kind];
-    if (cmd.kind in FACTION_ONLY && FACTION_ONLY[cmd.kind] !== p.faction) return 'Постройка другой фракции';
+    if (cmd.kind in FACTION_ONLY && FACTION_ONLY[cmd.kind] !== p.faction || cmd.kind === 'spire' && p.faction !== 'eldar' && p.faction !== 'ashen') return 'Постройка другой фракции';
     if (MEGA.has(cmd.kind) && !(p.unlock & 1)) return `Сначала исследуйте «${UNLOCKS[0].name}» в штабе`;
     { const probe = { ...p }; const e = pay(probe, c.cost, ENERGY_COST[cmd.kind] ?? 0); if (e) return e; } // проверка цены теми же правилами, что и оплата
     let { x, y } = snapB(cmd.kind, clamp(cmd.x, 4, MAP.w - 4), clamp(cmd.y, 4, MAP.h - 4)); // встаёт по клеткам сетки
@@ -880,7 +884,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     } else if (/turret$/.test(cmd.kind) && p.faction === 'orks') { // Орда ставит турели где угодно, кроме 20 м у чужого штаба
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) return 'Слишком близко к чужому штабу';
     } else if (cmd.kind === 'turret' || cmd.kind === 'aegis' || DEFENSE.has(cmd.kind) || /^key|^gate/.test(cmd.kind)) {
-      if ((/^key|^gate/.test(cmd.kind) || cmd.kind === 'lighthouse' || cmd.kind === 'obelisk' || cmd.kind === 'megagun' || cmd.kind === 'plague') && s.units.some(u => u.owner === owner && u.kind === cmd.kind && u.hp > 0)) return 'Такое здание уже есть';
+      if ((/^key|^gate/.test(cmd.kind) || cmd.kind === 'lighthouse' || cmd.kind === 'obelisk' || cmd.kind === 'megagun' || cmd.kind === 'plague' || cmd.kind === 'spire') && s.units.some(u => u.owner === owner && u.kind === cmd.kind && u.hp > 0)) return 'Такое здание уже есть';
       if (!s.units.some(u => u.owner === owner && isStruct(u.kind) && u.kind !== 'turret' && u.hp > 0 && dist(u, { x, y }) < 16) && !((cmd.kind === 'turret' || DEFENSE.has(cmd.kind)) && nearOwnPoint(s, owner, x, y)))
         return 'Турель ставится у своих построек или вокруг своей точки';
     } else if (cmd.kind !== 'hq') {
@@ -965,6 +969,7 @@ export function step(s: State, dt = DT): void {
   for (const z of s.plagues) { z.t -= dt; if (s.tick % 20 === 0) for (const v of s.units) if (v.owner !== z.owner && v.hp > 0 && (z.fire || !isStruct(v.kind)) && dist(v, z) < (z.fire ? FIRE.r : 18)) hurt(s, v, z.fire ? FIRE.dps : maxHp(v.kind) * 0.06, z.owner); }
   s.plagues = s.plagues.filter(z => z.t > 0);
   s.strikes = s.strikes.filter(st => st.t > 0);
+  s.scans = s.scans.filter(c => (c.t -= dt) > 0);
   for (const b of s.blasts) if ((b.t -= dt) <= 0) { // гранаты долетели
     const G = GEAR[b.g];
     if (b.g === 2) s.smoke.push({ x: b.x, y: b.y, t: SMOKE_TIME });
@@ -993,7 +998,7 @@ export const CRIT_NOBUILD = 12;
 export const wallOk = (structs: { kind: Kind; x: number; y: number; owner: number }[], owner: number, x: number, y: number) =>
   footFree(structs, 'wall', x, y) && dist({ x: POINTS[0][0], y: POINTS[0][1] }, { x, y }) >= CRIT_NOBUILD && !structs.some(u => u.kind === 'hq' && u.owner !== owner && dist(u, { x, y }) < 20);
 /** Уникальные оборонительные постройки ставятся как турели: у своих построек или вокруг своей точки. */
-export const DEFENSE = new Set<Kind>(['battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague']);
+export const DEFENSE = new Set<Kind>(['battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague', 'spire']);
 const postAt = (s: State, pt: { x: number; y: number }) => s.units.find(u => u.kind === 'post' && u.build >= 1 && u.hp > 0 && dist(u, pt) < 2);
 
 function produce(s: State, b: Unit, dt: number) {
@@ -1132,6 +1137,17 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
     }
   }
   if (u.kind === 'captain' && archOf(s, u) === 'mystic') for (const v of s.units) if (v.owner === u.owner && v !== u && !isStruct(v.kind) && !VEHICLES.has(v.kind) && v.hp > 0 && dist(v, u) < 10) v.hp = Math.min(maxHp(v.kind), v.hp + maxHp(v.kind) * 0.015 * dt); // Мистик: лампа лечит
+  if (MEGA.has(u.kind) && u.build >= 1 && (u.prog += dt) >= MEGA_SHOT.cd) { // дальний удар мегапостройки
+    let t: Unit | undefined, bd = MEGA_SHOT.range;
+    for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && s.players[v.owner]?.alive && dist(v, u) < bd) { bd = dist(v, u); t = v; }
+    if (t) {
+      u.prog = 0;
+      const tx = t.x, ty = t.y;
+      for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && dist(v, { x: tx, y: ty }) < MEGA_SHOT.aoe + STATS[v.kind].radius) hurt(s, v, MEGA_SHOT.dmg * VS.blast[armorOf(v.kind)], u.owner);
+      s.scans.push({ x: tx, y: ty, t: MEGA_SHOT.t, owner: u.owner });
+      if (s.shots.length < 200) s.shots.push([u.x, u.y, tx, ty, 12], [tx, ty, tx, ty - 0.1, 8]);
+    } else u.prog = MEGA_SHOT.cd;
+  }
   if (u.kind === 'plague' && u.build >= 1 && s.tick % 20 === 0) for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && !isStruct(v.kind) && dist(v, u) < PLAGUE.r) hurt(s, v, maxHp(v.kind) * PLAGUE.pct, u.owner); // Чумной шпиль: −1%/с
   if (u.kind === 'pyre' && u.build >= 1 && s.tick % 4 === 0) for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && !isStruct(v.kind) && dist(v, u) < PYRE.r) { hurt(s, v, PYRE.dps * dt * 4, u.owner); if (s.shots.length < 200 && Math.random() < 0.3) s.shots.push([u.x, u.y, v.x, v.y, FX.fire]); } // Огненная яма
   if (u.kind === 'healer') for (const v of s.units) if (v.owner === u.owner && v !== u && !isStruct(v.kind) && !VEHICLES.has(v.kind) && v.hp > 0 && dist(v, u) < 15) v.hp = Math.min(maxHp(v.kind), v.hp + maxHp(v.kind) * ROLES.healer!.heal! * dt); // целитель: 5%/с
@@ -1224,31 +1240,32 @@ function shoot(s: State, u: Unit, target: Unit): boolean {
   const st = STATS[u.kind], d = dist(u, target) - STATS[target.kind].radius;
   const melee = u.kind === 'guard' && isMelee('guard', fac(s, u.owner));
   const mystic = u.kind === 'captain' && archOf(s, u) === 'mystic'; // психосила библиария: дальше и по площади
+  const deceiver = u.kind === 'deity' && archOf(s, u) !== 'assault'; // К'тан по сборке: Обманщик (золотой) жжёт звёздным огнём издалека, Несущий Ночь (штурм) косит в упор
   const tf = modOf(fac(s, u.owner), u.kind); // свой «движ» юнита или турели фракции
   const tooClose = (MIN_RANGE[u.kind] ?? tf?.minRange ?? 0) > d; // артиллерия и мортиры не бьют в упор
   const upR = u.lvl > 1 ? tf?.up?.range ?? 0 : 0;
   const near = CLOSE[u.kind] && d <= CLOSE[u.kind]!.range ? CLOSE[u.kind] : undefined; // второе оружие вблизи
   const main = near ? undefined : tf; // свойства основного ствола — не для второго оружия
-  if (near || !tooClose && d <= (u.kind === 'post' && u.lvl >= 3 ? 12 : melee ? MELEE_GUARD.range : mystic ? 9 : st.range + (tf?.range ?? 0) + upR) + (u.lvl > 1 ? LVL2.range[u.kind] ?? 0 : 0) + ((u.kind === 'post' || u.kind === 'turret') && hasR(s, u.owner, 8) ? 3 : 0)) {
+  if (near || !tooClose && d <= (u.kind === 'post' && u.lvl >= 3 ? 12 : melee ? MELEE_GUARD.range : mystic ? 9 : deceiver ? 14 : st.range + (tf?.range ?? 0) + upR) + (u.lvl > 1 ? LVL2.range[u.kind] ?? 0 : 0) + ((u.kind === 'post' || u.kind === 'turret') && hasR(s, u.owner, 8) ? 3 : 0)) {
     if (u.cd === 0) {
       u.cd = near ? near.cd : melee ? MELEE_GUARD.cd : st.cd * (tf?.cd ?? 1);
       const mult = (u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1) * (main?.dmg ?? 1), armor = target.lvl > 1 ? LVL2.armor[target.kind] ?? 1 : 1;
       const smoked = !melee && st.range > 4 && s.smoke.some(c => dist(c, target) < 6 || dist(c, u) < 6); // в дыму стрельба вслепую
       const vs = (t: Unit) => (smoked ? 0.5 : 1) * VS[near?.type ?? main?.type ?? (u.kind === 'turret' && u.lvl > 1 ? 'heavy' : dmgOf(u.kind, fac(s, u.owner)))][armorOf(t.kind)];
-      const dealt = (near ? near.dmg : u.kind === 'post' && u.lvl >= 3 ? 14 : melee ? MELEE_GUARD.dmg : st.dmg) * (SQUADS.has(u.kind) ? members(u.kind, u.hp) : 1) * mult * armor * dmgMul(s, u) * armorMul(s, target) * vs(target);
+      const dealt = (near ? near.dmg : u.kind === 'post' && u.lvl >= 3 ? 14 : melee ? MELEE_GUARD.dmg : st.dmg) * (SQUADS.has(u.kind) ? members(u.kind, u.hp) : 1) * mult * (deceiver ? 0.7 : 1) * armor * dmgMul(s, u) * armorMul(s, target) * vs(target);
       hurt(s, target, dealt, u.owner);
       if (main?.leech) u.hp = Math.min(maxHp(u.kind), u.hp + dealt * main.leech);
       if (main?.freeze && !isStruct(target.kind)) target.frozen = Math.max(target.frozen, main.freeze);
       if (main?.fire && s.plagues.length < 60) s.plagues.push({ x: target.x, y: target.y, t: FIRE.t, owner: u.owner, fire: true });
-      if (fac(s, u.owner) === 'ashen' && !isStruct(u.kind)) u.hp = Math.min(maxHp(u.kind), u.hp + dealt * 0.1); // Порча: удар питает демона
+      if (fac(s, u.owner) === 'ashen' && !isStruct(u.kind) && u.kind !== 'titan') u.hp = Math.min(maxHp(u.kind), u.hp + dealt * 0.1); // Порча: удар питает демона
       const nade = u.kind === 'lveh' && u.lvl > 1; // Багги с гранатомётом
-      const aoe = near ? undefined : (nade ? 3 : undefined) ?? ROLES[u.kind]?.aoe ?? STRUCT_AOE[u.kind] ?? (tf?.aoe ? tf.aoe + (u.lvl > 1 ? tf.up?.aoe ?? 0 : 0) : undefined) ?? (mystic ? 3 : undefined);
+      const aoe = near ? undefined : (nade ? 3 : undefined) ?? ROLES[u.kind]?.aoe ?? STRUCT_AOE[u.kind] ?? (tf?.aoe ? tf.aoe + (u.lvl > 1 ? tf.up?.aoe ?? 0 : 0) : undefined) ?? (mystic ? 3 : deceiver ? 4 : undefined);
       if (u.kind === 'arty' && fac(s, u.owner) === 'ashen' && s.plagues.length < 60) s.plagues.push({ x: target.x, y: target.y, t: FIRE.t, owner: u.owner, fire: true }); // Адская мортира: зажигательный снаряд, земля горит
       if (aoe) for (const v of s.units) if (v !== target && v.owner !== u.owner && v.hp > 0 && dist(v, target) < aoe) { hurt(s, v, dealt * 0.6 * (vs(v) / Math.max(0.01, vs(target))), u.owner); } // взрыв по площади
       if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) { hurt(s, v, dealt * 0.5, u.owner); } // огненная буря
       const pa = s.players[u.owner];
       if (pa.faction === 'orks' && pa.waagh <= 0) { pa.rage += (dealt * 0.08 + (target.hp <= 0 ? 6 : 0)) * (s.units.some(w => w.kind === 'elite' && w.owner === u.owner && w.hp > 0 && dist(w, u) < 12) ? 2 : 1); /* Вожак рядом — ярость вдвое */ if (pa.rage >= RAGE_MAX) { pa.rage = 0; pa.waagh = WAAGH_TIME; } } // Ярость
-      if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y, mystic ? FX.fire : nade ? 12 : attackFx(u.kind, fac(s, u.owner), u.q)]);
+      if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y, mystic ? FX.fire : deceiver ? FX.beam : nade ? 12 : attackFx(u.kind, fac(s, u.owner), u.q)]);
     }
     return true;
   }
@@ -1285,7 +1302,7 @@ function separate(s: State) { // ponytail: O(n²) по парам, на сотн
 function doomStrike(s: State, st: { x: number; y: number; owner: number }) {
   const f = s.players[st.owner]?.faction ?? 'order', R = DOOM_R[f] ?? 16, boom = (x: number, y: number, r: number, dmg: number) => {
     for (const v of s.units) if (v.owner !== st.owner && v.hp > 0 && dist(v, { x, y }) < r + STATS[v.kind].radius) hurt(s, v, dmg * (1 - dist(v, { x, y }) / (r * 2)), st.owner);
-    if (s.shots.length < 200) s.shots.push([x, y, x, y - 0.1, 18]);
+    if (s.shots.length < 200) s.shots.push([x, y, x + r, y, 18]); // x2 − x1 — радиус взрыва
   };
   if (f === 'eldar') boom(st.x, st.y, R, 3000);                          // Тёмное солнце
   else if (f === 'tyranids') { boom(st.x, st.y, R, 800); s.plagues.push({ x: st.x, y: st.y, t: 20, owner: st.owner }); } // Варп-шторм: облако 20 с
@@ -1308,7 +1325,8 @@ function victoryPoints(s: State, dt: number) {
 /** Кто что видит: id юнитов в обзоре своих войск и построек (туман войны считается на сервере). */
 export function visibleTo(s: State, owner: number): Set<number> {
   const eyes = [...s.units.filter(u => u.owner === owner && u.hp > 0).map(u => ({ x: u.x, y: u.y, r: Math.max(STATS[u.kind].sight, isStruct(u.kind) ? SIGHT_STRUCT : 10) + (hasR(s, owner, 11) ? 4 : 0) })),
-    ...s.points.filter(p => p.owner === owner).map(p => ({ x: p.x, y: p.y, r: SIGHT_STRUCT + (hasR(s, owner, 11) ? 4 : 0) }))]; // своя точка видит и без башни
+    ...s.points.filter(p => p.owner === owner).map(p => ({ x: p.x, y: p.y, r: SIGHT_STRUCT + (hasR(s, owner, 11) ? 4 : 0) })), // своя точка видит и без башни
+    ...s.scans.filter(c => c.owner === owner).map(c => ({ x: c.x, y: c.y, r: MEGA_SHOT.reveal }))];
   const seen = new Set<number>();
   for (const u of s.units) {
     const hid = u.owner !== owner && veiled(s, u); // под Теневым порталом видно только вплотную
@@ -1377,11 +1395,11 @@ const prodPct = (u: Unit) => u.q <= 0 || u.kind === 'legend' ? 0
   : u.que[0] ? Math.floor((u.prog / STATS[u.que[0]].time) * 100) : 0;
 
 /** Компактный снимок для сети: целые числа вместо float, чтобы JSON был короче. */
-export type Snap = { vp: number[]; d: number[]; ss: number[][]; mg: number[][]; tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; qk: Record<number, number[]>; sm: number[][]; ps: number[][] };
+export type Snap = { vp: number[]; d: number[]; ss: number[][]; mg: number[][]; tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; qk: Record<number, number[]>; sm: number[][]; ps: number[][]; sc?: number[][] };
 /** Снимок для одного игрока: враги вне обзора вырезаны, выстрелы — только видимые концом или началом. */
 export function snapshotFor(s: State, owner: number): Snap {
   const full = snapshot(s), seen = visibleTo(s, owner), near = (x: number, y: number) => s.units.some(u => u.owner === owner && u.hp > 0 && Math.hypot(u.x - x / 10, u.y - y / 10) < Math.max(STATS[u.kind].sight, 12)) || s.points.some(p => p.owner === owner && Math.hypot(p.x - x / 10, p.y - y / 10) < SIGHT_STRUCT);
-  return { ...full, u: full.u.filter(r => seen.has(r[0])), sh: full.sh.filter(v => near(v[0], v[1]) || near(v[2], v[3])), qk: Object.fromEntries(Object.entries(full.qk).filter(([id]) => s.units.some(u => u.id === Number(id) && u.owner === owner))) };
+  return { ...full, sc: s.scans.filter(c => c.owner === owner).map(c => [Math.round(c.x * 10), Math.round(c.y * 10)]), u: full.u.filter(r => seen.has(r[0])), sh: full.sh.filter(v => near(v[0], v[1]) || near(v[2], v[3])), qk: Object.fromEntries(Object.entries(full.qk).filter(([id]) => s.units.some(u => u.id === Number(id) && u.owner === owner))) };
 }
 export function snapshot(s: State): Snap {
   return {
