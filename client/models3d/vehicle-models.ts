@@ -12,7 +12,7 @@ export type Kit = {
   piece: (p: THREE.Object3D, g: THREE.BufferGeometry, m: THREE.Material, pos: V, rot?: V) => THREE.Mesh;
   joint: (p: THREE.Object3D, name: string, pos: V) => THREE.Group;
 };
-export type VehicleRole = 'transport' | 'tank' | 'artillery' | 'walker';
+export type VehicleRole = 'transport' | 'tank' | 'artillery' | 'walker' | 'aircraft';
 export type Rig = { rig: THREE.Group; hull: THREE.Group; turret: THREE.Group; gun: THREE.Group; left: THREE.Group; right: THREE.Group; rearL?: THREE.Group; rearR?: THREE.Group; tail?: THREE.Group; muzzleZ: number };
 
 const X = Math.PI / 2;
@@ -42,6 +42,44 @@ export function buildVehicle(K: Kit, root: THREE.Group, faction: FactionId, role
     box(d, [w * 0.85, lower, w * 0.8], [0, -upper - lower / 2, back * 0.25], foot, [-back * 0.4, 0, 0]);
     box(d, [w * 1.2, 0.14, w * 1.5], [0, -upper - lower, 0.12], foot);
   };
+
+  // ---------- Самолёты: «Штормовой коготь», «Ночной серп», Дакка-джет, Адский дракон, «Бритвокрыл», Гарпия ----------
+  if (role === 'aircraft') {
+    hull.position.y = 0.6; turret.position.set(0, 0.2, 0.6); gun.position.set(0, -0.15, 0.9);
+    left.position.set(-1.2, 0.6, -0.2); right.position.set(1.2, 0.6, -0.2); // законцовки крыльев: анимация их покачивает
+    const wingSheet = (sg: number, pts: number[], mat = m.primary) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts.map((v, i) => (i % 3 === 0 ? v * sg : v)), 3)); g.computeVertexNormals(); return piece(hull, g, mat, [0, 0, 0]); };
+    if (faction === 'legion') {
+      box(hull, [0.7, 0.55, 2.4], [0, 0, 0], m.primary); box(hull, [0.45, 0.25, 0.6], [0, 0.35, 0.55], m.glow); // фюзеляж и фонарь
+      for (const sg of [-1, 1]) { box(hull, [1.4, 0.1, 0.9], [sg * 0.95, -0.05, -0.2], m.primary, [0, sg * 0.15, 0]); box(hull, [0.1, 0.5, 0.5], [sg * 0.3, 0.45, -1.0], m.trim); cylinder(hull, 0.16, 0.2, 0.5, [sg * 0.25, -0.05, -1.35], m.glow, [X, 0, 0]); }
+      out.muzzleZ = barrel(gun, 0.07, 0.6, [0, 0, 0]); barrel(gun, 0.05, 0.5, [-0.4, 0.1, -0.6]); barrel(gun, 0.05, 0.5, [0.4, 0.1, -0.6]);
+    } else if (faction === 'necrons') { // серп: полумесяц крыльев
+      box(hull, [0.45, 0.35, 1.8], [0, 0, 0], m.primary);
+      for (const sg of [-1, 1]) { wingSheet(sg, [0.2, 0, 0.6, 1.9, 0, -0.9, 0.3, 0, -0.5], m.metal); box(hull, [0.06, 0.06, 1.4], [sg * 1.0, 0.05, -0.25], m.glow, [0, sg * -0.5, 0]); }
+      piece(hull, new THREE.OctahedronGeometry(0.22), m.glow, [0, 0.25, 0.3]); out.muzzleZ = barrel(gun, 0.06, 0.6, [0, 0, 0], m.metal, m.glow);
+    } else if (faction === 'scrap') { // дакка-джет: грубая бочка, прямые крылья, акулья пасть, ракеты
+      cylinder(hull, 0.35, 0.45, 2.2, [0, 0, 0], m.primary, [X, 0, 0], 8); box(hull, [0.5, 0.06, 0.12], [0, -0.1, 1.12], m.glow);
+      for (const sg of [-1, 1]) { box(hull, [1.5, 0.1, 0.6], [sg * 0.95, 0, 0], m.metal); for (let i = 0; i < 2; i++) cylinder(hull, 0.06, 0.06, 0.6, [sg * (0.7 + i * 0.45), -0.15, 0.05], m.trim, [X, 0, 0]); }
+      box(hull, [0.08, 0.6, 0.5], [0, 0.4, -1.0], m.primary); cylinder(hull, 0.2, 0.3, 0.4, [0, 0, -1.25], m.glow, [X, 0, 0]);
+      out.muzzleZ = barrel(gun, 0.06, 0.7, [-0.15, 0, 0]); barrel(gun, 0.06, 0.7, [0.15, 0, 0]);
+    } else if (faction === 'heretics') { // адский дракон: тело змея, перепончатые крылья, пасть с огнём, хвост
+      const body = piece(hull, new THREE.SphereGeometry(0.5, 10, 8), m.metal, [0, 0, 0]); body.scale.set(0.9, 0.7, 2);
+      for (const sg of [-1, 1]) { wingSheet(sg, [0.3, 0.1, 0.4, 2.0, 0.6, -0.2, 1.6, 0, -1.0, 0.3, 0.1, 0.4, 1.6, 0, -1.0, 0.3, 0, -0.6], m.cloth); cylinder(hull, 0.03, 0.06, 1.9, [sg * 1.0, 0.3, -0.1], m.trim, [0, 0, -sg * 1.25]); }
+      box(turret, [0.4, 0.3, 0.6], [0, 0, 0.4], m.primary); for (const sg of [-1, 1]) cylinder(turret, 0, 0.05, 0.35, [sg * 0.15, 0.2, 0.2], m.trim, [-0.8, 0, -sg * 0.4], 5);
+      out.tail = joint(hull, 'BeastTail', [0, 0, -0.9]); for (let i = 0; i < 4; i++) cylinder(out.tail, 0.12 - i * 0.025, 0.14 - i * 0.025, 0.4, [0, 0, -0.35 * i - 0.2], m.metal, [X, 0, 0]);
+      gun.position.set(0, 0.2, 1.05); out.muzzleZ = barrel(gun, 0.08, 0.2, [0, 0, 0], m.trim, m.glow);
+    } else if (faction === 'drukhari') { // бритвокрыл: тонкое дельта-крыло, лезвия, шипы
+      box(hull, [0.35, 0.22, 2.2], [0, 0, 0], m.primary); cylinder(hull, 0, 0.2, 0.8, [0, 0, 1.45], m.metal, [X, 0, 0], 4);
+      for (const sg of [-1, 1]) { wingSheet(sg, [0.15, 0, 0.9, 1.8, 0, -1.0, 0.15, 0, -1.0], m.primary); box(hull, [0.04, 0.04, 1.6], [sg * 1.0, 0.03, -0.3], m.trim, [0, sg * -0.6, 0]); cylinder(hull, 0, 0.05, 0.5, [sg * 1.75, 0, -0.95], m.trim, [X, 0, 0], 4); }
+      out.muzzleZ = barrel(gun, 0.04, 0.6, [-0.12, 0, 0], m.metal, m.glow); barrel(gun, 0.04, 0.6, [0.12, 0, 0], m.metal, m.glow);
+    } else { // гарпия тиранидов: мясистое тело, огромные перепончатые крылья, костяная пушка, хвост
+      const body = piece(hull, new THREE.SphereGeometry(0.5, 10, 8), m.skin, [0, 0, 0]); body.scale.set(0.9, 0.7, 1.6);
+      for (let i = 0; i < 3; i++) box(hull, [0.75 - i * 0.1, 0.1, 0.3], [0, 0.32, 0.4 - i * 0.35], m.primary);
+      for (const sg of [-1, 1]) { wingSheet(sg, [0.3, 0.1, 0.3, 2.1, 0.5, 0.1, 1.8, 0, -0.9, 0.3, 0.1, 0.3, 1.8, 0, -0.9, 0.3, 0, -0.5], m.cloth); cylinder(hull, 0.03, 0.07, 2.0, [sg * 1.05, 0.3, 0.15], m.trim, [0, 0, -sg * 1.35]); }
+      out.tail = joint(hull, 'BeastTail', [0, 0, -0.7]); for (let i = 0; i < 3; i++) cylinder(out.tail, 0.1 - i * 0.025, 0.12 - i * 0.025, 0.4, [0, 0, -0.35 * i - 0.2], m.skin, [X, 0, 0]);
+      out.muzzleZ = barrel(gun, 0.09, 0.6, [0, 0, 0], m.trim, m.glow);
+    }
+    return out;
+  }
 
   // ---------- Космодесант: «Носорог», «Хищник», «Вихрь», Дредноут ----------
   if (faction === 'legion') {
@@ -212,11 +250,16 @@ export function buildVehicle(K: Kit, root: THREE.Group, faction: FactionId, role
   // ---------- Демоны: Колесница Тзинча, Перемалыватель душ, Пушка черепов, Демон-зверь ----------
   const flesh = (p: THREE.Object3D, r: number, pos: V, sc: V) => { const s = piece(p, new THREE.SphereGeometry(r, 16, 12), m.skin, pos); s.scale.set(sc[0], sc[1], sc[2]); return s; };
   const horns = (p: THREE.Object3D, x: number, y: number, z: number, len = 0.5) => { for (const s of [-1, 1]) cylinder(p, 0, 0.09, len, [s * x, y, z], m.trim, [-0.4, 0, -s * 0.6], 6); };
-  if (legs || role === 'tank') {                           // Перемалыватель душ (tank) / Демон-зверь (walker): тело на четырёх лапах
-    const grinder = role === 'tank';
+  const bug = faction === 'tyranids'; // у тиранидов вся техника — твари на лапах: Равенер, Карнифекс, Тираннофекс, Экзокрин
+  if (legs || role === 'tank' || bug) {                    // Перемалыватель душ (tank) / Демон-зверь (walker): тело на четырёх лапах
+    const grinder = role === 'tank' || (bug && role === 'artillery');
     hull.position.y = grinder ? 1.15 : 1.25;
     flesh(hull, 0.75, [0, 0, 0], [0.9, 0.6, 1.25]);
-    for (let i = 0; i < 4; i++) box(hull, [0.95 - i * 0.08, 0.1, 0.18], [0, 0.42 - i * 0.02, -0.55 + i * 0.35], m.metal);   // латунные пластины
+    for (let i = 0; i < 4; i++) box(hull, [0.95 - i * 0.08, 0.1, 0.18], [0, 0.42 - i * 0.02, -0.55 + i * 0.35], bug ? m.primary : m.metal);   // латунные пластины / хитиновый панцирь
+    if (bug && role === 'artillery') { const sac = piece(hull, new THREE.SphereGeometry(0.45, 12, 8), m.cloth, [0, 0.75, -0.3]); sac.scale.set(1, 0.8, 1.3); for (let i = 0; i < 3; i++) cylinder(hull, 0.09, 0.12, 0.9, [-0.25 + i * 0.25, 1.1, -0.1], m.trim, [-0.5, 0, 0]); } // Экзокрин: мешок плазмы и костяные трубы на спине
+    if (bug && role === 'transport') { hull.scale.set(0.8, 0.8, 1.15); }                                                  // Равенер: длинный и низкий
+    if (bug && legs) { for (const sx of [-1, 1]) { box(hull, [0.14, 0.9, 0.1], [sx * 0.65, 0.1, 0.95], m.trim, [-1.0, 0, sx * 0.25]); cylinder(hull, 0, 0.08, 0.4, [sx * 0.7, -0.15, 1.45], m.trim, [1.9, 0, 0], 4); } hull.scale.setScalar(1.1); } // Карнифекс: огромные косы спереди
+    if (bug && role === 'tank') hull.scale.setScalar(1.2);                                                                // Тираннофекс крупнее всех
     spikes(hull, 4, 0, 0.5, -0.5, 0.33, 0.35, m.trim, -0.35);
     if (grinder) { flesh(turret, 0.38, [0, 0.35, 0.65], [0.8, 1.0, 0.7]); horns(turret, 0.22, 0.75, 0.6, 0.45); box(turret, [0.28, 0.1, 0.05], [0, 0.42, 0.95], m.glow); gun.position.set(0.55, -0.05, 0.5); out.muzzleZ = barrel(gun, 0.15, 1.0, [0, 0, 0], m.metal, m.glow); } // торс демона и орудие-пасть
     else { flesh(turret, 0.36, [0, -0.05, 0.85], [0.8, 0.75, 1.0]); horns(turret, 0.2, 0.15, 0.95, 0.55); box(turret, [0.3, 0.08, 0.05], [0, -0.1, 1.2], m.glow); for (let i = 0; i < 4; i++) cylinder(turret, 0, 0.03, 0.12, [-0.12 + i * 0.08, -0.25, 1.15], m.trim, [Math.PI, 0, 0], 4); out.muzzleZ = 1.2; }

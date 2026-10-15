@@ -43,6 +43,7 @@ function toast(msg: string) {
 }
 function connect(then: () => void) {
   if (ws?.readyState === 1) return then();
+  if (ws?.readyState === 0) { ws.addEventListener('open', then, { once: true }); return; } // ещё подключается: второй сокет не открываем, ждём этот
   const sock = (ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`));
   sock.onopen = then;
   sock.onmessage = e => onMsg(JSON.parse(e.data));
@@ -111,7 +112,9 @@ function showPing(ms: number) {
 }
 setInterval(() => { if (ws?.readyState === 1) tx({ t: 'ping', at: performance.now() }); }, 2000);
 setInterval(() => { if (!$('menu').classList.contains('hidden') && !document.hidden && ws?.readyState !== 0) connect(() => tx({ t: 'list' })); }, 3000); // readyState 0: сокет ещё подключается — второй не открываем
-connect(() => tx({ t: 'list' }));
+const arena = new URLSearchParams(location.search).get('arena'); // ?arena=order,orks — показательный бой без сервера
+if (arena !== null) import('./arena.ts').then(m => m.runArena(arena, $('game')));
+else connect(() => tx({ t: 'list' }));
 
 /** Выбор фракции: карточки с силуэтом капитана, тема интерфейса и превью меняются вместе с выбором. */
 function renderFactions(mine: FactionId) {

@@ -67,7 +67,7 @@
   .w2d-gp.foe{border-color:var(--blood-300)}
   .w2d-gp i{position:absolute;left:2px;right:2px;bottom:2px;height:3px;background:linear-gradient(90deg,var(--verdigris-500) var(--v),var(--surface-000) var(--v))}
   .w2d-more{align-self:center;font:400 12px/1 var(--font-mono);color:var(--ink-muted)}
-  #hud-sel{flex:1;align-self:flex-end;padding-bottom:6px;font:500 12px/16px var(--font-label);letter-spacing:.08em;color:var(--verdigris-300)}
+  #hud-sel{pointer-events:none !important;flex:1;align-self:flex-end;padding-bottom:6px;font:500 12px/16px var(--font-label);letter-spacing:.08em;color:var(--verdigris-300)}
   #hud-cmd{margin-left:auto;padding:var(--space-3)}
   #hud-cmd .lc-cmd__cell svg.lc-art{width:44px;height:44px}
   #hud-cmd .lc-cmd__cell.ult{box-shadow:inset 0 0 0 2px var(--amber-500)}
@@ -96,7 +96,7 @@
   #view{position:absolute;inset:0}
   #view canvas{display:block;width:100%;height:100%}
   #hud{position:absolute;inset:0;pointer-events:none}
-  #hud>*{pointer-events:auto}
+  #hud>*:not(#hud-bottom){pointer-events:auto}
   #hud-sel,#hud-tip,#hud-alerts{pointer-events:none} /* подпись «Выбрано», подсказка и лента тревог — прозрачные полосы над картой: клики проходят сквозь них */
   #hud-alerts>*{pointer-events:auto}
   #hud-res{position:absolute;left:var(--space-4);top:var(--space-4)}
@@ -136,6 +136,7 @@
   .w2d-unit.rising .w2d-body{animation:w2d-rise 1s ease-in-out infinite;filter:drop-shadow(0 0 18px #8fe0cc) brightness(1.3)}
   @keyframes w2d-rise{50%{transform:translateY(-12px) scale(1.15)}}
   #hud-score{position:absolute;left:50%;top:72px;transform:translateX(-50%);width:min(420px,40vw);pointer-events:none;filter:drop-shadow(0 2px 6px #000)}
+  #hud-score .lc-score__points{gap:5px;flex-wrap:wrap}#hud-score .lc-score__pt{width:17px;height:17px;font-size:10px} /* до 17 точек — компактные ромбы */
   .w2d-fog{position:absolute;left:0;top:0;z-index:8500;pointer-events:none}
   .w2d-unit.ghost{filter:grayscale(.9) brightness(.6);opacity:.7}
   .w2d-unit.ghost .w2d-bar,.w2d-unit.ghost .w2d-ring{display:none}
@@ -234,7 +235,7 @@
   .pal-ashen{--art-brass:#79272d;--art-brass-lit:#ae8551;--art-iron:#242129;--art-glow:#f07835;--art-blood:#482131}
   .pal-orks{--art-brass:#935045;--art-brass-lit:#ac9764;--art-iron:#4c504e;--art-glow:#d5a455;--art-blood:#657d43}
   .pal-eldar{--art-brass:#3a2452;--art-brass-lit:#a15cba;--art-iron:#24202e;--art-glow:#59e8d0;--art-blood:#5a2a4a} /* Тёмные эльдар */
-  .pal-daemons{--art-brass:#8d223c;--art-brass-lit:#e6a74e;--art-iron:#352139;--art-glow:#ff5a23;--art-blood:#5c214a} /* Демоны Хаоса */
+  .pal-tyranids{--art-brass:#5b2a73;--art-brass-lit:#e8dcc0;--art-iron:#2a1830;--art-glow:#b6ff5a;--art-blood:#7a1f3a} /* Тираниды */
   .pal-clockwork{--art-brass:#394844;--art-brass-lit:#a18b54;--art-iron:#1f2725;--art-glow:#78ee51;--art-blood:#27362c}
   .w2d-ent .turret{transform-box:fill-box;transform-origin:50% 75%;transition:transform .25s var(--ease-snap)}
   .w2d-unit.enemy{--art-brass:var(--art-blood-lit);--art-brass-lit:#ee9a8e;--art-glow:var(--art-fire)} /* сторона читается металлом и светом, не обводкой */

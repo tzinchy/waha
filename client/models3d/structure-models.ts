@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BUILDING_ROLES, FACTION_ART, factionBuilding, upgradeFactionBuilding, type BuildingRole, type FactionId } from './faction-models.ts';
+import { BUILDING_ROLES, FACTION_ART, daemonic, factionBuilding, upgradeFactionBuilding, type BuildingRole, type FactionId } from './faction-models.ts';
 
 /** Building/point visuals only. These clips never mutate ownership, HP or income. */
 export const STRUCTURE_ROLES = [...BUILDING_ROLES, 'capture_point', 'resource_point'] as const;
@@ -28,7 +28,7 @@ const smooth = (t: number) => { const p = THREE.MathUtils.clamp(t, 0, 1); return
 function addFactionSilhouette(parent: THREE.Group, faction: FactionId, role: StructureRole) {
   const a = FACTION_ART[faction];
   const group = new THREE.Group(); group.name = `Structure_${faction}_Silhouette`; parent.add(group);
-  const armor = new THREE.MeshStandardMaterial({ color: a.primary, roughness: 0.72, metalness: faction === 'daemons' ? 0 : 0.6 });
+  const armor = new THREE.MeshStandardMaterial({ color: a.primary, roughness: 0.72, metalness: daemonic(faction) ? 0 : 0.6 });
   const metal = new THREE.MeshStandardMaterial({ color: a.metal, roughness: 0.65, metalness: 0.7 });
   const trim = new THREE.MeshStandardMaterial({ color: a.trim, roughness: 0.5, metalness: 0.65 });
   const light = new THREE.MeshStandardMaterial({ color: a.glow, emissive: a.glow, emissiveIntensity: 1.4 });
@@ -109,18 +109,21 @@ export class StructureActor {
   private barrels: THREE.Group | undefined;
   private flash: THREE.Group | undefined;
 
-  constructor(faction: FactionId, role: StructureRole = 'hq', level = 1) {
+  /** Ткань флага и свечение: точка перекрашивает их в цвет владельца. */
+  cloth!: THREE.MeshStandardMaterial; glow!: THREE.MeshStandardMaterial;
+  constructor(faction: FactionId, role: StructureRole = 'hq', level = 1, palette?: Partial<(typeof FACTION_ART)[FactionId]>) {
     this.faction = faction;
     this.role = role;
     this.level = Math.max(1, Math.min(3, Math.floor(level)));
     this.root.name = `${faction}_${role}_Actor`;
     this.body = this.joint(this.root, 'Body', [0, 0, 0]);
-    const a = FACTION_ART[faction];
+    const a = { ...FACTION_ART[faction], ...palette }; // нейтральная точка — своя палитра камня и латуни
     const metal = new THREE.MeshStandardMaterial({ color: a.metal, metalness: 0.8, roughness: 0.5 });
     const trim = new THREE.MeshStandardMaterial({ color: a.trim, metalness: 0.7, roughness: 0.45 });
     const primary = new THREE.MeshStandardMaterial({ color: a.primary, metalness: 0.4, roughness: 0.7 });
     const glow = new THREE.MeshStandardMaterial({ color: a.glow, emissive: a.glow, emissiveIntensity: 1.6, roughness: 0.45 });
     const cloth = new THREE.MeshStandardMaterial({ color: a.primary, side: THREE.DoubleSide, roughness: 1 });
+    this.cloth = cloth; this.glow = glow;
     const mesh = (parent: THREE.Object3D, geometry: THREE.BufferGeometry, material: THREE.Material, position: number[]) => {
       const node = new THREE.Mesh(geometry, material);
       node.position.set(position[0], position[1], position[2]);
@@ -149,9 +152,29 @@ export class StructureActor {
         }
       }
     } else {
-      const model = factionBuilding(faction, role as BuildingRole);
+      const model = factionBuilding(faction, role as BuildingRole, this.level);
       this.body.add(model);
       if (role === 'hq' && this.level > 1) upgradeFactionBuilding(model, faction, this.level);
+      // улучшенные версии: видно, что пост, турель и стены прокачаны
+      if (role === 'turret' && this.level > 1) { // тяжёлая турель: бронеплиты, второй ряд стволов, крупнее
+        const head = model.getObjectByName('TurretHead'), bar = model.getObjectByName('Barrels');
+        for (const sx of [-1, 1]) { mesh(model, new THREE.BoxGeometry(0.16, 0.7, 0.9), metal, [sx * 0.62, 0.55, 0]); mesh(model, new THREE.BoxGeometry(0.18, 0.06, 0.92), glow, [sx * 0.62, 0.9, 0]); }
+        if (head) mesh(head, new THREE.BoxGeometry(0.95, 0.12, 0.75), trim, [0, 0.24, 0]);
+        if (bar) for (const x of [-0.3, 0.3]) mesh(bar, new THREE.CylinderGeometry(0.06, 0.06, 0.9, 8), metal, [x, 0.14, 0.42]).rotation.x = Math.PI / 2;
+        model.scale.multiplyScalar(1.15);
+      }
+      if (role === 'post' && this.level > 1) { // укреплённый пост: кольцо из блоков вокруг основания
+        for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const b = mesh(model, new THREE.BoxGeometry(0.42, 0.38, 0.22), metal, [Math.cos(a) * 0.82, 0.3, Math.sin(a) * 0.82]); b.rotation.y = -a + Math.PI / 2; mesh(model, new THREE.BoxGeometry(0.44, 0.06, 0.24), trim, [Math.cos(a) * 0.82, 0.51, Math.sin(a) * 0.82]).rotation.y = -a + Math.PI / 2; }
+      }
+      if (role === 'post' && this.level > 2) { // пост 3 уровня стреляет: пушка на боку и маяк сверху
+        const gun = mesh(model, new THREE.CylinderGeometry(0.06, 0.07, 0.8, 8), metal, [0, 1.55, 0.5]); gun.rotation.x = Math.PI / 2;
+        mesh(model, new THREE.BoxGeometry(0.3, 0.25, 0.3), primary, [0, 1.55, 0.2]);
+        mesh(model, new THREE.OctahedronGeometry(0.2), glow, [0, 3.0, 0]);
+      }
+      if ((role === 'wall' || role === 'gate') && this.level > 1) { // укреплённые стены: зубцы и шипы
+        for (let i = 0; i < 7; i++) mesh(model, new THREE.ConeGeometry(0.07, 0.4, 5), trim, [-1.2 + i * 0.4, 2.0, 0.2]);
+        mesh(model, new THREE.BoxGeometry(2.9, 0.2, 0.7), metal, [0, 1.75, 0]);
+      }
       this.head = model.getObjectByName('TurretHead') as THREE.Group | undefined;
       this.barrels = model.getObjectByName('Barrels') as THREE.Group | undefined;
       for (const [name, node] of [['TurretHead', this.head], ['Barrels', this.barrels]] as const) {
@@ -165,7 +188,7 @@ export class StructureActor {
         const flame = mesh(this.flash, new THREE.ConeGeometry(0.18, 0.55, 5), glow, [0, 0, 0.2]);
         flame.rotation.x = Math.PI / 2;
       }
-      if (role === 'factory' || role === 'armory' || role === 'barracks') {
+      if (role === 'factory' || role === 'barracks') {
         for (const side of [-1, 1]) {
           const door = this.joint(this.body, `Door${side < 0 ? 'L' : 'R'}`, [side * 0.4, 0.78, 1.19]);
           mesh(door, new THREE.BoxGeometry(0.74, 0.92, 0.09), primary, [0, 0, 0]);
@@ -173,16 +196,8 @@ export class StructureActor {
           this.doors.push(door);
         }
       }
-      if (role === 'factory' || role === 'armory' || role === 'generator') {
-        for (let i = 0; i < 3; i++) {
-          const piston = this.joint(this.body, `Piston${i}`, [-0.68 + i * 0.68, role === 'generator' ? 1.7 : 2.2, -0.18]);
-          mesh(piston, new THREE.CylinderGeometry(0.075, 0.075, 0.45, 8), trim, [0, 0.12, 0]);
-          mesh(piston, new THREE.CylinderGeometry(0.14, 0.14, 0.13, 8), glow, [0, 0.34, 0]);
-          this.pistons.push(piston);
-        }
-      }
     }
-    addFactionSilhouette(this.body, faction, role);
+    if (!palette && role === 'capture_point') addFactionSilhouette(this.body, faction, role); // у построек свой стиль (factionBuilding) — общие пилоны больше не навешиваем
     const energyHeight = role === 'capture_point' ? 0.36 : role === 'resource_point' ? 0.6 : role === 'wall' || role === 'gate' ? 1.1 : role === 'hq' ? 2.85 : 1.9;
     this.energy = this.joint(this.body, 'Energy', [0, energyHeight, role === 'wall' || role === 'gate' ? 0.38 : 0]);
     if (role === 'resource_point') {

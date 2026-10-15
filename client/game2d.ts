@@ -2,8 +2,8 @@
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import { World3D, has3d } from './world3d.ts';
 import { ARCHS, CAPTAIN_COST, HERO, QUEUE_MAX, STRUCT_AOE, canFireGround, type Arch } from '../shared/sim.ts';
-import { resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
-import { ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
+import { TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { BUILD_NAME, PX_PACK, ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
 import { paintMap } from './mappaint.ts';
@@ -11,7 +11,7 @@ import { voice } from './voice.ts';
 
 const S = 26; // пикселей мира на единицу симуляции
 /** Цвет выстрелов фракции: [трассер/огонь, луч/свечение] — чтобы с первого взгляда было видно, кто стреляет. */
-const SHOT_COLOR: Record<string, [string, string]> = { order: ['#ffb04a', '#9fd4ff'], clockwork: ['#5affa0', '#5affa0'], orks: ['#ffd040', '#ff8a2a'], ashen: ['#ff6a2a', '#ff3a3a'], eldar: ['#c86bff', '#59e8d0'], daemons: ['#ff3a6a', '#ff9a3a'] };
+const SHOT_COLOR: Record<string, [string, string]> = { order: ['#ffb04a', '#9fd4ff'], clockwork: ['#5affa0', '#5affa0'], orks: ['#ffd040', '#ff8a2a'], ashen: ['#ff6a2a', '#ff3a3a'], eldar: ['#c86bff', '#59e8d0'], tyranids: ['#b6ff5a', '#ff9a3a'] };
 /** Клавиша по физическому положению: при русской раскладке W остаётся «w», а не «ц» — камера и горячие клавиши работают в любой раскладке. */
 const keyOf = (e: KeyboardEvent) => /^Key[A-Z]$/.test(e.code) ? e.code.slice(3).toLowerCase() : /^Digit\d$/.test(e.code) ? e.code.slice(5) : e.key.toLowerCase();
 const $ = (id: string) => document.getElementById(id)!;
@@ -42,15 +42,15 @@ const GEAR_ICON = [
   ico('<rect x="5" y="9" width="14" height="10" fill="currentColor"/><path d="M12 9V4M9 4h6" fill="none" stroke="currentColor" stroke-width="2"/>'),
   ico('<circle cx="8" cy="14" r="4" fill="currentColor"/><circle cx="15" cy="12" r="5" fill="currentColor" opacity=".7"/><circle cx="12" cy="8" r="3" fill="currentColor" opacity=".5"/>'),
 ];
-const KIND_NAME: Partial<Record<Kind, string>> = { lighthouse: 'Вокс-маяк', obelisk: 'Обелиск Вечности', megagun: 'Мега-Пушка', plague: 'Чумная башня', battery: 'Батарея «Громобой»', pylon: 'Гаусс-пилон', pyre: 'Огненная яма', bell: 'Алтарь ужаса', deity: 'Бог-Механизм', aegis: 'Теневое поле', rturret: 'Ракетная бочка', fturret: 'Огнемётная печь', hq: 'Штаб', barracks: 'Казарма', post: 'Реликварий', turret: 'Турель', foundry: 'Литейня', pump: 'Глубинный насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Крипта-бункер', mine: 'Мина' };
+const KIND_NAME: Partial<Record<Kind, string>> = { portal: 'Теневой портал', warpgate: 'Врата Варпа', khorne: 'Кровопускатели Кхорна', nurgle: 'Чумоносцы Нургла', tzeentch: 'Розовые ужасы Тзинча', slaanesh: 'Демонетки Слаанеш', lighthouse: 'Вокс-маяк', obelisk: 'Обелиск Вечности', megagun: 'Мега-Пушка', plague: 'Споровый улей', battery: 'Батарея «Громобой»', pylon: 'Гаусс-пилон', pyre: 'Огненная яма', bell: 'Синаптический шпиль', deity: 'Бог-Механизм', aegis: 'Теневое поле', rturret: 'Ракетная бочка', fturret: 'Огнемётная печь', hq: 'Штаб', barracks: 'Казарма', post: 'Реликварий', turret: 'Турель', foundry: 'Литейня', pump: 'Глубинный насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Крипта-бункер', mine: 'Мина' };
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 export const SLOT_COLORS = [0x4fa392, 0xe0675c, 0xe0a53a, 0xb9c3c6];
 
 // какой силуэт из пресетов у какого юнита, его ширина в мире и сколько бойцов в отряде
 // ширина силуэта в мире (единиц симуляции); сами силуэты — по фракции игрока (shared/factions.ts)
-const WIDTH: Record<string, number> = { doom: 8, lighthouse: 5, obelisk: 8, megagun: 7, plague: 5, battery: 4.4, pylon: 3.4, pyre: 3.8, bell: 3.8, deity: 9, aegis: 3.2, rturret: 3.6, fturret: 3.6, captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, motorpool: 9, yard: 14, legend: 6, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
+const WIDTH: Record<string, number> = { portal: 6, warpgate: 8, doom: 8, lighthouse: 5, obelisk: 8, megagun: 7, plague: 5, battery: 4.4, pylon: 3.4, pyre: 3.8, bell: 3.8, deity: 9, aegis: 3.2, rturret: 3.6, fturret: 3.6, captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, motorpool: 9, yard: 14, legend: 6, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
 /** Ширина силуэта на карте = рост в метрах (все силуэты дизайн-системы в одном поле 120×164): Стражник 2.4 м, титан — 26–34 м. */
-const widthOf = (kind: Kind, f: FactionId) => (kind === 'titan' ? ROSTER[f].titanM : ROLES[kind]?.meters && !WIDTH[kind] ? ROLES[kind]!.meters : WIDTH[kind] ?? 2.4);
+const widthOf = (kind: Kind, f: FactionId) => (kind === 'titan' ? ROSTER[f].titanM : kind === 'turret' && (f === 'tyranids' || f === 'ashen') ? 5.4 : ROLES[kind]?.meters && !WIDTH[kind] ? ROLES[kind]!.meters : WIDTH[kind] ?? 2.4);
 /** Постройки, нарисованные для каждой фракции (tools/sprites.py); у Ордена — исходные из дизайн-системы. */
 const FAC_BUILD = new Set<Kind>(['key1', 'key2', 'key3', 'key4', 'gate', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine']);
 const NEUTRAL: Partial<Record<Kind, [string, string]>> = {
@@ -60,6 +60,8 @@ const NEUTRAL: Partial<Record<Kind, [string, string]>> = {
   wall: ['Defenses/wall.svg', 'Defenses/wall.svg'], wallgate: ['Defenses/gate.svg', 'Defenses/gate.svg'], bunker: ['Defenses/bunker.svg', 'Defenses/bunker.svg'], mine: ['Defenses/mine.svg', 'Defenses/mine.svg'],
   key1: ['Buildings/scriptorium.svg', 'Buildings/scriptorium.svg'], key2: ['Buildings/forge.svg', 'Buildings/forge.svg'], key3: ['Buildings/observatory.svg', 'Buildings/observatory.svg'],
   key4: ['Buildings/reliqhall.svg', 'Buildings/reliqhall.svg'], gate: ['Buildings/gate.svg', 'Buildings/gate.svg'], post: ['Defenses/point-1.svg', 'Defenses/point-2.svg'], foundry: ['Buildings/foundry.svg', 'Buildings/foundry.svg'], pump: ['Buildings/pump.svg', 'Buildings/pump.svg'] };
+/** Демоны четырёх богов и их Врата: силуэты Пепельного культа. */
+const GOD_ART: Partial<Record<Kind, string>> = { warpgate: 'Factions/rift.svg', khorne: 'Factions/possessed.svg', nurgle: 'Factions/imp.svg', tzeentch: 'Factions/ashen-warlock.svg', slaanesh: 'Factions/ashen-priestess.svg' };
 /** Путь к силуэту юнита: по фракции, уровню и (у капитана) оружию. */
 export function artFor(kind: Kind, faction: FactionId, lvl = 1, arch: Arch = 'commander', variant = 0) {
   const a = FACTIONS[faction].art;
@@ -68,6 +70,7 @@ export function artFor(kind: Kind, faction: FactionId, lvl = 1, arch: Arch = 'co
   if (kind === 'doom') return DOOM_OF[faction].art;
   if (kind in ROSTER[faction] && typeof (ROSTER[faction] as Record<string, unknown>)[kind] === 'object') return ROSTER[faction][kind as 'sniper'].art;
   if (kind === 'captain') return CAPTAIN_ART[faction][archFor(faction, arch)] ?? a.captain[0];
+  if (kind in GOD_ART) return GOD_ART[kind]!;
   if (kind === 'turret') return a.turret[lvl > 1 ? 1 : 0];
   if (kind === 'post') return lvl >= 3 ? 'Defenses/point-3.svg' : lvl === 2 ? 'Defenses/point-2.svg' : 'Defenses/point-1.svg';
   const af = ART_BASE[faction] ?? faction; // у новых рас — здания старшей расы, перекрашенные палитрой .pal-<фракция>
@@ -110,12 +113,12 @@ export const setAnim = (svg: SVGElement, a: string) => {
 
 /** Атласы пакета faction-asset-lab: 8 строк направлений × 8 кадров. Размер кадра, опорная точка и рамка фигуры — из JSON атласа,
  *  поэтому новые модели подхватываются заменой файлов в client/public/models/factions/<пакет>/<роль>/sprites (idle.json + *.webp). */
-type PxRole = 'captain' | 'guard' | 'builder' | 'sniper' | 'heavy' | 'elite' | 'medic' | 'flamer' | 'transport' | 'walker' | 'tank' | 'artillery' | 'titan'
+type PxRole = 'captain' | 'guard' | 'builder' | 'sniper' | 'heavy' | 'elite' | 'medic' | 'flamer' | 'transport' | 'walker' | 'tank' | 'artillery' | 'titan' | 'flyer' | 'aircraft'
   | 'hq' | 'barracks' | 'factory' | 'armory' | 'generator' | 'relic' | 'post' | 'turret' | 'wall' | 'gate';
 /** Постройки с атласом: пока атлас не запечён, здание рисуется прежним векторным силуэтом. */
 const PX_STRUCT = new Set<PxRole>(['hq', 'barracks', 'factory', 'armory', 'generator', 'relic', 'post', 'turret', 'wall', 'gate']);
 /** Вид юнита → роль атласа. Поддержки (support) в пакете нет — у неё остаётся векторный силуэт. */
-const PX_ROLE: Partial<Record<Kind, PxRole>> = { hq: 'hq', barracks: 'barracks', motorpool: 'factory', yard: 'factory', key1: 'armory', key2: 'armory', key3: 'armory', key4: 'armory', foundry: 'generator', pump: 'generator', post: 'post', turret: 'turret', wall: 'wall', wallgate: 'gate', gate: 'relic', captain: 'captain', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan' };
+const PX_ROLE: Partial<Record<Kind, PxRole>> = { hq: 'hq', barracks: 'barracks', motorpool: 'factory', yard: 'factory', key1: 'armory', key2: 'armory', key3: 'armory', key4: 'armory', foundry: 'generator', pump: 'generator', post: 'post', turret: 'turret', wall: 'wall', wallgate: 'gate', gate: 'relic', captain: 'captain', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan', air: 'flyer', jet: 'aircraft' };
 export const pxRole = (k: Kind, f: FactionId): PxRole | undefined => (k === 'heavy' && f === 'ashen' ? 'flamer' : PX_ROLE[k]); // тяжёлые Культа — огнемётчики
 export const isPx = (k: Kind, f?: FactionId): boolean => { const r = PX_ROLE[k]; return !!r && (!PX_STRUCT.has(r) || (!!f && PX_META.has(pxKey(f, r)))); }; // здания — только когда их атлас уже есть
 /** Данные атласа из idle.json: кадр, опора, рамка фигуры (лицом к зрителю) — для масштаба, полосы здоровья и иконок. */
@@ -125,7 +128,7 @@ const PX_OLD: Partial<Record<PxRole, [number, number]>> = { captain: [30, 34], g
 const PX_VEH = new Set<PxRole>(['transport', 'walker', 'tank', 'artillery', 'titan']);
 const pxOld = (r: PxRole): PxMeta => { const [top, w] = PX_OLD[r] ?? [30, 60], ay = PX_VEH.has(r) ? 78 : 87; return { cell: 128, ax: 64, ay, bx: 64 - w / 2, by: top, bw: w, bh: ay - top, ext: 'png' }; };
 const PX_META = new Map<string, PxMeta>();
-const pxKey = (f: FactionId, r: PxRole) => `${PACK[f]}/${r}`;
+const pxKey = (f: FactionId, r: PxRole) => `${PX_PACK[f]}/${r}`;
 export const pxMeta = (f: FactionId, r: PxRole): PxMeta => PX_META.get(pxKey(f, r)) ?? pxOld(r);
 const pxLoad = Promise.all(FACTION_IDS.flatMap(f => [...new Set([...Object.values(PX_ROLE), 'flamer'] as PxRole[])].map(r =>
   fetch(`/models/factions/${pxKey(f, r)}/sprites/idle.json`).then(res => (res.ok ? res.json() : null)).then(j => {
@@ -137,7 +140,7 @@ const pxLoad = Promise.all(FACTION_IDS.flatMap(f => [...new Set([...Object.value
 /** Масштаб на экране: фигура шириной с юнита в игре (у пехоты — силуэт отряда). */
 const pxScale = (k: Kind, f: FactionId, r: PxRole) => (widthOf(k, f) * S) / Math.max(8, pxMeta(f, r).bw);
 const PX_DUR: Record<string, number> = { idle: 2, walk: 1, run: 0.65, attack: 0.7, shoot: 0.45, work: 1.1, death: 1.1 };
-export const pxUrl = (f: FactionId, role: PxRole, anim: string) => `/models/factions/${PACK[f]}/${role}/sprites/${anim}.${pxMeta(f, role).ext}`;
+export const pxUrl = (f: FactionId, role: PxRole, anim: string) => `/models/factions/${PX_PACK[f]}/${role}/sprites/${anim}.${pxMeta(f, role).ext}`;
 /** Строка атласа по направлению на экране (рад, y вниз): строка 0 смотрит вниз-влево, дальше по 45° против часовой. */
 export const pxRow = (face: number) => (((Math.round((135 - (face * 180) / Math.PI) / 45) % 8) + 8) % 8);
 type Px = { el: HTMLElement; anim: string; t0: number; ph: number; role: PxRole; sc: number; cell: number; ax: number; ay: number; top: number };
@@ -171,12 +174,14 @@ const miniArt = (path: string) => (PX_BY_ART.has(path) ? pxIcon(...PX_BY_ART.get
 /** Портрет: голова и плечи силуэта крупно (обрезка viewBox у фигур 120×164). */
 const portrait = (path: string) => (PX_BY_ART.has(path) ? pxIcon(...PX_BY_ART.get(path)!, true) : miniArt(path).replace(/viewBox="0 -12 120 164"/, 'viewBox="14 -10 92 92"'));
 
+/** Буквы точек на карте и в полосе очков: [0] — критическая. */
+const PT_LETTERS = ['Д', 'А', 'В', 'Б', 'Г', 'Е', 'Ж', 'З', 'И', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С'];
 /** Карта на языке пресета MapExample (классы lc-bigmap из bundle.css), в координатах мира. Пока декор: проходимость не меняет. */
 function mapSvg() {
   const k = S, W = MAP.w * k, H = MAP.h * k, P = (x: number, y: number) => `${x * k} ${y * k}`;
   const diamond = (x: number, y: number, r = 1.2) => `M${P(x, y - r)}L${P(x + r, y)}L${P(x, y + r)}L${P(x - r, y)}Z`;
   const star = (x: number, y: number, r: number) => { let d = ''; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, rr = i % 2 ? r * 0.55 : r; d += (i ? 'L' : 'M') + P(x + Math.sin(a) * rr, y - Math.cos(a) * rr); } return d + 'Z'; };
-  const letters = ['Д', 'А', 'В', 'Б', 'Г', 'Е', 'Ж'];
+  const letters = PT_LETTERS;
   const pts = POINTS.map(([x, y], i) => i === 0
     ? `<path class="pt-crit" d="${star(x, y - POINT_R - 2.2, 1.6)}"/><text class="t t-on" x="${x * k}" y="${(y - POINT_R - 1.8) * k}" style="font-size:22px">II</text>`
     : `<path class="pt-inf" d="${diamond(x, y - POINT_R - 2)}"/><text class="t" x="${x * k}" y="${(y - POINT_R - 1.6) * k}" style="font-size:22px">${letters[i]}</text>`).join('');
@@ -187,7 +192,7 @@ type View = {
   id: number; owner: number; kind: Kind; el: HTMLElement; body: HTMLElement; svgs: SVGElement[]; bar: HTMLElement; fg: HTMLElement; sel: HTMLElement;
   x: number; y: number; tx: number; ty: number; f: number; hp: number; build: number; q: number; dead: boolean; lvl: number; upg: number;
   hero?: { lvl: number; xp: number; pts: number; abil: number; cd: number[] }; // у героя — свой прогресс (из снимка, 25+)
-  atkUntil: number; melee?: boolean; atkFx?: number; respawn?: number; arch?: Arch; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; px: Px[]; prog: number; prod: number;
+  atkUntil: number; lvl3d?: number; melee?: boolean; atkFx?: number; respawn?: number; arch?: Arch; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; px: Px[]; prog: number; prod: number;
 };
 
 export class Game {
@@ -333,8 +338,8 @@ export class Game {
       ring.className = 'w2d-point ' + (i === 0 ? 'capture-key' : relic ? 'capture-relic' : 'capture-normal'); fill.className = 'w2d-point-fill';
       ring.title = i === 0 ? 'Ключевая точка' : relic ? 'Реликтовая точка' : 'Стратегическая точка';
       for (const e of [ring, fill]) Object.assign(e.style, { left: (x - POINT_R) * S + 'px', top: (y - POINT_R) * S + 'px', width: POINT_R * 2 * S + 'px', height: POINT_R * 2 * S + 'px' });
-      const el = this.place2(art(relic ? 'Buildings/reliquary.svg' : 'Defenses/point-3.svg', (relic ? 5 : 3.6) * S), x, y); // реликварий / знаменный столп
-      el.classList.add('w2d-neutral');
+      const el = document.createElement('div'); // вместо картинки — 3D-флагшток на платформе (как в Soulstorm)
+      this.w3d.point(i, x, y, i === 0 ? 'key' : relic ? 'relic' : 'normal', i === 0 ? 7 : relic ? 5 : 5.5);
       ring.classList.toggle('relic', relic);
       this.ground.append(ring, fill);
       const zone = document.createElement('div'); zone.className = 'w2d-zone' + (i === 0 ? ' crit' : ''); // территория точки: тут ставят турели и генераторы
@@ -362,7 +367,7 @@ export class Game {
     const r = STATS[kind].radius;
     const sel = document.createElement('div'); sel.className = 'w2d-sel';
     const range = document.createElement('div'); range.className = 'w2d-range';
-    const rr = STATS[kind].range + STATS[kind].radius;
+    const rr = STATS[kind].range + STATS[kind].radius + (kind === 'turret' ? TURRET_FAC[this.fac(owner)]?.range ?? 0 : 0);
     Object.assign(range.style, { width: rr * 2 * S + 'px', height: rr * 2 * S * 0.55 + 'px' });
     el.append(range);
     const ring = document.createElement('div'); ring.className = 'w2d-ring';
@@ -371,7 +376,7 @@ export class Game {
     const pl = this.players[owner], artPath = artFor(kind, pl.faction ?? 'order', 1, arch ?? pl.captain.arch, variant);
     const svgs: SVGElement[] = [], px: Px[] = [];
     const in3d = has3d(kind); // живая модель: в DOM остаются только полоса здоровья и кольца
-    if (in3d) this.w3d.add(id, PACK[pl.faction ?? 'order'], kind, widthOf(kind, pl.faction ?? 'order'), (FORM[kind] ?? [[0, 0]]).map(([ox, oy]) => [ox, oy]));
+    if (in3d) this.w3d.add(id, PACK[pl.faction ?? 'order'], kind, widthOf(kind, pl.faction ?? 'order'), (FORM[kind] ?? [[0, 0]]).map(([ox, oy]) => [ox, oy]), kind === 'captain' ? archFor(pl.faction ?? 'order', arch ?? pl.captain.arch) : undefined); // у сборок героя свой силуэт
     for (const [ox, oy] of in3d ? [] : FORM[kind] ?? [[0, 0]]) {
       if (isPx(kind, pl.faction ?? 'order')) { const f = pl.faction ?? 'order', r = pxRole(kind, f)!, p = pxSprite(f, r, pxScale(kind, f, r)); p.el.style.transform = `translate(${ox * S}px, ${oy * S * 0.6}px)`; body.append(p.el); px.push(p); continue; } // пиксельный атлас фракции
       const a = art(artPath, widthOf(kind, pl.faction ?? 'order') * S);
@@ -420,6 +425,8 @@ export class Game {
         const a = art(lvlArt, widthOf(kind, this.players[owner].faction ?? 'order') * S * 1.1);
         v.body.replaceChildren(a); v.svgs = [a.querySelector('svg')!]; v.px = [];
       }
+      const lvl3d = kind === 'hq' ? Math.min(3, Math.ceil((s.pl[owner]?.[2] ?? 1) / 2)) : /^key[1-4]$/.test(kind) ? Math.min(3, Number(kind[3])) : lvl; // ключевые здания: облик по тиру // штаб растёт с тиром владельца: I–II, III–IV, V
+      if (isStruct(kind) && has3d(kind) && lvl3d !== (v.lvl3d ?? 1)) { v.lvl3d = lvl3d; this.w3d.add(id, PACK[this.fac(owner)], kind, widthOf(kind, this.fac(owner)), undefined, undefined, lvl3d); } // улучшенная версия модели
       v.lvl = lvl; v.upg = upg; v.prog = prog ?? 0; v.prod = prog ?? 0; v.gear = gear ?? 0; v.ch = [c0 ?? 0, c1 ?? 0, c2 ?? 0]; v.gcd = gcd ?? 0;
       if (v.kind !== kind) { if (has3d(kind)) this.w3d.add(id, PACK[this.fac(owner)], kind, widthOf(kind, this.fac(owner))); v.kind = kind; v.artPath = artFor(kind, this.fac(owner)); const a = art(v.artPath, widthOf(kind, this.fac(owner)) * S); v.body.replaceChildren(a); v.svgs = [a.querySelector('svg')!]; v.px = []; if (kind === 'deity') { this.alert(owner === this.slot ? 'ok' : 'danger', 'Вознесение', 'Бог-Механизм пробудился', x / 10, y / 10); voice.announce(owner === this.slot ? 'Бог-Механизм пробудился.' : 'Враг вознёсся! Бог-Механизм на поле!'); this.shakeBy(14); } } // капитан ⇄ Бог-Механизм
       v.sh = sh ?? 0; v.frozen = frozen ?? 0; v.carry = carry ?? 0; v.rise = (rise ?? 0) / 10; v.off = off === 1; v.respawn = respawn ?? 0;
@@ -471,6 +478,7 @@ export class Game {
       p.el.style.filter = owner >= 0 ? `drop-shadow(0 0 6px ${col})` : '';
       p.fill.style.setProperty('--team', by >= 0 ? hex(SLOT_COLORS[by]) : 'transparent');
       p.fill.style.setProperty('--p', String(prog / 100));
+      this.w3d.pointState(i, by >= 0 && prog > 0 ? SLOT_COLORS[by] : owner >= 0 ? SLOT_COLORS[owner] : null, owner >= 0, prog / 100, now);
     });
     for (const [x1, y1, x2, y2, fx = 0] of s.sh) this.shot(x1 / 10, y1 / 10, x2 / 10, y2 / 10, now, Math.round(fx / 10));
     let heard = 0;
@@ -633,7 +641,8 @@ export class Game {
     $('hud-energy').textContent = String(this.energy); $('hud-relics').textContent = String(this.relics);
     const f = this.fac(), extra = $('hud-extra');
     extra.innerHTML = f === 'orks' ? (me[6] ? `<b class="waagh">ВААГХ ${me[6]} с</b>` : `<span class="rage"><i style="--v:${(me[5] / RAGE_MAX) * 100}%"></i></span>Ярость`)
-      : f === 'clockwork' ? 'Перезавод' : f === 'ashen' ? 'Порча' : 'Силовая броня';
+      : f === 'clockwork' ? 'Перезавод · живой металл' : f === 'ashen' ? `Порча · жертва ${(me[7] ?? 0) % TRIBUTE}/${TRIBUTE}` : f === 'eldar' ? `Сила из боли +${Math.round(Math.min(PAIN.max, Math.floor((me[7] ?? 0) / PAIN.per) * PAIN.step) * 100)}%`
+      : f === 'tyranids' ? 'Синапс' : 'Силовая броня · не ведают страха';
     extra.title = FACTIONS[f].mech;
     this.tier = s.pl[this.slot][2] ?? 1;
     $('hud-tier').textContent = ['I', 'II', 'III', 'IV', 'V'][this.tier - 1] ?? String(this.tier);
@@ -712,7 +721,7 @@ export class Game {
 
   private kindName(k: Kind, f: FactionId) {
     const F = FACTIONS[f], R = ROSTER[f] as unknown as Record<string, { name: string } | undefined>;
-    return k === 'builder' ? F.builder : k === 'guard' ? F.guard : k === 'hq' ? HQ_NAME[f] : k === 'motorpool' || k === 'yard' ? PROD_NAME[f][k] : k === 'doom' ? DOOM_OF[f].name : R[k]?.name ?? KIND_NAME[k] ?? k;
+    return k in BUILD_NAME[f] ? BUILD_NAME[f][k as 'post'] : k === 'builder' ? F.builder : k === 'guard' ? F.guard : k === 'hq' ? HQ_NAME[f] : k === 'motorpool' || k === 'yard' ? PROD_NAME[f][k] : k === 'doom' ? DOOM_OF[f].name : R[k]?.name ?? KIND_NAME[k] ?? k;
   }
   private nameOf(v: View) {
     const F = FACTIONS[this.fac(v.owner)];
@@ -745,16 +754,17 @@ export class Game {
     const own = (k: Kind) => [...this.views.values()].some(v => v.owner === this.slot && v.kind === k);
     if (st) {
       if (st.build < 1) return [{ act: '', name: 'Возводится', hot: '', icon: ICON.build, prog: Math.round(st.build * 100), info: 'Отправьте строителей: выберите их и ПКМ по стройке.' }];
-      const HOT = ['T', 'Z', 'X', 'C', 'V', 'B'], ROLE_INFO: Partial<Record<Kind, string>> = {
+      const HOT = ['T', 'Z', 'X', 'C', 'V', 'B', 'G'], ROLE_INFO: Partial<Record<Kind, string>> = {
         builder: 'Строит, чинит постройки и технику.', guard: isMelee('guard', this.fac()) ? 'Линейная пехота ближнего боя.' : 'Линейная пехота, стрелки.',
         sniper: 'Снайпер: косит пехоту издалека, бессилен против техники.', heavy: 'Тяжёлое оружие: против техники, турелей и зданий.', support: 'Поддержка: союзники рядом получают −15% урона, может нести дым.',
         elite: 'Тяжёлая элита: держит удар, бьёт в упор.', healer: 'Целитель: лечит отряды в 15 м на 5%/с.', lveh: 'Лёгкая техника: разведка, захват точек, охота на строителей.',
-        mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: 'Артиллерия: 45 м, по площади, в упор не стреляет — нужна разведка и прикрытие.', titan: 'Титан: один на армию, давит пехоту шагами.' };
+        mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: 'Артиллерия: 45 м, по площади, в упор не стреляет — нужна разведка и прикрытие.', titan: 'Титан: один на армию, давит пехоту шагами.', air: 'Авиация: быстрый отряд, летит над скалами и стенами — рейды по тылам.', jet: 'Самолёт: самый быстрый, летит высоко над всем, бьёт технику; слаб против зениток и турелей.',
+        khorne: 'Кровопускатели Кхорна: рубят в ближнем бою, бьют сильнее всех демонов.', nurgle: 'Чумоносцы Нургла: медленные, очень живучие, гниль лечит их 2%/с.', tzeentch: 'Розовые ужасы Тзинча: варп-пламя на 16 м по площади.', slaanesh: 'Демонетки Слаанеш: самые быстрые, частые удары когтями.' };
       producible(st.kind).forEach((k, i) => {
         const r = ROLES[k]!, n = this.qk[st.id]?.filter(q => q === KINDS.indexOf(k)).length ?? 0, now = this.qk[st.id]?.[0] === KINDS.indexOf(k);
         const researching = (/^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length) || st.q > 100;
         c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k), r.energy ?? 0, r.relics ?? 0),
-          info: `${ROLE_INFO[k] ?? ''} Легион: ${r.pop}.`, req: this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
+          info: `${ROLE_INFO[k] ?? ''}${modOf(this.fac(), k) ? ' ' + modOf(this.fac(), k)!.info : ''}${CLOSE[k] ? ` Вблизи (${CLOSE[k]!.range} м) — второе оружие.` : ''}${SETUP.has(k) ? ' На ходу не стреляет.' : ''} Легион: ${r.pop}.`, req: this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
       });
       if (st.kind === 'hq' || st.kind === 'barracks') { // герои заказываются в зданиях (Soulstorm): главный — в штабе, остальные архетипы — в казармах
         const main = archFor(this.fac(), this.players[this.slot]?.captain.arch ?? 'commander');
@@ -807,7 +817,7 @@ export class Game {
     const guards = sel.filter(v => SQUADS.has(v.kind)), hurt = guards.filter(v => v.hp < maxHp(v.kind));
     if (guards.length) c.push({ act: 'reinforce', name: 'Пополнить', hot: 'R', icon: ICON.reinforce, ...this.price(hurt.reduce((n, v) => n + Math.ceil((maxHp(v.kind) - v.hp) / STATS[v.kind].hp) * Math.round(REINFORCE_COST * STATS[v.kind].cost / 100), 0)), req: hurt.length ? undefined : 'Отряды полные', info: 'Добрать бойцов в отряды. Нужно быть рядом со своей постройкой.' });
     if (guards.length) GEAR.forEach((G, g) => { // снаряжение отряда (SquadWargear): купить или бросить
-      const NAMES: Record<FactionId, string[]> = { order: ['Осколочные гранаты', 'Мелта-бомба', 'Дымовые гранаты'], eldar: ['Плазменные гранаты', 'Хаймарский заряд', 'Теневой покров'], daemons: ['Варп-сгусток', 'Кровавый взрыв', 'Морок'], clockwork: ['Гравитационная сфера', 'Заряд распада', 'Туман времени'], orks: ['Бахалка', 'Связка бахалок', 'Дымовуха'], ashen: ['Сосуд с серой', 'Адский заряд', 'Пепельный дым'] };
+      const NAMES: Record<FactionId, string[]> = { order: ['Осколочные гранаты', 'Мелта-бомба', 'Дымовые гранаты'], eldar: ['Плазменные гранаты', 'Хаймарский заряд', 'Теневой покров'], tyranids: ['Кислотный сгусток', 'Споровая мина', 'Споровое облако'], clockwork: ['Гравитационная сфера', 'Заряд распада', 'Туман времени'], orks: ['Бахалка', 'Связка бахалок', 'Дымовуха'], ashen: ['Сосуд с серой', 'Адский заряд', 'Пепельный дым'] };
       const name = NAMES[this.fac()][g], owned = guards.filter(v => v.gear & (1 << g)), ch = owned.reduce((n, v) => n + v.ch[g], 0), cd = Math.min(...owned.map(v => v.gcd), 99);
       if (owned.length) c.push({ act: 'throw:' + g, name, hot: ['G', 'H', 'J'][g], icon: GEAR_ICON[g], info: `Бросок до ${G.range} м, радиус ${G.r} м.${g === 2 ? ' Дым: стрельба в облаке и по нему — вдвое слабее.' : ' Задевает и своих.'}`, req: ch ? undefined : 'Нет зарядов', cd: cd > 0 && cd < 99 ? cd : 0, cdMax: G.cd, queue: ch, active: this.throwG === g });
       else c.push({ act: 'gear:' + g, name: 'Купить: ' + name, hot: ['G', 'H', 'J'][g], icon: GEAR_ICON[g], ...this.price(G.cost * guards.length, G.energy * guards.length), info: `${G.charges} заряд(а), перезарядка ${G.cd} с. Покупается у штаба, казарм или капитана.`, req: this.tier < 2 ? 'Нужен тир II' : undefined });
@@ -862,15 +872,17 @@ export class Game {
       return { k, html: `<button class="lc-bcard${req ? ' lc-bcard--locked' : ''}" data-act="${req ? '' : k}" data-tipname="${name}" data-tipinfo="${info}${req ? ` ${req}.` : ''}" ${req ? 'aria-disabled="true"' : ''} ${this.place === k ? 'aria-pressed="true"' : ''}>${miniArt(artFor(k as Kind, this.fac(), 1))}<span><span class="lc-bcard__name">${name}</span><span class="lc-bcard__cost">${cost}</span></span><kbd>${hot}</kbd></button>` };
     };
     const tabs: [string, ReturnType<typeof card>[]][] = [
-      ['Экономика', [card('post', 'Реликварий', 'P', `Ставится на захваченную точку: держит её и даёт +2 ${this.incomeRes()}/с.`), card('foundry', 'Литейня', 'F', '+2 энергии/с. Ставится у своей точки или построек.'), card('pump', 'Насос', 'N', '+4 энергии/с. На жилу или у своей точки.')]],
-      ['Армия', [card('barracks', 'Казарма', 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`), card('motorpool', PROD_NAME[this.fac()].motorpool, 'T', 'Вся техника и артиллерия фракции. Тир III.', this.tier < 3 ? 'Нужен тир III' : undefined), card('yard', PROD_NAME[this.fac()].yard, 'U', 'Строит титана. Одна армия — один титан. Тир IV.', this.tier < 4 ? 'Нужен тир IV' : undefined)]],
-      ['Оборона', [card('turret', 'Турель', 'Y', 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'L', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
+      ['Экономика', [card('post', BUILD_NAME[this.fac()].post, 'P', `Ставится на захваченную точку: держит её и даёт +2 ${this.incomeRes()}/с.`), card('foundry', BUILD_NAME[this.fac()].foundry, 'F', '+2 энергии/с. Ставится у своей точки или построек.'), card('pump', BUILD_NAME[this.fac()].pump, 'N', '+4 энергии/с. На жилу или у своей точки.')]],
+      ['Армия', [card('barracks', BUILD_NAME[this.fac()].barracks, 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`), card('motorpool', PROD_NAME[this.fac()].motorpool, 'T', 'Вся техника и артиллерия фракции. Тир III.', this.tier < 3 ? 'Нужен тир III' : undefined), card('yard', PROD_NAME[this.fac()].yard, 'U', 'Строит титана. Одна армия — один титан. Тир IV.', this.tier < 4 ? 'Нужен тир IV' : undefined),
+        ...(this.fac() === 'ashen' ? [card('warpgate', 'Врата Варпа', 'J', 'Призыв демонов четырёх богов: Слаанеш и Кхорн с тира III, Нургл и Тзинч — с тира IV за реликвии.', this.tier < 3 ? 'Нужен тир III' : undefined)] : [])]],
+      ['Оборона', [card('turret', BUILD_NAME[this.fac()].turret, 'Y', TURRET_FAC[this.fac()]?.info ?? 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'L', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
         ...(this.fac() === 'orks' ? [card('rturret', 'Ракетная бочка', 'R', 'Ракеты по площади. Копит Ярость.'), card('fturret', 'Огнемётная печь', 'O', 'Жжёт в упор. Копит Ярость.')] : []),
         ...(this.fac() === 'order' ? [card('battery', 'Батарея «Громобой»', 'R', 'Стационарная артиллерия: 40 м, мёртвая зона 8 м, урон по площади.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'clockwork' ? [card('pylon', 'Гаусс-пилон', 'R', 'Дальний луч 30 м: пробивает технику и здания.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
-        ...((m => m ? [card(m as Buildable, KIND_NAME[m as Kind]!, 'M', ({ lighthouse: 'Открывает 70 м вокруг; союзники в 25 м получают на 15% меньше урона.', obelisk: 'Луч 220 на 40 м, пробивает технику и здания.', megagun: 'Снаряды 180 по площади 6 м, дальность 38 м.', plague: 'Враги в 30 м теряют 1% здоровья в секунду.' } as Record<string, string>)[m] + ' Строится 2 минуты — все игроки видят стройку.', this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в штабе' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun', daemons: 'plague' } as Record<string, string>)[this.fac()])),
+        ...((m => m ? [card(m as Buildable, KIND_NAME[m as Kind]!, 'M', ({ lighthouse: 'Открывает 70 м вокруг; союзники в 25 м получают на 15% меньше урона.', obelisk: 'Луч 220 на 40 м, пробивает технику и здания.', megagun: 'Снаряды 180 по площади 6 м, дальность 38 м.', plague: 'Враги в 30 м теряют 1% здоровья в секунду.' } as Record<string, string>)[m] + ' Строится 2 минуты — все игроки видят стройку.', this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в штабе' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun', tyranids: 'plague' } as Record<string, string>)[this.fac()])),
+        ...(this.fac() === 'eldar' ? [card('portal', 'Теневой портал', 'J', 'Свои в 16 м скрыты: враг видит и бьёт их только вплотную (8 м). Тир II.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'eldar' ? [card('aegis', 'Теневое поле', 'R', 'Купол над базой: поглощает 1200 урона по своим в 12 м, восстанавливается за 30 с.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
-        ...(this.fac() === 'daemons' ? [card('bell', 'Алтарь ужаса', 'R', 'Враги в 14 м медленнее и бьют слабее.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
+        ...(this.fac() === 'tyranids' ? [card('bell', 'Синаптический шпиль', 'R', 'Враги в 14 м медленнее и бьют слабее.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'ashen' ? [card('pyre', 'Огненная яма', 'R', 'Жжёт всех врагов в 8 м: 18 урона в секунду.', this.tier < 2 ? 'Нужен тир II' : undefined)] : [])]],
       ['Святыни', (() => {
         const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — только когда пали все штабы.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra]; })()],
@@ -890,7 +902,8 @@ export class Game {
     const melee = isMelee(v.kind, this.fac(v.owner));
     const cls = v.kind === 'captain' ? `Герой · ур. ${foe ? '?' : this.cap.lvl}` : v.kind === 'builder' ? 'Строитель' : v.kind === 'guard' ? `Пехота · ${melee ? 'ближний бой' : 'стрелки'}` : v.kind === 'legend' ? 'Легенда' : ({ deity: 'Бог · летает', titan: 'Титан', arty: 'Артиллерия · мёртвая зона 10 м', lveh: 'Лёгкая техника', mveh: 'Средняя техника', hveh: 'Тяжёлая техника', sniper: 'Снайпер', heavy: 'Тяжёлое оружие', support: 'Поддержка', elite: 'Тяжёлая элита', healer: 'Целитель' } as Partial<Record<Kind, string>>)[v.kind] ?? 'Постройка';
     const stats: [string, string][] = [];
-    if (st.dmg) stats.push(['УРОН', v.kind === 'guard' ? `${melee ? 6.5 : st.dmg}×${members('guard', v.hp)}` : String(st.dmg)], ['ДАЛ.', melee ? 'в упор' : String(st.range)]);
+    const tf = v.kind === 'turret' ? TURRET_FAC[this.fac(v.owner)] : undefined;
+    if (st.dmg) stats.push(['УРОН', v.kind === 'guard' ? `${melee ? 6.5 : st.dmg}×${members('guard', v.hp)}` : String(Math.round(st.dmg * (tf?.dmg ?? 1)))], ['ДАЛ.', melee ? 'в упор' : String(st.range + (tf?.range ?? 0))]);
     if (st.speed) stats.push(['СКОР.', String(st.speed)]);
     if (v.kind === 'guard') stats.push(['БОЙЦЫ', `${members('guard', v.hp)}/${st.n}`]);
     if (v.lvl > 1) stats.push(['УР.', `<b class="up">▲${v.lvl}</b>`]);
@@ -976,7 +989,7 @@ export class Game {
     else if (/^res[0-3]$/.test(act)) { const k = sel.find(v => /^key/.test(v.kind)); if (k) this.cmd({ c: 'research', id: k.id, r: Number(act[3]) }); }
     else if (/^sum[0-2]$/.test(act)) { const g = sel.find(v => v.kind === 'gate'); if (g) this.cmd({ c: 'summon', id: g.id, v: Number(act[3]) }); }
     else if (/^key[1-4]$|^gate$/.test(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
-    else if (['motorpool', 'yard', 'lighthouse', 'obelisk', 'megagun', 'plague', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine', 'aegis', 'rturret', 'fturret', 'battery', 'pylon', 'pyre', 'bell'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
+    else if (['motorpool', 'yard', 'lighthouse', 'obelisk', 'megagun', 'plague', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine', 'aegis', 'rturret', 'fturret', 'battery', 'pylon', 'pyre', 'bell', 'warpgate', 'portal'].includes(act)) { if (sel.some(v => v.kind === 'builder')) this.startPlace(act as Buildable); }
     else if (act === 'upgrade') { for (const v of sel) if ((UPGRADES[v.kind] && v.lvl < 2 || v.kind === 'post') && v.upg < 0) this.cmd({ c: 'upgrade', id: v.id }); }
     else if (act === 'reinforce') this.cmd({ c: 'reinforce', ids: sel.filter(v => v.kind === 'guard').map(v => v.id) });
   }
@@ -1063,6 +1076,7 @@ export class Game {
       else if (k === 'x') this.doAct('bunker');
       else if (k === 'v') this.doAct('mine');
       else if (k === 'o') this.doAct('fturret');
+      else if (k === 'j') this.doAct(this.fac() === 'eldar' ? 'portal' : 'warpgate');
       else if (k === 'k') { const n = this.nextKey(); if (n) this.doAct(n); }
       else if (/^[1-9]$/.test(k)) { const x = this.cells.find(c => c.hot === k && c.act); if (x) this.doAct(x.act); }
       else if (k === 'u') this.doAct('upgrade');
@@ -1292,7 +1306,7 @@ export class Game {
   /** Победные очки (CapturePoint): ромбы точек по буквам, перетягивание «мы — сильнейший враг» и счёт. */
   private renderScore(s: Snap) {
     const me = s.vp?.[Math.max(0, this.slot)] ?? 0, foe = Math.max(0, ...(s.vp ?? []).filter((_, i) => i !== Math.max(0, this.slot) && s.pl[i]?.[1])); // зритель: первый игрок против сильнейшего
-    const L = ['Д', 'А', 'В', 'Б', 'Г', 'Е', 'Ж'];
+    const L = PT_LETTERS;
     const ally = Math.max(0, this.slot); // зритель смотрит со стороны первого игрока
     const pts = s.p.slice(0, POINTS.length).map(([o], i) => `<span class="lc-score__pt${o >= 0 && o === ally ? ' lc-score__pt--ally' : o >= 0 ? ' lc-score__pt--enemy' : ''}"><span>${L[i]}</span></span>`).join('');
     const total = Math.max(1, me + foe);
@@ -1445,9 +1459,9 @@ export class Game {
         const building = !moving && v.kind === 'builder' && sites.some(s => s.owner === v.owner && Math.hypot(s.x - v.x, s.y - v.y) < STATS[s.kind].radius + 3.5);
         const n = members(v.kind, v.hp);
         const atk = ({ 1: 'chop', 2: 'claw', 5: 'thrust', 3: 'beam', 11: 'beam', 13: 'beam', 4: 'cast' } as Record<number, string>)[v.atkFx ?? -1] ?? (v.kind === 'guard' && !v.melee ? 'recoil' : 'attack'); // анимация по оружию
-        const flyer = v.kind === 'deity' || (v.kind === 'healer' && this.fac(v.owner) === 'order') || (v.kind === 'titan' && this.fac(v.owner) === 'clockwork'), heavyWalk = !flyer && (v.kind === 'titan' || v.kind === 'hveh');
+        const flyer = flies(v.kind, this.fac(v.owner)) || (v.kind === 'titan' && this.fac(v.owner) === 'clockwork'), heavyWalk = !flyer && (v.kind === 'titan' || v.kind === 'hveh');
         const anim = v.dead ? 'death' : v.rise > 0 ? 'ritual' : building ? 'work' : now < v.atkUntil ? atk : moving ? (heavyWalk ? 'stride' : flyer ? 'hover' : 'walk') : flyer ? 'hover' : 'idle';
-        if (v.frozen <= 0) this.w3d.update(v.id, v.x, v.y, v.f, v.dead ? 'death' : building ? 'work' : now < v.atkUntil ? (v.melee ? 'attack' : 'shoot') : moving ? 'walk' : 'idle', now, { alive: n });
+        if (v.frozen <= 0) this.w3d.update(v.id, v.x, v.y, v.f, v.dead ? 'death' : building ? 'work' : now < v.atkUntil ? (v.melee ? 'attack' : 'shoot') : moving ? 'walk' : 'idle', now, { alive: n, fly: flies(v.kind, this.fac(v.owner)) });
         if (v.frozen <= 0) v.px.forEach((p, i) => pxFrame(p, this.fac(v.owner), i >= n || v.dead ? 'death' : anim === 'work' ? 'work' : now < v.atkUntil ? (v.kind === 'captain' ? 'attack' : v.kind === 'builder' ? 'idle' : 'shoot') : moving ? (v.kind === 'captain' ? 'run' : 'walk') : 'idle', v.f, now));
         v.svgs.forEach((sv, i) => {
           const alive = i < n;

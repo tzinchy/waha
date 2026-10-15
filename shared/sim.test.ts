@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, BCELL, footRect, wallCells, type Kind, type State } from './sim.ts';
+import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, BCELL, footRect, wallCells, flies, producible, FACTION_ONLY, TRIBUTE, isStruct, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -681,4 +681,54 @@ test('очередь приказов (Shift): юнит выполняет пр�
   applyCmd(s, 0, { c: 'move', ids: [b.id], x: x0, y: y0 }); applyCmd(s, 0, { c: 'move', ids: [b.id], x: x0 + 5, y: y0, q: true });
   applyCmd(s, 0, { c: 'move', ids: [b.id], x: x0 + 3, y: y0 + 3 });
   assert.equal(b.queue, undefined, 'приказ без Shift очищает очередь');
+});
+
+test('тираниды: биопушка бьёт дальше обычной турели и задевает соседей; авиация и техника эльдар летают; Врата Варпа — только у Хаоса', () => {
+  const s = newState(2, ['tyranids', 'order']);
+  const hq = unit(s, 0, 'hq'), t = spawn(s, 0, 'turret', hq.x + 8, hq.y); t.build = 1;
+  const a = spawn(s, 1, 'guard', t.x + 20, t.y), b = spawn(s, 1, 'guard', t.x + 21.5, t.y);
+  const ha = a.hp, hb = b.hp;
+  run(s, 1);
+  assert.ok(a.hp < ha, 'попала на 20 м (у обычной турели 13)');
+  assert.ok(b.hp < hb, 'сплэш задел соседа');
+  for (const k of ['lveh', 'hveh', 'arty', 'titan'] as Kind[]) assert.ok(flies(k, 'eldar'), k);
+  assert.ok(!flies('lveh', 'order') && flies('air', 'order'));
+  assert.equal(FACTION_ONLY.warpgate, 'ashen');
+  assert.deepEqual(producible('warpgate'), ['khorne', 'nurgle', 'tzeentch', 'slaanesh']);
+});
+
+test('вторые механики: лом орков, жертва Хаоса, живой металл некронов; большие демоны — поздно', () => {
+  const s = newState(4, ['orks', 'ashen', 'order', 'tyranids']), [orks, ashen] = s.players;
+  const veh = spawn(s, 2, 'hveh', 200, 200), req = orks.req;
+  hurt(s, veh, 1e6, 0); run(s, 0.2);
+  assert.ok(orks.req >= req + STATS.hveh.cost * 0.25 - 1, 'орки собрали лом');
+  const rel = ashen.relics;
+  for (let i = 0; i < TRIBUTE; i++) hurt(s, spawn(s, 2, 'builder', 150 + i, 150), 1e6, 1);
+  run(s, 0.2);
+  assert.equal(ashen.relics, rel + 1, 'жертва богам: реликвия за 20 убийств');
+  const n = newState(2, ['clockwork', 'order']), mono = unit(n, 0, 'hq');
+  mono.hp = maxHp('hq') / 2; run(n, 10);
+  assert.ok(mono.hp > maxHp('hq') / 2 + maxHp('hq') * 0.04, 'живой металл чинит постройку');
+  assert.equal(ROLES.nurgle!.tier, 4); assert.equal(ROLES.tzeentch!.tier, 4); assert.equal(ROLES.khorne!.tier, 3);
+});
+
+test('каждая фракция может заказать каждого юнита в каждом своём здании и каждого героя, и он выходит', async () => {
+  const { FACTION_IDS, ARCH_OPTS } = await import('./factions.ts');
+  for (const f of FACTION_IDS) {
+    const s = newState(2, [f, 'order']), p = s.players[0], hq = unit(s, 0, 'hq');
+    p.tier = 5;
+    const homes = (['barracks', 'motorpool', 'yard', ...(f === 'ashen' ? ['warpgate'] : [])] as Kind[]).map((k, i) => { const b = spawn(s, 0, k, hq.x + 20 + i * 18, hq.y + 20); b.build = 1; return b; });
+    for (const b of [hq, ...homes]) for (const k of producible(b.kind)) {
+      Object.assign(p, { req: 1e6, energy: 1e6, relics: 1e3 });
+      for (const u of s.units) if (u.owner === 0 && !isStruct(u.kind) && u.kind !== 'builder') u.hp = 0; // освободить лимит
+      run(s, 0.2);
+      assert.equal(applyCmd(s, 0, { c: 'train', id: b.id, k }), undefined, `${f}: заказ ${k} в ${b.kind}`);
+      run(s, STATS[k].time + 2);
+      assert.ok(s.units.some(u => u.owner === 0 && u.kind === k && u.hp > 0), `${f}: ${k} вышел из ${b.kind}`);
+    }
+    for (const a of Object.keys(ARCH_OPTS[f]) as ('assault' | 'commander' | 'mystic')[]) {
+      Object.assign(p, { req: 1e6, energy: 1e6, relics: 1e3 });
+      assert.equal(applyCmd(s, 0, { c: 'hero', a }), undefined, `${f}: герой ${a}`);
+    }
+  }
 });
