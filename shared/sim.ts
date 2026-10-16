@@ -63,17 +63,17 @@ export const STATS: Record<Kind, Stat> = {
   pylon: { hp: 1800, n: 1, dmg: 70, range: 30, cd: 2.4, speed: 0, sight: 30, radius: 1.6, cost: 180, time: 18 },    // Гаусс-пилон Династий
   pyre: { hp: 1500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 1.8, cost: 150, time: 14 },         // Огненная яма Синклита: жжёт всё вокруг
   bell: { hp: 1650, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 16, radius: 1.6, cost: 160, time: 16 },         // Колокол Скорби Нежити
-  // сверхоружие (тир V) и мегапостройки обороны (тир IV)
+  // сверхоружие (тир V) и мегапостройки обороны (тир IV): обзор и дальность 200 м, крайне живучие
   doom: { hp: 5250, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 12, radius: 3, cost: 3000, time: 240 },
-  lighthouse: { hp: 4500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 70, radius: 2.4, cost: 1200, time: 150 },  // Вокс-маяк легиона: видит 70 м
-  obelisk: { hp: 6000, n: 1, dmg: 220, range: 40, cd: 3, speed: 0, sight: 40, radius: 3, cost: 1400, time: 150 },    // Обелиск Вечности Династий
-  megagun: { hp: 5250, n: 1, dmg: 180, range: 38, cd: 4, speed: 0, sight: 30, radius: 3, cost: 1300, time: 150 },    // Мега-Пушка Орды
-  plague: { hp: 4500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 30, radius: 2.4, cost: 1100, time: 150 },       // Чумной шпиль Нежити
+  lighthouse: { hp: 22500, n: 1, dmg: 0, range: 200, cd: 1, speed: 0, sight: 200, radius: 4.8, cost: 1200, time: 150 },  // Вокс-маяк легиона: видит 200 м
+  obelisk: { hp: 30000, n: 1, dmg: 220, range: 200, cd: 3, speed: 0, sight: 200, radius: 6, cost: 1400, time: 150 },    // Обелиск Вечности Династий
+  megagun: { hp: 26250, n: 1, dmg: 180, range: 200, cd: 4, speed: 0, sight: 200, radius: 6, cost: 1300, time: 150 },    // Мега-Пушка Орды
+  plague: { hp: 22500, n: 1, dmg: 0, range: 200, cd: 1, speed: 0, sight: 200, radius: 4.8, cost: 1100, time: 150 },       // Чумной шпиль Нежити
   fturret: { hp: 1050, n: 1, dmg: 9, range: 9, cd: 0.4, speed: 0, sight: 11, radius: 1.3, cost: 90, time: 10 },     // Огнемётная печь Орды
   air: { hp: 145, n: 3, dmg: 9, range: 10, cd: 1, speed: 11, sight: 18, radius: 1.6, cost: 160, time: 14 },        // авиация: крылатые/прыжковые отряды, летят над скалами и стенами
   jet: { hp: 900, n: 1, dmg: 24, range: 14, cd: 0.6, speed: 17, sight: 24, radius: 2.4, cost: 200, time: 24 },      // самолёт: быстрый, летит над всем, техцех
   bomber: { hp: 5000, n: 1, dmg: 320, range: 24, cd: 6, speed: 10, sight: 30, radius: 4, cost: 1500, time: 150 }, // Бомбовоз Орды: титан-класс на верфи, мини-атомки
-  spire: { hp: 5250, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 30, radius: 3, cost: 1300, time: 150 },     // Башня Кабала / Око Ужаса: мегапостройка Тёмных эльдар и Хаоса
+  spire: { hp: 26250, n: 1, dmg: 0, range: 200, cd: 1, speed: 0, sight: 200, radius: 6, cost: 1300, time: 150 },     // Башня Кабала / Око Ужаса: мегапостройка Тёмных эльдар и Хаоса
   portal: { hp: 2250, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 2.4, cost: 200, time: 20 },     // Теневой портал Тёмных эльдар
   // Врата Варпа Хаоса и демоны четырёх богов
   warpgate: { hp: 3300, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 3, cost: 300, time: 30 },
