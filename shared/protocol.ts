@@ -1,14 +1,14 @@
 import type { CaptainCfg, Cmd, Snap } from './sim.ts';
 import type { FactionId } from './factions.ts';
 
-export type LobbyPlayer = { id: string; name: string; captain: CaptainCfg; ready: boolean; bot: boolean; faction: FactionId; spec?: boolean }; // spec — зритель
+export type LobbyPlayer = { id: string; name: string; captain: CaptainCfg; ready: boolean; bot: boolean; faction: FactionId; spec?: boolean; random?: boolean }; // spec — зритель, random — раса выпадет при старте матча
 
 export type C2S =
   | { t: 'create'; name: string; captain: CaptainCfg }
   | { t: 'join'; code: string; name: string; captain: CaptainCfg }
   | { t: 'captain'; captain: CaptainCfg }
   | { t: 'ready'; ready: boolean }
-  | { t: 'faction'; f: FactionId }
+  | { t: 'faction'; f: FactionId | 'random' }
   | { t: 'spec'; on: boolean }
   | { t: 'map'; m: number }
   | { t: 'bot' }

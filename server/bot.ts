@@ -1,4 +1,4 @@
-import { ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
+import { GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
 
 /** Бот играет по тем же правилам: казармы, второй строитель, посты на точках, гвардия с пополнением, атака на штаб. */
 export function botThink(s: State, me: number): void {
@@ -12,11 +12,18 @@ export function botThink(s: State, me: number): void {
   if (s.tick % 20 !== (me * 7) % 20) return; // раз в секунду, со сдвигом, чтобы боты не думали в один тик
   const mine = s.units.filter(u => u.owner === me && u.hp > 0);
   const hq = mine.find(u => u.kind === 'hq');
-  if (!hq) return;
+  if (!hq) { // штаб пал, но игра идёт до последней постройки: отстраиваемся у уцелевших зданий, армия защищает их
+    const base = mine.find(u => isStruct(u.kind) && u.build >= 1 && u.kind !== 'wall' && u.kind !== 'mine'), bs = mine.filter(u => u.kind === 'builder');
+    if (base && bs.length && !mine.some(u => u.kind === 'hq')) for (const a of [0, 1.6, 3.2, 4.8]) if (!applyCmd(s, me, { c: 'build', ids: bs.map(b => b.id), kind: 'hq', x: base.x + Math.cos(a) * 14, y: base.y + Math.sin(a) * 14 })) break;
+    const army = mine.filter(u => !isStruct(u.kind) && u.kind !== 'builder');
+    if (base && army.length && s.tick % 100 === (me * 7) % 100) applyCmd(s, me, { c: 'amove', ids: army.map(u => u.id), x: base.x, y: base.y });
+    return;
+  }
   if (!cap) applyCmd(s, me, { c: 'hero', a: pl.arch }); // капитана заказывают в штабе — и павшего тоже (в очереди второй раз не встанет)
   const of = (k: Kind) => mine.filter(u => u.kind === k);
+  const army0 = mine.filter(u => !isStruct(u.kind) && u.kind !== 'builder').length;
   const builders = of('builder'), guards = of('guard'), barracks = of('barracks');
-  const req = s.players[me].req;
+  const req = pl.faction === 'clockwork' ? pl.energy : pl.req; // Династии платят всё энергией
   const dir = Math.atan2(MAP.h / 2 - hq.y, MAP.w / 2 - hq.x);
   const d = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
@@ -33,32 +40,45 @@ export function botThink(s: State, me: number): void {
     const free = s.points.filter(p => p.owner === me && !s.units.some(u => u.kind === 'post' && u.hp > 0 && d(u, p) < 2)).sort((a, b) => d(a, hq) - d(b, hq))[0];
     if (free) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'post', x: free.x, y: free.y });
   }
-  if (builders.length + hq.que.filter(k => k === 'builder').length < 3) applyCmd(s, me, { c: 'train', id: hq.id, k: 'builder' });
-  const P0 = s.players[me]; // техцех с тира III, верфь титана с тира IV
-  for (const [k, t, a] of [['motorpool', 3, 2.0], ['yard', 4, -2.0]] as const) if (P0.tier >= t && !of(k).length && !site && idle.length) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: k, x: hq.x + Math.cos(dir + a) * 18, y: hq.y + Math.sin(dir + a) * 18 });
-  for (const y of of('yard')) if (y.build >= 1) applyCmd(s, me, { c: 'train', id: y.id, k: 'titan' });
-  if (barracks.some(b => b.build >= 1) && !of('foundry').length && !site && idle.length && req >= 140) { // энергия: литейня у штаба
-    applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'foundry', x: hq.x + Math.cos(dir + 1.4) * 10, y: hq.y + Math.sin(dir + 1.4) * 10 });
+  if (builders.length + hq.que.filter(k => k === 'builder').length < 4) applyCmd(s, me, { c: 'train', id: hq.id, k: 'builder' });
+  const P = s.players[me], key = ('key' + Math.min(P.tier, 4)) as Kind, up = TIER_UP[P.tier];
+  if (up && hq.upg < 0 && of(up.key).some(k => k.build >= 1)) { // тир — первым делом: ключевое здание готово, качаемся сразу, как хватает
+    if (up.seal && !has(P, 15)) { const k4 = of('key4').find(k => k.build >= 1 && !k.q); if (k4) applyCmd(s, me, { c: 'research', id: k4.id, r: 3 }); } // Печать Вознесения
+    else applyCmd(s, me, { c: 'upgrade', id: hq.id });
   }
-  const P = s.players[me], key = ('key' + Math.min(P.tier, 4)) as Kind;
-  if (barracks.some(b => b.build >= 1) && P.tier <= 3 && !of(key).length && !site && idle.length) { // ключевое здание своего тира
+  const prio = P.tier >= 3 && !of('motorpool').length ? 'motorpool' : P.tier >= 4 && !of('yard').length ? 'yard' : undefined; // техцех и верфь — раньше турелей и генераторов
+  const saving = !!prio && army0 >= 4 || !!up && hq.upg < 0 && army0 >= 4 && (of(up.key).some(k => k.build >= 1) || !of(key).length && req < STATS[key].cost + 100); // копим на тир и ключевое здание
+  const P0 = P; // техцех с тира III, верфь титана с тира IV
+  for (const [k, t, a] of [['motorpool', 3, 2.0], ['yard', 4, -2.0]] as const) if (P0.tier >= t && !of(k).length && (!site || k === 'yard') && builders.length) // верфь — даже если идёт другая стройка; перебор мест, пока одно не подойдёт
+    for (const [da, r] of [[0, 18], [0.7, 20], [-0.7, 20], [1.4, 24], [-1.4, 24], [2.6, 22], [3.14, 26], [0, 28]]) if (!applyCmd(s, me, { c: 'build', ids: (idle.length ? idle : builders).map(b => b.id), kind: k, x: hq.x + Math.cos(dir + a + da) * r, y: hq.y + Math.sin(dir + a + da) * r })) break;
+  const big = (pl.faction === 'orks' && Math.random() < 0.5 ? 'bomber' : 'titan') as Kind; // Орда строит и Бомбовоз
+  const yard = of('yard').find(y => y.build >= 1 && !y.que.length), titanTime = P.tier >= 4 && army0 >= 6 && !of('yard').some(y => y.que.length); // IV тир и армия есть — копим на титана, пока он не в очереди
+  if (yard && s.points[0]?.owner === me) applyCmd(s, me, { c: 'train', id: yard.id, k: big });
+  if ((!prio || pl.energy < 600) && barracks.some(b => b.build >= 1) && !site && idle.length && (req >= 140 || pl.energy < 200) && of('foundry').length + of('pump').length < (saving ? 2 : GEN_CAP)) { // энергия: генератор на каждый свободный якорь — жилы, свои точки, штаб
+    const spots = [...VENTS.map(([x, y]) => ({ x, y, k: 'pump' as const })), ...[hq, ...s.points.filter(p => p.owner === me)].map(p => ({ x: p.x, y: p.y, k: 'foundry' as const }))]
+      .filter(p => genAnchor(s.points, mine, me, p.x, p.y, p.k)).sort((a, b) => d(a, hq) - d(b, hq));
+    for (const p of spots.slice(0, 3)) {
+      const a = Math.atan2(hq.y - p.y, hq.x - p.x) + (p === spots[0] ? 0 : 0.8), r = p.k === 'pump' ? 0 : p.x === hq.x && p.y === hq.y ? 10 : 7; // литейня — в стороне от поста, к своему штабу
+      if (!applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: p.k, x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r })) break;
+    }
+  }
+  if (barracks.some(b => b.build >= 1) && up && !of(key).length && !site && idle.length) { // ключевое здание своего тира
     applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: key as 'key1', x: hq.x + Math.cos(dir - 1.2) * (8 + P.tier * 4), y: hq.y + Math.sin(dir - 1.2) * (8 + P.tier * 4) });
   }
-  if (P.tier <= 3 && of(key).some(k => k.build >= 1) && hq.upg < 0) applyCmd(s, me, { c: 'upgrade', id: hq.id });
   const F = s.players[me].faction; // особые постройки фракции
-  if (F === 'orks' && of('rturret').length < 2 && !site && idle.length && req >= 160) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'rturret', x: hq.x + Math.cos(dir + 0.5) * 12, y: hq.y + Math.sin(dir + 0.5) * 12 });
+  if (!prio && !saving && !titanTime && F === 'orks' && of('rturret').length < 2 && !site && idle.length && req >= 160) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'rturret', x: hq.x + Math.cos(dir + 0.5) * 12, y: hq.y + Math.sin(dir + 0.5) * 12 });
   if (F === 'clockwork') applyCmd(s, me, { c: 'ascend' });
   const uniq = ({ order: 'battery', clockwork: 'pylon', ashen: 'pyre', eldar: 'aegis', tyranids: 'bell' } as const)[F as 'order'];
-  if (uniq && P.tier >= 2 && !of(uniq).length && !site && idle.length) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: uniq, x: hq.x + Math.cos(dir - 0.5) * 12, y: hq.y + Math.sin(dir - 0.5) * 12 });
-  if (F === 'ashen' && P.tier >= 3 && !of('warpgate').length && !site && idle.length) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'warpgate', x: hq.x + Math.cos(dir + 2.6) * 16, y: hq.y + Math.sin(dir + 2.6) * 16 }); // Врата Варпа
+  if (!prio && !saving && !titanTime && uniq && P.tier >= 2 && !of(uniq).length && !site && idle.length) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: uniq, x: hq.x + Math.cos(dir - 0.5) * 12, y: hq.y + Math.sin(dir - 0.5) * 12 });
+  if (!titanTime && F === 'ashen' && P.tier >= 3 && !of('warpgate').length && !site && idle.length) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'warpgate', x: hq.x + Math.cos(dir + 2.6) * 16, y: hq.y + Math.sin(dir + 2.6) * 16 }); // Врата Варпа
   if (of('deity').length && s.units.some(e => e.owner !== me && e.hp > 0 && of('deity').some(g => Math.hypot(g.x - e.x, g.y - e.y) < 10))) applyCmd(s, me, { c: 'timestop' });
-  if (!of('turret').length && !site && idle.length && req >= 180) {
-    applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'turret', x: hq.x + Math.cos(dir) * 9, y: hq.y + Math.sin(dir) * 9 });
-  }
-  if (s.players[me].tier > 1) for (const u of [...of('post'), ...of('turret'), ...guards]) if (u.lvl < 2 && u.upg < 0 && s.players[me].req >= 150) applyCmd(s, me, { c: 'upgrade', id: u.id });
-  const saving = P.tier <= 3 && (!of(key).length || hq.upg < 0 && of(key).some(k => k.build >= 1)) && guards.length >= 3 && req < 400; // копим на ключевое здание и тир, а не только на пехоту
-  if (!saving) for (const b of [...barracks, ...of('motorpool'), ...of('warpgate')]) if (b.build >= 1 && b.que.length < 2) { // смешанный состав: всё, что открыто тиром
-    const opts = producible(b.kind).filter(k => ROLES[k]!.tier <= s.players[me].tier);
+  const turrets = of('turret'), tSpot = [...[0.3, -0.3, 1.2, -1.2].map(a => ({ x: hq.x + Math.cos(dir + a) * 11, y: hq.y + Math.sin(dir + a) * 11 })), // турели: у штаба, потом у своих точек
+    ...s.points.filter((p, i) => i !== 0 && p.owner === me).map(p => ({ x: p.x + Math.cos(Math.atan2(hq.y - p.y, hq.x - p.x)) * 6, y: p.y + Math.sin(Math.atan2(hq.y - p.y, hq.x - p.x)) * 6 }))]
+    .filter(q => !turrets.some(t => d(t, q) < 8));
+  if ((!prio && !saving && !titanTime || req > 600) && turrets.length < (P.tier + 1) * 2 && !site && idle.length && req >= 180) for (const q of tSpot.slice(0, 4)) if (!applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'turret', x: q.x, y: q.y })) break; // первое свободное место
+  if (!saving && !titanTime && s.players[me].tier > 1) for (const u of [...of('post'), ...of('turret'), ...guards]) if (u.lvl < 2 && u.upg < 0 && s.players[me].req >= 150) applyCmd(s, me, { c: 'upgrade', id: u.id });
+  if (!saving && !titanTime) for (const b of [...barracks, ...of('motorpool'), ...of('warpgate')]) if (b.build >= 1 && b.que.length < 2) { // смешанный состав: всё, что открыто тиром
+    const opts = producible(b.kind, F).filter(k => ROLES[k]!.tier <= s.players[me].tier);
     if (opts.length) applyCmd(s, me, { c: 'train', id: b.id, k: opts[Math.floor(Math.random() * opts.length)] });
   }
   const broken = mine.find(u => (isStruct(u.kind) || VEHICLES.has(u.kind)) && u.build >= 1 && u.hp < maxHp(u.kind) * 0.6);
@@ -66,14 +86,16 @@ export function botThink(s: State, me: number): void {
 
   if (s.tick % 100 !== (me * 7) % 100) return; // приказы армии раз в 5 секунд
   const squads = mine.filter(u => SQUADS.has(u.kind)), hurt = squads.filter(g => g.hp < maxHp(g.kind));
-  if (hurt.length) applyCmd(s, me, { c: 'reinforce', ids: hurt.map(g => g.id) });
-  if (s.players[me].tier >= 2 && squads.length) applyCmd(s, me, { c: 'gear', ids: squads.map(u => u.id), g: 0 }); // гранаты
+  if (hurt.length && (!saving && !titanTime || req > 400)) applyCmd(s, me, { c: 'reinforce', ids: hurt.map(g => g.id) });
+  if (!saving && !titanTime && s.players[me].tier >= 2 && squads.length) applyCmd(s, me, { c: 'gear', ids: squads.map(u => u.id), g: 0 }); // гранаты
   const near = s.units.find(e => e.owner !== me && e.hp > 0 && !isStruct(e.kind) && squads.some(q => q.ch[0] > 0 && Math.hypot(q.x - e.x, q.y - e.y) < 16));
   if (near) applyCmd(s, me, { c: 'throw', ids: squads.map(u => u.id), g: 0, x: near.x, y: near.y });
   const army = mine.filter(u => !isStruct(u.kind) && u.kind !== 'builder' && !u.carry);
   if (!army.length) return;
-  const enemyHq = s.units.filter(u => u.kind === 'hq' && u.owner !== me && s.players[u.owner].alive).sort((a, b) => d(a, hq) - d(b, hq))[0];
+  const foes = s.units.filter(u => isStruct(u.kind) && u.owner !== me && u.hp > 0 && s.players[u.owner].alive && !['wall', 'wallgate', 'mine'].includes(u.kind));
+  const enemyHq = foes.filter(u => u.kind === 'hq').sort((a, b) => d(a, hq) - d(b, hq))[0] ?? foes.sort((a, b) => d(a, hq) - d(b, hq))[0]; // штаб пал — добиваем остальные постройки
   const point = s.points.filter(p => p.owner !== me).sort((a, b) => d(a, hq) - d(b, hq))[0];
-  const goal = army.length >= 6 || !point ? enemyHq : point;
+  const center = s.points[0] && (s.points[0].owner !== me && P.tier >= 3 || titanTime) ? s.points[0] : undefined; // с III тира берём центр, копя на титана — стоим на нём: без него титана не заказать
+  const goal = center ?? (army.length >= 6 || !point ? enemyHq : point);
   if (goal) applyCmd(s, me, { c: 'amove', ids: army.map(u => u.id), x: goal.x, y: goal.y });
 }

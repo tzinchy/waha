@@ -9,7 +9,7 @@ import { NuclearBlastActor } from './models3d/effect-models.ts';
 import type { Kind } from '../shared/sim.ts';
 
 /** Вид юнита → роль модели. Чего здесь нет (мины), рисуется по-старому. */
-export const UNIT_ROLE: Partial<Record<Kind, UnitRole>> = { captain: 'captain', deity: 'captain', legend: 'elite', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', support: 'scout', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan', air: 'flyer', jet: 'aircraft', khorne: 'elite', nurgle: 'elite', tzeentch: 'sniper', slaanesh: 'scout' };
+export const UNIT_ROLE: Partial<Record<Kind, UnitRole>> = { captain: 'captain', deity: 'captain', legend: 'elite', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', support: 'scout', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan', air: 'flyer', jet: 'aircraft', bomber: 'aircraft', khorne: 'elite', nurgle: 'elite', tzeentch: 'sniper', slaanesh: 'scout' };
 /** Демоны четырёх богов: тело демона в цветах своего бога, у какой бы фракции ни были. */
 export const GOD_PACK: Partial<Record<Kind, Pack>> = { khorne: 'khorne', nurgle: 'nurgle', tzeentch: 'tzeentch', slaanesh: 'slaanesh' };
 export const STRUCT_ROLE: Partial<Record<Kind, StructureRole>> = { hq: 'hq', barracks: 'barracks', bunker: 'barracks', motorpool: 'factory', yard: 'factory', key1: 'armory', key2: 'armory', key3: 'armory', key4: 'armory', foundry: 'generator', pump: 'generator', post: 'post', turret: 'turret', rturret: 'turret', fturret: 'turret', battery: 'turret', pylon: 'turret', pyre: 'turret', wall: 'wall', wallgate: 'gate', gate: 'relic', aegis: 'relic', bell: 'relic', plague: 'relic', lighthouse: 'relic', obelisk: 'relic', megagun: 'turret', warpgate: 'relic', portal: 'relic', spire: 'turret' };
@@ -18,7 +18,7 @@ export const has3d = (k: Kind) => k in UNIT_ROLE || k in STRUCT_ROLE;
 /** Наклон высоты: сколько экранных пикселей даёт метр высоты относительно метра земли. */
 const HEIGHT = 0.85;
 type Actor = { root: THREE.Group; pose: (m: never, t: number) => void };
-type Entry = { kind: Kind; group: THREE.Group; actors: Actor[]; structure: boolean; motions: Set<string>; mode: string; t0: number; dead: number; scale: number };
+type Entry = { kind: Kind; group: THREE.Group; actors: Actor[]; structure: boolean; motions: Set<string>; mode: string; t0: number; dead: number; scale: number; veil?: boolean };
 
 export class World3D {
   readonly canvas = document.createElement('canvas');
@@ -68,10 +68,19 @@ export class World3D {
   }
 
   /** Кадр юнита: место, поворот, анимация. build — доля готовности стройки (кадры «build» по готовности). alive — сколько бойцов отряда живо. */
-  update(id: number, x: number, y: number, face: number, motion: string, now: number, opts: { alive?: number; build?: number; ghost?: boolean; fly?: boolean } = {}) {
+  update(id: number, x: number, y: number, face: number, motion: string, now: number, opts: { alive?: number; build?: number; ghost?: boolean; fly?: boolean; veil?: boolean } = {}) {
     const e = this.entries.get(id);
     if (!e || e.dead) return;
-    e.group.position.set(x, opts.fly ? (e.kind === 'jet' ? 8 : 3) + Math.sin(now / 400 + id) * 0.3 : 0, y); // летуны висят над землёй и покачиваются
+    e.group.position.set(x, opts.fly ? (e.kind === 'bomber' ? 12 : e.kind === 'jet' ? 8 : 3) + Math.sin(now / 400 + id) * 0.3 : 0, y); // летуны висят над землёй и покачиваются
+    if (!!opts.veil !== !!e.veil) { // скрыт Теневым порталом: свой юнит полупрозрачный (материалы копируем — они общие у моделей)
+      e.veil = opts.veil;
+      e.group.traverse(o => {
+        const mesh = o as THREE.Mesh;
+        if (!mesh.material || Array.isArray(mesh.material)) return;
+        if (!o.userData.ownMat) { mesh.material = mesh.material.clone(); o.userData.ownMat = true; o.userData.op = mesh.material.opacity; o.userData.tr = mesh.material.transparent; }
+        mesh.material.transparent = e.veil || o.userData.tr; mesh.material.opacity = e.veil ? o.userData.op * 0.35 : o.userData.op;
+      });
+    }
     if (!e.structure) e.group.rotation.y = Math.PI / 2 - face; // модель смотрит по +Z, угол симуляции — в плоскости x/y
     const m = this.pick(e, motion);
     if (m !== e.mode) { e.mode = m; e.t0 = now; }

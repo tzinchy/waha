@@ -117,10 +117,11 @@ if (arena !== null) import('./arena.ts').then(m => m.runArena(arena, $('game')))
 else connect(() => tx({ t: 'list' }));
 
 /** Выбор фракции: карточки с силуэтом капитана, тема интерфейса и превью меняются вместе с выбором. */
-function renderFactions(mine: FactionId) {
-  $('factions').innerHTML = FACTION_IDS.map(f => `<button class="lc-btn lc-btn--sm ${f === mine ? '' : 'lc-btn--ghost'}" data-f="${f}" title="${FACTIONS[f].mech}">${svgFor(f)}${FACTIONS[f].name}</button>`).join('');
-  $('factions').querySelectorAll<HTMLElement>('[data-f]').forEach(b => { b.onclick = () => tx({ t: 'faction', f: b.dataset.f as FactionId }); });
-  $('faction-mech').textContent = FACTIONS[mine].mech;
+function renderFactions(mine: FactionId, random = false) {
+  $('factions').innerHTML = FACTION_IDS.map(f => `<button class="lc-btn lc-btn--sm ${f === mine && !random ? '' : 'lc-btn--ghost'}" data-f="${f}" title="${FACTIONS[f].mech}">${svgFor(f)}${FACTIONS[f].name}</button>`).join('')
+    + `<button class="lc-btn lc-btn--sm ${random ? '' : 'lc-btn--ghost'}" data-f="random" title="Раса выпадет случайно при старте матча">? Случайная</button>`;
+  $('factions').querySelectorAll<HTMLElement>('[data-f]').forEach(b => { b.onclick = () => tx({ t: 'faction', f: b.dataset.f as FactionId | 'random' }); });
+  $('faction-mech').textContent = random ? 'Раса выпадет случайно при старте матча.' : FACTIONS[mine].mech;
   if (faction !== mine) { faction = mine; setTheme(FACTIONS[mine].theme); preview.setFaction(mine); paintTheme(); preview.set({ ...cfg, arch: archFor(mine, cfg.arch) }); }
 }
 const svgFor = (f: FactionId) => pxIcon(f, 'captain', true); // пиксельный капитан фракции
@@ -129,10 +130,10 @@ function renderLobby() {
   if (!lobby) return;
   show('lobby');
   const me = lobby.players.find(p => p.id === lobby!.you)!, host = lobby.host === lobby.you;
-  renderFactions(me.faction);
+  renderFactions(me.faction, me.random);
   $('lcode').textContent = lobby.code;
   $('plist').innerHTML = lobby.players.map(p => `<li>
-    <span class="name">${esc(p.name)}<br><small class="tag">${FACTIONS[p.faction]?.name ?? ''}</small></span>
+    <span class="name">${esc(p.name)}<br><small class="tag">${p.random ? 'Случайная' : FACTIONS[p.faction]?.name ?? ''}</small></span>
     ${p.id === lobby!.host ? '<span class="tag">хост</span>' : ''}
     <span class="tag ${p.ready ? 'ready' : ''}">${p.spec ? 'зритель' : p.bot ? 'бот' : p.ready ? 'готов' : 'не готов'}</span>
     ${host && p.id !== lobby!.you ? `<button data-kick="${p.id}">✕</button>` : ''}</li>`).join('');

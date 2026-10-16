@@ -2,7 +2,7 @@
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import { World3D, has3d } from './world3d.ts';
 import { ARCHS, CAPTAIN_COST, HERO, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
-import { MEGA_SHOT, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { GEN_CAP, genAnchor, SCAN, PORTAL, MEGA_SHOT, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { BUILD_NAME, PX_PACK, ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -42,7 +42,7 @@ const GEAR_ICON = [
   ico('<rect x="5" y="9" width="14" height="10" fill="currentColor"/><path d="M12 9V4M9 4h6" fill="none" stroke="currentColor" stroke-width="2"/>'),
   ico('<circle cx="8" cy="14" r="4" fill="currentColor"/><circle cx="15" cy="12" r="5" fill="currentColor" opacity=".7"/><circle cx="12" cy="8" r="3" fill="currentColor" opacity=".5"/>'),
 ];
-const KIND_NAME: Partial<Record<Kind, string>> = { spire: 'Башня Кабала', portal: 'Теневой портал', warpgate: 'Врата Варпа', khorne: 'Кровопускатели Кхорна', nurgle: 'Чумоносцы Нургла', tzeentch: 'Розовые ужасы Тзинча', slaanesh: 'Демонетки Слаанеш', lighthouse: 'Вокс-маяк', obelisk: 'Обелиск Вечности', megagun: 'Мега-Пушка', plague: 'Споровый улей', battery: 'Батарея «Громобой»', pylon: 'Гаусс-пилон', pyre: 'Огненная яма', bell: 'Синаптический шпиль', deity: 'Бог-Механизм', aegis: 'Теневое поле', rturret: 'Ракетная бочка', fturret: 'Огнемётная печь', hq: 'Штаб', barracks: 'Казарма', post: 'Реликварий', turret: 'Турель', foundry: 'Литейня', pump: 'Глубинный насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Крипта-бункер', mine: 'Мина' };
+const KIND_NAME: Partial<Record<Kind, string>> = { bomber: 'Бомбовоз «Большой Бадабум»', spire: 'Башня Кабала', portal: 'Теневой портал', warpgate: 'Врата Варпа', khorne: 'Кровопускатели Кхорна', nurgle: 'Чумоносцы Нургла', tzeentch: 'Розовые ужасы Тзинча', slaanesh: 'Демонетки Слаанеш', lighthouse: 'Вокс-маяк', obelisk: 'Обелиск Вечности', megagun: 'Мега-Пушка', plague: 'Споровый улей', battery: 'Батарея «Громобой»', pylon: 'Гаусс-пилон', pyre: 'Огненная яма', bell: 'Синаптический шпиль', deity: 'Бог-Механизм', aegis: 'Теневое поле', rturret: 'Ракетная бочка', fturret: 'Огнемётная печь', hq: 'Штаб', barracks: 'Казарма', post: 'Реликварий', turret: 'Турель', foundry: 'Литейня', pump: 'Глубинный насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Крипта-бункер', mine: 'Мина' };
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 const damageName: Record<DmgType, string> = { small: 'стрелковое', sniper: 'снайперское', heavy: 'противотанковое', melee: 'ближний бой', blast: 'взрывное' };
 const armorName: Record<Armor, string> = { inf: 'пехота', hinf: 'тяжёлая пехота', light: 'лёгкая техника', veh: 'бронетехника', titan: 'титан', struct: 'здание' };
@@ -81,6 +81,7 @@ export function artFor(kind: Kind, faction: FactionId, lvl = 1, arch: Arch = 'co
   if (kind === 'legend') return FACTIONS[faction].legendArt[variant] ?? FACTIONS[faction].legendArt[0];
   if (kind === 'deity') return arch === 'assault' ? 'px/nightbringer/captain' : 'px/deceiver/captain'; // К'тан по сборке
   if (kind === 'doom') return DOOM_OF[faction].art;
+  if (kind === 'bomber') return artFor('jet', faction); // свой портрет пока не нарисован
   if (kind in ROSTER[faction] && typeof (ROSTER[faction] as Record<string, unknown>)[kind] === 'object') return ROSTER[faction][kind as 'sniper'].art;
   if (kind === 'captain') return CAPTAIN_ART[faction][archFor(faction, arch)] ?? a.captain[0];
   if (kind in GOD_ART) return GOD_ART[kind]!;
@@ -131,7 +132,7 @@ type PxRole = 'scout' | 'captain' | 'guard' | 'builder' | 'sniper' | 'heavy' | '
 /** Постройки с атласом: пока атлас не запечён, здание рисуется прежним векторным силуэтом. */
 const PX_STRUCT = new Set<PxRole>(['hq', 'barracks', 'factory', 'armory', 'generator', 'relic', 'post', 'turret', 'wall', 'gate']);
 /** Вид юнита → роль атласа. Поддержки (support) в пакете нет — у неё остаётся векторный силуэт. */
-const PX_ROLE: Partial<Record<Kind, PxRole>> = { hq: 'hq', barracks: 'barracks', motorpool: 'factory', yard: 'factory', key1: 'armory', key2: 'armory', key3: 'armory', key4: 'armory', foundry: 'generator', pump: 'generator', post: 'post', turret: 'turret', wall: 'wall', wallgate: 'gate', gate: 'relic', captain: 'captain', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan', air: 'flyer', jet: 'aircraft' };
+const PX_ROLE: Partial<Record<Kind, PxRole>> = { hq: 'hq', barracks: 'barracks', motorpool: 'factory', yard: 'factory', key1: 'armory', key2: 'armory', key3: 'armory', key4: 'armory', foundry: 'generator', pump: 'generator', post: 'post', turret: 'turret', wall: 'wall', wallgate: 'gate', gate: 'relic', captain: 'captain', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan', air: 'flyer', jet: 'aircraft', bomber: 'aircraft' };
 export const pxRole = (k: Kind, f: FactionId): PxRole | undefined => (k === 'heavy' && f === 'ashen' ? 'flamer' : PX_ROLE[k]); // тяжёлые Культа — огнемётчики
 export const isPx = (k: Kind, f?: FactionId): boolean => { const r = PX_ROLE[k]; return !!r && (!PX_STRUCT.has(r) || (!!f && PX_META.has(pxKey(f, r)))); }; // здания — только когда их атлас уже есть
 /** Данные атласа из idle.json: кадр, опора, рамка фигуры (лицом к зрителю) — для масштаба, полосы здоровья и иконок. */
@@ -233,7 +234,7 @@ export class Game {
   private pan: { x: number; y: number } | null = null;
   private throwG = -1;
   private stopCd = 0;
-  private unlock = 0; private doomPct = 0;
+  private unlock = 0; private doomPct = 0; private scanCd = 0;
   private strikeEls = new Map<string, HTMLElement>();
   private megaSeen = new Set<number>();
   private megaMini = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -415,7 +416,7 @@ export class Game {
     this.qk = s.qk ?? {};
     if (this.slot >= 0) this.renderScore(s);
     this.drawSmoke(s.sm ?? []);
-    this.stopCd = s.ps?.[this.slot]?.[0] ?? 0; this.unlock = s.ps?.[this.slot]?.[1] ?? 0; this.doomPct = s.ps?.[this.slot]?.[2] ?? 0;
+    this.stopCd = s.ps?.[this.slot]?.[0] ?? 0; this.unlock = s.ps?.[this.slot]?.[1] ?? 0; this.doomPct = s.ps?.[this.slot]?.[2] ?? 0; this.scanCd = s.ps?.[this.slot]?.[3] ?? 0;
     this.drawStrikes(s); this.megaWatch(s);
     for (const [id, owner, ki, x, y, hp, face, q, bp, , lvl, upg, prog, gear, c0, c1, c2, gcd, sh, frozen, carry, rise, off, respawn, archI, ...hr] of s.u) {
       const kind = KINDS[ki];
@@ -667,7 +668,7 @@ export class Game {
     $('hud-req').textContent = String(this.req);
     $('hud-req').parentElement!.classList.toggle('hidden', this.fac() === 'clockwork'); // у Некронов влияния нет — ячейку не показываем
     $('hud-builders').textContent = `${builders}/${CAP.builder}`;
-    const pop = [0, 0], add = (k: Kind) => { pop[VEHICLES.has(k) || k === 'arty' ? 1 : 0] += ROLES[k]?.pop ?? 0; }; // пехота и техника — раздельные лимиты
+    const pop = [0, 0], add = (k: Kind) => { if (!ROLES[k]?.one) pop[VEHICLES.has(k) || k === 'arty' ? 1 : 0] += ROLES[k]?.pop ?? 0; }; // титаны — свой слот // пехота и техника — раздельные лимиты
     for (const u of s.u) if (u[1] === this.slot) add(KINDS[u[2]]);
     for (const q of Object.values(s.qk ?? {})) for (const k of q) add(KINDS[k]);
     const bonus = this.research & (1 << 12) ? 6 : 0;
@@ -774,9 +775,9 @@ export class Game {
         builder: 'Строит, чинит постройки и технику.', guard: isMelee('guard', this.fac()) ? 'Линейная пехота ближнего боя.' : 'Линейная пехота, стрелки.',
         sniper: 'Снайпер: против пехоты издалека; вблизи переключается на второе оружие.', heavy: dmgOf('heavy', this.fac()) === 'heavy' ? 'Противотанковое оружие: против техники и зданий. Дополнительное стрелковое доступно вблизи; против брони сохраняется более эффективный ствол.' : 'Антипехотное оружие: против пехоты; бронетехнику почти не пробивает.', support: 'Поддержка: снижает урон по союзникам рядом, может нести дым.',
         elite: 'Тяжёлая элита: держит удар, бьёт в упор.', healer: 'Целитель: лечит отряды в 15 м на 5%/с.', lveh: 'Лёгкая техника: разведка, захват точек, охота на строителей.',
-        mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: `Артиллерия: ${STATS.arty.range + (modOf(this.fac(), 'arty')?.range ?? 0)} м, по площади, в упор не стреляет — нужна разведка и прикрытие.`, titan: 'Титан: один на армию, давит пехоту шагами.', air: 'Авиация: быстрый отряд, летит над скалами и стенами — рейды по тылам.', jet: 'Самолёт: самый быстрый, летит высоко над всем, бьёт технику; слаб против зениток и турелей.',
+        mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: `Артиллерия: ${STATS.arty.range + (modOf(this.fac(), 'arty')?.range ?? 0)} м, по площади, в упор не стреляет — нужна разведка и прикрытие.`, titan: 'Титан: один на армию, давит пехоту шагами.', air: 'Авиация: быстрый отряд, летит над скалами и стенами — рейды по тылам.', jet: 'Самолёт: самый быстрый, летит высоко над всем, бьёт технику; постройки сбивают его втрое сильнее, по зданиям бьёт вполсилы.', bomber: 'Бомбовоз Орды: огромный самолёт титан-класса, мини-атомки по 9 м, земля горит. Нужна критическая точка; турели и тяжёлое оружие бьют по нему сильнее.',
         khorne: 'Кровопускатели Кхорна: рубят в ближнем бою, бьют сильнее всех демонов.', nurgle: 'Чумоносцы Нургла: медленные, очень живучие, гниль лечит их 2%/с.', tzeentch: 'Розовые ужасы Тзинча: варп-пламя на 16 м по площади.', slaanesh: 'Демонетки Слаанеш: самые быстрые, частые удары когтями.' };
-      producible(st.kind).forEach((k, i) => {
+      producible(st.kind, this.fac()).forEach((k, i) => {
         const r = ROLES[k]!, n = this.qk[st.id]?.filter(q => q === KINDS.indexOf(k)).length ?? 0, now = this.qk[st.id]?.[0] === KINDS.indexOf(k);
         const researching = (/^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length) || st.q > 100;
         c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k), r.energy ?? 0, r.relics ?? 0),
@@ -810,6 +811,7 @@ export class Game {
       if (st.kind === 'hq') { // открытия и сверхоружие — всё в штабе
         UNLOCKS.forEach((U, u) => { const done = !!(this.unlock & (1 << u)), busy = st.q > 100 && st.q !== 101 + u;
           c.push({ act: done ? '' : 'unlock:' + u, name: U.name, hot: String(1 + u), icon: ICON.research, ...(done ? {} : this.price(U.cost, U.energy, U.relics)), done, info: `Дорогое открытие: ${U.info}. ${U.time} с.`, req: this.tier < U.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][U.tier - 1]}` : busy ? 'Штаб уже исследует' : this.qk[st.id]?.length ? 'Штаб нанимает войска' : undefined, prog: st.q === 101 + u ? st.prod : undefined }); });
+        c.push({ act: this.scanCd > 0 ? '' : 'scan', name: 'Засвет', hot: 'O', icon: ICON.attack, ...this.price(0, SCAN.energy), active: this.throwG === 10, info: `Открывает круг ${SCAN.r} м на ${SCAN.t} с в любой точке карты — видно и скрытых порталом. Артиллерия бьёт по засвеченному (по зданиям на 15 м дальше). Перезарядка ${SCAN.cd} с.`, req: this.scanCd > 0 ? `Перезарядка ${this.scanCd} с` : undefined });
         if (this.unlock & 2) c.push({ act: this.doomPct >= 100 ? 'strike' : '', name: DOOM_OF[this.fac()].name, hot: 'Y', icon: ABIL_ICON[5], ult: true, ...this.price(0, DOOM_SHOT), info: `Удар в любую точку карты: ${DOOM_OF[this.fac()].info}. Заряд 3 минуты; все получат предупреждение за 6 с.`, req: this.doomPct < 100 ? `Заряд ${this.doomPct}%` : undefined, prog: this.doomPct < 100 ? this.doomPct : undefined, active: this.throwG === 9 });
       }
       if (st.kind === 'gate') {
@@ -896,12 +898,12 @@ export class Game {
         ...(this.fac() === 'order' ? [card('battery', 'Батарея «Громобой»', 'R', 'Стационарная артиллерия: 40 м, мёртвая зона 8 м, урон по площади.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'clockwork' ? [card('pylon', 'Гаусс-пилон', 'R', 'Дальний луч 30 м: пробивает технику и здания.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...((m => m ? [card(m as Buildable, this.kindName(m as Kind, this.fac()), 'M', ({ lighthouse: 'Открывает 70 м вокруг; союзники в 25 м получают на 15% меньше урона.', obelisk: 'Луч 220 на 40 м, пробивает технику и здания.', megagun: 'Снаряды 180 по площади 6 м, дальность 38 м.', plague: 'Враги в 30 м теряют 1% здоровья в секунду.', spire: 'Сторожит базу и держит поле под прицелом.' } as Record<string, string>)[m] + ` Раз в ${MEGA_SHOT.cd} с бьёт ближайшего врага в ${MEGA_SHOT.range} м (${MEGA_SHOT.dmg} по площади ${MEGA_SHOT.aoe} м) и засвечивает место удара. Строится 2 минуты — все игроки видят стройку.`, this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в штабе' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun', tyranids: 'plague', eldar: 'spire', ashen: 'spire' } as Record<string, string>)[this.fac()])),
-        ...(this.fac() === 'eldar' ? [card('portal', 'Теневой портал', 'J', 'Свои в 16 м скрыты: враг видит и бьёт их только вплотную (8 м). Тир II.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
+        ...(this.fac() === 'eldar' ? [card('portal', 'Теневой портал', 'J', `Всё своё в ${PORTAL.r} м — войска, стены, постройки — скрыто: враг видит и бьёт только вплотную (${PORTAL.reveal} м) или засветом. Ставится где угодно, кроме 20 м у чужого штаба. Тир II.`, this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'eldar' ? [card('aegis', 'Теневое поле', 'R', 'Купол над базой: поглощает 1200 урона по своим в 12 м, восстанавливается за 30 с.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'tyranids' ? [card('bell', 'Синаптический шпиль', 'R', 'Враги в 14 м медленнее и бьют слабее.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'ashen' ? [card('pyre', 'Огненная яма', 'R', 'Жжёт всех врагов в 8 м: 18 урона в секунду.', this.tier < 2 ? 'Нужен тир II' : undefined)] : [])]],
       ['Святыни', (() => {
-        const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — только когда пали все штабы.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra]; })()],
+        const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — только когда пали все постройки.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra]; })()],
     ];
     const tab = tabs[this.buildTab] ?? tabs[0];
     return `<div class="lc-buildhead">${miniArt(artFor('builder', this.fac()))}<div><div class="lc-buildhead__who">${F.builder} ×${bs.length}</div><div class="lc-buildhead__meta">скорость стройки ×${bs.length}</div></div><button class="lc-btn lc-btn--sm lc-btn--ghost" data-act="cmdgrid">Команды ▸</button></div>`
@@ -988,6 +990,7 @@ export class Game {
     if (act.startsWith('learn:')) { this.cmd({ c: 'learn', a: Number(act.slice(6)), id: this.heroView()?.id }); return; }
     if (act.startsWith('unlock:')) { const k = sel.find(v => v.kind === 'hq'); if (k) this.cmd({ c: 'unlock', id: k.id, u: Number(act.slice(7)) }); return; }
     if (act === 'strike') { this.throwG = 9; this.root.style.cursor = 'crosshair'; return; } // прицел удара сверхоружием
+    if (act === 'scan') { this.throwG = 10; this.root.style.cursor = 'crosshair'; return; } // прицел засвета
     if (act === 'sacrifice') { this.cmd({ c: 'sacrifice', ids: [...this.sel] }); return; }
     if (act === 'timestop') { this.cmd({ c: 'timestop' }); return; }
     if (act === 'drag') {
@@ -1101,7 +1104,7 @@ export class Game {
       else if (k === 'g') this.doAct('wallgate');
       else if (k === 'x') this.doAct('bunker');
       else if (k === 'v') this.doAct('mine');
-      else if (k === 'o') this.doAct('fturret');
+      else if (k === 'o') this.doAct(this.selected().some(v => v.kind === 'hq' && v.owner === this.slot) ? 'scan' : 'fturret'); // штаб: засвет
       else if (k === 'j') this.doAct(this.fac() === 'eldar' ? 'portal' : 'warpgate');
       else if (k === 'k') { const n = this.nextKey(); if (n) this.doAct(n); }
       else if (/^[1-9]$/.test(k)) { const x = this.cells.find(c => c.hot === k && c.act); if (x) this.doAct(x.act); }
@@ -1175,7 +1178,7 @@ export class Game {
     }
     if (this.throwG >= 0) { // бросок снаряжения в точку (GrenadeTargeting)
       const p = this.toWorld(sx, sy);
-      if (this.throwG === 9) this.cmd({ c: 'strike', x: p.x, y: p.y }); else if (this.throwG === 8) this.cmd({ c: 'fire', ids: [...this.sel], x: p.x, y: p.y, q: add }); else this.cmd({ c: 'throw', ids: [...this.sel], g: this.throwG, x: p.x, y: p.y });
+      if (this.throwG === 9) this.cmd({ c: 'strike', x: p.x, y: p.y }); else if (this.throwG === 10) this.cmd({ c: 'scan', x: p.x, y: p.y }); else if (this.throwG === 8) this.cmd({ c: 'fire', ids: [...this.sel], x: p.x, y: p.y, q: add }); else this.cmd({ c: 'throw', ids: [...this.sel], g: this.throwG, x: p.x, y: p.y });
       this.marker(p.x, p.y, 'attack');
       this.throwG = -1; this.root.style.cursor = ''; this.aimRing.style.display = 'none';
       this.renderCmd();
@@ -1221,15 +1224,14 @@ export class Game {
       const taken = vs.some(v => v.kind === 'post' && Math.hypot(v.x - x, v.y - y) < 2);
       return { x, y, ok: (this.pointOwner[i] === this.slot || this.pointOwner[i] < 0) && !taken };
     }
-    if (this.place === 'pump' || this.place === 'foundry') { // на жилу (насос) или рядом со своей точкой
-      const v = this.place === 'pump' ? VENTS.find(([x, y]) => Math.hypot(x - g.x, y - g.y) < 6) : undefined;
-      const p = v ? { x: v[0], y: v[1] } : g;
-      const nearPt = nearOwnPt(p.x, p.y);
-      const nearBase = this.place === 'foundry' && vs.some(u => u.owner === this.slot && isStruct(u.kind) && u.kind !== 'turret' && Math.hypot(u.x - p.x, u.y - p.y) < 16);
-      return { ...p, ok: (!!v || nearPt || nearBase) && footFree(structs, this.place, p.x, p.y) };
+    if (this.place === 'pump' || this.place === 'foundry') { // один генератор на точку: насос на свободную жилу, литейня у своей точки или штаба
+      const pts = [...POINTS, ...RELICS].map(([x, y], i) => ({ x, y, owner: this.pointOwner[i] ?? -1 }));
+      const an = genAnchor(pts, structs, this.slot, g.x, g.y, this.place), p = an?.vent ? { x: an.x, y: an.y } : g;
+      const gens = structs.filter(v => v.owner === this.slot && (v.kind === 'pump' || v.kind === 'foundry')).length;
+      return { ...p, ok: !!an && gens < GEN_CAP && footFree(structs, this.place, p.x, p.y) };
     }
     if (this.place === 'wall') return { ...g, ok: wallOk(structs, this.slot, g.x, g.y) };
-    if (['mine', 'wallgate', 'bunker'].includes(this.place ?? '')) return { ...g, ok: footFree(structs, this.place!, g.x, g.y) && !vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 20) };
+    if (['mine', 'wallgate', 'bunker', 'portal'].includes(this.place ?? '')) return { ...g, ok: footFree(structs, this.place!, g.x, g.y) && !vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 20) };
     if (this.place === 'turret' || ['battery', 'pylon', 'pyre', 'bell', 'aegis', 'lighthouse', 'obelisk', 'megagun', 'plague', 'spire'].includes(this.place ?? '') || /^key|^gate/.test(this.place ?? '')) {
       const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16) || (['turret', 'battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague', 'spire', 'spire'].includes(this.place ?? '') && nearOwnPt(g.x, g.y));
       return { ...g, ok: near && footFree(structs, this.place!, g.x, g.y) };
@@ -1303,7 +1305,7 @@ export class Game {
   /** Видит ли игрок точку: в обзоре своих войск и построек (тот же расчёт, что на сервере). */
   private inSight(x: number, y: number) {
     for (const v of this.views.values()) if (v.owner === this.slot && !v.dead && Math.hypot(v.x - x, v.y - y) < Math.max(STATS[v.kind].sight, isStruct(v.kind) ? 12 : 10)) return true;
-    if (this.scans.some(([sx, sy]) => Math.hypot(sx / 10 - x, sy / 10 - y) < MEGA_SHOT.reveal)) return true;
+    if (this.scans.some(([sx, sy, sr]) => Math.hypot(sx / 10 - x, sy / 10 - y) < (sr ?? MEGA_SHOT.reveal))) return true;
     return this.ownPoints().some(([px, py]) => Math.hypot(px - x, py - y) < SIGHT_STRUCT);
   }
   /** Свои точки — глаза даже без башни (как visibleTo на сервере). */
@@ -1319,7 +1321,7 @@ export class Game {
     x.globalCompositeOperation = 'destination-out';
     const holes: string[] = [];
     const eyes = [...[...this.views.values()].filter(v => v.owner === this.slot && !v.dead).map(v => ({ x: v.x, y: v.y, r: Math.max(STATS[v.kind].sight, isStruct(v.kind) ? 12 : 10) })),
-      ...this.ownPoints().map(([x, y]) => ({ x, y, r: SIGHT_STRUCT })), ...this.scans.map(([x, y]) => ({ x: x / 10, y: y / 10, r: MEGA_SHOT.reveal }))]; // засвет дальнего удара
+      ...this.ownPoints().map(([x, y]) => ({ x, y, r: SIGHT_STRUCT })), ...this.scans.map(([x, y, r]) => ({ x: x / 10, y: y / 10, r: r ?? MEGA_SHOT.reveal }))]; // засвет: дальний удар и засвет из штаба
     for (const v of eyes) {
       const r = v.r + (this.research & (1 << 11) ? 4 : 0);
       const g = x.createRadialGradient(v.x * k, v.y * k, r * k * 0.7, v.x * k, v.y * k, r * k);
@@ -1439,8 +1441,8 @@ export class Game {
     this.w3d.render(c.x, c.y, c.zoom, S, r.width, r.height, now, MAP.h); // живые модели под ту же камеру
 
     if (this.throwG >= 0 && this.mouse) { // прицел броска: зона поражения у курсора, красная — вне дальности
-      const p = this.toWorld(this.mouse.x, this.mouse.y), G = this.throwG === 9 ? { r: DOOM_R[this.fac()] ?? 16, range: 1e9 } : GEAR[this.throwG], sq = this.selected().filter(v => v.gear & (1 << this.throwG));
-      const d = this.throwG === 9 ? 0 : Math.min(...sq.map(v => Math.hypot(v.x - p.x, v.y - p.y)));
+      const p = this.toWorld(this.mouse.x, this.mouse.y), G = this.throwG === 9 ? { r: DOOM_R[this.fac()] ?? 16, range: 1e9 } : this.throwG === 10 ? { r: SCAN.r, range: 1e9 } : GEAR[this.throwG] ?? { r: 2, range: 1e9 }, sq = this.selected().filter(v => v.gear & (1 << this.throwG));
+      const d = this.throwG >= 8 ? 0 : Math.min(...sq.map(v => Math.hypot(v.x - p.x, v.y - p.y)));
       Object.assign(this.aimRing.style, { display: '', left: (p.x - G.r) * S + 'px', top: (p.y - G.r) * S + 'px', width: G.r * 2 * S + 'px', height: G.r * 2 * S + 'px' });
       this.aimRing.classList.toggle('bad', d > G.range);
       $('hud-sel').textContent = d > G.range ? `вне дальности — ${Math.round(d)} м (подойдут и бросят)` : `${Math.round(d)} м · радиус ${G.r} м`;
@@ -1468,6 +1470,7 @@ export class Game {
 
     const a = 1 - Math.exp(-dt * 14);
     const sites = [...this.views.values()].filter(v => isStruct(v.kind) && v.build < 1);
+    const portals = [...this.views.values()].filter(v => v.kind === 'portal' && v.owner === this.slot && v.build >= 1 && !v.dead); // свои под Теневым порталом — полупрозрачные: враг их не видит
     for (const v of this.views.values()) {
       const moving = Math.hypot(v.tx - v.x, v.ty - v.y) > 0.06;
       v.x += (v.tx - v.x) * a; v.y += (v.ty - v.y) * a;
@@ -1488,7 +1491,9 @@ export class Game {
         const atk = ({ 1: 'chop', 2: 'claw', 5: 'thrust', 3: 'beam', 11: 'beam', 13: 'beam', 4: 'cast' } as Record<number, string>)[v.atkFx ?? -1] ?? (v.kind === 'guard' && !v.melee ? 'recoil' : 'attack'); // анимация по оружию
         const flyer = flies(v.kind, this.fac(v.owner)) || (v.kind === 'titan' && this.fac(v.owner) === 'clockwork'), heavyWalk = !flyer && (v.kind === 'titan' || v.kind === 'hveh');
         const anim = v.dead ? 'death' : v.rise > 0 ? 'ritual' : building ? 'work' : now < v.atkUntil ? atk : moving ? (heavyWalk ? 'stride' : flyer ? 'hover' : 'walk') : flyer ? 'hover' : 'idle';
-        if (v.frozen <= 0) this.w3d.update(v.id, v.x, v.y, v.f, v.dead ? 'death' : building ? 'work' : now < v.atkUntil ? (v.melee ? 'attack' : 'shoot') : moving ? 'walk' : 'idle', now, { alive: n, fly: flies(v.kind, this.fac(v.owner)) });
+        const veil = v.owner === this.slot && portals.some(w => Math.hypot(w.x - v.x, w.y - v.y) < PORTAL.r);
+        if (v.frozen <= 0) this.w3d.update(v.id, v.x, v.y, v.f, v.dead ? 'death' : building ? 'work' : now < v.atkUntil ? (v.melee ? 'attack' : 'shoot') : moving ? 'walk' : 'idle', now, { alive: n, fly: flies(v.kind, this.fac(v.owner)), veil });
+        v.el.classList.toggle('veiled', veil);
         if (v.frozen <= 0) v.px.forEach((p, i) => pxFrame(p, this.fac(v.owner), i >= n || v.dead ? 'death' : anim === 'work' ? 'work' : now < v.atkUntil ? (v.kind === 'captain' ? 'attack' : v.kind === 'builder' ? 'idle' : 'shoot') : moving ? (v.kind === 'captain' ? 'run' : 'walk') : 'idle', v.f, now));
         v.svgs.forEach((sv, i) => {
           const alive = i < n;

@@ -160,3 +160,76 @@ test('артиллерия считается техникой: медик ле�
   advance(s,1);
   assert.ok(artillery.hp>artilleryHp,'повреждённую артиллерию можно отремонтировать строителем');
 });
+
+test('ПВО: постройки сбивают самолёты, самолёт не сносит штаб в одиночку', () => {
+  const { s, victim: jet } = duel('turret', 'jet', 10);
+  advance(s, 20);
+  assert.ok(maxHp('jet') - jet.hp > maxHp('jet') * 0.3, 'турель за 20 с снимает самолёту больше трети здоровья');
+  const toHq = damageAfter('jet', 'hq', 12, 60);
+  assert.ok(toHq > 0 && toHq < maxHp('hq') * 0.2, 'самолёт по зданиям бьёт вполсилы');
+});
+
+test('осада: артиллерия по зданиям бьёт дальше, чем по войскам, если цель засвечена', () => {
+  const s = arena(), hq = s.units.find(u => u.owner === 1)!, arty = spawn(s, 0, 'arty', hq.x - 55 - 4.5, hq.y);
+  s.players[0].energy = 1000;
+  assert.equal(applyCmd(s, 0, { c: 'scan', x: hq.x, y: hq.y }), undefined);
+  assert.match(applyCmd(s, 0, { c: 'scan', x: hq.x, y: hq.y }) ?? '', /Перезарядка/);
+  const hp = hq.hp;
+  arty.frozen = 0; step(s);
+  assert.ok(hq.hp < hp, 'засвеченный штаб в 55 м под огнём артиллерии');
+});
+
+test('засвет открывает скрытых порталом, обычная армия отвечает тому, кто бьёт издалека', async () => {
+  const { visibleTo } = await import('./sim.ts');
+  const s = arena(['eldar', 'order']), portal = spawn(s, 0, 'portal', 100, 100), hidden = spawn(s, 0, 'guard', 104, 100);
+  spawn(s, 1, 'guard', 120, 100).frozen = 1e6;
+  void portal; step(s);
+  assert.ok(!visibleTo(s, 1).has(hidden.id), 'под порталом отряд скрыт');
+  s.players[1].energy = 1000;
+  assert.equal(applyCmd(s, 1, { c: 'scan', x: 104, y: 100 }), undefined);
+  assert.ok(visibleTo(s, 1).has(hidden.id), 'засвет его показывает');
+
+  const t = arena(), arty = spawn(t, 0, 'arty', 60, 160), guard = spawn(t, 1, 'guard', 100, 160);
+  assert.equal(applyCmd(t, 0, { c: 'attack', ids: [arty.id], id: guard.id }), undefined);
+  advance(t, 0.2);
+  const d0 = Math.hypot(guard.x - arty.x, guard.y - arty.y);
+  advance(t, 3);
+  assert.ok(Math.hypot(guard.x - arty.x, guard.y - arty.y) < d0 - 10, 'обстрелянный отряд идёт на стрелка');
+});
+
+test('генераторы: один на точку, жилу или штаб; титан не занимает лимит техники', async () => {
+  const { VENTS, legion } = await import('./sim.ts');
+  const s = newState(2), p = s.players[0], hq = s.units.find(u => u.owner === 0 && u.kind === 'hq')!, b = s.units.find(u => u.owner === 0 && u.kind === 'builder')!;
+  Object.assign(p, { req: 1e4, energy: 1e4 });
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: hq.x + 8, y: hq.y + 3 }), undefined);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: hq.x - 8, y: hq.y + 6 }) ?? '', /один генератор/);
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'pump', x: VENTS[0][0] + 2, y: VENTS[0][1] }), undefined);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'pump', x: VENTS[0][0] - 2, y: VENTS[0][1] }) ?? '', /жил/);
+  spawn(s, 0, 'titan', hq.x + 30, hq.y + 30);
+  assert.equal(legion(s, 0, true), 0);
+  const yard = spawn(s, 0, 'yard', hq.x - 25, hq.y); p.tier = 4; s.points[0].owner = 0; Object.assign(p, { req: 1e5, energy: 1e5, relics: 100 });
+  for (let i = 0; i < 6; i++) spawn(s, 0, 'hveh', hq.x + 40, hq.y + i * 4); // лимит техники забит: 48 из 45
+  assert.equal(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }), undefined, 'полный техцех не мешает титану');
+});
+
+test('Теневой портал: ставится в поле, прячет стены и постройки, видно только вплотную', async () => {
+  const { visibleTo, PORTAL } = await import('./sim.ts');
+  const s = newState(2, ['eldar', 'order']), p = s.players[0], b = s.units.find(u => u.owner === 0 && u.kind === 'builder')!;
+  Object.assign(p, { req: 1e4, energy: 1e4, tier: 2 });
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'portal', x: 100, y: 160 }), undefined, 'далеко от базы — можно');
+  const portal = s.units.find(u => u.kind === 'portal')!; portal.build = 1; portal.hp = maxHp('portal');
+  const wall = spawn(s, 0, 'wall', portal.x + 8, portal.y), scout = spawn(s, 1, 'guard', wall.x + 12, wall.y);
+  scout.frozen = 1e6; step(s);
+  assert.ok(!visibleTo(s, 1).has(wall.id), 'стена под порталом скрыта');
+  scout.x = wall.x + PORTAL.reveal; step(s);
+  assert.ok(visibleTo(s, 1).has(wall.id), 'вплотную видно');
+});
+
+test('генераторов не больше GEN_CAP', async () => {
+  const { GEN_CAP } = await import('./sim.ts');
+  const s = newState(2), b = s.units.find(u => u.owner === 0 && u.kind === 'builder')!;
+  Object.assign(s.players[0], { req: 1e4, energy: 1e4 });
+  for (let i = 0; i < GEN_CAP; i++) spawn(s, 0, 'foundry', 5 + i * 3, 230);
+  s.points[1].owner = 0;
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: s.points[1].x + 7, y: s.points[1].y }) ?? '', /не больше/);
+});

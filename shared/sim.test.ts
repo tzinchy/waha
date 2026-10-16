@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, BCELL, footRect, wallCells, flies, producible, FACTION_ONLY, TRIBUTE, isStruct, type Kind, type State } from './sim.ts';
+import { DOOM, archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, BCELL, footRect, wallCells, flies, producible, FACTION_ONLY, TRIBUTE, isStruct, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -147,7 +147,7 @@ test('реликвии: реликтовая точка даёт реликви�
   run(s, 13); // CAPTURE_TIME 12 с
   assert.equal(s.points[ri].owner, 0);
   assert.match(applyCmd(s, 0, { c: 'upgrade', id: cap.id }) ?? '', /реликвий/);
-  run(s, 61);
+  run(s, 121); // RELIC_RATE: 1 реликвия в минуту
   assert.ok(s.players[0].relics >= 2);
   assert.equal(applyCmd(s, 0, { c: 'upgrade', id: cap.id }), undefined);
   run(s, 6);
@@ -340,7 +340,7 @@ test('Рубаки Орды бьют в упор, Стражники Орден�
   assert.ok(s.shots.some(sh => sh[4] === 1), 'рубящий удар');
 });
 
-test('армия по ролям: найм по тиру, Легион, урон по броне, ремонт, гранаты, титан один', () => {
+test('армия по ролям: найм по тиру, Легион, урон по броне, ремонт, гранаты, титаны', () => {
   const s = newState(2);
   const p = s.players[0], hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
   p.req = 1e5; p.energy = 1e5; p.relics = 20;
@@ -352,10 +352,13 @@ test('армия по ролям: найм по тиру, Легион, урон
   for (const k of ['sniper', 'heavy', 'support', 'elite', 'healer'] as const) assert.ok(s.units.some(u => u.owner === 0 && u.kind === k), k + ' нанят');
   // Легион: титан занимает 20, второго не дадут; строится только на верфи
   const yard = spawn(s, 0, 'yard', hq.x - 20, hq.y);
+  assert.match(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }) ?? '', /критическ/, 'титан — только с критической точкой');
+  s.points[0].owner = 0;
   assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }), undefined); // штаб титана не строит: заказ подменяется на строителя
   assert.ok(!hq.que.includes('titan'));
   assert.equal(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }), undefined);
-  assert.match(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }) ?? '', /один|Легион/);
+  p.relics = 20;
+  assert.equal(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }), undefined, 'второй титан — если хватает ресурсов');
   // снайпер почти не царапает технику, тяжёлое оружие — сильно
   const veh = spawn(s, 1, 'mveh', 80, 80), sn = unit(s, 0, 'sniper'), hv = unit(s, 0, 'heavy');
   [sn.x, sn.y] = [80, 66]; const hp0 = veh.hp; sn.order = { t: 'attack', id: veh.id }; hv.x = -50;
@@ -504,7 +507,10 @@ test('Династии: только энергия (доход с точек и
   unit(s, 0, 'hq').hp = 0; run(s, 0.1);
   assert.equal(p.alive, true, 'жив, пока стоит Монолит');
   mono.hp = 0; run(s, 0.1);
-  assert.equal(p.alive, false);
+  assert.equal(p.alive, true, 'без штабов жив, пока стоят другие постройки');
+  for (const u of s.units) if (u.owner === 0 && isStruct(u.kind)) u.hp = 0;
+  run(s, 0.1);
+  assert.equal(p.alive, false, 'проигрыш — когда пали все постройки');
 });
 
 test('сверхоружие и мегапостройки: открытия в штабе, стройка видна всем, удар у каждой фракции свой и только по врагам', () => {
@@ -525,19 +531,19 @@ test('сверхоружие и мегапостройки: открытия в 
   run(s, 121);
   assert.ok(p.unlock & 2);
   assert.match(applyCmd(s, 0, { c: 'strike', x: 200, y: 200 }) ?? '', /Заряд/);
-  p.doom = 180;
+  p.doom = DOOM.charge;
   const foe = unit(s, 1, 'hq'), hp = foe.hp;
   assert.equal(applyCmd(s, 0, { c: 'strike', x: foe.x, y: foe.y }), undefined);
   assert.equal(snapshotFor(s, 1).ss.length, 1, 'враг видит предупреждение');
   run(s, 7);
-  assert.ok(foe.hp < hp - 2000, 'орбитальный удар');
-  p.doom = 180; const own = hq.hp;
+  assert.ok(foe.hp < hp - 1500 && foe.hp > hp - 2000, 'орбитальный удар: по зданиям вполсилы (DOOM.struct)');
+  p.doom = DOOM.charge; const own = hq.hp;
   assert.equal(applyCmd(s, 0, { c: 'strike', x: hq.x, y: hq.y }), undefined); run(s, 7);
   assert.equal(hq.hp, own, 'своих не задевает');
-  p.doom = 180; p.energy = 0; p.req = 0;
+  p.doom = DOOM.charge; p.energy = 0; p.req = 0;
   assert.match(applyCmd(s, 0, { c: 'strike', x: foe.x, y: foe.y }) ?? '', /./, 'пуск стоит энергии');
   // Культ: Око Разлома — из разлома выходят три демона
-  const u = s.players[1]; u.unlock = 2; u.doom = 180; u.req = 1e4; u.energy = 1e4;
+  const u = s.players[1]; u.unlock = 2; u.doom = DOOM.charge; u.req = 1e4; u.energy = 1e4;
   const elites = () => s.units.filter(v => v.owner === 1 && v.kind === 'elite').length, e0 = elites();
   assert.equal(applyCmd(s, 1, { c: 'strike', x: 200, y: 200 }), undefined); run(s, 7);
   assert.equal(elites() - e0, 3, 'демоны из разлома');
@@ -578,9 +584,10 @@ for (const faction of ['order', 'clockwork', 'orks', 'ashen'] as const) {
   });
 }
 
-test('титан требует полную цену каждого ресурса; второй не нанимается', () => {
+test('титан требует полную цену каждого ресурса и критическую точку; титанов может быть несколько', () => {
   const s = newState(2), p = s.players[0], hq0 = unit(s, 0, 'hq'); p.tier = 4;
   const hq = spawn(s, 0, 'yard', hq0.x - 20, hq0.y); // верфь титана
+  s.points[0].owner = 0; // критическая точка
   const cost = STATS.titan.cost, energyCost = ROLES.titan!.energy!, relicCost = ROLES.titan!.relics!;
   assert.ok(cost >= 1500 && energyCost >= 2500 && relicCost >= 10, 'титан — дорогой юнит поздней игры');
   for (const [req, energy, relics, missing] of [[cost - 1, energyCost, relicCost, 'влияния'], [cost, energyCost - 1, relicCost, 'энергии'], [cost, energyCost, relicCost - 1, 'реликвий']] as const) {
@@ -593,7 +600,9 @@ test('титан требует полную цену каждого ресур�
   assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }), undefined);
   assert.deepEqual([p.req, p.energy, p.relics], [0, 0, 0]);
   Object.assign(p, { req: 1e4, energy: 1e4, relics: 100 });
-  assert.match(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }) ?? '', /один/);
+  assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }), undefined, 'титанов сколько позволят ресурсы');
+  assert.match(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'bomber' }) ?? 'не тот юнит', /./);
+  assert.ok(!hq.que.includes('bomber'), 'Бомбовоз — только у Орды');
 });
 
 test('техника — в техцехе, исследования — в ключевом здании: одно другому не мешает', () => {
@@ -650,6 +659,7 @@ test('второй герой: другой архетип — в казарма
   assert.equal(archOf(s, heroes[1]), 'assault');
   assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /уже/);
   const hq = unit(s, 0, 'hq'), yard = spawn(s, 0, 'yard', hq.x - 20, hq.y), gate = spawn(s, 0, 'gate', hq.x + 20, hq.y);
+  s.points[0].owner = 0; p.energy = 2e4;
   assert.equal(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }), undefined);
   assert.equal(applyCmd(s, 0, { c: 'summon', id: gate.id, v: 0 }), undefined, 'легенда вместе с титаном и героями');
 });
@@ -718,9 +728,9 @@ test('каждая фракция может заказать каждого ю�
   const { FACTION_IDS, ARCH_OPTS } = await import('./factions.ts');
   for (const f of FACTION_IDS) {
     const s = newState(2, [f, 'order']), p = s.players[0], hq = unit(s, 0, 'hq');
-    p.tier = 5;
+    p.tier = 5; s.points[0].owner = 0; // титан — только с критической точкой
     const homes = (['barracks', 'motorpool', 'yard', ...(f === 'ashen' ? ['warpgate'] : [])] as Kind[]).map((k, i) => { const b = spawn(s, 0, k, hq.x + 20 + i * 18, hq.y + 20); b.build = 1; return b; });
-    for (const b of [hq, ...homes]) for (const k of producible(b.kind)) {
+    for (const b of [hq, ...homes]) for (const k of producible(b.kind, f)) {
       Object.assign(p, { req: 1e6, energy: 1e6, relics: 1e3 });
       for (const u of s.units) if (u.owner === 0 && !isStruct(u.kind) && u.kind !== 'builder') u.hp = 0; // освободить лимит
       run(s, 0.2);

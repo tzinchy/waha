@@ -24,7 +24,7 @@ const cleanCaptain = (c: Partial<CaptainCfg> | undefined): CaptainCfg => ({
   arch: 'commander', // сборки в лобби нет: главный герой — командир, остальные архетипы заказываются в казармах
 });
 const cleanName = (n: unknown) => (typeof n === 'string' && n.trim() ? n.trim().slice(0, 16) : 'Капитан');
-const pub = ({ id, name, captain, ready, bot, faction, spec }: Member): LobbyPlayer => ({ id, name, captain, ready, bot, faction, spec: !!spec });
+const pub = ({ id, name, captain, ready, bot, faction, spec, random }: Member): LobbyPlayer => ({ id, name, captain, ready, bot, faction, spec: !!spec, random: !!random });
 
 function newCode() {
   for (;;) {
@@ -52,6 +52,7 @@ function leave(ws: WebSocket) {
 
 function startMatch(l: Lobby) {
   const fighters = l.members.filter(m => !m.spec);
+  for (const m of fighters) if (m.random) m.faction = FACTION_IDS[Math.floor(Math.random() * FACTION_IDS.length)]; // случайная раса выпадает при старте
   setMap(l.map); // карта лобби — до создания состояния
   const state = newState(fighters.length, fighters.map(m => m.faction), fighters.map(m => archFor(m.faction, m.captain.arch)));
   state.dev = process.env.NODE_ENV !== 'production'; // чит F9 только в разработке
@@ -120,7 +121,7 @@ function onMessage(ws: WebSocket, raw: string) {
   if (l.match) return;
   if (m.t === 'captain') me.captain = cleanCaptain(m.captain);
   else if (m.t === 'ready') me.ready = !!m.ready;
-  else if (m.t === 'faction') { if (isFaction(m.f)) me.faction = m.f; }
+  else if (m.t === 'faction') { if (m.f === 'random') me.random = true; else if (isFaction(m.f)) { me.faction = m.f; me.random = false; } }
   else if (m.t === 'spec') { if (m.on || l.members.filter(x => !x.spec).length < MAX_PLAYERS) { me.spec = !!m.on; me.ready = me.spec; } }
   else if (l.host !== me.id) return err('Только хост');
   else if (m.t === 'map') { if (Number.isInteger(m.m) && MAPS[m.m]) l.map = m.m; }
