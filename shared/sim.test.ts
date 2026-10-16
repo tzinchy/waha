@@ -52,11 +52,11 @@ test('строители строят казармы, казармы наним�
 test('пополнение: докупаем потерянных бойцов за requisition, под огнём нельзя', () => {
   const s = newState(2);
   const g = withGuard(s);
-  g.hp = 100; g.hit = 0; // осталось 2 бойца, только что получили урон
+  g.hp = STATS.guard.hp; g.hit = 0; // остался один целый боец, только что получили урон
   const before = s.players[0].req;
   applyCmd(s, 0, { c: 'reinforce', ids: [g.id] });
   run(s, 1.5);
-  assert.equal(g.hp, 100, 'под огнём пополнение стоит');
+  assert.equal(g.hp, STATS.guard.hp, 'под огнём пополнение стоит');
   run(s, 6);
   assert.equal(g.hp, maxHp('guard'));
   assert.equal(g.reinf, false);
@@ -364,10 +364,12 @@ test('армия по ролям: найм по тиру, Легион, урон
   const hp1 = veh.hp; run(s, 3.5); const byHeavy = hp1 - veh.hp;
   assert.ok(byHeavy > bySniper * 5, `тяжёлое ${byHeavy} vs снайпер ${bySniper}`);
   // ремонт: строитель чинит казармы за влияние
-  bar.hp = 200; const req = p.req;
+  bar.hp = 200;
+  const withoutRepair = structuredClone(s); // одинаковый доход и найм, но без приказа ремонта
   assert.equal(applyCmd(s, 0, { c: 'assist', ids: [b.id], id: bar.id }), undefined);
   run(s, 20);
-  assert.ok(bar.hp > 600, 'казармы отремонтированы'); assert.ok(p.req < req, 'ремонт стоит влияния');
+  run(withoutRepair, 20);
+  assert.ok(bar.hp > 600, 'казармы отремонтированы'); assert.ok(p.req < withoutRepair.players[0].req, 'ремонт тратит влияние с учётом дохода');
   // граната: купить у штаба, бросить
   const g = unit(s, 0, 'guard') ?? spawn(s, 0, 'guard', hq.x + 5, hq.y + 5);
   [g.x, g.y] = [hq.x + 5, hq.y + 5];

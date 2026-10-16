@@ -1,10 +1,10 @@
-// Справочник всех юнитов, турелей и зданий фракций: 3D-модель + цифры из симуляции (dev-инструмент, в сборку не входит): /units.html
+// Справочник юнитов, турелей и зданий: живые 3D-модели и базовые характеристики из симуляции.
 import * as THREE from 'three';
 import { FactionActor, ROLE_MOTIONS, motionDuration, type FactionId as Pack } from './models3d/faction-models.ts';
 import { StructureActor, STRUCTURE_ROLE_MOTIONS, structureMotionDuration } from './models3d/structure-models.ts';
 import { UNIT_ROLE, GOD_PACK, STRUCT_ROLE } from './world3d.ts';
 import { BUILD_NAME, ARCH_OPTS, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, type FactionId } from '../shared/factions.ts';
-import { AEGIS, BELL, CLOSE, FACTION_ONLY, MIN_RANGE, PORTAL, PYRE, ROLES, SETUP, STATS, STRUCT_AOE, BUILD_TIER, dmgOf, flies, maxHp, modOf, producible, type Kind } from '../shared/sim.ts';
+import { AEGIS, BELL, CLOSE, FACTION_ONLY, MIN_RANGE, PORTAL, PYRE, ROLES, SETUP, SQUADS, STATS, STRUCT_AOE, BUILD_TIER, MELEE_GUARD, LVL2, VS, LIGHTHOUSE, PLAGUE, ENERGY_INCOME, armorOf, dmgOf, isMelee, flies, maxHp, modOf, producible, type Armor, type DmgType, type Kind } from '../shared/sim.ts';
 
 const PX = 200, r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
 r.setSize(PX, PX, false); r.setClearColor(0, 0); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.2;
@@ -14,8 +14,10 @@ const sun = new THREE.DirectionalLight(0xffe2b5, 2.6); sun.position.set(-4, 8, 6
 const cam = new THREE.PerspectiveCamera(30, 1, 0.01, 500);
 
 const NAME: Partial<Record<Kind, string>> = { khorne: 'Кровопускатели Кхорна', nurgle: 'Чумоносцы Нургла', tzeentch: 'Розовые ужасы Тзинча', slaanesh: 'Демонетки Слаанеш', barracks: 'Казарма', post: 'Пост на точке', foundry: 'Генератор', pump: 'Термогенератор на жиле', wall: 'Стена', bunker: 'Бункер', warpgate: 'Врата Варпа', portal: 'Теневой портал', battery: 'Батарея «Громобой»', pylon: 'Гаусс-пилон', rturret: 'Ракетная бочка', fturret: 'Огнемётная печь', pyre: 'Огненная яма', bell: 'Синаптический шпиль', aegis: 'Теневое поле', lighthouse: 'Вокс-маяк', obelisk: 'Обелиск Вечности', megagun: 'Мега-Пушка', plague: 'Споровый улей' };
-const TYPE: Record<string, string> = { small: 'стрелковый', sniper: 'снайперский', heavy: 'противотанк.', melee: 'ближний бой', blast: 'взрывной' };
-const AURA: Partial<Record<Kind, string>> = { pyre: `жжёт всех в ${PYRE.r} м: ${PYRE.dps}/с`, bell: `враги в ${BELL.r} м медленнее и слабее`, aegis: `купол ${AEGIS.r} м поглощает ${AEGIS.pool} урона`, portal: `свои в ${PORTAL.r} м видны врагу только с ${PORTAL.reveal} м`, lighthouse: 'обзор 70 м, свои −15% урона', plague: 'враги в 30 м теряют 1%/с', foundry: '+2 энергии/с', pump: '+4 энергии/с', post: 'держит точку, доход' };
+const TYPE: Record<DmgType, string> = { small: 'стрелковый', sniper: 'снайперский', heavy: 'противотанк.', melee: 'ближний бой', blast: 'взрывной' };
+const ARMOR: Record<Armor, string> = { inf: 'пехота', hinf: 'тяжёлая пехота', light: 'лёгкая техника', veh: 'бронетехника', titan: 'титан', struct: 'здание' };
+const number = (value: number) => String(Math.round(value * 100) / 100);
+const AURA: Partial<Record<Kind, string>> = { pyre: `жжёт всех в ${PYRE.r} м: ${PYRE.dps}/с`, bell: `враги в ${BELL.r} м медленнее и слабее`, aegis: `купол ${AEGIS.r} м поглощает ${AEGIS.pool} урона`, portal: `свои в ${PORTAL.r} м видны врагу только с ${PORTAL.reveal} м`, lighthouse: `обзор ${STATS.lighthouse.sight} м, свои в ${LIGHTHOUSE.r} м получают −${number((1 - LIGHTHOUSE.armor) * 100)}% урона`, plague: `враги в ${PLAGUE.r} м теряют ${number(PLAGUE.pct * 100)}%/с`, foundry: `+${ENERGY_INCOME.foundry} энергии/с`, pump: `+${ENERGY_INCOME.pump} энергии/с`, post: 'держит точку, доход' };
 
 type Make = () => { root: THREE.Object3D; pose: (m: never, t: number) => void };
 const makers: Make[] = []; // по номеру карточки — для просмотра анимаций
@@ -29,17 +31,26 @@ function shot(make: Make) {
   return r.domElement.toDataURL();
 }
 /** Строка цифр: здоровье, урон, дальность, перезарядка, тип, особенности. */
-function stats(f: FactionId, k: Kind) {
-  const st = STATS[k], m = modOf(f, k), out: string[] = [`❤ ${maxHp(k)}`];
+function stats(f: FactionId, k: Kind, level = 1) {
+  const st = STATS[k], m = modOf(f, k), guardMelee = k === 'guard' && isMelee(k, f), out: string[] = [`❤ ${maxHp(k)} · броня: ${ARMOR[armorOf(k)]}`];
+  const aoe = ROLES[k]?.aoe ?? STRUCT_AOE[k] ?? (m?.aoe ? m.aoe + (level > 1 ? m.up?.aoe ?? 0 : 0) : undefined);
   if (st.dmg) {
-    const dmg = Math.round(st.dmg * (m?.dmg ?? 1) * 10) / 10, aoe = m?.aoe ?? ROLES[k]?.aoe ?? STRUCT_AOE[k];
-    out.push(`⚔ ${dmg}${st.n > 1 ? '×' + st.n : ''} · ${st.range + (m?.range ?? 0)} м · ${Math.round(st.cd * (m?.cd ?? 1) * 10) / 10} с · ${TYPE[m?.type ?? dmgOf(k, f)]}${aoe ? ` · площадь ${aoe} м` : ''}${MIN_RANGE[k] ?? m?.minRange ? ` · мёртвая зона ${MIN_RANGE[k] ?? m?.minRange} м` : ''}`);
+    const damage = (guardMelee ? MELEE_GUARD.dmg : k === 'post' && level >= 3 ? 14 : st.dmg) * (m?.dmg ?? 1) * (level > 1 ? LVL2.dmg[k] ?? 1 : 1);
+    const count = SQUADS.has(k) ? st.n : 1;
+    const type = m?.type ?? (k === 'turret' && level > 1 ? 'heavy' : dmgOf(k, f));
+    const range = (guardMelee ? MELEE_GUARD.range : k === 'post' && level >= 3 ? 12 : st.range + (m?.range ?? 0) + (level > 1 ? m?.up?.range ?? 0 : 0)) + (level > 1 ? LVL2.range[k] ?? 0 : 0);
+    out.push(`Залп осн. оружия (база): ${number(damage)}${SQUADS.has(k) ? ` × ${count} = ${number(damage * count)}` : ''} · ${k === 'captain' ? 'дальность по архетипу' : `${number(range)} м`} · интервал ${number(guardMelee ? MELEE_GUARD.cd : st.cd * (m?.cd ?? 1))} с · ${TYPE[type]}${aoe ? ` · площадь ${number(aoe)} м` : ''}${MIN_RANGE[k] ?? m?.minRange ? ` · мёртвая зона ${MIN_RANGE[k] ?? m?.minRange} м` : ''}`);
+    out.push('Множители оружия: ' + Object.entries(VS[type]).map(([armor, multiplier]) => `${ARMOR[armor as Armor]} ×${number(multiplier)}`).join(' · '));
+    out.push('Без аур, исследований, бонусов героя и дополнительной защиты цели.');
   }
-  if (CLOSE[k]) out.push(`вблизи ${CLOSE[k]!.range} м: ${CLOSE[k]!.dmg} · ${TYPE[CLOSE[k]!.type]}`);
-  if (st.speed) out.push(`скорость ${st.speed}${flies(k, f) ? ' · летает' : ''}${SETUP.has(k) ? ' · на ходу не стреляет' : ''}`);
+  if (CLOSE[k]) {
+    const close = CLOSE[k]!, damage = close.dmg * (level > 1 ? LVL2.dmg[k] ?? 1 : 1), count = SQUADS.has(k) ? st.n : 1;
+    out.push(`Дополнительное оружие до ${close.range} м: ${number(damage)}${SQUADS.has(k) ? ` × ${count} = ${number(damage * count)}` : ''} · интервал ${close.cd} с · ${TYPE[close.type]}${k === 'heavy' || k === 'hveh' ? '. Против брони сохраняется более эффективный ствол.' : ''}`);
+  }
+  if (st.speed) out.push(`скорость роли (база): ${guardMelee ? MELEE_GUARD.speed : st.speed}${flies(k, f) ? ' · летает' : ''}${SETUP.has(k) ? ' · на ходу не стреляет' : ''}`);
   out.push(`обзор ${st.sight} м`);
   if (AURA[k]) out.push(AURA[k]!);
-  if (m?.info) out.push(`<b>${m.info}</b>`);
+  if (m?.info) out.push(`<b>${m.aoe && aoe !== m.aoe ? `Радиус основного оружия: ${aoe} м.${m.fire ? ' Поджигает землю.' : ''}${m.freeze ? ` Останавливает цель на ${m.freeze} с.` : ''}${m.leech ? ` Лечит стрелка на ${number(m.leech * 100)}% урона.` : ''}` : m.info}</b>`);
   return out.join('<br>');
 }
 const card = (img: string, name: string, k: string, info: string) => `<figure data-i="${makers.length - 1}" title="Клик — анимации"><img src="${img}"><figcaption><strong>${name}</strong><small>${k}</small><span>${info}</span></figcaption></figure>`;
@@ -54,8 +65,8 @@ for (const f of FACTION_IDS) {
   const builds = (Object.keys(BUILD_TIER) as Kind[]).filter(k => k !== 'mine' && k !== 'wallgate' && STRUCT_ROLE[k] && (!(k in FACTION_ONLY) || FACTION_ONLY[k as 'aegis'] === f));
   const bName = (k: Kind) => k === 'hq' ? HQ_NAME[f] : k in BUILD_NAME[f] ? BUILD_NAME[f][k as 'post'] : k === 'motorpool' || k === 'yard' ? PROD_NAME[f][k] : /^key[1-4]$/.test(k) ? F.keys[Number(k[3]) - 1] : k === 'gate' ? F.gate : NAME[k] ?? k;
   const buildCards = builds.map(k => card(shot(() => new StructureActor(pack, STRUCT_ROLE[k]!, /^key[1-4]$/.test(k) ? Math.min(3, Number(k[3])) : 1) as never), bName(k), k, stats(f, k) + `<br>тир ${BUILD_TIER[k as 'hq']} · ${STATS[k].cost}◆`));
-  const UPG: [Kind, number, string][] = [['hq', 2, 'тир III–IV'], ['hq', 3, 'тир V'], ['post', 2, 'укреплён: −50% урона, доход +3'], ['post', 3, 'стреляет: 14 урона, 12 м'], ['turret', 2, 'тяжёлая: урон ×1.8, +3 м, броня'], ['wall', 2, 'укреплена: −50% урона']];
-  buildCards.push(...UPG.map(([k, l, info]) => card(shot(() => new StructureActor(pack, STRUCT_ROLE[k]!, l) as never), `${bName(k)} · ур. ${l}`, k, info)));
+  const UPG: [Kind, number, string][] = [['hq', 2, 'тир III–IV'], ['hq', 3, 'тир V'], ['post', 2, 'укреплён: выше защита и доход'], ['post', 3, 'бастион с отдельным орудием'], ['turret', 2, `тяжёлая: урон ×${LVL2.dmg.turret}, +${LVL2.range.turret} м, броня`], ['wall', 2, `укреплена: −${number((1 - (LVL2.armor.wall ?? 1)) * 100)}% урона`]];
+  buildCards.push(...UPG.map(([k, l, info]) => card(shot(() => new StructureActor(pack, STRUCT_ROLE[k]!, l) as never), `${bName(k)} · ур. ${l}`, k, stats(f, k, l) + '<br>' + info)));
   root.insertAdjacentHTML('beforeend', `<h2>${F.name}</h2><p class="mech">${F.mech}</p><h3>Юниты</h3><div class="row">${heroes.join('')}${unitCards.join('')}</div><h3>Здания и турели</h3><div class="row">${buildCards.join('')}</div>`);
 }
 

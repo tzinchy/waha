@@ -22,60 +22,60 @@ type Stat = { hp: number; n: number; dmg: number; range: number; cd: number; spe
 export const STATS: Record<Kind, Stat> = {
   captain: { hp: 800, n: 1, dmg: 20, range: 3.5, cd: 0.8, speed: 8, sight: 14, radius: 1, cost: 150, time: 20 }, // заказывается в штабе (как в Soulstorm)
   builder: { hp: 70, n: 2, dmg: 0, range: 0, cd: 1, speed: 7, sight: 0, radius: 1.1, cost: 30, time: 3 },
-  guard: { hp: 100, n: 5, dmg: 3.2, range: 9, cd: 1, speed: 7, sight: 14, radius: 1.8, cost: 80, time: 6 },
-  hq: { hp: 4000, n: 1, dmg: 14, range: 12, cd: 1.2, speed: 0, sight: 12, radius: 4.5, cost: 600, time: 60 },
-  barracks: { hp: 1600, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3.2, cost: 150, time: 20 },
-  post: { hp: 800, n: 1, dmg: 6, range: 10, cd: 1.5, speed: 0, sight: 10, radius: 1.4, cost: 50, time: 8 },
-  turret: { hp: 700, n: 1, dmg: 12, range: 13, cd: 1.2, speed: 0, sight: 13, radius: 1.3, cost: 80, time: 10 },
-  foundry: { hp: 900, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.6, cost: 120, time: 15 }, // Литейня: энергия
-  pump: { hp: 600, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.6, cost: 100, time: 12 },     // Глубинный насос на жиле
-  key1: { hp: 1500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.6, cost: 150, time: 20 },    // ключевые здания тиров I–IV
-  key2: { hp: 1800, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.8, cost: 250, time: 25 },
-  motorpool: { hp: 2600, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 3.4, cost: 300, time: 45 }, // техцех: вся техника
-  yard: { hp: 5000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 12, radius: 5.5, cost: 1000, time: 120 },    // верфь титана
-  key3: { hp: 2000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.8, cost: 350, time: 30 },
-  key4: { hp: 2400, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3, cost: 450, time: 35 },
-  gate: { hp: 3000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3.6, cost: 500, time: 40 },    // Врата призыва, тир V
+  guard: { hp: 125, n: 5, dmg: 4, range: 9, cd: 1, speed: 7, sight: 14, radius: 1.8, cost: 80, time: 6 },
+  hq: { hp: 8000, n: 1, dmg: 14, range: 12, cd: 1.2, speed: 0, sight: 12, radius: 4.5, cost: 600, time: 60 },
+  barracks: { hp: 2400, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3.2, cost: 150, time: 20 },
+  post: { hp: 1200, n: 1, dmg: 6, range: 10, cd: 1.5, speed: 0, sight: 10, radius: 1.4, cost: 50, time: 8 },
+  turret: { hp: 1050, n: 1, dmg: 12, range: 13, cd: 1.2, speed: 0, sight: 13, radius: 1.3, cost: 80, time: 10 },
+  foundry: { hp: 1350, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.6, cost: 120, time: 15 }, // Литейня: энергия
+  pump: { hp: 900, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.6, cost: 100, time: 12 },     // Глубинный насос на жиле
+  key1: { hp: 2250, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.6, cost: 150, time: 20 },    // ключевые здания тиров I–IV
+  key2: { hp: 2700, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.8, cost: 250, time: 25 },
+  motorpool: { hp: 3900, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 3.4, cost: 300, time: 45 }, // техцех: вся техника
+  yard: { hp: 7500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 12, radius: 5.5, cost: 1000, time: 120 },    // верфь титана
+  key3: { hp: 3000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.8, cost: 350, time: 30 },
+  key4: { hp: 3600, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3, cost: 450, time: 35 },
+  gate: { hp: 4500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 3.6, cost: 500, time: 40 },    // Врата призыва, тир V
   legend: { hp: 3000, n: 1, dmg: 50, range: 5, cd: 1, speed: 8, sight: 16, radius: 1.4, cost: 0, time: 0 },
   // укрепления (пресет Fortifications)
-  wall: { hp: 1200, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.6, cost: 30, time: 4 },      // сегмент стены
-  wallgate: { hp: 1800, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.6, cost: 120, time: 10 }, // ворота: свои проходят
-  bunker: { hp: 2500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.2, cost: 250, time: 18 },  // крипта: пехота рядом −50% урона
+  wall: { hp: 1500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.6, cost: 30, time: 4 },      // сегмент стены
+  wallgate: { hp: 2400, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.6, cost: 120, time: 10 }, // ворота: свои проходят
+  bunker: { hp: 3750, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 2.2, cost: 250, time: 18 },  // крипта: пехота рядом −50% урона
   mine: { hp: 60, n: 1, dmg: 180, range: 2, cd: 1, speed: 0, sight: 0, radius: 0.6, cost: 40, time: 3 },      // мина: невидима, 180 урона по 6 м
   // роли пехоты (пресет UnitRoles)
-  sniper: { hp: 85, n: 2, dmg: 30, range: 22, cd: 3, speed: 6.5, sight: 24, radius: 1.4, cost: 90, time: 10 },
-  heavy: { hp: 110, n: 3, dmg: 16, range: 17, cd: 2.2, speed: 5, sight: 18, radius: 1.8, cost: 120, time: 12 },
-  support: { hp: 95, n: 2, dmg: 4, range: 9, cd: 1, speed: 7, sight: 14, radius: 1.5, cost: 80, time: 8 },
-  elite: { hp: 260, n: 3, dmg: 15, range: 2.6, cd: 1.1, speed: 6, sight: 14, radius: 2, cost: 200, time: 16 },
+  sniper: { hp: 105, n: 2, dmg: 30, range: 22, cd: 3, speed: 6.5, sight: 24, radius: 1.4, cost: 90, time: 10 },
+  heavy: { hp: 145, n: 3, dmg: 16, range: 17, cd: 2.2, speed: 5, sight: 18, radius: 1.8, cost: 120, time: 12 },
+  support: { hp: 120, n: 2, dmg: 4, range: 9, cd: 1, speed: 7, sight: 14, radius: 1.5, cost: 80, time: 8 },
+  elite: { hp: 300, n: 3, dmg: 15, range: 2.6, cd: 1.1, speed: 6, sight: 14, radius: 2, cost: 200, time: 16 },
   healer: { hp: 700, n: 1, dmg: 6, range: 6, cd: 1, speed: 8, sight: 16, radius: 1.4, cost: 170, time: 18 },
   // техника (пресет Vehicles) и титаны (пресет Titans)
-  lveh: { hp: 700, n: 1, dmg: 9, range: 12, cd: 0.6, speed: 12, sight: 18, radius: 2.2, cost: 100, time: 14 },
-  mveh: { hp: 1200, n: 1, dmg: 10, range: 14, cd: 0.5, speed: 7, sight: 16, radius: 2.7, cost: 130, time: 18 },
-  hveh: { hp: 2600, n: 1, dmg: 95, range: 20, cd: 3, speed: 5, sight: 22, radius: 3, cost: 180, time: 24 },
+  lveh: { hp: 700, n: 1, dmg: 9, range: 12, cd: 0.6, speed: 12, sight: 18, radius: 2.2, cost: 130, time: 18 },
+  mveh: { hp: 1200, n: 1, dmg: 10, range: 14, cd: 0.5, speed: 7, sight: 16, radius: 2.7, cost: 170, time: 24 },
+  hveh: { hp: 2600, n: 1, dmg: 85, range: 20, cd: 3, speed: 5, sight: 22, radius: 3, cost: 250, time: 30 },
   titan: { hp: 15000, n: 1, dmg: 280, range: 26, cd: 3, speed: 3.2, sight: 80, radius: 5, cost: 4500, time: 240 }, // титан: 4500 влияния, 7000 энергии, 20 реликвий, 4 минуты; видит с высоты 80 м
   // особые механики фракций (пресет FactionSpecials)
   deity: { hp: 4200, n: 1, dmg: 95, range: 6, cd: 1, speed: 9, sight: 22, radius: 2.2, cost: 0, time: 0 },        // Бог-Механизм Династий
-  aegis: { hp: 700, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.3, cost: 150, time: 14 },        // Купол-эгида Консенсуса
-  rturret: { hp: 600, n: 1, dmg: 26, range: 16, cd: 3, speed: 0, sight: 16, radius: 1.3, cost: 110, time: 12 },   // Ракетная бочка Орды
+  aegis: { hp: 1050, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 0, radius: 1.3, cost: 150, time: 14 },        // Купол-эгида Консенсуса
+  rturret: { hp: 900, n: 1, dmg: 26, range: 16, cd: 3, speed: 0, sight: 16, radius: 1.3, cost: 110, time: 12 },   // Ракетная бочка Орды
   // артиллерия (техника всех фракций) и уникальные постройки Ордена, Нежити, Династий, Синклита
-  arty: { hp: 900, n: 1, dmg: 130, range: 45, cd: 4.5, speed: 4, sight: 18, radius: 2.6, cost: 200, time: 28 },
-  battery: { hp: 1400, n: 1, dmg: 150, range: 40, cd: 5, speed: 0, sight: 20, radius: 2, cost: 200, time: 20 },   // Батарея «Громобой» легиона
-  pylon: { hp: 1200, n: 1, dmg: 70, range: 30, cd: 2.4, speed: 0, sight: 30, radius: 1.6, cost: 180, time: 18 },    // Гаусс-пилон Династий
-  pyre: { hp: 1000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 1.8, cost: 150, time: 14 },         // Огненная яма Синклита: жжёт всё вокруг
-  bell: { hp: 1100, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 16, radius: 1.6, cost: 160, time: 16 },         // Колокол Скорби Нежити
+  arty: { hp: 900, n: 1, dmg: 115, range: 45, cd: 4.5, speed: 4, sight: 18, radius: 2.6, cost: 260, time: 34 },
+  battery: { hp: 2100, n: 1, dmg: 150, range: 40, cd: 5, speed: 0, sight: 20, radius: 2, cost: 200, time: 20 },   // Батарея «Громобой» легиона
+  pylon: { hp: 1800, n: 1, dmg: 70, range: 30, cd: 2.4, speed: 0, sight: 30, radius: 1.6, cost: 180, time: 18 },    // Гаусс-пилон Династий
+  pyre: { hp: 1500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 1.8, cost: 150, time: 14 },         // Огненная яма Синклита: жжёт всё вокруг
+  bell: { hp: 1650, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 16, radius: 1.6, cost: 160, time: 16 },         // Колокол Скорби Нежити
   // сверхоружие (тир V) и мегапостройки обороны (тир IV)
-  doom: { hp: 3500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 12, radius: 3, cost: 3000, time: 240 },
-  lighthouse: { hp: 3000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 70, radius: 2.4, cost: 1200, time: 150 },  // Вокс-маяк легиона: видит 70 м
-  obelisk: { hp: 4000, n: 1, dmg: 220, range: 40, cd: 3, speed: 0, sight: 40, radius: 3, cost: 1400, time: 150 },    // Обелиск Вечности Династий
-  megagun: { hp: 3500, n: 1, dmg: 180, range: 38, cd: 4, speed: 0, sight: 30, radius: 3, cost: 1300, time: 150 },    // Мега-Пушка Орды
-  plague: { hp: 3000, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 30, radius: 2.4, cost: 1100, time: 150 },       // Чумной шпиль Нежити
-  fturret: { hp: 700, n: 1, dmg: 9, range: 6, cd: 0.4, speed: 0, sight: 8, radius: 1.3, cost: 90, time: 10 },     // Огнемётная печь Орды
-  air: { hp: 120, n: 3, dmg: 9, range: 10, cd: 1, speed: 11, sight: 18, radius: 1.6, cost: 160, time: 14 },        // авиация: крылатые/прыжковые отряды, летят над скалами и стенами
+  doom: { hp: 5250, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 12, radius: 3, cost: 3000, time: 240 },
+  lighthouse: { hp: 4500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 70, radius: 2.4, cost: 1200, time: 150 },  // Вокс-маяк легиона: видит 70 м
+  obelisk: { hp: 6000, n: 1, dmg: 220, range: 40, cd: 3, speed: 0, sight: 40, radius: 3, cost: 1400, time: 150 },    // Обелиск Вечности Династий
+  megagun: { hp: 5250, n: 1, dmg: 180, range: 38, cd: 4, speed: 0, sight: 30, radius: 3, cost: 1300, time: 150 },    // Мега-Пушка Орды
+  plague: { hp: 4500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 30, radius: 2.4, cost: 1100, time: 150 },       // Чумной шпиль Нежити
+  fturret: { hp: 1050, n: 1, dmg: 9, range: 6, cd: 0.4, speed: 0, sight: 8, radius: 1.3, cost: 90, time: 10 },     // Огнемётная печь Орды
+  air: { hp: 145, n: 3, dmg: 9, range: 10, cd: 1, speed: 11, sight: 18, radius: 1.6, cost: 160, time: 14 },        // авиация: крылатые/прыжковые отряды, летят над скалами и стенами
   jet: { hp: 900, n: 1, dmg: 24, range: 14, cd: 0.6, speed: 17, sight: 24, radius: 2.4, cost: 260, time: 24 },      // самолёт: быстрый, летит над всем, техцех
-  spire: { hp: 3500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 30, radius: 3, cost: 1300, time: 150 },     // Башня Кабала / Око Ужаса: мегапостройка Тёмных эльдар и Хаоса
-  portal: { hp: 1500, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 2.4, cost: 200, time: 20 },     // Теневой портал Тёмных эльдар
+  spire: { hp: 5250, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 30, radius: 3, cost: 1300, time: 150 },     // Башня Кабала / Око Ужаса: мегапостройка Тёмных эльдар и Хаоса
+  portal: { hp: 2250, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 2.4, cost: 200, time: 20 },     // Теневой портал Тёмных эльдар
   // Врата Варпа Хаоса и демоны четырёх богов
-  warpgate: { hp: 2200, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 3, cost: 300, time: 30 },
+  warpgate: { hp: 3300, n: 1, dmg: 0, range: 0, cd: 1, speed: 0, sight: 10, radius: 3, cost: 300, time: 30 },
   khorne: { hp: 160, n: 4, dmg: 14, range: 2.6, cd: 0.9, speed: 8, sight: 14, radius: 1.8, cost: 180, time: 14 },   // Кровопускатели: рубят
   nurgle: { hp: 340, n: 3, dmg: 9, range: 2.6, cd: 1.2, speed: 5, sight: 14, radius: 1.9, cost: 200, time: 16 },    // Чумоносцы: живучие, гниль лечит
   tzeentch: { hp: 90, n: 3, dmg: 16, range: 16, cd: 1.8, speed: 6.5, sight: 18, radius: 1.6, cost: 190, time: 15 }, // Розовые ужасы: варп-пламя по площади
@@ -137,11 +137,11 @@ export const ROLES: Partial<Record<Kind, Role>> = {
 };
 /** Урон по броне (как в DoW/WH40k): болтеры и пулемёты почти не пробивают технику, снайпер косит пехоту, противотанковое — технику, взрывчатка — здания. */
 export const VS: Record<DmgType, Record<Armor, number>> = {
-  small: { inf: 1, hinf: 0.7, light: 0.35, veh: 0.04, titan: 0.01, struct: 0.15 },
+  small: { inf: 1, hinf: 0.7, light: 0.5, veh: 0.04, titan: 0.01, struct: 0.15 },
   sniper: { inf: 1.8, hinf: 0.8, light: 0.1, veh: 0.02, titan: 0.01, struct: 0.05 },
   heavy: { inf: 0.4, hinf: 1.1, light: 1.3, veh: 1.2, titan: 1, struct: 1.2 },
-  melee: { inf: 1.1, hinf: 1, light: 0.6, veh: 0.3, titan: 0.15, struct: 0.4 },
-  blast: { inf: 1.3, hinf: 0.9, light: 0.9, veh: 0.7, titan: 0.5, struct: 1.6 },
+  melee: { inf: 1.1, hinf: 1, light: 0.6, veh: 0.4, titan: 0.15, struct: 0.4 },
+  blast: { inf: 1.2, hinf: 0.9, light: 0.9, veh: 0.7, titan: 0.5, struct: 1.6 },
 };
 /** Тяжёлое оружие пехоты: у Орды пулемёты-шуты, у Синклита огнемёты — это против пехоты, не против брони. */
 const HEAVY_SMALL = new Set<FactionId>(['orks', 'ashen']);
@@ -191,7 +191,7 @@ export const armorOf = (k: Kind): Armor => (isStruct(k) ? 'struct' : ROLES[k]?.a
 export const dmgOf = (k: Kind, f: FactionId): DmgType => (k === 'guard' && isMelee('guard', f)) || k === 'captain' || k === 'legend' || k === 'deity' ? 'melee' : k === 'heavy' && HEAVY_SMALL.has(f) ? 'small' : ROLES[k]?.dmg ?? STRUCT_DMG[k] ?? 'small';
 export const LEGION_CAP = 60, MOTOR_CAP = 45; // пехота и техника считаются отдельно
 export const SQUADS = new Set<Kind>(['guard', 'sniper', 'heavy', 'support', 'elite', 'air', 'khorne', 'nurgle', 'tzeentch', 'slaanesh']); // пополняются бойцами
-export const VEHICLES = new Set<Kind>(['lveh', 'mveh', 'hveh', 'titan', 'jet']);          // не лечатся — их чинят строители
+export const VEHICLES = new Set<Kind>(['lveh', 'mveh', 'hveh', 'arty', 'titan', 'jet']);  // не лечатся — их чинят строители
 /** Снаряжение отряда (пресет SquadWargear): 0 — граната, 1 — заряд против техники и зданий, 2 — дым. */
 export const GEAR = [
   { name: 'Граната', range: 18, r: 4, dmg: 80, charges: 3, cd: 25, cost: 40, energy: 0 },
@@ -281,7 +281,7 @@ export function attackFx(k: Kind, f: FactionId, variant = 0) {
   return ({ obelisk: 3, megagun: 12, arty: 12, battery: 12, pylon: 3, rturret: 12, fturret: FX.fire, deity: FX.chop, sniper: 10, heavy: 11, hveh: 12, titan: 13, mveh: f === 'ashen' || f === 'orks' ? FX.fire : 14, lveh: 14 } as Partial<Record<Kind, number>>)[k] ?? FX.shot;
 }
 /** Рукопашная пехота: дальность в упор, бьёт сильнее и реже, бегает быстрее. */
-const MELEE_GUARD = { range: 1.4, dmg: 6, cd: 1.3, speed: 8.6 };
+export const MELEE_GUARD = { range: 1.4, dmg: 6, cd: 1.3, speed: 8.6 };
 
 // ---------- капитан: опыт, уровни 1–10 и дерево способностей (CaptainLevelUp, CaptainAbilities) ----------
 export const XP_KILL: Partial<Record<Kind, number>> = { arty: 60, deity: 300, builder: 5, guard: 20, sniper: 20, heavy: 25, support: 15, elite: 45, healer: 45, lveh: 40, mveh: 60, hveh: 90, captain: 40, legend: 200, titan: 300 };
@@ -357,7 +357,7 @@ export const UPGRADES: Partial<Record<Kind, Upgrade>> = {
   captain: { cost: 0, energy: 0, relics: 2, time: 5, tier: 1, name: 'Реликвийный доспех' },
   lveh: { cost: 60, energy: 40, relics: 0, time: 8, tier: 3, name: 'Гранатомёт' }, // только Багги Орды: выстрел по площади 3 м
 };
-const LVL2 = { dmg: { post: 1, turret: 1.8, guard: 1.6, captain: 1.5 } as Partial<Record<Kind, number>>, armor: { post: 1, turret: 0.6, guard: 0.8, captain: 0.7, wall: 0.5, wallgate: 0.5 } as Partial<Record<Kind, number>>, range: { post: 0, turret: 3 } as Partial<Record<Kind, number>> };
+export const LVL2 = { dmg: { post: 1, turret: 1.8, guard: 1.6, captain: 1.5 } as Partial<Record<Kind, number>>, armor: { post: 1, turret: 0.6, guard: 0.8, captain: 0.7, wall: 0.5, wallgate: 0.5 } as Partial<Record<Kind, number>>, range: { post: 0, turret: 3 } as Partial<Record<Kind, number>> };
 export const BUILD_TIER: Record<Buildable, number> = { hq: 2, barracks: 1, post: 1, turret: 1, foundry: 1, pump: 1, key1: 1, key2: 2, key3: 3, key4: 4, gate: 5, motorpool: 3, yard: 4, wall: 1, wallgate: 1, bunker: 2, mine: 1, aegis: 2, rturret: 1, fturret: 1, battery: 2, pylon: 2, pyre: 2, bell: 2, lighthouse: 4, obelisk: 4, megagun: 4, plague: 4, warpgate: 3, portal: 2, spire: 4 };
 /** Постройки только своей фракции. */
 /** null — постройка снятых фракций (Консенсус, Нежить): вид остаётся в KINDS ради стабильных индексов, строить нельзя. */
@@ -368,6 +368,7 @@ export const members = (k: Kind, hp: number) => (hp <= 0 ? 0 : Math.min(STATS[k]
 
 export const REINFORCE_COST = 18; // за порцию в одну модель
 export const REINFORCE_TIME = 1.2;
+export const REPAIR = { rate: 25, combatDelay: 5, combatMul: 0.35 };
 export const CAP = { builder: 4, guard: 8 };
 export const QUEUE_MAX = 5;
 export const START_REQ = 300, START_ENERGY = 100, BASE_INCOME = 2; // влияние в секунду от штаба без точек
@@ -542,7 +543,13 @@ function armorMul(s: State, t: Unit) {
   const f = fac(s, t.owner), p = s.players[t.owner];
   if (isStruct(t.kind)) return (has(p, 4) ? 0.8 : 1) * (t.kind === 'post' && t.lvl >= 2 ? 0.5 : 1) * (t.kind === 'wall' ? 0.6 : 1);
   if (s.units.some(b => b.kind === 'bunker' && b.owner === t.owner && b.build >= 1 && b.hp > 0 && dist(b, t) < STATS.bunker.radius + 3)) return 0.5; // крипта-бункер
-  const res = (s.units.some(l => l.kind === 'lighthouse' && l.owner === t.owner && l.build >= 1 && l.hp > 0 && dist(l, t) < LIGHTHOUSE.r) ? LIGHTHOUSE.armor : 1) * (t.kind === 'captain' && archOf(s, t) === 'assault' ? 0.9 : 1) * (t.kind !== 'captain' && nearArch(s, t, 'commander') ? 0.9 : 1) * (s.units.some(a => a.kind === 'support' && a.owner === t.owner && a.hp > 0 && dist(a, t) < 10) ? (f === 'order' ? 0.75 : 0.85) : 1) // Знаменосец легиона: силовая броня * (nearCapWith(s, t, 0, 12) ? 0.85 : 1) * (t.kind === 'guard' && has(p, 0) ? 0.9 : 1) * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
+  const res = (s.units.some(l => l.kind === 'lighthouse' && l.owner === t.owner && l.build >= 1 && l.hp > 0 && dist(l, t) < LIGHTHOUSE.r) ? LIGHTHOUSE.armor : 1)
+    * (t.kind === 'captain' && archOf(s, t) === 'assault' ? 0.9 : 1)
+    * (t.kind !== 'captain' && nearArch(s, t, 'commander') ? 0.9 : 1)
+    * (s.units.some(a => a.kind === 'support' && a.owner === t.owner && a.hp > 0 && dist(a, t) < 10) ? (f === 'order' ? 0.75 : 0.85) : 1) // Знаменосец легиона: силовая броня
+    * (nearCapWith(s, t, 0, 12) ? 0.85 : 1)
+    * (t.kind === 'guard' && has(p, 0) ? 0.9 : 1)
+    * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
   return res * factionArmor(f, s, t);
 }
 function factionArmor(f: FactionId, s: State, t: Unit) {
@@ -552,6 +559,8 @@ function factionArmor(f: FactionId, s: State, t: Unit) {
   if (f === 'orks') return 1.1;
   return 1;
 }
+/** Weapon and ground-fire protection belongs to each victim, including its upgrade. */
+const combatArmorMul = (s: State, t: Unit) => armorMul(s, t) * (t.lvl > 1 ? LVL2.armor[t.kind] ?? 1 : 1);
 /** Цена для сервера и интерфейса: Династии платят энергией. */
 export function resourceCost(faction: FactionId, req: number, energy = 0, availableEnergy = 0) {
   if (faction === 'clockwork') return { req: 0, energy: energy + req };
@@ -966,7 +975,20 @@ export function step(s: State, dt = DT): void {
     if (s.shots.length < 200) s.shots.push([m.x, m.y, m.x, m.y - 0.1]);
   }
   for (const st of s.strikes) if ((st.t -= dt) <= 0) doomStrike(s, st); // удар сверхоружия — у каждой фракции свой
-  for (const z of s.plagues) { z.t -= dt; if (s.tick % 20 === 0) for (const v of s.units) if (v.owner !== z.owner && v.hp > 0 && (z.fire || !isStruct(v.kind)) && dist(v, z) < (z.fire ? FIRE.r : 18)) hurt(s, v, z.fire ? FIRE.dps : maxHp(v.kind) * 0.06, z.owner); }
+  const burning = new Map<Unit, { damage: number; owner: number }>();
+  for (const z of s.plagues) {
+    z.t -= dt;
+    if (s.tick % 20 !== 0) continue;
+    for (const v of s.units) {
+      if (v.owner === z.owner || v.hp <= 0 || (!z.fire && isStruct(v.kind)) || dist(v, z) >= (z.fire ? FIRE.r : 18)) continue;
+      if (!z.fire) { hurt(s, v, maxHp(v.kind) * 0.06, z.owner); continue; } // кислотная чума сохраняет свой процентный урон
+      const damage = FIRE.dps * VS.small[armorOf(v.kind)] * combatArmorMul(s, v);
+      const previous = burning.get(v);
+      if (!previous || damage > previous.damage) burning.set(v, { damage, owner: z.owner });
+    }
+  }
+  // Overlapping incendiary patches refresh the hazard, never multiply its DPS.
+  for (const [v, fire] of burning) hurt(s, v, fire.damage, fire.owner);
   s.plagues = s.plagues.filter(z => z.t > 0);
   s.strikes = s.strikes.filter(st => st.t > 0);
   s.scans = s.scans.filter(c => (c.t -= dt) > 0);
@@ -1155,14 +1177,15 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
   if (u.kind === 'nurgle' && u.hp > 0 && u.hp < maxHp(u.kind)) u.hp = Math.min(maxHp(u.kind), u.hp + maxHp(u.kind) * 0.02 * dt); // гниль Нургла
   if (fac(s, u.owner) === 'tyranids' && !isStruct(u.kind) && u.hp < maxHp(u.kind)) u.hp = Math.min(maxHp(u.kind), u.hp + maxHp(u.kind) * 0.01 * dt); // демоническая плоть
   if (fac(s, u.owner) === 'ashen' && !isStruct(u.kind) && u.hp < maxHp(u.kind) && nearOwn(s, u.owner, u.x, u.y, 14)) u.hp = Math.min(maxHp(u.kind), u.hp + maxHp(u.kind) * 0.02 * dt); // Порча лечит
-  if (fac(s, u.owner) === 'clockwork' && (isStruct(u.kind) || VEHICLES.has(u.kind)) && u.build >= 1 && u.hp > 0 && u.hp < maxHp(u.kind)) u.hp = Math.min(maxHp(u.kind), u.hp + maxHp(u.kind) * LIVING_METAL * dt); // Живой металл
+  if (fac(s, u.owner) === 'clockwork' && (isStruct(u.kind) || VEHICLES.has(u.kind)) && (!isStruct(u.kind) || u.hit >= REPAIR.combatDelay) && u.build >= 1 && u.hp > 0 && u.hp < maxHp(u.kind)) u.hp = Math.min(maxHp(u.kind), u.hp + maxHp(u.kind) * LIVING_METAL * dt); // Живой металл: постройки восстанавливаются после выхода из боя
   if (isStruct(u.kind) && u.build < 1) return; // стройка ещё не работает
   const o = u.order;
   if (o?.t === 'build') {
     const site = byId.get(o.id);
     if (site && site.hp > 0 && site.build >= 1 && site.hp < maxHp(site.kind) - 1e-6 && site.owner === u.owner) { // ремонт постройки или техники
       if (dist(u, site) - STATS[site.kind].radius > 2) { go(s, u, site.x, site.y, dt); return; }
-      const rate = maxHp(site.kind) / Math.max(8, (STATS[site.kind].time || 20) * 1.5), add = Math.min(rate * dt, maxHp(site.kind) - site.hp);
+      const rate = Math.min(REPAIR.rate, maxHp(site.kind) / Math.max(8, (STATS[site.kind].time || 20) * 1.5)) * (site.hit < REPAIR.combatDelay ? REPAIR.combatMul : 1);
+      const add = Math.min(rate * dt, maxHp(site.kind) - site.hp);
       if (pay(s.players[u.owner], (add / maxHp(site.kind)) * Math.max(40, STATS[site.kind].cost) * 0.5)) { u.order = null; return; } // ремонт стоит половину цены за полное восстановление
       site.hp += add; u.face = Math.atan2(site.y - u.y, site.x - u.x);
       if (s.tick % 10 === 0 && s.shots.length < 200) s.shots.push([u.x, u.y, site.x, site.y, 6]); // искры сварки
@@ -1191,13 +1214,18 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
     return;
   }
   if (o?.t === 'fire') { // огонь по земле: подойти на дальность и бить в точку
-    const d = dist(u, o), r = st.range;
+    const main = modOf(fac(s, u.owner), u.kind);
+    const d = dist(u, o), r = st.range + (main?.range ?? 0) + (u.lvl > 1 ? (main?.up?.range ?? 0) + (LVL2.range[u.kind] ?? 0) : 0);
     if (d > r) { go(s, u, o.x, o.y, dt); return; }
     u.face = Math.atan2(o.y - u.y, o.x - u.x);
-    if (u.cd > 0 || (MIN_RANGE[u.kind] ?? 0) > d) return;
-    u.cd = st.cd;
-    const aoe = ROLES[u.kind]?.aoe ?? 2, type = dmgOf(u.kind, fac(s, u.owner)), base = st.dmg * (SQUADS.has(u.kind) ? members(u.kind, u.hp) : 1) * dmgMul(s, u);
-    for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && dist(v, o) < aoe + STATS[v.kind].radius) hurt(s, v, base * VS[type][armorOf(v.kind)] * armorMul(s, v), u.owner);
+    if (u.cd > 0 || (MIN_RANGE[u.kind] ?? main?.minRange ?? 0) > d) return;
+    u.cd = st.cd * (main?.cd ?? 1);
+    const aoe = ROLES[u.kind]?.aoe ?? 2, type = main?.type ?? dmgOf(u.kind, fac(s, u.owner));
+    const base = st.dmg * (SQUADS.has(u.kind) ? members(u.kind, u.hp) : 1) * (main?.dmg ?? 1) * (u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1) * dmgMul(s, u);
+    for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && dist(v, o) < aoe + STATS[v.kind].radius) {
+      const smoked = st.range > 4 && s.smoke.some(c => dist(c, v) < 6 || dist(c, u) < 6);
+      hurt(s, v, base * VS[type][armorOf(v.kind)] * combatArmorMul(s, v) * (smoked ? 0.5 : 1), u.owner);
+    }
     if (s.shots.length < 200) s.shots.push([u.x, u.y, o.x, o.y, attackFx(u.kind, fac(s, u.owner), u.q)]);
     return;
   }
@@ -1244,25 +1272,32 @@ function shoot(s: State, u: Unit, target: Unit): boolean {
   const tf = modOf(fac(s, u.owner), u.kind); // свой «движ» юнита или турели фракции
   const tooClose = (MIN_RANGE[u.kind] ?? tf?.minRange ?? 0) > d; // артиллерия и мортиры не бьют в упор
   const upR = u.lvl > 1 ? tf?.up?.range ?? 0 : 0;
-  const near = CLOSE[u.kind] && d <= CLOSE[u.kind]!.range ? CLOSE[u.kind] : undefined; // второе оружие вблизи
+  let near = CLOSE[u.kind] && d <= CLOSE[u.kind]!.range ? CLOSE[u.kind] : undefined; // второе оружие вблизи
+  if (near && (u.kind === 'heavy' || u.kind === 'hveh') && !tooClose && d <= st.range + (tf?.range ?? 0) + upR) {
+    const armor = armorOf(target.kind), mainType = tf?.type ?? dmgOf(u.kind, fac(s, u.owner));
+    const mainDps = st.dmg * (tf?.dmg ?? 1) * VS[mainType][armor] / (st.cd * (tf?.cd ?? 1));
+    const closeDps = near.dmg * VS[near.type][armor] / near.cd;
+    if (mainDps > closeDps) near = undefined; // бронецель не заставляет бросать противотанковый ствол ради пистолета
+  }
   const main = near ? undefined : tf; // свойства основного ствола — не для второго оружия
   if (near || !tooClose && d <= (u.kind === 'post' && u.lvl >= 3 ? 12 : melee ? MELEE_GUARD.range : mystic ? 9 : deceiver ? 14 : st.range + (tf?.range ?? 0) + upR) + (u.lvl > 1 ? LVL2.range[u.kind] ?? 0 : 0) + ((u.kind === 'post' || u.kind === 'turret') && hasR(s, u.owner, 8) ? 3 : 0)) {
     if (u.cd === 0) {
       u.cd = near ? near.cd : melee ? MELEE_GUARD.cd : st.cd * (tf?.cd ?? 1);
-      const mult = (u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1) * (main?.dmg ?? 1), armor = target.lvl > 1 ? LVL2.armor[target.kind] ?? 1 : 1;
-      const smoked = !melee && st.range > 4 && s.smoke.some(c => dist(c, target) < 6 || dist(c, u) < 6); // в дыму стрельба вслепую
-      const vs = (t: Unit) => (smoked ? 0.5 : 1) * VS[near?.type ?? main?.type ?? (u.kind === 'turret' && u.lvl > 1 ? 'heavy' : dmgOf(u.kind, fac(s, u.owner)))][armorOf(t.kind)];
-      const dealt = (near ? near.dmg : u.kind === 'post' && u.lvl >= 3 ? 14 : melee ? MELEE_GUARD.dmg : st.dmg) * (SQUADS.has(u.kind) ? members(u.kind, u.hp) : 1) * mult * (deceiver ? 0.7 : 1) * armor * dmgMul(s, u) * armorMul(s, target) * vs(target);
+      const mult = (u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1) * (main?.dmg ?? 1);
+      const vs = (t: Unit) => ((!melee && st.range > 4 && s.smoke.some(c => dist(c, t) < 6 || dist(c, u) < 6)) ? 0.5 : 1)
+        * VS[near?.type ?? main?.type ?? (u.kind === 'turret' && u.lvl > 1 ? 'heavy' : dmgOf(u.kind, fac(s, u.owner)))][armorOf(t.kind)];
+      const base = (near ? near.dmg : u.kind === 'post' && u.lvl >= 3 ? 14 : melee ? MELEE_GUARD.dmg : st.dmg) * (SQUADS.has(u.kind) ? members(u.kind, u.hp) : 1) * mult * (deceiver ? 0.7 : 1) * dmgMul(s, u);
+      const damageFor = (t: Unit) => base * combatArmorMul(s, t) * vs(t);
+      const dealt = damageFor(target);
       hurt(s, target, dealt, u.owner);
       if (main?.leech) u.hp = Math.min(maxHp(u.kind), u.hp + dealt * main.leech);
       if (main?.freeze && !isStruct(target.kind)) target.frozen = Math.max(target.frozen, main.freeze);
-      if (main?.fire && s.plagues.length < 60) s.plagues.push({ x: target.x, y: target.y, t: FIRE.t, owner: u.owner, fire: true });
+      if ((main?.fire || (u.kind === 'arty' && fac(s, u.owner) === 'ashen')) && s.plagues.length < 60) s.plagues.push({ x: target.x, y: target.y, t: FIRE.t, owner: u.owner, fire: true });
       if (fac(s, u.owner) === 'ashen' && !isStruct(u.kind) && u.kind !== 'titan') u.hp = Math.min(maxHp(u.kind), u.hp + dealt * 0.1); // Порча: удар питает демона
       const nade = u.kind === 'lveh' && u.lvl > 1; // Багги с гранатомётом
       const aoe = near ? undefined : (nade ? 3 : undefined) ?? ROLES[u.kind]?.aoe ?? STRUCT_AOE[u.kind] ?? (tf?.aoe ? tf.aoe + (u.lvl > 1 ? tf.up?.aoe ?? 0 : 0) : undefined) ?? (mystic ? 3 : deceiver ? 4 : undefined);
-      if (u.kind === 'arty' && fac(s, u.owner) === 'ashen' && s.plagues.length < 60) s.plagues.push({ x: target.x, y: target.y, t: FIRE.t, owner: u.owner, fire: true }); // Адская мортира: зажигательный снаряд, земля горит
-      if (aoe) for (const v of s.units) if (v !== target && v.owner !== u.owner && v.hp > 0 && dist(v, target) < aoe) { hurt(s, v, dealt * 0.6 * (vs(v) / Math.max(0.01, vs(target))), u.owner); } // взрыв по площади
-      if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) { hurt(s, v, dealt * 0.5, u.owner); } // огненная буря
+      if (aoe) for (const v of s.units) if (v !== target && v.owner !== u.owner && v.hp > 0 && dist(v, target) < aoe) { hurt(s, v, damageFor(v) * 0.6, u.owner); } // взрыв по площади: защита каждого потерпевшего
+      if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) { hurt(s, v, damageFor(v) * 0.5, u.owner); } // огненная буря
       const pa = s.players[u.owner];
       if (pa.faction === 'orks' && pa.waagh <= 0) { pa.rage += (dealt * 0.08 + (target.hp <= 0 ? 6 : 0)) * (s.units.some(w => w.kind === 'elite' && w.owner === u.owner && w.hp > 0 && dist(w, u) < 12) ? 2 : 1); /* Вожак рядом — ярость вдвое */ if (pa.rage >= RAGE_MAX) { pa.rage = 0; pa.waagh = WAAGH_TIME; } } // Ярость
       if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y, mystic ? FX.fire : deceiver ? FX.beam : nade ? 12 : attackFx(u.kind, fac(s, u.owner), u.q)]);

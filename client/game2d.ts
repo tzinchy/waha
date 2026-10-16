@@ -1,7 +1,7 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import { World3D, has3d } from './world3d.ts';
-import { ARCHS, CAPTAIN_COST, HERO, QUEUE_MAX, STRUCT_AOE, canFireGround, type Arch } from '../shared/sim.ts';
+import { ARCHS, CAPTAIN_COST, HERO, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
 import { MEGA_SHOT, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { BUILD_NAME, PX_PACK, ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
@@ -44,6 +44,17 @@ const GEAR_ICON = [
 ];
 const KIND_NAME: Partial<Record<Kind, string>> = { spire: 'Башня Кабала', portal: 'Теневой портал', warpgate: 'Врата Варпа', khorne: 'Кровопускатели Кхорна', nurgle: 'Чумоносцы Нургла', tzeentch: 'Розовые ужасы Тзинча', slaanesh: 'Демонетки Слаанеш', lighthouse: 'Вокс-маяк', obelisk: 'Обелиск Вечности', megagun: 'Мега-Пушка', plague: 'Споровый улей', battery: 'Батарея «Громобой»', pylon: 'Гаусс-пилон', pyre: 'Огненная яма', bell: 'Синаптический шпиль', deity: 'Бог-Механизм', aegis: 'Теневое поле', rturret: 'Ракетная бочка', fturret: 'Огнемётная печь', hq: 'Штаб', barracks: 'Казарма', post: 'Реликварий', turret: 'Турель', foundry: 'Литейня', pump: 'Глубинный насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Крипта-бункер', mine: 'Мина' };
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
+const damageName: Record<DmgType, string> = { small: 'стрелковое', sniper: 'снайперское', heavy: 'противотанковое', melee: 'ближний бой', blast: 'взрывное' };
+const armorName: Record<Armor, string> = { inf: 'пехота', hinf: 'тяжёлая пехота', light: 'лёгкая техника', veh: 'бронетехника', titan: 'титан', struct: 'здание' };
+const statNumber = (value: number) => String(Math.round(value * 100) / 100);
+const weaponCounters = (type: DmgType, compact = false) => Object.entries(VS[type]).filter(([armor]) => !compact || ['inf', 'veh', 'struct'].includes(armor)).map(([armor, value]) => `${armorName[armor as Armor]} ×${statNumber(value)}`).join(' · ');
+function weaponModInfo(faction: FactionId, kind: Kind) {
+  const mod = modOf(faction, kind);
+  if (!mod) return '';
+  const aoe = ROLES[kind]?.aoe ?? STRUCT_AOE[kind] ?? mod.aoe;
+  if (!mod.aoe || mod.aoe === aoe) return mod.info;
+  return `Основное оружие: радиус поражения ${aoe} м.${mod.fire ? ' Поджигает землю.' : ''}${mod.freeze ? ` Останавливает цель на ${mod.freeze} с.` : ''}${mod.leech ? ` Лечит стрелка на ${statNumber(mod.leech * 100)}% урона.` : ''}`;
+}
 export const SLOT_COLORS = [0x4fa392, 0xe0675c, 0xe0a53a, 0xb9c3c6];
 
 // какой силуэт из пресетов у какого юнита, его ширина в мире и сколько бойцов в отряде
@@ -761,15 +772,15 @@ export class Game {
       if (st.build < 1) return [{ act: '', name: 'Возводится', hot: '', icon: ICON.build, prog: Math.round(st.build * 100), info: 'Отправьте строителей: выберите их и ПКМ по стройке.' }];
       const HOT = ['T', 'Z', 'X', 'C', 'V', 'B', 'G'], ROLE_INFO: Partial<Record<Kind, string>> = {
         builder: 'Строит, чинит постройки и технику.', guard: isMelee('guard', this.fac()) ? 'Линейная пехота ближнего боя.' : 'Линейная пехота, стрелки.',
-        sniper: 'Снайпер: косит пехоту издалека, бессилен против техники.', heavy: 'Тяжёлое оружие: против техники, турелей и зданий.', support: 'Поддержка: союзники рядом получают −15% урона, может нести дым.',
+        sniper: 'Снайпер: против пехоты издалека; вблизи переключается на второе оружие.', heavy: dmgOf('heavy', this.fac()) === 'heavy' ? 'Противотанковое оружие: против техники и зданий. Дополнительное стрелковое доступно вблизи; против брони сохраняется более эффективный ствол.' : 'Антипехотное оружие: против пехоты; бронетехнику почти не пробивает.', support: 'Поддержка: снижает урон по союзникам рядом, может нести дым.',
         elite: 'Тяжёлая элита: держит удар, бьёт в упор.', healer: 'Целитель: лечит отряды в 15 м на 5%/с.', lveh: 'Лёгкая техника: разведка, захват точек, охота на строителей.',
-        mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: 'Артиллерия: 45 м, по площади, в упор не стреляет — нужна разведка и прикрытие.', titan: 'Титан: один на армию, давит пехоту шагами.', air: 'Авиация: быстрый отряд, летит над скалами и стенами — рейды по тылам.', jet: 'Самолёт: самый быстрый, летит высоко над всем, бьёт технику; слаб против зениток и турелей.',
+        mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: `Артиллерия: ${STATS.arty.range + (modOf(this.fac(), 'arty')?.range ?? 0)} м, по площади, в упор не стреляет — нужна разведка и прикрытие.`, titan: 'Титан: один на армию, давит пехоту шагами.', air: 'Авиация: быстрый отряд, летит над скалами и стенами — рейды по тылам.', jet: 'Самолёт: самый быстрый, летит высоко над всем, бьёт технику; слаб против зениток и турелей.',
         khorne: 'Кровопускатели Кхорна: рубят в ближнем бою, бьют сильнее всех демонов.', nurgle: 'Чумоносцы Нургла: медленные, очень живучие, гниль лечит их 2%/с.', tzeentch: 'Розовые ужасы Тзинча: варп-пламя на 16 м по площади.', slaanesh: 'Демонетки Слаанеш: самые быстрые, частые удары когтями.' };
       producible(st.kind).forEach((k, i) => {
         const r = ROLES[k]!, n = this.qk[st.id]?.filter(q => q === KINDS.indexOf(k)).length ?? 0, now = this.qk[st.id]?.[0] === KINDS.indexOf(k);
         const researching = (/^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length) || st.q > 100;
         c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k), r.energy ?? 0, r.relics ?? 0),
-          info: `${ROLE_INFO[k] ?? ''}${modOf(this.fac(), k) ? ' ' + modOf(this.fac(), k)!.info : ''}${CLOSE[k] ? ` Вблизи (${CLOSE[k]!.range} м) — второе оружие.` : ''}${SETUP.has(k) ? ' На ходу не стреляет.' : ''} Легион: ${r.pop}.`, req: this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
+          info: `${ROLE_INFO[k] ?? ''}${modOf(this.fac(), k) ? ' ' + weaponModInfo(this.fac(), k) : ''}${CLOSE[k] ? ` Дополнительное оружие до ${CLOSE[k]!.range} м.${k === 'heavy' || k === 'hveh' ? ' Против брони сохраняется более эффективный ствол.' : ''}` : ''}${SETUP.has(k) ? ' На ходу не стреляет.' : ''} Легион: ${r.pop}.`, req: this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
       });
       if (st.kind === 'hq' || st.kind === 'barracks') { // герои заказываются в зданиях (Soulstorm): главный — в штабе, остальные архетипы — в казармах
         const main = archFor(this.fac(), this.players[this.slot]?.captain.arch ?? 'commander');
@@ -905,16 +916,26 @@ export class Game {
     if (sel.length > 1) return `<div class="w2d-group">${sel.slice(0, 18).map(v => `<button class="w2d-gp${v.owner !== this.slot ? ' foe' : ''}" data-pick="${v.id}">${miniArt(v.artPath)}<i style="--v:${Math.max(0, v.hp / maxHp(v.kind)) * 100}%"></i></button>`).join('')}${sel.length > 18 ? `<span class="w2d-more">+${sel.length - 18}</span>` : ''}</div>`;
     const v = sel[0], st = STATS[v.kind], foe = v.owner !== this.slot, max = maxHp(v.kind), hp = Math.max(0, Math.round(v.hp));
     const melee = isMelee(v.kind, this.fac(v.owner));
-    const cls = v.kind === 'captain' ? `Герой · ур. ${foe ? '?' : this.cap.lvl}` : v.kind === 'builder' ? 'Строитель' : v.kind === 'guard' ? `Пехота · ${melee ? 'ближний бой' : 'стрелки'}` : v.kind === 'legend' ? 'Легенда' : ({ deity: 'Бог · летает', titan: 'Титан', arty: 'Артиллерия · мёртвая зона 10 м', lveh: 'Лёгкая техника', mveh: 'Средняя техника', hveh: 'Тяжёлая техника', sniper: 'Снайпер', heavy: 'Тяжёлое оружие', support: 'Поддержка', elite: 'Тяжёлая элита', healer: 'Целитель' } as Partial<Record<Kind, string>>)[v.kind] ?? 'Постройка';
+    const cls = v.kind === 'captain' ? `Герой · ур. ${foe ? '?' : this.cap.lvl}` : v.kind === 'builder' ? 'Строитель' : v.kind === 'guard' ? `Пехота · ${melee ? 'ближний бой' : 'стрелки'}` : v.kind === 'legend' ? 'Легенда' : ({ deity: 'Бог · летает', titan: 'Титан', arty: `Артиллерия · мёртвая зона ${MIN_RANGE.arty} м`, lveh: 'Лёгкая техника', mveh: 'Средняя техника', hveh: 'Тяжёлая техника', sniper: 'Снайпер', heavy: 'Тяжёлое оружие', support: 'Поддержка', elite: 'Тяжёлая элита', healer: 'Целитель' } as Partial<Record<Kind, string>>)[v.kind] ?? 'Постройка';
     const stats: [string, string][] = [];
-    const tf = v.kind === 'turret' ? TURRET_FAC[this.fac(v.owner)] : undefined;
-    if (st.dmg) stats.push(['УРОН', v.kind === 'guard' ? `${melee ? 6.5 : st.dmg}×${members('guard', v.hp)}` : String(Math.round(st.dmg * (tf?.dmg ?? 1)))], ['ДАЛ.', melee ? 'в упор' : String(st.range + (tf?.range ?? 0))]);
-    if (st.speed) stats.push(['СКОР.', String(st.speed)]);
-    if (v.kind === 'guard') stats.push(['БОЙЦЫ', `${members('guard', v.hp)}/${st.n}`]);
+    const tf = modOf(this.fac(v.owner), v.kind), guardMelee = v.kind === 'guard' && melee;
+    const weaponType = tf?.type ?? (v.kind === 'turret' && v.lvl > 1 ? 'heavy' : dmgOf(v.kind, this.fac(v.owner)));
+    if (st.dmg && v.kind !== 'mine') {
+      const base = guardMelee ? MELEE_GUARD.dmg : v.kind === 'post' && v.lvl >= 3 ? 14 : st.dmg;
+      const damage = base * (tf?.dmg ?? 1) * (v.lvl > 1 ? LVL2.dmg[v.kind] ?? 1 : 1);
+      const count = SQUADS.has(v.kind) ? members(v.kind, v.hp) : 1;
+      const range = (guardMelee ? MELEE_GUARD.range : v.kind === 'post' && v.lvl >= 3 ? 12 : st.range + (tf?.range ?? 0) + (v.lvl > 1 ? tf?.up?.range ?? 0 : 0)) + (v.lvl > 1 ? LVL2.range[v.kind] ?? 0 : 0);
+      const specialRange = v.kind === 'captain' && v.arch === 'mystic' || v.kind === 'deity' && v.arch !== 'assault';
+      stats.push(['ЗАЛП (БАЗА)', SQUADS.has(v.kind) ? `${statNumber(damage)}×${count} = ${statNumber(damage * count)}` : statNumber(damage)], ['ИНТЕРВАЛ', statNumber(guardMelee ? MELEE_GUARD.cd : st.cd * (tf?.cd ?? 1)) + ' с'], ['ДАЛ.', specialRange ? 'по архетипу' : statNumber(range) + ' м'], ['ОРУЖИЕ', damageName[weaponType]]);
+    }
+    if (v.kind === 'mine') stats.push(['ВЗРЫВ (БАЗА)', statNumber(st.dmg)]);
+    stats.push(['БРОНЯ', armorName[armorOf(v.kind)]]);
+    if (st.speed) stats.push(['СКОР. (БАЗА)', statNumber(guardMelee ? MELEE_GUARD.speed : st.speed)]);
+    if (SQUADS.has(v.kind)) stats.push(['БОЙЦЫ', `${members(v.kind, v.hp)}/${st.n}`]);
     if (v.lvl > 1) stats.push(['УР.', `<b class="up">▲${v.lvl}</b>`]);
     if (isStruct(v.kind) && v.build < 1) stats.push(['СТРОЙКА', `${Math.round(v.build * 100)}%`]);
     if (v.hero && !foe) stats.push(['ОПЫТ', v.hero.lvl >= MAX_LVL ? 'предел' : `${v.hero.xp}/${xpNeed(v.hero.lvl)}`], ...(v.hero.pts ? [['ОЧКИ', `<b class="up">${v.hero.pts}</b>`] as [string, string]] : [])); // прокачка — кнопка P в панели команд
-    return `<div class="lc-unit${foe ? ' foe' : ''}"><div class="lc-unit__portrait">${miniArt(v.artPath)}<span class="lc-unit__rank">${['I', 'II', 'III'][Math.min(2, v.lvl - 1)]}</span></div><div><h3 class="lc-unit__name">${this.nameOf(v).replace(/[<>&]/g, '')}</h3><p class="lc-unit__class">${cls}${foe ? ' · враг' : ''}</p><div class="lc-vitals"><div class="lc-vitals__bar" style="--v:${(hp / max) * 100}%"></div><div class="lc-vitals__nums"><span>Здоровье</span><span><b>${hp}/${max}</b></span></div></div><p class="lc-unit__stats">${stats.map(([a, b]) => `<span>${a} <b>${b}</b></span>`).join('')}</p>${!foe && isStruct(v.kind) && v.build >= 1 && (producible(v.kind).length || v.kind === 'hq' || v.kind === 'barracks') ? this.queueSlots(v) : ''}</div></div>`;
+    return `<div class="lc-unit${foe ? ' foe' : ''}"><div class="lc-unit__portrait">${miniArt(v.artPath)}<span class="lc-unit__rank">${['I', 'II', 'III'][Math.min(2, v.lvl - 1)]}</span></div><div><h3 class="lc-unit__name">${this.nameOf(v).replace(/[<>&]/g, '')}</h3><p class="lc-unit__class">${cls}${foe ? ' · враг' : ''}</p><div class="lc-vitals"><div class="lc-vitals__bar" style="--v:${(hp / max) * 100}%"></div><div class="lc-vitals__nums"><span>Здоровье</span><span><b>${hp}/${max}</b></span></div></div><p class="lc-unit__stats" title="Основное оружие: база с улучшением модели и фракционным модификатором, до аур, исследований, бонусов героя и защиты цели.">${stats.map(([a, b]) => `<span>${a} <b>${b}</b></span>`).join('')}</p>${st.dmg && v.kind !== 'mine' ? `<p class="lc-unit__class" title="Множители типа оружия: ${weaponCounters(weaponType)}. Дополнительная защита цели применяется отдельно.">По броне: ${weaponCounters(weaponType, true)}</p>${CLOSE[v.kind] ? `<p class="lc-unit__class">Дополнительное оружие до ${CLOSE[v.kind]!.range} м.${v.kind === 'heavy' || v.kind === 'hveh' ? ' Против брони сохраняется более эффективный ствол.' : ''}</p>` : ''}` : ''}${!foe && isStruct(v.kind) && v.build >= 1 && (producible(v.kind).length || v.kind === 'hq' || v.kind === 'barracks') ? this.queueSlots(v) : ''}</div></div>`;
   }
 
   private renderCmd() {
