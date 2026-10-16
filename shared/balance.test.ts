@@ -147,14 +147,12 @@ test('живой металл: некронские здания не реген
   assert.ok(site.hp > hp, 'после затишья живой металл снова восстанавливает здание');
 });
 
-test('артиллерия считается техникой: медик лечит пехоту рядом, машину чинит строитель', () => {
-  const s=arena(), artillery=spawn(s,0,'arty',140,60), infantry=spawn(s,0,'guard',143,63);
-  spawn(s,0,'healer',145,65);
-  hurt(s,artillery,200,1);hurt(s,infantry,100,1);
-  const artilleryHp=artillery.hp,infantryHp=infantry.hp;
+test('артиллерия считается техникой: сама не лечится, её чинит строитель', () => {
+  const s=arena(), artillery=spawn(s,0,'arty',140,60);
+  hurt(s,artillery,200,1);
+  const artilleryHp=artillery.hp;
   advance(s,1);
-  assert.ok(infantry.hp>infantryHp,'медик действует: соседняя пехота получает лечение');
-  assert.equal(artillery.hp,artilleryHp,'лечение пехоты не восстанавливает артиллерию');
+  assert.equal(artillery.hp,artilleryHp,'техника сама не восстанавливается');
   const builder=spawn(s,0,'builder',136,60);
   assert.equal(applyCmd(s,0,{c:'assist',ids:[builder.id],id:artillery.id}),undefined);
   advance(s,1);

@@ -140,18 +140,27 @@ test('энергия: литейня и насос на жиле дают эне
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'pump', x: VENTS[0][0] + 2, y: VENTS[0][1] }), undefined);
 });
 
-test('реликвии: реликтовая точка даёт реликвии, капитан берёт реликвийный доспех', () => {
+test('реликвия — только у того, кто держит ключевую точку; не копится; реликварий — обычная точка с постом', () => {
   const s = newState(2);
   const cap = captainAt(s, 0), ri = POINTS.length;
+  assert.match(applyCmd(s, 0, { c: 'upgrade', id: cap.id }) ?? '', /ключевую точку/);
   [cap.x, cap.y] = RELICS[0] as [number, number];
   run(s, 13); // CAPTURE_TIME 12 с
   assert.equal(s.points[ri].owner, 0);
-  assert.match(applyCmd(s, 0, { c: 'upgrade', id: cap.id }) ?? '', /реликвий/);
-  run(s, 121); // RELIC_RATE: 1 реликвия в минуту
-  assert.ok(s.players[0].relics >= 2);
+  assert.equal(s.players[0].relics, 0, 'реликварий реликвий не даёт');
+  const b = unit(s, 0, 'builder');
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: RELICS[0][0], y: RELICS[0][1] }), undefined, 'на реликварий ставится пост');
+  [cap.x, cap.y] = POINTS[0] as [number, number];
+  run(s, 13);
+  assert.equal(s.points[0].owner, 0);
+  run(s, 60);
+  assert.equal(s.players[0].relics, 1, 'держим центр — одна реликвия, сколько ни стой');
   assert.equal(applyCmd(s, 0, { c: 'upgrade', id: cap.id }), undefined);
+  assert.equal(s.players[0].relics, 1, 'условие не списывается');
   run(s, 6);
   assert.equal(cap.lvl, 2);
+  s.points[0].owner = 1; run(s, 0.1);
+  assert.equal(s.players[0].relics, 0, 'потеряли центр — потеряли реликвию');
 });
 
 test('Династии: платят энергией, влияния нет', () => {
@@ -190,6 +199,7 @@ test('Орда: ярость копится от урона и запускае�
 test('тиры I→V: ключевые здания, исследования, Печать, Врата и призыв легенды', () => {
   const s = newState(2);
   const p = s.players[0], hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
+  p.cheat = true; p.relics = 5; // реликварии держим (реликвии не копятся)
   p.req = 1e5; p.energy = 1e5; p.relics = 50;
   const spots: Record<string, [number, number]> = { key1: [10, 0], key2: [0, 10], key3: [10, 10], key4: [18, 4], gate: [4, 19] };
   for (let t = 1; t <= 4; t++) {
@@ -347,17 +357,17 @@ test('армия по ролям: найм по тиру, Легион, урон
   const bar = spawn(s, 0, 'barracks', hq.x + 12, hq.y);
   assert.match(applyCmd(s, 0, { c: 'train', id: bar.id, k: 'sniper' }) ?? '', /тир/);
   p.tier = 4;
-  for (const k of ['sniper', 'heavy', 'support', 'elite', 'healer'] as const) assert.equal(applyCmd(s, 0, { c: 'train', id: bar.id, k }), undefined, k);
+  for (const k of ['sniper', 'heavy', 'support', 'elite'] as const) assert.equal(applyCmd(s, 0, { c: 'train', id: bar.id, k }), undefined, k);
   run(s, 70);
-  for (const k of ['sniper', 'heavy', 'support', 'elite', 'healer'] as const) assert.ok(s.units.some(u => u.owner === 0 && u.kind === k), k + ' нанят');
+  assert.ok(!producible('barracks').includes('healer'), 'целителей больше нет');
+  for (const k of ['sniper', 'heavy', 'support', 'elite'] as const) assert.ok(s.units.some(u => u.owner === 0 && u.kind === k), k + ' нанят');
   // Легион: титан занимает 20, второго не дадут; строится только на верфи
   const yard = spawn(s, 0, 'yard', hq.x - 20, hq.y);
   assert.match(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }) ?? '', /критическ/, 'титан — только с критической точкой');
-  s.points[0].owner = 0;
+  s.points[0].owner = 0; p.relics = 2; // держим центр и два реликвария
   assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }), undefined); // штаб титана не строит: заказ подменяется на строителя
   assert.ok(!hq.que.includes('titan'));
   assert.equal(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }), undefined);
-  p.relics = 20;
   assert.equal(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }), undefined, 'второй титан — если хватает ресурсов');
   // снайпер почти не царапает технику, тяжёлое оружие — сильно
   const veh = spawn(s, 1, 'mveh', 80, 80), sn = unit(s, 0, 'sniper'), hv = unit(s, 0, 'heavy');
@@ -412,12 +422,6 @@ test('особые механики: Архангел Ордена, Бог-Ме�
   god.hp = 0; run(c, 0.1);
   const back = captainAt(c, 0);
   assert.ok(back && back.hp <= 0 && back.dead < 0, 'гибель бога: капитан недоступен надолго');
-  // Орден: Архангел поднимает павшего бойца
-  const o = newState(2, ['order', 'orks']), oh = unit(o, 0, 'hq');
-  const angel = spawn(o, 0, 'healer', oh.x + 6, oh.y), sq = spawn(o, 0, 'guard', oh.x + 7, oh.y);
-  void angel; sq.hp = STATS.guard.hp * 2; sq.hit = 0;
-  run(o, 62);
-  assert.ok(sq.hp >= STATS.guard.hp * 3, 'боец поднят');
 });
 
 test('победные очки тают у того, кто держит меньше точек, но не убивают; туман войны прячет далёких врагов', () => {
@@ -506,16 +510,17 @@ test('Династии: только энергия (доход с точек и
   mono.build = 1; mono.hp = maxHp('hq');
   unit(s, 0, 'hq').hp = 0; run(s, 0.1);
   assert.equal(p.alive, true, 'жив, пока стоит Монолит');
+  const bar = spawn(s, 0, 'barracks', mono.x + 12, mono.y);
   mono.hp = 0; run(s, 0.1);
-  assert.equal(p.alive, true, 'без штабов жив, пока стоят другие постройки');
-  for (const u of s.units) if (u.owner === 0 && isStruct(u.kind)) u.hp = 0;
-  run(s, 0.1);
-  assert.equal(p.alive, false, 'проигрыш — когда пали все постройки');
+  assert.equal(p.alive, true, 'без штабов жив, пока стоят казармы');
+  bar.hp = 0; run(s, 0.1);
+  assert.equal(p.alive, false, 'проигрыш — когда пали штабы и все здания найма, остальное не спасает');
 });
 
 test('сверхоружие и мегапостройки: открытия в штабе, стройка видна всем, удар у каждой фракции свой и только по врагам', () => {
   const s = newState(2, ['order', 'ashen']);
   const p = s.players[0], hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
+  p.cheat = true; p.relics = 5; // реликварии держим (реликвии не копятся)
   p.req = 1e5; p.energy = 1e5; p.relics = 50; p.tier = 5;
   const spot = { x: hq.x + 14, y: hq.y + 4 };
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'lighthouse', ...spot }) ?? '', /Мегапостройки/);
@@ -589,8 +594,8 @@ test('титан требует полную цену каждого ресур�
   const hq = spawn(s, 0, 'yard', hq0.x - 20, hq0.y); // верфь титана
   s.points[0].owner = 0; // критическая точка
   const cost = STATS.titan.cost, energyCost = ROLES.titan!.energy!, relicCost = ROLES.titan!.relics!;
-  assert.ok(cost >= 1500 && energyCost >= 2500 && relicCost >= 10, 'титан — дорогой юнит поздней игры');
-  for (const [req, energy, relics, missing] of [[cost - 1, energyCost, relicCost, 'влияния'], [cost, energyCost - 1, relicCost, 'энергии'], [cost, energyCost, relicCost - 1, 'реликвий']] as const) {
+  assert.ok(cost >= 1500 && energyCost >= 2500 && relicCost >= 1, 'титан — дорогой юнит поздней игры: нужна реликвия ключевой точки');
+  for (const [req, energy, relics, missing] of [[cost - 1, energyCost, relicCost, 'влияния'], [cost, energyCost - 1, relicCost, 'энергии'], [cost, energyCost, relicCost - 1, 'реликви']] as const) {
     Object.assign(p, { req, energy, relics });
     assert.match(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }) ?? '', new RegExp(missing));
     assert.equal(hq.que.length, 0);
@@ -598,7 +603,7 @@ test('титан требует полную цену каждого ресур�
   }
   Object.assign(p, { req: cost, energy: energyCost, relics: relicCost });
   assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }), undefined);
-  assert.deepEqual([p.req, p.energy, p.relics], [0, 0, 0]);
+  assert.deepEqual([p.req, p.energy, p.relics], [0, 0, relicCost], 'реликварии не списываются');
   Object.assign(p, { req: 1e4, energy: 1e4, relics: 100 });
   assert.equal(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'titan' }), undefined, 'титанов сколько позволят ресурсы');
   assert.match(applyCmd(s, 0, { c: 'train', id: hq.id, k: 'bomber' }) ?? 'не тот юнит', /./);
@@ -644,6 +649,7 @@ test('отмена найма из очереди возвращает ресу�
 
 test('второй герой: другой архетип — в казармах с тира II, свой бонус, один на армию; легенда и титан — вместе с ним', () => {
   const s = newState(2, ['order', 'ashen'], ['commander', 'commander']), p = s.players[0];
+  p.cheat = true; p.relics = 5; // реликварии держим (реликвии не копятся)
   Object.assign(p, { req: 1e4, energy: 1e4, relics: 50 });
   captainAt(s, 0);
   assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /тир II/);
@@ -714,10 +720,10 @@ test('вторые механики: лом орков, жертва Хаоса,
   const veh = spawn(s, 2, 'hveh', 200, 200), req = orks.req;
   hurt(s, veh, 1e6, 0); run(s, 0.2);
   assert.ok(orks.req >= req + STATS.hveh.cost * 0.25 - 1, 'орки собрали лом');
-  const rel = ashen.relics;
+  const en = ashen.energy;
   for (let i = 0; i < TRIBUTE; i++) hurt(s, spawn(s, 2, 'builder', 150 + i, 150), 1e6, 1);
   run(s, 0.2);
-  assert.equal(ashen.relics, rel + 1, 'жертва богам: реликвия за 20 убийств');
+  assert.ok(ashen.energy >= en + 150, 'жертва богам: энергия за 20 убийств');
   const n = newState(2, ['clockwork', 'order']), mono = unit(n, 0, 'hq');
   mono.hp = maxHp('hq') / 2; run(n, 10);
   assert.ok(mono.hp > maxHp('hq') / 2 + maxHp('hq') * 0.04, 'живой металл чинит постройку');
@@ -728,6 +734,7 @@ test('каждая фракция может заказать каждого ю�
   const { FACTION_IDS, ARCH_OPTS } = await import('./factions.ts');
   for (const f of FACTION_IDS) {
     const s = newState(2, [f, 'order']), p = s.players[0], hq = unit(s, 0, 'hq');
+    p.cheat = true; p.relics = 5; // реликварии держим (реликвии не копятся)
     p.tier = 5; s.points[0].owner = 0; // титан — только с критической точкой
     const homes = (['barracks', 'motorpool', 'yard', ...(f === 'ashen' ? ['warpgate'] : [])] as Kind[]).map((k, i) => { const b = spawn(s, 0, k, hq.x + 20 + i * 18, hq.y + 20); b.build = 1; return b; });
     for (const b of [hq, ...homes]) for (const k of producible(b.kind, f)) {

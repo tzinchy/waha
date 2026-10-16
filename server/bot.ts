@@ -1,4 +1,4 @@
-import { GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
+import { PRODUCERS, GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
 
 /** Бот играет по тем же правилам: казармы, второй строитель, посты на точках, гвардия с пополнением, атака на штаб. */
 export function botThink(s: State, me: number): void {
@@ -13,7 +13,7 @@ export function botThink(s: State, me: number): void {
   const mine = s.units.filter(u => u.owner === me && u.hp > 0);
   const hq = mine.find(u => u.kind === 'hq');
   if (!hq) { // штаб пал, но игра идёт до последней постройки: отстраиваемся у уцелевших зданий, армия защищает их
-    const base = mine.find(u => isStruct(u.kind) && u.build >= 1 && u.kind !== 'wall' && u.kind !== 'mine'), bs = mine.filter(u => u.kind === 'builder');
+    const base = mine.find(u => PRODUCERS.has(u.kind) && u.build >= 1), bs = mine.filter(u => u.kind === 'builder');
     if (base && bs.length && !mine.some(u => u.kind === 'hq')) for (const a of [0, 1.6, 3.2, 4.8]) if (!applyCmd(s, me, { c: 'build', ids: bs.map(b => b.id), kind: 'hq', x: base.x + Math.cos(a) * 14, y: base.y + Math.sin(a) * 14 })) break;
     const army = mine.filter(u => !isStruct(u.kind) && u.kind !== 'builder');
     if (base && army.length && s.tick % 100 === (me * 7) % 100) applyCmd(s, me, { c: 'amove', ids: army.map(u => u.id), x: base.x, y: base.y });
@@ -92,7 +92,7 @@ export function botThink(s: State, me: number): void {
   if (near) applyCmd(s, me, { c: 'throw', ids: squads.map(u => u.id), g: 0, x: near.x, y: near.y });
   const army = mine.filter(u => !isStruct(u.kind) && u.kind !== 'builder' && !u.carry);
   if (!army.length) return;
-  const foes = s.units.filter(u => isStruct(u.kind) && u.owner !== me && u.hp > 0 && s.players[u.owner].alive && !['wall', 'wallgate', 'mine'].includes(u.kind));
+  const foes = s.units.filter(u => PRODUCERS.has(u.kind) && u.owner !== me && u.hp > 0 && s.players[u.owner].alive);
   const enemyHq = foes.filter(u => u.kind === 'hq').sort((a, b) => d(a, hq) - d(b, hq))[0] ?? foes.sort((a, b) => d(a, hq) - d(b, hq))[0]; // штаб пал — добиваем остальные постройки
   const point = s.points.filter(p => p.owner !== me).sort((a, b) => d(a, hq) - d(b, hq))[0];
   const center = s.points[0] && (s.points[0].owner !== me && P.tier >= 3 || titanTime) ? s.points[0] : undefined; // с III тира берём центр, копя на титана — стоим на нём: без него титана не заказать
