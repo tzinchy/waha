@@ -62,6 +62,9 @@ for (const f of FACTION_IDS) {
 // ---- просмотр анимаций: клик по карточке — живая модель и кнопки всех её движений ----
 const box = document.getElementById('anim')!, view = box.querySelector('canvas')!, bar = box.querySelector('nav')!;
 const vr = new THREE.WebGLRenderer({ canvas: view, antialias: true, alpha: true });
+vr.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+view.style.imageRendering = 'auto';
+const viewSize = new THREE.Vector2();
 vr.outputColorSpace = THREE.SRGBColorSpace; vr.toneMapping = THREE.ACESFilmicToneMapping; vr.toneMappingExposure = 1.2;
 const vs = new THREE.Scene(); vs.add(new THREE.HemisphereLight(0xdfe7ec, 0x3b3128, 2.2)); const vsun = new THREE.DirectionalLight(0xffe2b5, 2.6); vsun.position.set(-4, 8, 6); vs.add(vsun);
 const vc = new THREE.PerspectiveCamera(30, 1, 0.01, 500);
@@ -86,11 +89,16 @@ box.addEventListener('click', e => { if (e.target === box) box.hidden = true; })
 (function loop() {
   if (cur && !box.hidden) {
     const w = view.clientWidth, h = view.clientHeight;
-    if (view.width !== w || view.height !== h) { vr.setSize(w, h, false); vc.aspect = w / h; vc.updateProjectionMatrix(); }
-    const t = (performance.now() - cur.t0) / 1000, dur = cur.dur(cur.motion);
-    cur.a.pose(cur.motion as never, t % (dur + 0.6)); // одиночные движения повторяются с паузой
-    cur.a.root.rotation.y = 0.5 + Math.sin(performance.now() / 2500) * 0.6;
-    vr.render(vs, vc);
+    if(w && h) {
+      const ratio=Math.min(devicePixelRatio || 1, 2);
+      if(vr.getPixelRatio()!==ratio)vr.setPixelRatio(ratio);
+      vr.getSize(viewSize);
+      if (viewSize.x !== w || viewSize.y !== h) { vr.setSize(w, h, false); vc.aspect = w / h; vc.updateProjectionMatrix(); }
+      const t = (performance.now() - cur.t0) / 1000, dur = cur.dur(cur.motion);
+      cur.a.pose(cur.motion as never, t % (dur + 0.6)); // одиночные движения повторяются с паузой
+      cur.a.root.rotation.y = 0.5 + Math.sin(performance.now() / 2500) * 0.6;
+      vr.render(vs, vc);
+    }
   }
   requestAnimationFrame(loop);
 })();

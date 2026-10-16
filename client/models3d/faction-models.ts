@@ -91,7 +91,9 @@ for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) {
   const i = (y * 64 + x) * 4; surfacePixels[i] = surfacePixels[i + 1] = surfacePixels[i + 2] = value; surfacePixels[i + 3] = 255;
 }
 const surfaceTexture = new THREE.DataTexture(surfacePixels, 64, 64); surfaceTexture.needsUpdate = true;
-surfaceTexture.magFilter = surfaceTexture.minFilter = THREE.NearestFilter;
+surfaceTexture.magFilter = THREE.LinearFilter;
+surfaceTexture.minFilter = THREE.LinearMipmapLinearFilter;
+surfaceTexture.generateMipmaps = true;
 
 /** Общие материалы ролей: белый медика, камуфляж снайпера, жёлто-чёрный «опасно» огнемётчика и строителя. */
 let roleMats: Record<'white' | 'camo' | 'hazard', THREE.MeshStandardMaterial> | undefined;

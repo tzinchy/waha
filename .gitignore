@@ -4,3 +4,4 @@ dist
 .env.local
 tools/meshy-state.json
 design/
+artifacts/

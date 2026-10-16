@@ -11,6 +11,7 @@ function stage() {
 }
 function renderer(canvas: HTMLCanvasElement) {
   const r = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  r.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   r.setClearColor(0, 0); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.2;
   return r;
 }
@@ -28,17 +29,23 @@ export class Live3D {
   private scene = stage();
   private cam = new THREE.PerspectiveCamera(30, 1, 0.01, 200);
   private actor?: FactionActor;
+  private logicalSize = new THREE.Vector2();
   private t0 = performance.now();
   constructor(private el: HTMLElement) {
-    Object.assign(this.canvas.style, { width: '100%', height: '100%', display: 'block' });
+    Object.assign(this.canvas.style, { width: '100%', height: '100%', display: 'block', imageRendering: 'auto' });
     const tick = () => {
       if (this.actor && this.canvas.isConnected) {
-        const w = this.el.clientWidth, h = this.el.clientHeight;
-        if (w && h && (this.canvas.width !== w || this.canvas.height !== h)) { this.r.setSize(w, h, false); this.cam.aspect = w / h; this.cam.updateProjectionMatrix(); }
-        const t = ((performance.now() - this.t0) / 1000) % 4, atk = this.actor.role === 'captain' ? 'attack_slash' : 'shoot';
-        this.actor.pose((t > 3 ? atk : 'idle') as never, t > 3 ? t - 3 : t);
-        this.actor.root.rotation.y = Math.sin(performance.now() / 3000) * 0.35;
-        this.r.render(this.scene, this.cam);
+        const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
+        if(w && h) {
+          const ratio=Math.min(devicePixelRatio || 1, 2);
+          if(this.r.getPixelRatio()!==ratio)this.r.setPixelRatio(ratio);
+          this.r.getSize(this.logicalSize); // logical CSS pixels, independent of drawing-buffer DPR
+          if(this.logicalSize.x!==w || this.logicalSize.y!==h) { this.r.setSize(w, h, false); this.cam.aspect = w / h; this.cam.updateProjectionMatrix(); }
+          const t = ((performance.now() - this.t0) / 1000) % 4, atk = this.actor.role === 'captain' ? 'attack_slash' : 'shoot';
+          this.actor.pose((t > 3 ? atk : 'idle') as never, t > 3 ? t - 3 : t);
+          this.actor.root.rotation.y = Math.sin(performance.now() / 3000) * 0.35;
+          this.r.render(this.scene, this.cam);
+        }
       }
       requestAnimationFrame(tick);
     };

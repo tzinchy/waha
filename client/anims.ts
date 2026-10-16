@@ -64,7 +64,7 @@ function render(f: FactionId) {
     b('hq', HQ_NAME[f], 'штаб · можно строить ещё два'), b('barracks', 'Казарма', 'пехота и роли'), b('motorpool', PROD_NAME[f].motorpool, 'техцех: вся техника, тир III'), b('yard', PROD_NAME[f].yard, 'верфь титана, тир IV'),
     ...F.keys.map((n, i) => b(('key' + (i + 1)) as Kind, n, `ключевое здание тира ${['I', 'II', 'III', 'IV'][i]}`)), b('gate', F.gate, 'врата легенд, тир V'),
     card('Турель', 'тир I', artFor('turret', f), f, [['idle', 'стоит'], ['attack', 'огонь']], 110), b('turret', 'Тяжёлая турель', 'тир II', 2),
-    ...uniq.map(([k, s]) => b(k, NAMES[k] ?? k, s)),
+    ...(uniq ?? []).map(([k, s]) => b(k, NAMES[k] ?? k, s)),
     b('doom', DOOM_OF[f].name, 'сверхоружие тира V: ' + DOOM_OF[f].info),
     b('post', 'Столп I', 'точка'), b('post', 'Столп II', 'укреплённый', 2), b('post', 'Бастион', 'с турелью', 3),
     b('foundry', 'Литейня', 'энергия'), b('pump', 'Насос', 'энергия с жилы'), b('wall', 'Стена', 'укрепление'), b('wallgate', 'Ворота', 'свои проходят'), b('bunker', 'Бункер', 'пехота рядом −50% урона'), b('mine', 'Мина', 'невидима врагу'),

@@ -47,7 +47,19 @@ export function buildVehicle(K: Kit, root: THREE.Group, faction: FactionId, role
   if (role === 'aircraft') {
     hull.position.y = 0.6; turret.position.set(0, 0.2, 0.6); gun.position.set(0, -0.15, 0.9);
     left.position.set(-1.2, 0.6, -0.2); right.position.set(1.2, 0.6, -0.2); // законцовки крыльев: анимация их покачивает
-    const wingSheet = (sg: number, pts: number[], mat = m.primary) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts.map((v, i) => (i % 3 === 0 ? v * sg : v)), 3)); g.computeVertexNormals(); return piece(hull, g, mat, [0, 0, 0]); };
+    const wingSheet = (sg: number, pts: number[], mat = m.primary) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pts.map((v, i) => (i % 3 === 0 ? v * sg : v)), 3));
+      const xs = pts.filter((_, i) => i % 3 === 0), zs = pts.filter((_, i) => i % 3 === 2);
+      const minX = Math.min(...xs), minZ = Math.min(...zs);
+      const width = Math.max(0.0001, Math.max(...xs) - minX), depth = Math.max(0.0001, Math.max(...zs) - minZ);
+      const uv: number[] = [];
+      // Planar coordinates stay consistent on mirrored wings and match other mesh attributes for compaction.
+      for (let i = 0; i < pts.length; i += 3) uv.push((pts[i] - minX) / width, (pts[i + 2] - minZ) / depth);
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      g.computeVertexNormals();
+      return piece(hull, g, mat, [0, 0, 0]);
+    };
     if (faction === 'legion') {
       box(hull, [0.7, 0.55, 2.4], [0, 0, 0], m.primary); box(hull, [0.45, 0.25, 0.6], [0, 0.35, 0.55], m.glow); // фюзеляж и фонарь
       for (const sg of [-1, 1]) { box(hull, [1.4, 0.1, 0.9], [sg * 0.95, -0.05, -0.2], m.primary, [0, sg * 0.15, 0]); box(hull, [0.1, 0.5, 0.5], [sg * 0.3, 0.45, -1.0], m.trim); cylinder(hull, 0.16, 0.2, 0.5, [sg * 0.25, -0.05, -1.35], m.glow, [X, 0, 0]); }
