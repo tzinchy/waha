@@ -14,6 +14,7 @@ export type C2S =
   | { t: 'bot' }
   | { t: 'kick'; id: string }
   | { t: 'start' }
+  | { t: 'scene'; m?: number } // разработка: показательный бой у турелей
   | { t: 'cmd'; cmd: Cmd }
   | { t: 'leave' }
   | { t: 'list' } // открытые лобби для меню

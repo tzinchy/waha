@@ -1,4 +1,4 @@
-// Показательный бой без сервера: /?arena=order,orks — две армии полным составом сходятся в центре карты; &units=titan — только эти виды (через запятую).
+// Показательный бой без сервера: /?arena=tyranids,inquisition — две армии полным составом сходятся в центре карты; &units=titan — только эти виды (через запятую).
 // Симуляция идёт прямо в браузере (shared/sim.ts), клиент игры смотрит как зритель: видно все выстрелы, взрывы и пожары.
 import { Game, ready2d } from './game2d.ts';
 import { FACTIONS, isFaction, type FactionId } from '../shared/factions.ts';
@@ -24,7 +24,7 @@ function deploy(s: State) {
 
 export function runArena(param: string, root: HTMLElement) {
   const fs = param.split(',').filter(isFaction).slice(0, 2) as FactionId[];
-  while (fs.length < 2) fs.push(fs.length ? 'orks' : 'order');
+  while (fs.length < 2) fs.push(fs.length ? 'inquisition' : 'tyranids');
   setMap(0);
   const s = newState(2, fs);
   s.players.forEach(p => Object.assign(p, { tier: 5, req: 1e6, energy: 1e6, relics: 1e3 }));

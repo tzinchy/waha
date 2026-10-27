@@ -60,6 +60,51 @@ export function parseWhm(buf: ArrayBuffer): Whm {
   return out;
 }
 
+/** .whe — дерево действий DoW: действие → движения по условиям (ветки if/elseif/else), движение → клип .whm, условие → классы.
+ *  Класс — переменная юнита: скорость, «стреляет», стоящее в точке крепления оружие (первое имя — это оружие, второе — по умолчанию). */
+type WheBranch = { to: string; k: number; c: string }; // k: 0 if, 1 elseif, 2 else, 3 всегда
+export type Whe = { motions: Map<string, { anim?: string; kids?: string[] }>; actions: Map<string, { motions: WheBranch[]; branches: WheBranch[] }>; conds: Map<string, string[]>; classes: Map<string, { v: string; a?: string; b?: string }> };
+export function parseWhe(buf: ArrayBuffer): Whe {
+  const v = header(buf), out: Whe = { motions: new Map(), actions: new Map(), conds: new Map(), classes: new Map() };
+  chunks(v, 24, buf.byteLength, (c) => {
+    if (c.type !== 'DATA') return;
+    const r = new Reader(v);
+    r.p = c.start;
+    try {
+      if (c.id === 'MTON') { if (r.u32()) out.motions.set(c.name, { anim: r.str() }); else out.motions.set(c.name, { kids: Array.from({ length: r.u32() }, () => { const s = r.str(); r.f32(); return s; }) }); }
+      else if (c.id === 'COND') out.conds.set(c.name, Array.from({ length: r.u32() }, () => r.str()));
+      else if (c.id === 'CLAS') { const t = r.u32(), cl: { v: string; a?: string; b?: string } = { v: r.str() }; if (t === 2) { r.u32(); cl.a = r.str(); cl.b = r.str(); } out.classes.set(c.name, cl); }
+      else if (c.id === 'ACTS') {
+        const list = () => Array.from({ length: r.u32() }, () => { const to = r.str(), k = r.u32(); return { to, k, c: k < 2 ? r.str() : '' }; });
+        for (let i = 0, n = r.u32(); i < n; i++) { const a = r.str(); out.actions.set(a, { motions: list(), branches: list() }); }
+      }
+    } catch { /* чужой формат куска — без него */ }
+  });
+  return out;
+}
+
+/** Клипы, которые DoW включил бы для действия (default — по состоянию), в порядке дерева. weapons — стволы юнита (имена файлов оружия). */
+export function wheClips(w: Whe, action: string, state: { moving: boolean; firing: boolean }, weapons: string[]) {
+  const on = (name: string) => {
+    const c = w.classes.get(name);
+    if (!c) return false;
+    if (c.v === 'velocity') return /mov|run|walk/.test(name) === state.moving;
+    if (c.v.startsWith('weapon_range_firing')) return state.firing;
+    if (c.a) return weapons.includes(c.a) || (c.a === c.b && ![...w.classes.values()].some((x) => x.v === c.v && x.a && weapons.includes(x.a)));
+    return false; // укрытие, под огнём, случайные варианты, снаряжение
+  };
+  const test = (cond: string) => (w.conds.get(cond) ?? [cond]).every(on);
+  const each = (l: WheBranch[], f: (to: string) => void) => {
+    let taken = false;
+    for (const e of l) if (e.k === 3 || (e.k === 0 ? (taken = test(e.c)) : e.k === 1 ? !taken && (taken = test(e.c)) : !taken)) f(e.to);
+  };
+  const motions: string[] = [];
+  const run = (a: string, d: number) => { const x = w.actions.get(a); if (!x || d > 8) return; each(x.motions, (m) => motions.push(m)); each(x.branches, (b) => run(b, d + 1)); };
+  run(action, 0);
+  const anim = (m: string, d = 0): string | undefined => { const x = w.motions.get(m); return !x || d > 6 ? undefined : x.anim ?? (x.kids?.[0] && anim(x.kids[0], d + 1)); };
+  return motions.map((m) => anim(m)).filter((a): a is string => !!a);
+}
+
 function readMesh(r: Reader, name: string): WhmMesh {
   r.u32(); r.u8(); r.u32(); r.u32();
   const skin: number[] = [];

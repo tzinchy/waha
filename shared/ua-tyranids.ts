@@ -5,7 +5,9 @@ export const UA_TYRANIDS = {
    "min": 2,
    "max": 4,
    "reinforce": 200,
+   "ups": 2,
    "unit": {
+    "id": "tyranids_biovores",
     "name": "Biovores",
     "icon": "Tyranids_icons/i_biovore",
     "model": "races/tyranids/troops/biovore",
@@ -15,6 +17,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 25,
     "cost": 200,
+    "power": 50,
     "time": 20,
     "hardpoints": [
      [
@@ -38,7 +41,12 @@ export const UA_TYRANIDS = {
         "veh": 6,
         "titan": 11,
         "struct": 10
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_biovores_spores_bioacid",
@@ -60,7 +68,15 @@ export const UA_TYRANIDS = {
         "veh": 75,
         "titan": 50,
         "struct": 40
-       }
+       },
+       "cost": 20,
+       "power": 70,
+       "time": 1.600000023841858,
+       "icon": "tyranids_icons/i_spore_acid",
+       "requires": [
+        "tyranids_hq_addon_2",
+        "tyranids_biomorph_hive"
+       ]
       },
       {
        "file": "tyranids_biovores_spores_frag",
@@ -82,7 +98,16 @@ export const UA_TYRANIDS = {
         "veh": 10,
         "titan": 5,
         "struct": 10
-       }
+       },
+       "cost": 40,
+       "power": 100,
+       "time": 2,
+       "icon": "tyranids_icons/i_spore_frag",
+       "requires": [
+        "tyranids_hq_addon_2",
+        "tyranids_biomorph_hive",
+        "tyranids_arrival3_research"
+       ]
       },
       {
        "file": "tyranids_biovores_spores_toxin",
@@ -104,17 +129,41 @@ export const UA_TYRANIDS = {
         "veh": 6,
         "titan": 11,
         "struct": 10
-       }
+       },
+       "cost": 20,
+       "power": 40,
+       "time": 7,
+       "icon": "tyranids_icons/i_spore_toxin",
+       "requires": [
+        "tyranids_hq_addon_2",
+        "tyranids_biomorph_hive"
+       ]
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "broodlord": {
    "min": 3,
    "max": 6,
    "reinforce": 170,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_broodlord",
     "name": "Broodlord",
     "icon": "Tyranids_icons/i_broodlord",
     "model": "races/tyranids/troops/broodlord",
@@ -124,6 +173,7 @@ export const UA_TYRANIDS = {
     "speed": 18,
     "sight": 25,
     "cost": 170,
+    "power": 0,
     "time": 20,
     "hardpoints": [
      [
@@ -147,7 +197,12 @@ export const UA_TYRANIDS = {
         "veh": 20,
         "titan": 20,
         "struct": 15
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_scyth_broodlord",
@@ -169,17 +224,44 @@ export const UA_TYRANIDS = {
         "veh": 55,
         "titan": 70,
         "struct": 35
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "carnifex": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 1,
    "unit": {
+    "id": "tyranids_carnifex",
     "name": "Carnifex",
     "icon": "tyranids_icons/i_carnifex",
     "model": "races/tyranids/troops/carnifex",
@@ -189,6 +271,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 35,
     "cost": 700,
+    "power": 150,
     "time": 45,
     "hardpoints": [
      [
@@ -212,7 +295,12 @@ export const UA_TYRANIDS = {
         "veh": 45,
         "titan": 15,
         "struct": 17
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_barbed_strangler_carnifex",
@@ -234,7 +322,12 @@ export const UA_TYRANIDS = {
         "veh": 10,
         "titan": 5.5,
         "struct": 9
-       }
+       },
+       "cost": 120,
+       "power": 0,
+       "time": 3,
+       "icon": "Tyranids_icons/i_strangler",
+       "requires": []
       },
       {
        "file": "tyranids_venom_canon_carnifex",
@@ -256,7 +349,12 @@ export const UA_TYRANIDS = {
         "veh": 60,
         "titan": 22,
         "struct": 12
-       }
+       },
+       "cost": 120,
+       "power": 0,
+       "time": 7,
+       "icon": "tyranids_icons/i_venom",
+       "requires": []
       }
      ],
      [
@@ -280,7 +378,12 @@ export const UA_TYRANIDS = {
         "veh": 45,
         "titan": 15,
         "struct": 17
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_carnifex_crushclaw",
@@ -302,7 +405,12 @@ export const UA_TYRANIDS = {
         "veh": 65,
         "titan": 30,
         "struct": 35
-       }
+       },
+       "cost": 100,
+       "power": 0,
+       "time": 2,
+       "icon": "tyranids_icons/i_claw",
+       "requires": []
       }
      ],
      [
@@ -326,7 +434,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_bioplasma_carnifex",
@@ -348,7 +461,14 @@ export const UA_TYRANIDS = {
         "veh": 80,
         "titan": 25,
         "struct": 25
-       }
+       },
+       "cost": 120,
+       "power": 0,
+       "time": 4,
+       "icon": "Tyranids_icons/i_plasma",
+       "requires": [
+        "tyranids_arrival3_research"
+       ]
       }
      ],
      [
@@ -372,7 +492,12 @@ export const UA_TYRANIDS = {
         "veh": 45,
         "titan": 15,
         "struct": 35
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -396,17 +521,44 @@ export const UA_TYRANIDS = {
         "veh": 45,
         "titan": 15,
         "struct": 35
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_carnifex_hive"
+     ]
+    }
+   ]
   },
   "carnifex_khazi": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 1,
    "unit": {
+    "id": "tyranids_carnifex_khazi",
     "name": "Hellfex (Carnifex)",
     "icon": "tyranids_icons/i_hellfex",
     "model": "races/tyranids/troops/carnifex_khazi",
@@ -416,6 +568,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 35,
     "cost": 300,
+    "power": 0,
     "time": 25,
     "hardpoints": [
      [
@@ -439,7 +592,12 @@ export const UA_TYRANIDS = {
         "veh": 40,
         "titan": 25,
         "struct": 20
-       }
+       },
+       "cost": 25,
+       "power": 0,
+       "time": 1.399999976158142,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": []
       },
       {
        "file": "tyranids_deathspitter_khazi_carnifex",
@@ -461,7 +619,12 @@ export const UA_TYRANIDS = {
         "veh": 20,
         "titan": 35,
         "struct": 30
-       }
+       },
+       "cost": 70,
+       "power": 0,
+       "time": 2,
+       "icon": "tyranids_icons/i_spitter",
+       "requires": []
       }
      ],
      [
@@ -485,7 +648,12 @@ export const UA_TYRANIDS = {
         "veh": 40,
         "titan": 25,
         "struct": 20
-       }
+       },
+       "cost": 25,
+       "power": 0,
+       "time": 1.399999976158142,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": []
       },
       {
        "file": "tyranids_venom_canon_khazi_carnifex",
@@ -507,7 +675,15 @@ export const UA_TYRANIDS = {
         "veh": 60,
         "titan": 22,
         "struct": 12
-       }
+       },
+       "cost": 80,
+       "power": 0,
+       "time": 4,
+       "icon": "tyranids_icons/i_venom",
+       "requires": [
+        "tyranids_hq_addon_2",
+        "tyranids_biomorph_hive"
+       ]
       }
      ],
      [
@@ -531,17 +707,38 @@ export const UA_TYRANIDS = {
         "veh": 45,
         "titan": 15,
         "struct": 17
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_carnifex_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "carnifex_skiller": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_carnifex_skiller",
     "name": "Screamer Killer (Carnifex)",
     "icon": "tyranids_icons/i_screamer_killer",
     "model": "races/tyranids/troops/carnifex_skiller",
@@ -551,6 +748,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 35,
     "cost": 280,
+    "power": 100,
     "time": 25,
     "hardpoints": [
      [
@@ -574,7 +772,12 @@ export const UA_TYRANIDS = {
         "veh": 45,
         "titan": 15,
         "struct": 17
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -598,17 +801,38 @@ export const UA_TYRANIDS = {
         "veh": 45,
         "titan": 15,
         "struct": 17
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_carnifex_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "carnifex_tervigon": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_carnifex_tervigon",
     "name": "Tervigon (Carnifex)",
     "icon": "tyranids_icons/i_tervigon",
     "model": "races/tyranids/troops/carnifex_uber",
@@ -618,6 +842,7 @@ export const UA_TYRANIDS = {
     "speed": 22,
     "sight": 35,
     "cost": 1100,
+    "power": 0,
     "time": 60,
     "hardpoints": [
      [
@@ -641,7 +866,12 @@ export const UA_TYRANIDS = {
         "veh": 65,
         "titan": 45,
         "struct": 35
-       }
+       },
+       "cost": 100,
+       "power": 0,
+       "time": 2,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -665,7 +895,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -689,7 +924,12 @@ export const UA_TYRANIDS = {
         "veh": 65,
         "titan": 45,
         "struct": 35
-       }
+       },
+       "cost": 100,
+       "power": 0,
+       "time": 2,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -713,17 +953,38 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_relic_hive"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    }
+   ]
   },
   "carnifex_uber": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 1,
    "unit": {
+    "id": "tyranids_carnifex_uber",
     "name": "Uberfex (Carnifex)",
     "icon": "tyranids_icons/i_uberfex",
     "model": "races/tyranids/troops/carnifex_uber",
@@ -733,6 +994,7 @@ export const UA_TYRANIDS = {
     "speed": 22,
     "sight": 45,
     "cost": 1250,
+    "power": 0,
     "time": 60,
     "hardpoints": [
      [
@@ -756,7 +1018,12 @@ export const UA_TYRANIDS = {
         "veh": 65,
         "titan": 45,
         "struct": 35
-       }
+       },
+       "cost": 100,
+       "power": 0,
+       "time": 2,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_venom_canon_uberfex",
@@ -778,7 +1045,12 @@ export const UA_TYRANIDS = {
         "veh": 75,
         "titan": 40,
         "struct": 10
-       }
+       },
+       "cost": 120,
+       "power": 0,
+       "time": 10,
+       "icon": "tyranids_icons/i_venom",
+       "requires": []
       }
      ],
      [
@@ -802,7 +1074,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_bioplasma_uberfex",
@@ -824,7 +1101,14 @@ export const UA_TYRANIDS = {
         "veh": 15,
         "titan": 10,
         "struct": 10
-       }
+       },
+       "cost": 250,
+       "power": 0,
+       "time": 10,
+       "icon": "Tyranids_icons/i_plasma",
+       "requires": [
+        "tyranids_arrival3_research"
+       ]
       }
      ],
      [
@@ -848,7 +1132,12 @@ export const UA_TYRANIDS = {
         "veh": 65,
         "titan": 45,
         "struct": 35
-       }
+       },
+       "cost": 100,
+       "power": 0,
+       "time": 2,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_uberfex_crushclaw",
@@ -870,7 +1159,14 @@ export const UA_TYRANIDS = {
         "veh": 40,
         "titan": 45,
         "struct": 75
-       }
+       },
+       "cost": 275,
+       "power": 0,
+       "time": 15,
+       "icon": "tyranids_icons/i_claw",
+       "requires": [
+        "tyranids_assimilation_research"
+       ]
       }
      ],
      [
@@ -894,17 +1190,38 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_relic_hive"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    }
+   ]
   },
   "gargoyle": {
    "min": 6,
    "max": 15,
    "reinforce": 30,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_gargoyle",
     "name": "Gargoyles",
     "icon": "Tyranids_icons/tyranids_gargoyle_icon",
     "model": "races/tyranids/troops/gargoyle",
@@ -914,6 +1231,7 @@ export const UA_TYRANIDS = {
     "speed": 48,
     "sight": 55,
     "cost": 30,
+    "power": 0,
     "time": 1,
     "hardpoints": [
      [
@@ -937,7 +1255,14 @@ export const UA_TYRANIDS = {
         "veh": 15,
         "titan": 5.5,
         "struct": 7
-       }
+       },
+       "cost": 10,
+       "power": 0,
+       "time": 1,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": [
+        "tyranids_gaunt_devourer_research"
+       ]
       },
       {
        "file": "tyranids_devourer_gargoyle",
@@ -959,17 +1284,46 @@ export const UA_TYRANIDS = {
         "veh": 10,
         "titan": 9,
         "struct": 4
-       }
+       },
+       "cost": 10,
+       "power": 0,
+       "time": 1,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": [
+        "tyranids_gaunt_devourer_research"
+       ]
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_gaunt_hive"
+     ]
+    }
+   ]
   },
   "gargoyle_max": {
    "min": 4,
    "max": 8,
    "reinforce": 15,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_gargoyle",
     "name": "Gargoyles",
     "icon": "Tyranids_icons/tyranids_gargoyle_icon",
     "model": "races/tyranids/troops/gargoyle",
@@ -979,6 +1333,7 @@ export const UA_TYRANIDS = {
     "speed": 48,
     "sight": 55,
     "cost": 30,
+    "power": 0,
     "time": 1,
     "hardpoints": [
      [
@@ -1002,7 +1357,14 @@ export const UA_TYRANIDS = {
         "veh": 15,
         "titan": 5.5,
         "struct": 7
-       }
+       },
+       "cost": 10,
+       "power": 0,
+       "time": 1,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": [
+        "tyranids_gaunt_devourer_research"
+       ]
       },
       {
        "file": "tyranids_devourer_gargoyle",
@@ -1024,17 +1386,40 @@ export const UA_TYRANIDS = {
         "veh": 10,
         "titan": 9,
         "struct": 4
-       }
+       },
+       "cost": 10,
+       "power": 0,
+       "time": 1,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": [
+        "tyranids_gaunt_devourer_research"
+       ]
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_gaunt_hive"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ]
   },
   "gaunt_won": {
    "min": 25,
    "max": 25,
    "reinforce": 3,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_gaunt_won",
     "name": "Spinegaunt (Without Number)",
     "icon": "Tyranids_icons/i_spinegaunt_won",
     "model": "races/tyranids/troops/spinegaunt",
@@ -1044,6 +1429,7 @@ export const UA_TYRANIDS = {
     "speed": 30,
     "sight": 25,
     "cost": 0,
+    "power": 0,
     "time": 1,
     "hardpoints": [
      [
@@ -1067,7 +1453,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "Tyranids_icons/i_fist",
+       "requires": []
       }
      ],
      [
@@ -1091,17 +1482,38 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_xeno_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "genestealer": {
    "min": 4,
    "max": 4,
    "reinforce": 40,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_genestealer",
     "name": "Genestealers",
     "icon": "Tyranids_icons/i_genestealer",
     "model": "races/tyranids/troops/genestealer",
@@ -1111,6 +1523,7 @@ export const UA_TYRANIDS = {
     "speed": 18,
     "sight": 25,
     "cost": 26.25,
+    "power": 0,
     "time": 3,
     "hardpoints": [
      [
@@ -1134,7 +1547,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_scyth_genestealer",
@@ -1156,17 +1574,25 @@ export const UA_TYRANIDS = {
         "veh": 40,
         "titan": 70,
         "struct": 10
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": []
   },
   "genestealer_max": {
    "min": 2,
    "max": 4,
    "reinforce": 40,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_genestealer_max",
     "name": "Genestealers",
     "icon": "Tyranids_icons/i_genestealer",
     "model": "races/tyranids/troops/genestealer",
@@ -1176,6 +1602,7 @@ export const UA_TYRANIDS = {
     "speed": 18,
     "sight": 25,
     "cost": 0,
+    "power": 30,
     "time": 6,
     "hardpoints": [
      [
@@ -1199,7 +1626,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_scyth_genestealer",
@@ -1221,17 +1653,38 @@ export const UA_TYRANIDS = {
         "veh": 40,
         "titan": 70,
         "struct": 10
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_biomorph_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "hierophant": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 1,
    "unit": {
+    "id": "tyranids_hierophant",
     "name": "Hierophant Bio Titan",
     "icon": "tyranids_icons/i_titan",
     "model": "races/tyranids/troops/tyranids_hierophant",
@@ -1241,6 +1694,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 50,
     "cost": 6500,
+    "power": 0,
     "time": 200,
     "hardpoints": [
      [
@@ -1264,7 +1718,12 @@ export const UA_TYRANIDS = {
         "veh": 70,
         "titan": 25,
         "struct": 20
-       }
+       },
+       "cost": 80,
+       "power": 0,
+       "time": 8,
+       "icon": "tyranids_icons/i_venom",
+       "requires": []
       },
       {
        "file": "tyranids_venom_canon_improved_left_hierophant",
@@ -1286,7 +1745,12 @@ export const UA_TYRANIDS = {
         "veh": 70,
         "titan": 25,
         "struct": 20
-       }
+       },
+       "cost": 250,
+       "power": 0,
+       "time": 8,
+       "icon": "tyranids_icons/i_weapon_hierophant_venomcannon_2",
+       "requires": []
       }
      ],
      [
@@ -1310,7 +1774,12 @@ export const UA_TYRANIDS = {
         "veh": 70,
         "titan": 25,
         "struct": 20
-       }
+       },
+       "cost": 80,
+       "power": 0,
+       "time": 8,
+       "icon": "tyranids_icons/i_venom",
+       "requires": []
       },
       {
        "file": "tyranids_venom_canon_improved_hierophant",
@@ -1332,7 +1801,12 @@ export const UA_TYRANIDS = {
         "veh": 70,
         "titan": 25,
         "struct": 20
-       }
+       },
+       "cost": 250,
+       "power": 0,
+       "time": 8,
+       "icon": "tyranids_icons/i_weapon_hierophant_venomcannon_1",
+       "requires": []
       }
      ],
      [
@@ -1356,7 +1830,12 @@ export const UA_TYRANIDS = {
         "veh": 80,
         "titan": 40,
         "struct": 40
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_hiero_improved_left",
@@ -1378,7 +1857,12 @@ export const UA_TYRANIDS = {
         "veh": 80,
         "titan": 40,
         "struct": 40
-       }
+       },
+       "cost": 500,
+       "power": 0,
+       "time": 15,
+       "icon": "tyranids_icons/i_weapon_hierophant_melee_2",
+       "requires": []
       }
      ],
      [
@@ -1402,7 +1886,12 @@ export const UA_TYRANIDS = {
         "veh": 80,
         "titan": 40,
         "struct": 40
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_hiero_improved",
@@ -1424,7 +1913,12 @@ export const UA_TYRANIDS = {
         "veh": 80,
         "titan": 40,
         "struct": 40
-       }
+       },
+       "cost": 500,
+       "power": 0,
+       "time": 15,
+       "icon": "tyranids_icons/i_weapon_hierophant_melee_1",
+       "requires": []
       }
      ],
      [
@@ -1448,7 +1942,12 @@ export const UA_TYRANIDS = {
         "veh": 75,
         "titan": 30,
         "struct": 20
-       }
+       },
+       "cost": 50,
+       "power": 0,
+       "time": 1.600000023841858,
+       "icon": "tyranids_icons/i_spore_acid",
+       "requires": []
       }
      ],
      [
@@ -1472,7 +1971,12 @@ export const UA_TYRANIDS = {
         "veh": 75,
         "titan": 30,
         "struct": 20
-       }
+       },
+       "cost": 50,
+       "power": 0,
+       "time": 1.600000023841858,
+       "icon": "tyranids_icons/i_spore_acid",
+       "requires": []
       }
      ],
      [
@@ -1496,7 +2000,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_turret_mine_launcher_improved_hierophant",
@@ -1518,7 +2027,12 @@ export const UA_TYRANIDS = {
         "veh": 75,
         "titan": 30,
         "struct": 20
-       }
+       },
+       "cost": 1000,
+       "power": 0,
+       "time": 20,
+       "icon": "tyranids_icons/i_weapon_hierophant_back",
+       "requires": []
       }
      ],
      [
@@ -1542,7 +2056,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_bioplasma_hierophant",
@@ -1564,17 +2083,50 @@ export const UA_TYRANIDS = {
         "veh": 90,
         "titan": 25,
         "struct": 25
-       }
+       },
+       "cost": 300,
+       "power": 0,
+       "time": 9,
+       "icon": "Tyranids_icons/i_weapon_hierophant_head",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_biotitan_hive"
+     ]
+    }
+   ]
   },
   "hierophant_max": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 1,
    "unit": {
+    "id": "tyranids_hierophant_max",
     "name": "Hierophant Bio Titan",
     "icon": "tyranids_icons/i_titan",
     "model": "races/tyranids/troops/tyranids_hierophant",
@@ -1584,6 +2136,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 50,
     "cost": 0,
+    "power": 6500,
     "time": 270,
     "hardpoints": [
      [
@@ -1607,7 +2160,12 @@ export const UA_TYRANIDS = {
         "veh": 70,
         "titan": 25,
         "struct": 20
-       }
+       },
+       "cost": 80,
+       "power": 0,
+       "time": 8,
+       "icon": "tyranids_icons/i_venom",
+       "requires": []
       },
       {
        "file": "tyranids_venom_canon_improved_left_hierophant",
@@ -1629,7 +2187,12 @@ export const UA_TYRANIDS = {
         "veh": 70,
         "titan": 25,
         "struct": 20
-       }
+       },
+       "cost": 250,
+       "power": 0,
+       "time": 8,
+       "icon": "tyranids_icons/i_weapon_hierophant_venomcannon_2",
+       "requires": []
       }
      ],
      [
@@ -1653,7 +2216,12 @@ export const UA_TYRANIDS = {
         "veh": 70,
         "titan": 25,
         "struct": 20
-       }
+       },
+       "cost": 80,
+       "power": 0,
+       "time": 8,
+       "icon": "tyranids_icons/i_venom",
+       "requires": []
       },
       {
        "file": "tyranids_venom_canon_improved_hierophant",
@@ -1675,7 +2243,12 @@ export const UA_TYRANIDS = {
         "veh": 70,
         "titan": 25,
         "struct": 20
-       }
+       },
+       "cost": 250,
+       "power": 0,
+       "time": 8,
+       "icon": "tyranids_icons/i_weapon_hierophant_venomcannon_1",
+       "requires": []
       }
      ],
      [
@@ -1699,7 +2272,12 @@ export const UA_TYRANIDS = {
         "veh": 80,
         "titan": 40,
         "struct": 40
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_hiero_improved_left",
@@ -1721,7 +2299,12 @@ export const UA_TYRANIDS = {
         "veh": 80,
         "titan": 40,
         "struct": 40
-       }
+       },
+       "cost": 500,
+       "power": 0,
+       "time": 15,
+       "icon": "tyranids_icons/i_weapon_hierophant_melee_2",
+       "requires": []
       }
      ],
      [
@@ -1745,7 +2328,12 @@ export const UA_TYRANIDS = {
         "veh": 80,
         "titan": 40,
         "struct": 40
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_hiero_improved",
@@ -1767,7 +2355,12 @@ export const UA_TYRANIDS = {
         "veh": 80,
         "titan": 40,
         "struct": 40
-       }
+       },
+       "cost": 500,
+       "power": 0,
+       "time": 15,
+       "icon": "tyranids_icons/i_weapon_hierophant_melee_1",
+       "requires": []
       }
      ],
      [
@@ -1791,7 +2384,12 @@ export const UA_TYRANIDS = {
         "veh": 75,
         "titan": 30,
         "struct": 20
-       }
+       },
+       "cost": 50,
+       "power": 0,
+       "time": 1.600000023841858,
+       "icon": "tyranids_icons/i_spore_acid",
+       "requires": []
       }
      ],
      [
@@ -1815,7 +2413,12 @@ export const UA_TYRANIDS = {
         "veh": 75,
         "titan": 30,
         "struct": 20
-       }
+       },
+       "cost": 50,
+       "power": 0,
+       "time": 1.600000023841858,
+       "icon": "tyranids_icons/i_spore_acid",
+       "requires": []
       }
      ],
      [
@@ -1839,7 +2442,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_turret_mine_launcher_improved_hierophant",
@@ -1861,7 +2469,12 @@ export const UA_TYRANIDS = {
         "veh": 75,
         "titan": 30,
         "struct": 20
-       }
+       },
+       "cost": 1000,
+       "power": 0,
+       "time": 20,
+       "icon": "tyranids_icons/i_weapon_hierophant_back",
+       "requires": []
       }
      ],
      [
@@ -1885,7 +2498,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_bioplasma_hierophant",
@@ -1907,17 +2525,50 @@ export const UA_TYRANIDS = {
         "veh": 90,
         "titan": 25,
         "struct": 25
-       }
+       },
+       "cost": 300,
+       "power": 0,
+       "time": 9,
+       "icon": "Tyranids_icons/i_weapon_hierophant_head",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_xeno_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_biotitan_hive"
+     ]
+    }
+   ]
   },
   "hive_tyrant": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_hive_tyrant",
     "name": "Hive Tyrant",
     "icon": "Tyranids_icons/i_hivetyrant",
     "model": "races/tyranids/troops/hivetyrant",
@@ -1927,6 +2578,7 @@ export const UA_TYRANIDS = {
     "speed": 12.5,
     "sight": 40,
     "cost": 440,
+    "power": 0,
     "time": 50,
     "hardpoints": [
      [
@@ -1950,7 +2602,12 @@ export const UA_TYRANIDS = {
         "veh": 10,
         "titan": 10,
         "struct": 10
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_devourer_hivetyrant",
@@ -1972,7 +2629,12 @@ export const UA_TYRANIDS = {
         "veh": 15,
         "titan": 11.100000381469727,
         "struct": 10
-       }
+       },
+       "cost": 25,
+       "power": 0,
+       "time": 2.4000000953674316,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": []
       },
       {
        "file": "tyranids_scyth_hivetyrant",
@@ -1994,7 +2656,12 @@ export const UA_TYRANIDS = {
         "veh": 55,
         "titan": 35,
         "struct": 35
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -2018,7 +2685,12 @@ export const UA_TYRANIDS = {
         "veh": 10,
         "titan": 10,
         "struct": 10
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_scyth_hivetyrant",
@@ -2040,7 +2712,12 @@ export const UA_TYRANIDS = {
         "veh": 55,
         "titan": 35,
         "struct": 35
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_devourer_hivetyrant",
@@ -2062,7 +2739,12 @@ export const UA_TYRANIDS = {
         "veh": 15,
         "titan": 11.100000381469727,
         "struct": 10
-       }
+       },
+       "cost": 25,
+       "power": 0,
+       "time": 2.4000000953674316,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": []
       },
       {
        "file": "tyranids_barbed_strangler_hivetyrant",
@@ -2084,7 +2766,12 @@ export const UA_TYRANIDS = {
         "veh": 10,
         "titan": 5.5,
         "struct": 9
-       }
+       },
+       "cost": 30,
+       "power": 0,
+       "time": 15,
+       "icon": "Tyranids_icons/i_strangler",
+       "requires": []
       },
       {
        "file": "tyranids_venom_canon_hivetyrant",
@@ -2106,7 +2793,12 @@ export const UA_TYRANIDS = {
         "veh": 90,
         "titan": 22,
         "struct": 20
-       }
+       },
+       "cost": 80,
+       "power": 0,
+       "time": 8,
+       "icon": "tyranids_icons/i_venom",
+       "requires": []
       }
      ],
      [
@@ -2130,7 +2822,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "space_marine_dummy_weapon",
@@ -2152,7 +2849,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "space_marine_dummy_weapon",
@@ -2174,7 +2876,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -2198,7 +2905,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "space_marine_dummy_weapon",
@@ -2220,7 +2932,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -2244,7 +2961,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "space_marine_dummy_weapon",
@@ -2266,7 +2988,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -2290,7 +3017,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "space_marine_dummy_weapon",
@@ -2312,7 +3044,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "space_marine_dummy_weapon",
@@ -2334,7 +3071,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "space_marine_dummy_weapon",
@@ -2356,17 +3098,32 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "hormagaunt": {
    "min": 6,
    "max": 12,
    "reinforce": 20,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_hormagaunt",
     "name": "Hormagaunt",
     "icon": "Tyranids_icons/i_hormagaunt",
     "model": "races/tyranids/troops/hormagaunt",
@@ -2376,15 +3133,32 @@ export const UA_TYRANIDS = {
     "speed": 18,
     "sight": 25,
     "cost": 25,
+    "power": 0,
     "time": 2,
     "hardpoints": []
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_gaunt_hive"
+     ]
+    }
+   ]
   },
   "hormagaunt_max": {
    "min": 6,
    "max": 15,
    "reinforce": 15,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_hormagaunt_max",
     "name": "Hormagaunt",
     "icon": "Tyranids_icons/i_hormagaunt",
     "model": "races/tyranids/troops/hormagaunt",
@@ -2394,15 +3168,32 @@ export const UA_TYRANIDS = {
     "speed": 18,
     "sight": 25,
     "cost": 0,
+    "power": 15,
     "time": 2,
     "hardpoints": []
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_gaunt_hive"
+     ]
+    }
+   ]
   },
   "lictor": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_lictor",
     "name": "Lictor",
     "icon": "Tyranids_icons/i_lictor",
     "model": "races/tyranids/troops/lictor",
@@ -2412,6 +3203,7 @@ export const UA_TYRANIDS = {
     "speed": 24,
     "sight": 55,
     "cost": 150,
+    "power": 0,
     "time": 25,
     "hardpoints": [
      [
@@ -2435,7 +3227,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 20,
         "struct": 6
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -2459,17 +3256,25 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 20,
         "struct": 6
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": []
   },
   "lictor_alpha": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_lictor_alpha",
     "name": "Lictor Alpha",
     "icon": "Tyranids_icons/i_lictor_alpha",
     "model": "races/tyranids/troops/lictor_alpha",
@@ -2479,6 +3284,7 @@ export const UA_TYRANIDS = {
     "speed": 32,
     "sight": 55,
     "cost": 250,
+    "power": 0,
     "time": 55,
     "hardpoints": [
      [
@@ -2502,7 +3308,12 @@ export const UA_TYRANIDS = {
         "veh": 5,
         "titan": 5.5,
         "struct": 4
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -2526,17 +3337,38 @@ export const UA_TYRANIDS = {
         "veh": 5,
         "titan": 5.5,
         "struct": 4
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "ravener": {
    "min": 4,
    "max": 9,
    "reinforce": 50,
+   "ups": 2,
    "unit": {
+    "id": "tyranids_ravener",
     "name": "Ravener",
     "icon": "tyranids_icons/i_ravener",
     "model": "races/tyranids/troops/ravener",
@@ -2546,6 +3378,7 @@ export const UA_TYRANIDS = {
     "speed": 24,
     "sight": 30,
     "cost": 45,
+    "power": 0,
     "time": 7,
     "hardpoints": [
      [
@@ -2569,7 +3402,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_deathspitter_ravener",
@@ -2591,7 +3429,15 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 15,
         "struct": 0
-       }
+       },
+       "cost": 35,
+       "power": 0,
+       "time": 2,
+       "icon": "tyranids_icons/i_spitter",
+       "requires": [
+        "tyranids_hq_addon_1",
+        "tyranids_biomorph_hive"
+       ]
       },
       {
        "file": "tyranids_bioplasma_ravener",
@@ -2613,7 +3459,15 @@ export const UA_TYRANIDS = {
         "veh": 90,
         "titan": 25,
         "struct": 25
-       }
+       },
+       "cost": 85,
+       "power": 0,
+       "time": 4,
+       "icon": "Tyranids_icons/i_plasma",
+       "requires": [
+        "tyranids_arrival3_research",
+        "tyranids_biomorph_hive"
+       ]
       }
      ],
      [
@@ -2637,7 +3491,12 @@ export const UA_TYRANIDS = {
         "veh": 5,
         "titan": 10,
         "struct": 2
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_ravener_rend",
@@ -2659,7 +3518,14 @@ export const UA_TYRANIDS = {
         "veh": 55,
         "titan": 30,
         "struct": 15
-       }
+       },
+       "cost": 20,
+       "power": 0,
+       "time": 2,
+       "icon": "tyranids_icons/i_claw",
+       "requires": [
+        "tyranids_hq_addon_1"
+       ]
       }
      ],
      [
@@ -2683,17 +3549,38 @@ export const UA_TYRANIDS = {
         "veh": 5,
         "titan": 10,
         "struct": 2
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_warrior_hive"
+     ]
+    }
+   ]
   },
   "ripperswarm": {
    "min": 1,
    "max": 5,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_ripperswarm",
     "name": "Ripper Swarm",
     "icon": "Tyranids_icons/i_ripper",
     "model": "races/tyranids/troops/ripper",
@@ -2703,6 +3590,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 20,
     "cost": 50,
+    "power": 0,
     "time": 10,
     "hardpoints": [
      [
@@ -2726,17 +3614,32 @@ export const UA_TYRANIDS = {
         "veh": 25,
         "titan": 30,
         "struct": 50
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "ripperswarm_global": {
    "min": 1,
    "max": 6,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_ripperswarm_global",
     "name": "Ripper Swarm",
     "icon": "Tyranids_icons/i_ripper",
     "model": "races/tyranids/troops/ripper",
@@ -2746,6 +3649,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 20,
     "cost": 0,
+    "power": 30,
     "time": 18,
     "hardpoints": [
      [
@@ -2769,17 +3673,38 @@ export const UA_TYRANIDS = {
         "veh": 25,
         "titan": 30,
         "struct": 50
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_biomorph_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "spinegaunt": {
    "min": 4,
    "max": 10,
    "reinforce": 2,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_spinegaunt",
     "name": "Spinegaunt",
     "icon": "tyranids_icons/i_spinegant",
     "model": "races/tyranids/troops/spinegaunt",
@@ -2789,6 +3714,7 @@ export const UA_TYRANIDS = {
     "speed": 19,
     "sight": 25,
     "cost": 0,
+    "power": 0,
     "time": 4,
     "hardpoints": [
      [
@@ -2812,7 +3738,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "Tyranids_icons/i_fist",
+       "requires": []
       }
      ],
      [
@@ -2836,17 +3767,38 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_gaunt_hive"
+     ]
+    }
+   ]
   },
   "spinegaunt_max": {
    "min": 4,
    "max": 10,
    "reinforce": 2,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_spinegaunt_max",
     "name": "Spinegaunt",
     "icon": "tyranids_icons/i_spinegant",
     "model": "races/tyranids/troops/spinegaunt",
@@ -2856,6 +3808,7 @@ export const UA_TYRANIDS = {
     "speed": 19,
     "sight": 25,
     "cost": 0,
+    "power": 5,
     "time": 1,
     "hardpoints": [
      [
@@ -2879,7 +3832,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "Tyranids_icons/i_fist",
+       "requires": []
       }
      ],
      [
@@ -2903,17 +3861,38 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_gaunt_hive"
+     ]
+    }
+   ]
   },
   "spore_cluster": {
    "min": 6,
    "max": 12,
    "reinforce": 25,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_spore_cluster",
     "name": "Spore Cluster",
     "icon": "tyranids_icons/i_spore_cluster",
     "model": "races/tyranids/troops/sporemines",
@@ -2923,6 +3902,7 @@ export const UA_TYRANIDS = {
     "speed": 22,
     "sight": 15,
     "cost": 25,
+    "power": 0,
     "time": 3,
     "hardpoints": [
      [
@@ -2946,7 +3926,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 0,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "tyranids_icons/i_spitter",
+       "requires": []
       }
      ],
      [
@@ -2970,17 +3955,44 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_gaunt_hive"
+     ]
+    }
+   ]
   },
   "spore_cluster_max": {
    "min": 6,
    "max": 6,
    "reinforce": 25,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_spore_cluster_max",
     "name": "Spore Cluster",
     "icon": "tyranids_icons/i_spore_cluster",
     "model": "races/tyranids/troops/sporemines",
@@ -2990,6 +4002,7 @@ export const UA_TYRANIDS = {
     "speed": 22,
     "sight": 15,
     "cost": 0,
+    "power": 25,
     "time": 6,
     "hardpoints": [
      [
@@ -3013,7 +4026,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 0,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "tyranids_icons/i_spitter",
+       "requires": []
       }
      ],
      [
@@ -3037,17 +4055,44 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_xeno_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_gaunt_hive"
+     ]
+    }
+   ]
   },
   "spore_cluster_spam": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_spore_cluster_spam",
     "name": "",
     "icon": "tyranids_icons/i_spore_cluster",
     "model": "races/tyranids/troops/sporemines",
@@ -3057,6 +4102,7 @@ export const UA_TYRANIDS = {
     "speed": 22,
     "sight": 15,
     "cost": 0,
+    "power": 0,
     "time": 50,
     "hardpoints": [
      [
@@ -3080,7 +4126,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 0,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "tyranids_icons/i_spitter",
+       "requires": []
       }
      ],
      [
@@ -3104,17 +4155,32 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "local_addon",
+     "ids": [
+      "tyranids_turret_production_addon"
+     ]
+    }
+   ]
   },
   "swarmlord": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_swarmlord",
     "name": "Swarmlord",
     "icon": "Tyranids_icons/i_swarmlord",
     "model": "races/tyranids/troops/swarmlord",
@@ -3124,6 +4190,7 @@ export const UA_TYRANIDS = {
     "speed": 20,
     "sight": 40,
     "cost": 8000,
+    "power": 4000,
     "time": 180,
     "hardpoints": [
      [
@@ -3147,7 +4214,12 @@ export const UA_TYRANIDS = {
         "veh": 55,
         "titan": 50,
         "struct": 75
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -3171,7 +4243,12 @@ export const UA_TYRANIDS = {
         "veh": 55,
         "titan": 50,
         "struct": 75
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -3195,7 +4272,12 @@ export const UA_TYRANIDS = {
         "veh": 55,
         "titan": 50,
         "struct": 75
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -3219,17 +4301,38 @@ export const UA_TYRANIDS = {
         "veh": 55,
         "titan": 50,
         "struct": 75
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_apocalypse_research"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "termagant": {
    "min": 6,
    "max": 12,
    "reinforce": 25,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_termagant",
     "name": "Termagant",
     "icon": "Tyranids_icons/i_termagaunt",
     "model": "races/tyranids/troops/termagaunt",
@@ -3239,6 +4342,7 @@ export const UA_TYRANIDS = {
     "speed": 17,
     "sight": 25,
     "cost": 25,
+    "power": 0,
     "time": 2,
     "hardpoints": [
      [
@@ -3262,7 +4366,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "Tyranids_icons/i_borer",
+       "requires": []
       },
       {
        "file": "tyranids_devourer_gaunt",
@@ -3284,7 +4393,14 @@ export const UA_TYRANIDS = {
         "veh": 15,
         "titan": 5.5,
         "struct": 7
-       }
+       },
+       "cost": 10,
+       "power": 0,
+       "time": 1,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": [
+        "tyranids_gaunt_devourer_research"
+       ]
       }
      ],
      [
@@ -3308,17 +4424,38 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_gaunt_hive"
+     ]
+    }
+   ]
   },
   "termagant_max": {
    "min": 6,
    "max": 15,
    "reinforce": 25,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_termagant_max",
     "name": "Termagant",
     "icon": "Tyranids_icons/i_termagaunt",
     "model": "races/tyranids/troops/termagaunt",
@@ -3328,6 +4465,7 @@ export const UA_TYRANIDS = {
     "speed": 17,
     "sight": 25,
     "cost": 0,
+    "power": 15,
     "time": 2,
     "hardpoints": [
      [
@@ -3351,7 +4489,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "Tyranids_icons/i_borer",
+       "requires": []
       },
       {
        "file": "tyranids_devourer_gaunt",
@@ -3373,7 +4516,14 @@ export const UA_TYRANIDS = {
         "veh": 15,
         "titan": 5.5,
         "struct": 7
-       }
+       },
+       "cost": 10,
+       "power": 0,
+       "time": 1,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": [
+        "tyranids_gaunt_devourer_research"
+       ]
       }
      ],
      [
@@ -3397,17 +4547,38 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_gaunt_hive"
+     ]
+    }
+   ]
   },
   "trygon": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 1,
    "unit": {
+    "id": "tyranids_trygon",
     "name": "Trygon",
     "icon": "tyranids_icons/i_trygon",
     "model": "races/tyranids/troops/trygon",
@@ -3417,6 +4588,7 @@ export const UA_TYRANIDS = {
     "speed": 36,
     "sight": 40,
     "cost": 1000,
+    "power": 0,
     "time": 90,
     "hardpoints": [
      [
@@ -3440,7 +4612,12 @@ export const UA_TYRANIDS = {
         "veh": 50,
         "titan": 35,
         "struct": 19
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_trygon_crushclaw",
@@ -3462,7 +4639,14 @@ export const UA_TYRANIDS = {
         "veh": 50,
         "titan": 35,
         "struct": 25
-       }
+       },
+       "cost": 100,
+       "power": 0,
+       "time": 6,
+       "icon": "tyranids_icons/i_claw",
+       "requires": [
+        "tyranids_assimilation_research"
+       ]
       }
      ],
      [
@@ -3486,7 +4670,12 @@ export const UA_TYRANIDS = {
         "veh": 50,
         "titan": 35,
         "struct": 19
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_trygon_crushclaw",
@@ -3508,7 +4697,14 @@ export const UA_TYRANIDS = {
         "veh": 50,
         "titan": 35,
         "struct": 25
-       }
+       },
+       "cost": 100,
+       "power": 0,
+       "time": 6,
+       "icon": "tyranids_icons/i_claw",
+       "requires": [
+        "tyranids_assimilation_research"
+       ]
       }
      ],
      [
@@ -3532,7 +4728,12 @@ export const UA_TYRANIDS = {
         "veh": 50,
         "titan": 35,
         "struct": 19
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_trygon_crushclaw",
@@ -3554,7 +4755,14 @@ export const UA_TYRANIDS = {
         "veh": 50,
         "titan": 35,
         "struct": 25
-       }
+       },
+       "cost": 100,
+       "power": 0,
+       "time": 6,
+       "icon": "tyranids_icons/i_claw",
+       "requires": [
+        "tyranids_assimilation_research"
+       ]
       }
      ],
      [
@@ -3578,7 +4786,12 @@ export const UA_TYRANIDS = {
         "veh": 50,
         "titan": 35,
         "struct": 19
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_trygon_crushclaw",
@@ -3600,17 +4813,46 @@ export const UA_TYRANIDS = {
         "veh": 50,
         "titan": 35,
         "struct": 25
-       }
+       },
+       "cost": 100,
+       "power": 0,
+       "time": 6,
+       "icon": "tyranids_icons/i_claw",
+       "requires": [
+        "tyranids_assimilation_research"
+       ]
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_relic_hive"
+     ]
+    }
+   ]
   },
   "tyrant_guard": {
    "min": 2,
    "max": 2,
    "reinforce": 220,
+   "ups": 2,
    "unit": {
+    "id": "tyranids_tyrant_guard",
     "name": "Tyrant Guard",
     "icon": "tyranids_icons/i_tyrant_guard",
     "model": "races/tyranids/troops/tyrant_guard",
@@ -3620,6 +4862,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 30,
     "cost": 220,
+    "power": 0,
     "time": 20,
     "hardpoints": [
      [
@@ -3643,7 +4886,12 @@ export const UA_TYRANIDS = {
         "veh": 50,
         "titan": 20,
         "struct": 20
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_tyrant_guard_crushclaw",
@@ -3665,17 +4913,40 @@ export const UA_TYRANIDS = {
         "veh": 60,
         "titan": 20,
         "struct": 20
-       }
+       },
+       "cost": 100,
+       "power": 0,
+       "time": 2,
+       "icon": "tyranids_icons/i_claw",
+       "requires": [
+        "tyranids_hq_addon_2"
+       ]
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_carnifex_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "warrior": {
    "min": 4,
    "max": 8,
    "reinforce": 80,
+   "ups": 3,
    "unit": {
+    "id": "tyranids_warrior",
     "name": "Warrior",
     "icon": "tyranids_icons/i_warrior",
     "model": "races/tyranids/troops/warrior",
@@ -3685,6 +4956,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 30,
     "cost": 70,
+    "power": 0,
     "time": 8,
     "hardpoints": [
      [
@@ -3708,7 +4980,12 @@ export const UA_TYRANIDS = {
         "veh": 30,
         "titan": 10,
         "struct": 10
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_warrior_rend",
@@ -3730,7 +5007,12 @@ export const UA_TYRANIDS = {
         "veh": 55,
         "titan": 30,
         "struct": 15
-       }
+       },
+       "cost": 25,
+       "power": 0,
+       "time": 2,
+       "icon": "tyranids_icons/i_claw",
+       "requires": []
       },
       {
        "file": "tyranids_devourer_warrior",
@@ -3752,7 +5034,15 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 50,
+       "power": 0,
+       "time": 1.399999976158142,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": [
+        "tyranids_hq_addon_1",
+        "tyranids_biomorph_hive"
+       ]
       },
       {
        "file": "tyranids_deathspitter_warrior",
@@ -3774,7 +5064,15 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 45,
+       "power": 0,
+       "time": 2,
+       "icon": "tyranids_icons/i_spitter",
+       "requires": [
+        "tyranids_hq_addon_1",
+        "tyranids_biomorph_hive"
+       ]
       },
       {
        "file": "tyranids_venom_canon_warrior",
@@ -3796,7 +5094,15 @@ export const UA_TYRANIDS = {
         "veh": 48,
         "titan": 22,
         "struct": 14
-       }
+       },
+       "cost": 70,
+       "power": 0,
+       "time": 4,
+       "icon": "tyranids_icons/i_venom",
+       "requires": [
+        "tyranids_hq_addon_1",
+        "tyranids_biomorph_hive"
+       ]
       }
      ],
      [
@@ -3820,7 +5126,12 @@ export const UA_TYRANIDS = {
         "veh": 30,
         "titan": 10,
         "struct": 10
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -3844,7 +5155,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_bioplasma_warrior",
@@ -3866,17 +5182,47 @@ export const UA_TYRANIDS = {
         "veh": 90,
         "titan": 25,
         "struct": 25
-       }
+       },
+       "cost": 85,
+       "power": 0,
+       "time": 4,
+       "icon": "Tyranids_icons/i_plasma",
+       "requires": [
+        "tyranids_arrival3_research",
+        "tyranids_biomorph_hive"
+       ]
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_warrior_hive"
+     ]
+    }
+   ]
   },
   "warrior_max": {
    "min": 4,
    "max": 8,
    "reinforce": 80,
+   "ups": 3,
    "unit": {
+    "id": "tyranids_warrior_max",
     "name": "Warrior",
     "icon": "tyranids_icons/i_warrior",
     "model": "races/tyranids/troops/warrior",
@@ -3886,6 +5232,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 30,
     "cost": 0,
+    "power": 60,
     "time": 8,
     "hardpoints": [
      [
@@ -3909,7 +5256,12 @@ export const UA_TYRANIDS = {
         "veh": 30,
         "titan": 10,
         "struct": 10
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_melee_warrior_rend",
@@ -3931,7 +5283,12 @@ export const UA_TYRANIDS = {
         "veh": 55,
         "titan": 30,
         "struct": 15
-       }
+       },
+       "cost": 25,
+       "power": 0,
+       "time": 2,
+       "icon": "tyranids_icons/i_claw",
+       "requires": []
       },
       {
        "file": "tyranids_devourer_warrior",
@@ -3953,7 +5310,15 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5,
         "struct": 0
-       }
+       },
+       "cost": 50,
+       "power": 0,
+       "time": 1.399999976158142,
+       "icon": "tyranids_icons/i_devourer",
+       "requires": [
+        "tyranids_hq_addon_1",
+        "tyranids_biomorph_hive"
+       ]
       },
       {
        "file": "tyranids_deathspitter_warrior",
@@ -3975,7 +5340,15 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 45,
+       "power": 0,
+       "time": 2,
+       "icon": "tyranids_icons/i_spitter",
+       "requires": [
+        "tyranids_hq_addon_1",
+        "tyranids_biomorph_hive"
+       ]
       },
       {
        "file": "tyranids_venom_canon_warrior",
@@ -3997,7 +5370,15 @@ export const UA_TYRANIDS = {
         "veh": 48,
         "titan": 22,
         "struct": 14
-       }
+       },
+       "cost": 70,
+       "power": 0,
+       "time": 4,
+       "icon": "tyranids_icons/i_venom",
+       "requires": [
+        "tyranids_hq_addon_1",
+        "tyranids_biomorph_hive"
+       ]
       }
      ],
      [
@@ -4021,7 +5402,12 @@ export const UA_TYRANIDS = {
         "veh": 30,
         "titan": 10,
         "struct": 10
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ],
      [
@@ -4045,7 +5431,12 @@ export const UA_TYRANIDS = {
         "veh": 0,
         "titan": 5.5,
         "struct": 0
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       },
       {
        "file": "tyranids_bioplasma_warrior",
@@ -4067,17 +5458,47 @@ export const UA_TYRANIDS = {
         "veh": 90,
         "titan": 25,
         "struct": 25
-       }
+       },
+       "cost": 85,
+       "power": 0,
+       "time": 4,
+       "icon": "Tyranids_icons/i_plasma",
+       "requires": [
+        "tyranids_arrival3_research",
+        "tyranids_biomorph_hive"
+       ]
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_warrior_hive"
+     ]
+    }
+   ]
   },
   "woth": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_woth",
     "name": "Hivemind",
     "icon": "tyranids_icons/i_will_of_the_hive",
     "model": "races/tyranids/structures/drop_building",
@@ -4087,15 +5508,26 @@ export const UA_TYRANIDS = {
     "speed": 0,
     "sight": 0,
     "cost": 0,
+    "power": 0,
     "time": 1,
     "hardpoints": []
-   }
+   },
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "zoanthropes": {
    "min": 1,
    "max": 1,
    "reinforce": 0,
+   "ups": 0,
    "unit": {
+    "id": "tyranids_zoanthropes",
     "name": "Zoanthrope",
     "icon": "Tyranids_icons/i_zoanthrope",
     "model": "races/tyranids/troops/zoanthrope",
@@ -4105,6 +5537,7 @@ export const UA_TYRANIDS = {
     "speed": 16,
     "sight": 45,
     "cost": 340,
+    "power": 0,
     "time": 65,
     "hardpoints": [
      [
@@ -4128,7 +5561,12 @@ export const UA_TYRANIDS = {
         "veh": 65,
         "titan": 25,
         "struct": 15
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "tyranids_icons/i_blast",
+       "requires": []
       }
      ],
      [
@@ -4152,15 +5590,41 @@ export const UA_TYRANIDS = {
         "veh": 30,
         "titan": 10,
         "struct": 10
-       }
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
       }
      ]
     ]
-   }
+   },
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   }
  },
  "buildings": {
   "adv_magma_vent": {
+   "id": "tyranids_adv_magma_vent",
    "name": "Magma Vent",
    "icon": "tyranids_icons/i_magma_vent",
    "model": "races/tyranids/structures/magmavent",
@@ -4170,6 +5634,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 40,
    "cost": 275,
+   "power": 0,
    "time": 60,
    "hardpoints": [],
    "spawns": [],
@@ -4183,9 +5648,27 @@ export const UA_TYRANIDS = {
     "tyranids_building_synapse_aurax2_research",
     "tyranids_power_research",
     "tyranids_building_miasmax2_research"
+   ],
+   "addons": [
+    "tyranids_structure_shield_addon"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
    ]
   },
   "biomorph_hive": {
+   "id": "tyranids_biomorph_hive",
    "name": "Gestation Pod",
    "icon": "tyranids_icons/i_gestation_pod",
    "model": "races/tyranids/structures/stealerhive",
@@ -4195,6 +5678,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 30,
    "cost": 150,
+   "power": 0,
    "time": 60,
    "hardpoints": [],
    "spawns": [
@@ -4220,9 +5704,19 @@ export const UA_TYRANIDS = {
     "tyranids_gaunt_upgrade_research_3",
     "tyranids_gaunt_upgrade_research_1",
     "tyranids_gaunt_devourer_research"
+   ],
+   "addons": [],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
    ]
   },
   "biotitan_hive": {
+   "id": "tyranids_biotitan_hive",
    "name": "Assimilation Chamber",
    "icon": "tyranids_icons/i_titan_chamber",
    "model": "races/race_tyranid/structures/tyranid_base",
@@ -4232,6 +5726,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 40,
    "cost": 1200,
+   "power": 0,
    "time": 200,
    "hardpoints": [],
    "spawns": [
@@ -4244,9 +5739,34 @@ export const UA_TYRANIDS = {
     "tyranids_titan_bioplasma_research",
     "tyranids_titan_regen_research",
     "tyranids_assimilation_research"
+   ],
+   "addons": [
+    "tyranids_titanchamber_addon_1",
+    "tyranids_titanchamber_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    }
    ]
   },
   "capillary_tower": {
+   "id": "tyranids_capillary_tower",
    "name": "Capillary Tower",
    "icon": "tyranids_icons/i_capillary_tower",
    "model": "races/tyranids/structures/capillarytower",
@@ -4256,14 +5776,39 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 5,
    "cost": 3000,
+   "power": 0,
    "time": 180,
    "hardpoints": [],
    "spawns": [],
    "research": [
     "tyranids_assimilation_research"
+   ],
+   "addons": [
+    "addon_superweapon"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    }
    ]
   },
   "capillary_vein": {
+   "id": "tyranids_capillary_vein",
    "name": "Capillary Vein",
    "icon": "tyranids_icons/i_capillary_vein",
    "model": "races/race_tyranid/structures/capillary_tower",
@@ -4273,6 +5818,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 10,
    "cost": 100,
+   "power": 300,
    "time": 190,
    "hardpoints": [],
    "spawns": [],
@@ -4282,9 +5828,30 @@ export const UA_TYRANIDS = {
     "tyranids_requisition_research_2",
     "tyranids_requisition_research_3",
     "tyranids_requisition_research_1"
+   ],
+   "addons": [
+    "tyranids_structure_production_addon",
+    "tyranids_structure_sight_addon",
+    "tyranids_structure_regeneration_addon",
+    "tyranids_structure_shield_addon"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
    ]
   },
   "carnifex_hive": {
+   "id": "tyranids_carnifex_hive",
    "name": "Carnifex Chamber",
    "icon": "tyranids_icons/i_spawning_chamb",
    "model": "races/tyranids/structures/heavyhive",
@@ -4294,6 +5861,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 30,
    "cost": 400,
+   "power": 0,
    "time": 40,
    "hardpoints": [],
    "spawns": [
@@ -4308,9 +5876,25 @@ export const UA_TYRANIDS = {
     "tyranids_carnifex_thorned_carapace_research",
     "tyranids_carnifex_toxic_miasma_research",
     "tyranids_carnifex_ext_carapace_research"
+   ],
+   "addons": [],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
    ]
   },
   "digest_pool": {
+   "id": "tyranids_digest_pool",
    "name": "Reclamation Pool",
    "icon": "tyranids_icons/i_reclamation_pool",
    "model": "races/tyranids/structures/reclamationpool",
@@ -4320,6 +5904,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 25,
    "cost": 150,
+   "power": 0,
    "time": 50,
    "hardpoints": [],
    "spawns": [],
@@ -4333,9 +5918,25 @@ export const UA_TYRANIDS = {
     "tyranids_building_synapse_aurax2_research",
     "tyranids_power_research",
     "tyranids_building_miasmax2_research"
+   ],
+   "addons": [],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
    ]
   },
   "gaunt_hive": {
+   "id": "tyranids_gaunt_hive",
    "name": "Gaunt Hive",
    "icon": "tyranids_icons/i_hive_node",
    "model": "races/tyranids/structures/troophive",
@@ -4345,6 +5946,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 30,
    "cost": 170,
+   "power": 0,
    "time": 70,
    "hardpoints": [],
    "spawns": [
@@ -4354,9 +5956,12 @@ export const UA_TYRANIDS = {
     "tyranids_squad_spore_cluster",
     "tyranids_squad_termagant"
    ],
-   "research": []
+   "research": [],
+   "addons": [],
+   "req": []
   },
   "hq": {
+   "id": "tyranids_hq",
    "name": "Hive Spire",
    "icon": "tyranids_icons/i_hq",
    "model": "races/tyranids/structures/hq",
@@ -4366,6 +5971,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 50,
    "cost": 450,
+   "power": 0,
    "time": 150,
    "hardpoints": [],
    "spawns": [
@@ -4385,9 +5991,22 @@ export const UA_TYRANIDS = {
     "tyranids_relic_research_2",
     "tyranids_relic_research_1",
     "tyranids_caps_research_1"
+   ],
+   "addons": [
+    "tyranids_hq_addon_1",
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
    ]
   },
   "mines": {
+   "id": "tyranids_mines",
    "name": "Frag Spore Mines",
    "icon": "tyranids_icons/i_spore_cluster",
    "model": "races/tyranids/troops/sporemines",
@@ -4397,12 +6016,16 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 10,
    "cost": 25,
+   "power": 0,
    "time": 1,
    "hardpoints": [],
    "spawns": [],
-   "research": []
+   "research": [],
+   "addons": [],
+   "req": []
   },
   "relic_hive": {
+   "id": "tyranids_relic_hive",
    "name": "Tunnel Warrens",
    "icon": "tyranids_icons/i_tunnel_warrens",
    "model": "races/tyranids/structures/relichive",
@@ -4412,6 +6035,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 30,
    "cost": 635,
+   "power": 0,
    "time": 120,
    "hardpoints": [],
    "spawns": [
@@ -4421,9 +6045,31 @@ export const UA_TYRANIDS = {
    ],
    "research": [
     "tyranids_arrival3_research"
+   ],
+   "addons": [],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    }
    ]
   },
   "spore_chimney": {
+   "id": "tyranids_spore_chimney",
    "name": "Spore Chimney",
    "icon": "tyranids_icons/i_spore_chimney",
    "model": "races/tyranids/structures/sporechimney",
@@ -4433,6 +6079,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 55,
    "cost": 90,
+   "power": 0,
    "time": 30,
    "hardpoints": [],
    "spawns": [],
@@ -4442,9 +6089,15 @@ export const UA_TYRANIDS = {
     "tyranids_requisition_research_2",
     "tyranids_requisition_research_3",
     "tyranids_requisition_research_1"
-   ]
+   ],
+   "addons": [
+    "tyranids_list_post_addon_1",
+    "tyranids_list_post_addon_2"
+   ],
+   "req": []
   },
   "turret": {
+   "id": "tyranids_turret",
    "name": "",
    "icon": "tyranids_icons\\i_turret",
    "model": "races/tyranids/structures/hive_nest",
@@ -4454,6 +6107,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 55,
    "cost": 20,
+   "power": 180,
    "time": 35,
    "hardpoints": [
     [
@@ -4477,7 +6131,12 @@ export const UA_TYRANIDS = {
        "veh": 10,
        "titan": 50,
        "struct": 20
-      }
+      },
+      "cost": 0,
+      "power": 0,
+      "time": 0,
+      "icon": "space_marine_icons/upgrade",
+      "requires": []
      },
      {
       "file": "tyranids_turret_mine_launcher_bioacid",
@@ -4499,16 +6158,42 @@ export const UA_TYRANIDS = {
        "veh": 50,
        "titan": 15,
        "struct": 20
-      }
+      },
+      "cost": 0,
+      "power": 0,
+      "time": 0,
+      "icon": "space_marine_icons/upgrade",
+      "requires": []
      }
     ]
    ],
    "spawns": [
     "tyranids_squad_spore_cluster_spam"
    ],
-   "research": []
+   "research": [],
+   "addons": [
+    "tyranids_turret_production_addon",
+    "tyranids_turret_bioacid_addon",
+    "tyranids_turret_launcher_addon"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "either",
+     "ids": [
+      "tyranids_warrior_hive",
+      "tyranids_biomorph_hive"
+     ]
+    }
+   ]
   },
   "turret_bioacid": {
+   "id": "tyranids_turret_bioacid",
    "name": "Bio Acid Hive Node",
    "icon": "tyranids_icons\\i_turret_bioacid",
    "model": "races/tyranids/structures/improved_nest",
@@ -4518,6 +6203,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 75,
    "cost": 140,
+   "power": 660,
    "time": 190,
    "hardpoints": [
     [
@@ -4541,7 +6227,12 @@ export const UA_TYRANIDS = {
        "veh": 50,
        "titan": 15,
        "struct": 10
-      }
+      },
+      "cost": 0,
+      "power": 0,
+      "time": 0,
+      "icon": "space_marine_icons/upgrade",
+      "requires": []
      }
     ],
     [
@@ -4565,7 +6256,12 @@ export const UA_TYRANIDS = {
        "veh": 10,
        "titan": 50,
        "struct": 20
-      }
+      },
+      "cost": 0,
+      "power": 0,
+      "time": 0,
+      "icon": "space_marine_icons/upgrade",
+      "requires": []
      }
     ],
     [
@@ -4589,7 +6285,12 @@ export const UA_TYRANIDS = {
        "veh": 10,
        "titan": 50,
        "struct": 20
-      }
+      },
+      "cost": 0,
+      "power": 0,
+      "time": 0,
+      "icon": "space_marine_icons/upgrade",
+      "requires": []
      }
     ],
     [
@@ -4613,7 +6314,12 @@ export const UA_TYRANIDS = {
        "veh": 10,
        "titan": 50,
        "struct": 20
-      }
+      },
+      "cost": 0,
+      "power": 0,
+      "time": 0,
+      "icon": "space_marine_icons/upgrade",
+      "requires": []
      }
     ],
     [
@@ -4637,7 +6343,12 @@ export const UA_TYRANIDS = {
        "veh": 10,
        "titan": 50,
        "struct": 20
-      }
+      },
+      "cost": 0,
+      "power": 0,
+      "time": 0,
+      "icon": "space_marine_icons/upgrade",
+      "requires": []
      }
     ]
    ],
@@ -4646,9 +6357,35 @@ export const UA_TYRANIDS = {
    ],
    "research": [
     "tyranids_arrival3_research"
+   ],
+   "addons": [
+    "tyranids_turret_production_addon",
+    "tyranids_turret_launcher_addon"
+   ],
+   "req": [
+    {
+     "t": "either",
+     "ids": [
+      "tyranids_gaunt_hive",
+      "tyranids_biomorph_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    }
    ]
   },
   "warrior_hive": {
+   "id": "tyranids_warrior_hive",
    "name": "Brood Hive",
    "icon": "tyranids_icons/i_birthing_sacs",
    "model": "races/tyranids/structures/warriorhive",
@@ -4658,6 +6395,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 30,
    "cost": 180,
+   "power": 0,
    "time": 35,
    "hardpoints": [],
    "spawns": [
@@ -4669,9 +6407,19 @@ export const UA_TYRANIDS = {
     "tyranids_squad_ravener",
     "tyranids_squad_broodlord"
    ],
-   "research": []
+   "research": [],
+   "addons": [],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ]
   },
   "xeno_hive": {
+   "id": "tyranids_xeno_hive",
    "name": "Manipulator Hive",
    "icon": "tyranids_icons/i_mutation_lair",
    "model": "races/tyranids/structures/elitehive",
@@ -4681,6 +6429,7 @@ export const UA_TYRANIDS = {
    "speed": 0,
    "sight": 30,
    "cost": 290,
+   "power": 0,
    "time": 60,
    "hardpoints": [],
    "spawns": [
@@ -4691,7 +6440,4042 @@ export const UA_TYRANIDS = {
     "tyranids_errection_research",
     "tyranids_biobomb_research",
     "tyranids_hivefleet_research"
+   ],
+   "addons": [],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
    ]
+  }
+ },
+ "research": {
+  "tyranids_power_research_5": {
+   "name": "Increased Power Income V",
+   "info": "",
+   "icon": "space_marine_icons/power_inc_research_5",
+   "cost": 800,
+   "power": 100,
+   "time": 125,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "income_power_player",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "adv_magma_vent"
+  },
+  "tyranids_power_research_3": {
+   "name": "Increased Power Income III",
+   "info": "",
+   "icon": "space_marine_icons/power_inc_research_3",
+   "cost": 500,
+   "power": 60,
+   "time": 115,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "income_power_player",
+     "value": 1.25,
+     "add": false,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "adv_magma_vent"
+  },
+  "tyranids_ripper_toxin_sacs_research": {
+   "name": "Biomorph - Ripper Swarm Toxin Sacs",
+   "info": "- Tick like organisms that excrete lethal poisons into and over weapons.",
+   "icon": "tyranids_icons/i_sacs",
+   "cost": 0,
+   "power": 35,
+   "time": 30,
+   "requires": [
+    "tyranids_hq",
+    "tyranids_hq_addon_1"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "min_damage_weapon",
+     "value": 1.2999999523162842,
+     "add": false,
+     "target": "tyranids_melee_ripperswarm",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.2999999523162842,
+     "add": false,
+     "target": "tyranids_melee_ripperswarm",
+     "on": "weapon_type"
+    }
+   ],
+   "building": "adv_magma_vent"
+  },
+  "tyranids_ripper_leaping_research": {
+   "name": "Biomorph - Ripper Speed Increase",
+   "info": "- Enhances the muscles and tendons of Ripper Swarms.",
+   "icon": "tyranids_icons/i_leap",
+   "cost": 0,
+   "power": 50,
+   "time": 50,
+   "requires": [
+    "tyranids_hq",
+    "tyranids_hq_addon_1"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "speed_maximum",
+     "value": 1.3300000429153442,
+     "add": false,
+     "target": "tyranids_ripperswarm_global",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.3300000429153442,
+     "add": false,
+     "target": "tyranids_ripperswarm",
+     "on": "entity_type"
+    }
+   ],
+   "building": "adv_magma_vent"
+  },
+  "tyranids_power_research_2": {
+   "name": "Increased Power Income II",
+   "info": "",
+   "icon": "space_marine_icons/power_inc_research_2",
+   "cost": 350,
+   "power": 40,
+   "time": 95,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "income_power_player",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "adv_magma_vent"
+  },
+  "tyranids_power_research_4": {
+   "name": "Increased Power Income IV",
+   "info": "",
+   "icon": "space_marine_icons/power_inc_research_4",
+   "cost": 650,
+   "power": 80,
+   "time": 125,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "income_power_player",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "adv_magma_vent"
+  },
+  "tyranids_building_synapse_aurax2_research": {
+   "name": "Biomorph - Strengthen Synapse Aura",
+   "info": "- The Tyranids' grip tightens on the planet.",
+   "icon": "tyranids_icons/i_miasma",
+   "cost": 0,
+   "power": 250,
+   "time": 60,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [],
+   "building": "adv_magma_vent"
+  },
+  "tyranids_power_research": {
+   "name": "Increased Power Income I",
+   "info": "",
+   "icon": "space_marine_icons/power_inc_research_1",
+   "cost": 200,
+   "power": 20,
+   "time": 60,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "income_power_player",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "adv_magma_vent"
+  },
+  "tyranids_building_miasmax2_research": {
+   "name": "Biomorph - Strengthen Toxic Miasma",
+   "info": "- The Tyranids' grip tightens on the planet.",
+   "icon": "tyranids_icons/i_strengthen_toxic_miasma",
+   "cost": 0,
+   "power": 250,
+   "time": 60,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "sight_radius",
+     "value": 20,
+     "add": true,
+     "target": "tyranids_spore_chimney",
+     "on": "entity_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 5,
+     "add": true,
+     "target": "tyranids_spore_chimney",
+     "on": "entity_type"
+    }
+   ],
+   "building": "adv_magma_vent"
+  },
+  "tyranids_hormagaunt_adrenal_glands_research": {
+   "name": "Biomorph - Adrenal Glands Research I",
+   "info": "- Decreases reaction time and increases overall creature strength.",
+   "icon": "tyranids_icons/i_adrenalin",
+   "cost": 0,
+   "power": 60,
+   "time": 45,
+   "requires": [
+    "tyranids_hq_addon_1"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "min_damage_weapon",
+     "value": 1.2999999523162842,
+     "add": false,
+     "target": "tyranids_melee_hormagaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.2999999523162842,
+     "add": false,
+     "target": "tyranids_melee_hormagaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "armour_piercing_weapon",
+     "value": 7,
+     "add": true,
+     "target": "tyranids_melee_hormagaunt",
+     "on": "weapon_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_lictor_upgrade_research_1": {
+   "name": "Lictor Acclimatization I",
+   "info": "- Allows Lictors to adapt to this planet.",
+   "icon": "Tyranids_icons/i_lictor1",
+   "cost": 0,
+   "power": 75,
+   "time": 25,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "sight_radius",
+     "value": 5,
+     "add": true,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor_alpha",
+     "on": "weapon_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1666699647903442,
+     "add": false,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 100,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor_alpha",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1666699647903442,
+     "add": false,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor",
+     "on": "weapon_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 10,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 50,
+     "add": true,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_genestealer_implant_research": {
+   "name": "Biomorph - Genestealer Implant Attack",
+   "info": "- A barbed stinger delivers acids and toxins.",
+   "icon": "tyranids_icons/i_implant",
+   "cost": 0,
+   "power": 170,
+   "time": 35,
+   "requires": [
+    "tyranids_hq_addon_1"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "max_damage_weapon",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_rending_claw_genestealer",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_scyth_genestealer",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_rending_claw_genestealer",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_scyth_genestealer",
+     "on": "weapon_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_lictor_upgrade_research_2": {
+   "name": "Lictor Acclimatization II",
+   "info": "- Allows Lictors to adapt to this planet.",
+   "icon": "Tyranids_icons/i_lictor2",
+   "cost": 0,
+   "power": 95,
+   "time": 35,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "sight_radius",
+     "value": 5,
+     "add": true,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor_alpha",
+     "on": "weapon_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1666699647903442,
+     "add": false,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 100,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor_alpha",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1666699647903442,
+     "add": false,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor",
+     "on": "weapon_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 10,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 50,
+     "add": true,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_genestealer_upgrade_research_2": {
+   "name": "Genestealer Acclimatization II",
+   "info": "- Allows Genestealers to adapt to this planet.",
+   "icon": "Tyranids_icons/i_genestealer2",
+   "cost": 0,
+   "power": 120,
+   "time": 45,
+   "requires": [
+    "tyranids_hq_addon_1"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "armour",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    },
+    {
+     "type": "armour",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_squad_genestealer",
+     "on": "squad_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_squad_genestealer_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_genestealer_scyth_research": {
+   "name": "Biomorph - Genestealer Scything Talons",
+   "info": "- Changes claws to long, sharp bones.",
+   "icon": "tyranids_icons/i_scyth",
+   "cost": 0,
+   "power": 190,
+   "time": 45,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "default_weapon_modifier_hardpoint1",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    },
+    {
+     "type": "default_weapon_modifier_hardpoint1",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_warrior_leaping_research": {
+   "name": "Biomorph - Adaptive Speeds",
+   "info": "- Strengthens muscles and tendons.",
+   "icon": "tyranids_icons/i_leap",
+   "cost": 0,
+   "power": 100,
+   "time": 30,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_broodlord",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_biovores",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_warrior_hvy",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_warrior_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_ravener",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_zoanthropes",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_warrior",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_warrior_hvy_bs",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_warrior_adrenal_glands_research": {
+   "name": "Biomorph - Adrenal Glands Research I",
+   "info": "- Decreases reaction time and increases overall creature strength.",
+   "icon": "tyranids_icons/i_adrenalin_warrior",
+   "cost": 0,
+   "power": 270,
+   "time": 70,
+   "requires": [
+    "tyranids_arrival3_research",
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_maximum",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_broodlord",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_warrior_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_warrior_hvy",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_ravener_rend",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_broodlord",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_warrior",
+     "on": "entity_type"
+    },
+    {
+     "type": "armour",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_warrior_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_ravener",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_broodlord",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_zoanthropes",
+     "on": "entity_type"
+    },
+    {
+     "type": "armour",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_warrior",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_warrior",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_ravener_rend",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_warrior_rend",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_biovores",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_warrior_hvy_bs",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_ravener",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_warrior",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_ravener",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_warrior_rend",
+     "on": "weapon_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_warrior_weapons_research": {
+   "name": "",
+   "info": "",
+   "icon": "tyranids_icons/i_whip_bonesword_research",
+   "cost": 0,
+   "power": 75,
+   "time": 21,
+   "requires": [
+    "tyranids_hq_addon_1"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "max_upgrades_squad",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_squad_ravener",
+     "on": "squad_type"
+    },
+    {
+     "type": "max_upgrades_squad",
+     "value": 3,
+     "add": true,
+     "target": "tyranids_squad_warrior_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "max_upgrades_squad",
+     "value": 3,
+     "add": true,
+     "target": "tyranids_squad_warrior",
+     "on": "squad_type"
+    },
+    {
+     "type": "max_upgrades_squad",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_squad_biovores",
+     "on": "squad_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_lictor_upgrade_research_3": {
+   "name": "Lictor Acclimatization III",
+   "info": "- Allows Lictors to adapt to this planet.",
+   "icon": "Tyranids_icons/i_lictor3",
+   "cost": 0,
+   "power": 115,
+   "time": 45,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "sight_radius",
+     "value": 5,
+     "add": true,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor_alpha",
+     "on": "weapon_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1666699647903442,
+     "add": false,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 100,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor_alpha",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1666699647903442,
+     "add": false,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_lictor",
+     "on": "weapon_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 10,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 50,
+     "add": true,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_genestealer_upgrade_research_1": {
+   "name": "Genestealer Acclimatization I",
+   "info": "- Allows Genestealers to adapt to this planet.",
+   "icon": "Tyranids_icons/i_genestealer1",
+   "cost": 0,
+   "power": 100,
+   "time": 55,
+   "requires": [
+    "tyranids_hq_addon_1"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "max_troopers_squad",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_squad_genestealer",
+     "on": "squad_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_squad_genestealer_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_genestealer_tendrils_research": {
+   "name": "Biomorph - Feeder Tendrils",
+   "info": "- Genestealers, Hormagaunts, Termagaunts, Spinegaunts, Lictors, and Raveners grow Feeder Tendrils.",
+   "icon": "tyranids_icons/i_tendrils",
+   "cost": 0,
+   "power": 80,
+   "time": 28,
+   "requires": [
+    "tyranids_hq_addon_1"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_lictor",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_termagant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_hormagaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_gaunt_won",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_ravener",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_hormagaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_spinegaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 15,
+     "add": true,
+     "target": "tyranids_spinegaunt",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_genestealer_senses_research": {
+   "name": "Biomorph - Genestealer Keen Senses",
+   "info": "- Allows Genestealers to detect infiltrated units.",
+   "icon": "tyranids_icons/i_senses",
+   "cost": 0,
+   "power": 30,
+   "time": 10,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "keen_sight_radius",
+     "value": 20,
+     "add": true,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 20,
+     "add": true,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_genestealer_upgrade_research_3": {
+   "name": "Genestealer Acclimatization III",
+   "info": "- Allows Genestealers to adapt to this planet.",
+   "icon": "Tyranids_icons/i_genestealer3",
+   "cost": 0,
+   "power": 140,
+   "time": 35,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_regeneration",
+     "value": 5,
+     "add": true,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    },
+    {
+     "type": "special_attack_physics_mass",
+     "value": 60,
+     "add": true,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_squad_genestealer",
+     "on": "squad_type"
+    },
+    {
+     "type": "special_attack_physics_mass",
+     "value": 60,
+     "add": true,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 5,
+     "add": true,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_squad_genestealer_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_gaunt_upgrade_research_2": {
+   "name": "Gaunt Acclimatization II",
+   "info": "- Allows Spinegaunts, Termagants and Hormagaunts to adapt to this planet.",
+   "icon": "Tyranids_icons/i_hormagaunt2",
+   "cost": 0,
+   "power": 120,
+   "time": 35,
+   "requires": [
+    "tyranids_hq_addon_1"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_hormagaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.25,
+     "add": false,
+     "target": "tyranids_hormagaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.725000023841858,
+     "add": false,
+     "target": "tyranids_fleshborer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_squad_spinegaunt_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1666699647903442,
+     "add": false,
+     "target": "tyranids_hormagaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_gaunt_won",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_termagant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_spinegaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.25,
+     "add": false,
+     "target": "tyranids_termagant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hormagaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_termagant",
+     "on": "squad_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_termagant_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_spinefist_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_devourer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_spinegaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_termagant",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_hormagaunt",
+     "on": "squad_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_spinefist_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.15788996219635,
+     "add": false,
+     "target": "tyranids_spinegaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_hormagaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1764700412750244,
+     "add": false,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.20000000298023224,
+     "add": false,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hormagaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_hormagaunt_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_gargoyle",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 50,
+     "add": true,
+     "target": "tyranids_gargoyle",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 25,
+     "add": true,
+     "target": "tyranids_gaunt_won",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_gargoyle",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_devourer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_termagant",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_spinegaunt",
+     "on": "squad_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.15000000596046448,
+     "add": false,
+     "target": "tyranids_spinegaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.25,
+     "add": false,
+     "target": "tyranids_spinegaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.725000023841858,
+     "add": false,
+     "target": "tyranids_fleshborer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.20000000298023224,
+     "add": false,
+     "target": "tyranids_hormagaunt",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_genestealer_bl_infiltration_research": {
+   "name": "Biomorph - Infiltration/Stealth",
+   "info": "- Allows the Broodlord and Genestealers to become infiltrated.",
+   "icon": "tyranids_icons/i_infiltrate",
+   "cost": 0,
+   "power": 300,
+   "time": 50,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "enable_infiltration_veil_of_darkness",
+     "value": 1,
+     "add": false,
+     "target": "tyranids_genestealer",
+     "on": "entity_type"
+    },
+    {
+     "type": "enable_infiltration_veil_of_darkness",
+     "value": 1,
+     "add": false,
+     "target": "tyranids_broodlord",
+     "on": "entity_type"
+    },
+    {
+     "type": "enable_infiltration_veil_of_darkness",
+     "value": 1,
+     "add": false,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_gaunt_upgrade_research_3": {
+   "name": "Gaunt Acclimatization III",
+   "info": "- Allows Spinegaunts, Termagants and Hormagaunts to adapt to this planet.",
+   "icon": "Tyranids_icons/i_hormagaunt3",
+   "cost": 0,
+   "power": 140,
+   "time": 40,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_hormagaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 35,
+     "add": true,
+     "target": "tyranids_hormagaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_fleshborer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_squad_spinegaunt_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1666699647903442,
+     "add": false,
+     "target": "tyranids_hormagaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_gaunt_won",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_termagant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_spinegaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 35,
+     "add": true,
+     "target": "tyranids_termagant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hormagaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_termagant",
+     "on": "squad_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_termagant_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_spinefist_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_devourer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_spinegaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_termagant",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_hormagaunt",
+     "on": "squad_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_spinefist_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.15788996219635,
+     "add": false,
+     "target": "tyranids_spinegaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_hormagaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1764700412750244,
+     "add": false,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.20000000298023224,
+     "add": false,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hormagaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_hormagaunt_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_gargoyle",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 50,
+     "add": true,
+     "target": "tyranids_gargoyle",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 25,
+     "add": true,
+     "target": "tyranids_gaunt_won",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_gargoyle",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_devourer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_termagant",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_spinegaunt",
+     "on": "squad_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.15000000596046448,
+     "add": false,
+     "target": "tyranids_spinegaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 25,
+     "add": true,
+     "target": "tyranids_spinegaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_fleshborer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.20000000298023224,
+     "add": false,
+     "target": "tyranids_hormagaunt",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_gaunt_upgrade_research_1": {
+   "name": "Gaunt Acclimatization I",
+   "info": "- Allows Spinegaunts, Termagants and Hormagaunts to adapt to this planet.",
+   "icon": "tyranids_icons/i_hormagaunt1",
+   "cost": 0,
+   "power": 100,
+   "time": 30,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_hormagaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 35,
+     "add": true,
+     "target": "tyranids_hormagaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_fleshborer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 2,
+     "add": true,
+     "target": "tyranids_squad_spinegaunt_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1666699647903442,
+     "add": false,
+     "target": "tyranids_hormagaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_gaunt_won",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_termagant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_spinegaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 35,
+     "add": true,
+     "target": "tyranids_termagant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hormagaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_termagant",
+     "on": "squad_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_termagant_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_spinefist_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_devourer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_spinegaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_termagant",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_hormagaunt",
+     "on": "squad_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_spinefist_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.15788996219635,
+     "add": false,
+     "target": "tyranids_spinegaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_hormagaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.1764700412750244,
+     "add": false,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.20000000298023224,
+     "add": false,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hormagaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_hormagaunt_max",
+     "on": "squad_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_gargoyle",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 50,
+     "add": true,
+     "target": "tyranids_gargoyle",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 25,
+     "add": true,
+     "target": "tyranids_gaunt_won",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_gargoyle",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_devourer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_termagant",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 0.5,
+     "add": true,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_troopers_squad",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_squad_spinegaunt",
+     "on": "squad_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.15000000596046448,
+     "add": false,
+     "target": "tyranids_spinegaunt",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 25,
+     "add": true,
+     "target": "tyranids_spinegaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_fleshborer_gaunt",
+     "on": "weapon_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.20000000298023224,
+     "add": false,
+     "target": "tyranids_hormagaunt",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_gaunt_devourer_research": {
+   "name": "Biomorph - Devourer Weapon Effectiveness",
+   "info": "- Improves the damage dealt of all Devourers used by Termagaunts, Gargoyles, Warriors, and the Hive Tyrant.",
+   "icon": "tyranids_icons/i_devourer",
+   "cost": 0,
+   "power": 100,
+   "time": 45,
+   "requires": [
+    "tyranids_hq_addon_1"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "default_weapon_modifier_hardpoint1",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_gargoyle",
+     "on": "entity_type"
+    },
+    {
+     "type": "default_weapon_modifier_hardpoint1",
+     "value": 1,
+     "add": true,
+     "target": "tyranids_termagant",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biomorph_hive"
+  },
+  "tyranids_titan_armor2_research": {
+   "name": "Biomorph - Spiked Carapace",
+   "info": "- Further thickens and evolves the carapace armor of the Hierophant massively.",
+   "icon": "tyranids_icons/i_thorn",
+   "cost": 0,
+   "power": 600,
+   "time": 80,
+   "requires": [
+    "tyranids_titan_armor_research",
+    "tyranids_assimilation_research"
+   ],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_titan_armor_research"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_titan_armor_research"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "armour",
+     "value": 8,
+     "add": true,
+     "target": "tyranids_hierophant",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 4000,
+     "add": true,
+     "target": "tyranids_hierophant",
+     "on": "entity_type"
+    },
+    {
+     "type": "armour",
+     "value": 5,
+     "add": true,
+     "target": "tyranids_trygon",
+     "on": "entity_type"
+    },
+    {
+     "type": "armour",
+     "value": 8,
+     "add": true,
+     "target": "tyranids_hierophant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 2000,
+     "add": true,
+     "target": "tyranids_trygon",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 4000,
+     "add": true,
+     "target": "tyranids_hierophant_max",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biotitan_hive"
+  },
+  "tyranids_titan_armor_research": {
+   "name": "Biomorph - Bridged Carapace",
+   "info": "- Thickens and evolves the carapace armor of the Hierophant.",
+   "icon": "tyranids_icons/i_banks",
+   "cost": 0,
+   "power": 450,
+   "time": 60,
+   "requires": [
+    "tyranids_relic_hive",
+    "tyranids_assimilation_research"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_relic_hive"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_maximum",
+     "value": 4000,
+     "add": true,
+     "target": "tyranids_hierophant",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 2000,
+     "add": true,
+     "target": "tyranids_trygon",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 4000,
+     "add": true,
+     "target": "tyranids_hierophant_max",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biotitan_hive"
+  },
+  "tyranids_titan_melee_research": {
+   "name": "Biomorph - Massive Limb Improvement",
+   "info": "- Strengthens and evolves the limbs of the Hierophant.",
+   "icon": "tyranids_icons/i_bonded",
+   "cost": 0,
+   "power": 350,
+   "time": 50,
+   "requires": [
+    "tyranids_relic_hive",
+    "tyranids_assimilation_research"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_relic_hive"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hiero_improved_left",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_hierophant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hiero_improved",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hiero",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hiero_improved_left",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_hierophant",
+     "on": "entity_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hiero_improved",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_trygon",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_hiero",
+     "on": "weapon_type"
+    },
+    {
+     "type": "speed_maximum",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_trygon",
+     "on": "entity_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "tyranids_melee_trygon",
+     "on": "weapon_type"
+    }
+   ],
+   "building": "biotitan_hive"
+  },
+  "tyranids_titan_bioplasma_research": {
+   "name": "Biomorph - Bioplasma",
+   "info": "- Changes the bio organisms of the Trygon, allowing it to use vile toxins.",
+   "icon": "tyranids_icons/i_plasma",
+   "cost": 0,
+   "power": 200,
+   "time": 50,
+   "requires": [
+    "tyranids_relic_hive",
+    "tyranids_assimilation_research"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_relic_hive"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    }
+   ],
+   "mods": [],
+   "building": "biotitan_hive"
+  },
+  "tyranids_titan_regen_research": {
+   "name": "Biomorph - Regenerative Organs",
+   "info": "- Imbues the Hierophant with ultimate regenerative organs and replaceable biomass.",
+   "icon": "tyranids_icons/i_regenerate",
+   "cost": 0,
+   "power": 350,
+   "time": 50,
+   "requires": [
+    "tyranids_relic_hive",
+    "tyranids_assimilation_research"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_relic_hive"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_regeneration",
+     "value": 1.5,
+     "add": false,
+     "target": "tyranids_hierophant",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_trygon",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 1.5,
+     "add": false,
+     "target": "tyranids_hierophant_max",
+     "on": "entity_type"
+    }
+   ],
+   "building": "biotitan_hive"
+  },
+  "tyranids_assimilation_research": {
+   "name": "Planetary Assimilation (Tier IV)",
+   "info": "- Allows the Tyranids to progress to Tier IV.",
+   "icon": "tyranids_icons/planetary_assimilation",
+   "cost": 1800,
+   "power": 1200,
+   "time": 240,
+   "requires": [
+    "tyranids_relic_hive",
+    "tyranids_hq_addon_2",
+    "tyranids_arrival3_research"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_relic_hive"
+     ]
+    },
+    {
+     "t": "local_addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    }
+   ],
+   "mods": [],
+   "building": "biotitan_hive"
+  },
+  "tyranids_requisition_research_5": {
+   "name": "Increased Requisition Income V",
+   "info": "",
+   "icon": "space_marine_icons/req_inc_research_5",
+   "cost": 300,
+   "power": 1100,
+   "time": 125,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "income_requisition_player",
+     "value": 1.2000000476837158,
+     "add": false,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "capillary_vein"
+  },
+  "tyranids_requisition_research_4": {
+   "name": "Increased Requisition Income IV",
+   "info": "",
+   "icon": "space_marine_icons/req_inc_research_4",
+   "cost": 150,
+   "power": 550,
+   "time": 125,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "income_requisition_player",
+     "value": 1.100000023841858,
+     "add": false,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "capillary_vein"
+  },
+  "tyranids_requisition_research_2": {
+   "name": "Increased Requisition Income II",
+   "info": "",
+   "icon": "space_marine_icons/req_inc_research_2",
+   "cost": 100,
+   "power": 350,
+   "time": 95,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "income_requisition_player",
+     "value": 1.100000023841858,
+     "add": false,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "capillary_vein"
+  },
+  "tyranids_requisition_research_3": {
+   "name": "Increased Requisition Income III",
+   "info": "",
+   "icon": "space_marine_icons/req_inc_research_3",
+   "cost": 125,
+   "power": 450,
+   "time": 115,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "income_requisition_player",
+     "value": 1.100000023841858,
+     "add": false,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "capillary_vein"
+  },
+  "tyranids_requisition_research_1": {
+   "name": "Increased Requisition Income I",
+   "info": "",
+   "icon": "space_marine_icons/req_inc_research_1",
+   "cost": 75,
+   "power": 250,
+   "time": 60,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "income_requisition_player",
+     "value": 1.100000023841858,
+     "add": false,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "capillary_vein"
+  },
+  "tyranids_carnifex_regeneration_research": {
+   "name": "Biomorph - Carnifex Regeneration",
+   "info": "- Increases the natural Carnifex metabolism in order to accelerate healing.",
+   "icon": "tyranids_icons/i_regenerate",
+   "cost": 0,
+   "power": 170,
+   "time": 25,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_regeneration",
+     "value": 12,
+     "add": true,
+     "target": "tyranids_tyrant_guard",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 6,
+     "add": true,
+     "target": "tyranids_carnifex_skiller",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 12,
+     "add": true,
+     "target": "tyranids_carnifex_uber",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 12,
+     "add": true,
+     "target": "tyranids_carnifex_tervigon",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 12,
+     "add": true,
+     "target": "tyranids_carnifex",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 6,
+     "add": true,
+     "target": "tyranids_carnifex_khazi",
+     "on": "entity_type"
+    }
+   ],
+   "building": "carnifex_hive"
+  },
+  "tyranids_carnifex_implant_research": {
+   "name": "Biomorph - Carnifex Implant Attack",
+   "info": "- A barbed stinger delivers acids and toxins.",
+   "icon": "tyranids_icons/i_implant",
+   "cost": 0,
+   "power": 125,
+   "time": 50,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "min_damage_weapon",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_melee_uberfex",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_tyrant_guard",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_carnifex",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.25,
+     "add": false,
+     "target": "tyranids_melee_uberfex",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_carnifex_crushclaw",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_tyrant_guard",
+     "on": "weapon_type"
+    },
+    {
+     "type": "max_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_carnifex",
+     "on": "weapon_type"
+    },
+    {
+     "type": "min_damage_weapon",
+     "value": 1.149999976158142,
+     "add": false,
+     "target": "tyranids_melee_carnifex_crushclaw",
+     "on": "weapon_type"
+    }
+   ],
+   "building": "carnifex_hive"
+  },
+  "tyranids_carnifex_thorned_carapace_research": {
+   "name": "Biomorph - Spiked Carapace",
+   "info": "- Thickens and hardens carapace armor.",
+   "icon": "tyranids_icons/i_thorn",
+   "cost": 0,
+   "power": 300,
+   "time": 50,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_maximum",
+     "value": 1250,
+     "add": true,
+     "target": "tyranids_tyrant_guard",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.20000000298023224,
+     "add": false,
+     "target": "tyranids_carnifex_skiller",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 2500,
+     "add": true,
+     "target": "tyranids_carnifex_uber",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 2500,
+     "add": true,
+     "target": "tyranids_carnifex_tervigon",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.20000000298023224,
+     "add": false,
+     "target": "tyranids_carnifex",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1500,
+     "add": true,
+     "target": "tyranids_carnifex_khazi",
+     "on": "entity_type"
+    }
+   ],
+   "building": "carnifex_hive"
+  },
+  "tyranids_carnifex_toxic_miasma_research": {
+   "name": "Biomorph - Carnifex Toxic Miasma",
+   "info": "- Exudes an aura of Toxic Miasma (slows enemies and reduces damage).",
+   "icon": "tyranids_icons/i_miasma",
+   "cost": 0,
+   "power": 80,
+   "time": 25,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "keen_sight_radius",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_carnifex_skiller",
+     "on": "entity_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_carnifex_uber",
+     "on": "entity_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_carnifex_khazi",
+     "on": "entity_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_carnifex",
+     "on": "entity_type"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 4,
+     "add": true,
+     "target": "tyranids_carnifex_tervigon",
+     "on": "entity_type"
+    }
+   ],
+   "building": "carnifex_hive"
+  },
+  "tyranids_carnifex_ext_carapace_research": {
+   "name": "Biomorph - Carnifex Extended Carapace",
+   "info": "- Thickens and hardens carapace armor.",
+   "icon": "tyranids_icons/i_carapace",
+   "cost": 0,
+   "power": 200,
+   "time": 30,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "health_maximum",
+     "value": 1000,
+     "add": true,
+     "target": "tyranids_tyrant_guard",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.20000000298023224,
+     "add": false,
+     "target": "tyranids_carnifex_skiller",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 2500,
+     "add": true,
+     "target": "tyranids_carnifex_uber",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 2500,
+     "add": true,
+     "target": "tyranids_carnifex_tervigon",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 0.20000000298023224,
+     "add": false,
+     "target": "tyranids_carnifex",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1500,
+     "add": true,
+     "target": "tyranids_carnifex_khazi",
+     "on": "entity_type"
+    }
+   ],
+   "building": "carnifex_hive"
+  },
+  "tyranids_caps_research_2": {
+   "name": "Hive Expansion III",
+   "info": "",
+   "icon": "tyranids_icons/i_cap_squad_3",
+   "cost": 0,
+   "power": 150,
+   "time": 30,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "squad_cap_player",
+     "value": 30,
+     "add": true,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "hq"
+  },
+  "tyranids_caps_research": {
+   "name": "Hive Expansion I",
+   "info": "",
+   "icon": "tyranids_icons/i_cap_squad",
+   "cost": 0,
+   "power": 150,
+   "time": 30,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "squad_cap_player",
+     "value": 6,
+     "add": true,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "hq"
+  },
+  "tyranids_caps_research_4": {
+   "name": "Carnifex Expansion II",
+   "info": "",
+   "icon": "tyranids_icons/i_cap_support_2",
+   "cost": 0,
+   "power": 150,
+   "time": 30,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "support_cap_player",
+     "value": 30,
+     "add": true,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "hq"
+  },
+  "tyranids_arrival3_research": {
+   "name": "Planetary Harvest (Tier III)",
+   "info": "- Advances the Tyranids higher up the tech tree.",
+   "icon": "tyranids_icons/i_hq3",
+   "cost": 1200,
+   "power": 800,
+   "time": 180,
+   "requires": [
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "local_addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "local_addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "cost_requisition",
+     "value": 100,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 250,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_regeneration",
+     "value": 5,
+     "add": true,
+     "target": "tyranids_lictor_alpha",
+     "on": "entity_type"
+    }
+   ],
+   "building": "hq"
+  },
+  "tyranids_caps_research_3": {
+   "name": "Carnifex Expansion I",
+   "info": "",
+   "icon": "tyranids_icons/i_cap_support",
+   "cost": 0,
+   "power": 150,
+   "time": 30,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "support_cap_player",
+     "value": 12,
+     "add": true,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "hq"
+  },
+  "tyranids_apocalypse_research": {
+   "name": "Apocalypse (Tier V)",
+   "info": "- Time consuming final tier that will allow the use of win-buttons and apocalypse like technology.",
+   "icon": "npc/apocalypse_icon",
+   "cost": 8000,
+   "power": 4000,
+   "time": 300,
+   "requires": [
+    "tyranids_assimilation_research",
+    "tyranids_hq_addon_2"
+   ],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    },
+    {
+     "t": "local_addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    }
+   ],
+   "mods": [],
+   "building": "hq"
+  },
+  "tyranids_relic_research_2": {
+   "name": "Tier II Relics",
+   "info": "- Further upgrades the relics to add an extra bonus to the relic resource, along with increasing its income rates.",
+   "icon": "npc/relic_inc_research2",
+   "cost": 0,
+   "power": 3000,
+   "time": 120,
+   "requires": [
+    "tyranids_assimilation_research",
+    "tyranids_relic_research_1"
+   ],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_relic_research_1"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_relic_research_1"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "population_growth_rate_player",
+     "value": 0.4000000059604645,
+     "add": true,
+     "target": "",
+     "on": "player"
+    },
+    {
+     "type": "population_cap_player",
+     "value": 250,
+     "add": true,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "hq"
+  },
+  "tyranids_relic_research_1": {
+   "name": "Tier I Relics",
+   "info": "- Upgrades the relics to add an extra bonus to the relic resource, along with increasing its income rates.",
+   "icon": "npc/relic_inc_research1",
+   "cost": 0,
+   "power": 1500,
+   "time": 90,
+   "requires": [
+    "tyranids_arrival3_research"
+   ],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "population_growth_rate_player",
+     "value": 0.4000000059604645,
+     "add": true,
+     "target": "",
+     "on": "player"
+    },
+    {
+     "type": "population_cap_player",
+     "value": 350,
+     "add": true,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "hq"
+  },
+  "tyranids_caps_research_1": {
+   "name": "Hive Expansion II",
+   "info": "",
+   "icon": "tyranids_icons/i_cap_squad_2",
+   "cost": 0,
+   "power": 150,
+   "time": 30,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "squad_cap_player",
+     "value": 6,
+     "add": true,
+     "target": "",
+     "on": "player"
+    }
+   ],
+   "building": "hq"
+  },
+  "tyranids_eatworld_research": {
+   "name": "End Game Research - Claim World",
+   "info": "- Allows the tyranoformation of the entire planet.",
+   "icon": "tyranids_icons/i_eatworld",
+   "cost": 0,
+   "power": 30000,
+   "time": 300,
+   "requires": [
+    "tyranids_apocalypse_research"
+   ],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_apocalypse_research"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "cost_time",
+     "value": 0.05000000074505806,
+     "add": false,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_time",
+     "value": 0.05000000074505806,
+     "add": false,
+     "target": "tyranids_spore_cluster_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_power",
+     "value": 0.05000000074505806,
+     "add": false,
+     "target": "tyranids_termagant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_time",
+     "value": 0.05000000074505806,
+     "add": false,
+     "target": "tyranids_hormagaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_time",
+     "value": 0.05000000074505806,
+     "add": false,
+     "target": "tyranids_ripperswarm_global",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_time",
+     "value": 0.05000000074505806,
+     "add": false,
+     "target": "tyranids_spinegaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_power",
+     "value": 0.5,
+     "add": false,
+     "target": "tyranids_genestealer_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_time",
+     "value": 0.05000000074505806,
+     "add": false,
+     "target": "tyranids_gaunt_won",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_power",
+     "value": 0.5,
+     "add": false,
+     "target": "tyranids_hierophant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_power",
+     "value": 0.5,
+     "add": false,
+     "target": "tyranids_hormagaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_power",
+     "value": 0.5,
+     "add": false,
+     "target": "tyranids_spinegaunt_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_power",
+     "value": 0,
+     "add": false,
+     "target": "tyranids_gaunt_won",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_power",
+     "value": 0.5,
+     "add": false,
+     "target": "tyranids_spore_cluster_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_power",
+     "value": 0.5,
+     "add": false,
+     "target": "tyranids_termagant_max",
+     "on": "entity_type"
+    },
+    {
+     "type": "sight_radius",
+     "value": 2000,
+     "add": true,
+     "target": "tyranids_woth",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_power",
+     "value": 0.5,
+     "add": false,
+     "target": "tyranids_ripperswarm_global",
+     "on": "entity_type"
+    },
+    {
+     "type": "cost_time",
+     "value": 0.05000000074505806,
+     "add": false,
+     "target": "tyranids_hierophant_max",
+     "on": "entity_type"
+    }
+   ],
+   "building": "xeno_hive"
+  },
+  "tyranids_errection_research": {
+   "name": "End Game Research - Errect Ground",
+   "info": "- Allows the tyranoforming of the ground nearby a capillary tower, creating Capillary Veins.",
+   "icon": "tyranids_icons/i_capillary_errection",
+   "cost": 0,
+   "power": 5000,
+   "time": 300,
+   "requires": [
+    "tyranids_apocalypse_research"
+   ],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_apocalypse_research"
+     ]
+    }
+   ],
+   "mods": [],
+   "building": "xeno_hive"
+  },
+  "tyranids_biobomb_research": {
+   "name": "Biomorph - Biobomb",
+   "info": "- Devastating massed impact ability.",
+   "icon": "tyranids_icons/i_biobomb",
+   "cost": 0,
+   "power": 2000,
+   "time": 100,
+   "requires": [
+    "tyranids_apocalypse_research"
+   ],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_apocalypse_research"
+     ]
+    }
+   ],
+   "mods": [],
+   "building": "xeno_hive"
+  },
+  "tyranids_hivefleet_research": {
+   "name": "End Game Research - Summon The Hive Fleet",
+   "info": "- Allows Capillary Towers to summon the Hive Fleet!",
+   "icon": "tyranids_icons/i_hive_fleet_summon",
+   "cost": 0,
+   "power": 10000,
+   "time": 200,
+   "requires": [
+    "tyranids_apocalypse_research"
+   ],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_apocalypse_research"
+     ]
+    }
+   ],
+   "mods": [],
+   "building": "xeno_hive"
+  }
+ },
+ "addons": {
+  "tyranids_structure_shield_addon": {
+   "name": "Attachment: Regen Field Synapse (Add-On)",
+   "info": "- Attaches this structure with a regen like aura which will massively regenerate all allied units and structures within a 25m radius.",
+   "icon": "Tyranids_icons/i_gene_regeneration",
+   "cost": 0,
+   "power": 500,
+   "time": 190,
+   "requires": [
+    "tyranids_xeno_hive",
+    "tyranids_hq",
+    "tyranids_arrival3_research"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_xeno_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "ability_energy_field_event",
+     "value": 1,
+     "add": false,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "adv_magma_vent"
+  },
+  "tyranids_titanchamber_addon_1": {
+   "name": "Growth Chamber",
+   "info": "- CRITICAL STRUCTURE!!! Increases the population (relic resource) of the Tyranids required to advance in technology.",
+   "icon": "tyranids_icons/i_titan_chamber_addon1",
+   "cost": 600,
+   "power": 130,
+   "time": 20,
+   "requires": [
+    "tyranids_biotitan_hive"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_biotitan_hive"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "cost_requisition",
+     "value": -500,
+     "add": true,
+     "target": "tyranids_hierophant",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1000,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "biotitan_hive"
+  },
+  "tyranids_titanchamber_addon_2": {
+   "name": "Growth Chamber II",
+   "info": "- Exudes toxic miasma and synapse.",
+   "icon": "tyranids_icons/i_titan_chamber_addon2",
+   "cost": 750,
+   "power": 250,
+   "time": 70,
+   "requires": [
+    "tyranids_titanchamber_addon_1",
+    "tyranids_biotitan_hive"
+   ],
+   "req": [
+    {
+     "t": "local_addon",
+     "ids": [
+      "tyranids_titanchamber_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_biotitan_hive"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "cost_requisition",
+     "value": -500,
+     "add": true,
+     "target": "tyranids_hierophant",
+     "on": "entity_type"
+    },
+    {
+     "type": "health_maximum",
+     "value": 1000,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "biotitan_hive"
+  },
+  "addon_superweapon": {
+   "name": "Construct Superweapon",
+   "info": "- Enables the countdown of superweapons to be fired upon the battlefield.",
+   "icon": "npc/superweapon_addon_1_1",
+   "cost": 0,
+   "power": 0,
+   "time": 300,
+   "requires": [],
+   "req": [],
+   "mods": [
+    {
+     "type": "enable_abilities",
+     "value": 2,
+     "add": false,
+     "target": "",
+     "on": "entity"
+    },
+    {
+     "type": "enable_general_combat",
+     "value": 2,
+     "add": false,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "capillary_tower"
+  },
+  "tyranids_structure_production_addon": {
+   "name": "Attachment: Production Core (Add-On)",
+   "info": "- Speeds up the production rates of all structures 90m from the Capillary Vein by 40%.",
+   "icon": "Tyranids_icons/i_gene_production",
+   "cost": 0,
+   "power": 200,
+   "time": 25,
+   "requires": [
+    "tyranids_xeno_hive",
+    "tyranids_hq"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_xeno_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "production_speed",
+     "value": 2,
+     "add": false,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "capillary_vein"
+  },
+  "tyranids_structure_sight_addon": {
+   "name": "Attachment: Sight Node (Add-On)",
+   "info": "- Increases the sight and keen sight radius of this Capillary Vein.",
+   "icon": "Tyranids_icons/i_gene_sight",
+   "cost": 0,
+   "power": 80,
+   "time": 25,
+   "requires": [
+    "tyranids_hq_addon_1",
+    "tyranids_hq"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "keen_sight_radius",
+     "value": 20,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    },
+    {
+     "type": "sight_radius",
+     "value": 60,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "capillary_vein"
+  },
+  "tyranids_structure_regeneration_addon": {
+   "name": "Attachment: Regeneration Biomorph (Add-On)",
+   "info": "- Increases the health regeneration of all structures 50m from the Capillary Vein.",
+   "icon": "Tyranids_icons/obliterator_gene",
+   "cost": 0,
+   "power": 100,
+   "time": 25,
+   "requires": [
+    "tyranids_xeno_hive",
+    "tyranids_hq"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_xeno_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_regeneration",
+     "value": 6,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "capillary_vein"
+  },
+  "tyranids_hq_addon_1": {
+   "name": "Established Link (Tier I)",
+   "info": "- Matures the psychic connection with the Hive Mind in orbit.",
+   "icon": "tyranids_icons/i_hq1",
+   "cost": 250,
+   "power": 130,
+   "time": 90,
+   "requires": [
+    "tyranids_gaunt_hive",
+    "tyranids_warrior_hive",
+    "tyranids_biomorph_hive",
+    "tyranids_hq"
+   ],
+   "req": [
+    {
+     "t": "either",
+     "ids": [
+      "tyranids_gaunt_hive",
+      "tyranids_warrior_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_biomorph_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_maximum",
+     "value": 500,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "hq"
+  },
+  "tyranids_hq_addon_2": {
+   "name": "Perfect Link (Tier II)",
+   "info": "- Establishes perfect connection between the Hive Mind and the Spire.",
+   "icon": "tyranids_icons/i_hq2",
+   "cost": 600,
+   "power": 400,
+   "time": 150,
+   "requires": [
+    "tyranids_hq_addon_1",
+    "tyranids_carnifex_hive",
+    "tyranids_hq"
+   ],
+   "req": [
+    {
+     "t": "local_addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "local_addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_carnifex_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_maximum",
+     "value": 500,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "hq"
+  },
+  "tyranids_list_post_addon_1": {
+   "name": "Spore Chinmey Heavily Fortified Add-on",
+   "info": "- Fortify this Strategic Point.",
+   "icon": "tyranids_icons/i_spore_chimney1",
+   "cost": 0,
+   "power": 170,
+   "time": 35,
+   "requires": [
+    "tyranids_spore_chimney"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_spore_chimney"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "health_maximum",
+     "value": 800,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    },
+    {
+     "type": "garrison_requisition",
+     "value": 1.5,
+     "add": false,
+     "target": "",
+     "on": "entity"
+    },
+    {
+     "type": "keen_sight_radius",
+     "value": 20,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "spore_chimney"
+  },
+  "tyranids_list_post_addon_2": {
+   "name": "Spore Chinmey Heavily Fortified Add-on",
+   "info": "- Heavily fortify this Strategic Point.",
+   "icon": "tyranids_icons/i_spore_chimney2",
+   "cost": 0,
+   "power": 420,
+   "time": 55,
+   "requires": [
+    "tyranids_list_post_addon_1",
+    "tyranids_hq_addon_1",
+    "tyranids_spore_chimney"
+   ],
+   "req": [
+    {
+     "t": "local_addon",
+     "ids": [
+      "tyranids_list_post_addon_1"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_spore_chimney"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_spore_chimney"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "keen_sight_radius",
+     "value": 40,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    },
+    {
+     "type": "garrison_requisition",
+     "value": 2.1500000953674316,
+     "add": false,
+     "target": "",
+     "on": "entity"
+    },
+    {
+     "type": "health_maximum",
+     "value": 2000,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "spore_chimney"
+  },
+  "tyranids_turret_production_addon": {
+   "name": "Attachment: Spore Mine Production (Add-On)",
+   "info": "- Allows this structure to continuously produce spore mines for free.",
+   "icon": "Tyranids_icons/i_spore_frag",
+   "cost": 0,
+   "power": 200,
+   "time": 25,
+   "requires": [
+    "tyranids_hq",
+    "tyranids_xeno_hive"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_xeno_hive"
+     ]
+    }
+   ],
+   "mods": [],
+   "building": "turret"
+  },
+  "tyranids_turret_bioacid_addon": {
+   "name": "Attachment: Acid Spore Mine (Add-On)",
+   "info": "- Permanently replaces default weapon with acid spore mines as an attack.",
+   "icon": "Tyranids_icons/i_spore_acid",
+   "cost": 0,
+   "power": 60,
+   "time": 15,
+   "requires": [
+    "tyranids_hq_addon_1",
+    "tyranids_hq"
+   ],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ],
+   "mods": [
+    {
+     "type": "default_weapon_modifier_hardpoint1",
+     "value": 1,
+     "add": true,
+     "target": "",
+     "on": "entity"
+    }
+   ],
+   "building": "turret"
+  },
+  "tyranids_turret_launcher_addon": {
+   "name": "Attachment: Spore Mine Launchers (Add-On)",
+   "info": "- Allows this structure to launch a barrage of Spore Mines, both toxin and acid from a distance.",
+   "icon": "Tyranids_icons/i_spore_launch",
+   "cost": 0,
+   "power": 100,
+   "time": 15,
+   "requires": [
+    "tyranids_xeno_hive",
+    "tyranids_hq"
+   ],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_xeno_hive"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    }
+   ],
+   "mods": [],
+   "building": "turret"
   }
  }
 } as const;

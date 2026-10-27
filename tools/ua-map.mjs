@@ -41,7 +41,8 @@ for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) {
 const W = Math.round(nx * cell * K), H = Math.round(ny * cell * K);
 const def = {
   id, name, info: `${W}×${H} м, ${hq.length} игрока: карта Dawn of War, ${points.length} точек, ${relics.length} реликвии${vents.length ? `, ${vents.length} жилы` : ''}`,
-  map: { w: W, h: H }, hq, points, relics, vents, roads: [], river: [], bridges: [], plateaus: [], ruins: [], craters: [], cover: [], blocks,
+  map: { w: W, h: H }, ground: '/' + file.replace(/\.sgb$/i, '.tga').replace(/^\/?/, ''), // вид сверху из DoW — земля карты (только в разработке, где /ua/ отдаётся)
+  hq, points, relics, vents, roads: [], river: [], bridges: [], plateaus: [], ruins: [], craters: [], cover: [], blocks,
 };
 writeFileSync(`shared/map-${id}.ts`, `// Сгенерировано tools/ua-map.mjs из ${file.replace(/^.*\//, '')}. Не править руками.\nimport type { MapDef } from './mapdata.ts';\nexport const MAP_${id.toUpperCase()}: MapDef = ${JSON.stringify(def)};\n`);
 console.log('ok', id, W + '×' + H + 'м', hq.length, 'старта,', points.length, 'точек,', relics.length, 'реликвий,', vents.length, 'жил,', blocks.length, 'скал');

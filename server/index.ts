@@ -6,7 +6,8 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { MAPS, setMap, applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
+import { PLAY_MAPS } from '../shared/mapdata.ts';
+import { MAP, MAPS, setMap, spawn, applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type Kind, type State } from '../shared/sim.ts';
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import { botThink } from './bot.ts';
 import { PLAYABLE, archFor, isFaction } from '../shared/factions.ts';
@@ -102,7 +103,7 @@ function onMessage(ws: WebSocket, raw: string) {
       if (!l.match && l.members.filter(x => !x.spec).length >= MAX_PLAYERS) return err('Лобби заполнено');
     }
     const me: Member = { id: randomBytes(4).toString('hex'), name: cleanName(m.name), captain: cleanCaptain(m.captain), ready: false, bot: false, faction: PLAYABLE[0], ws };
-    if (!l) { l = { code: newCode(), host: me.id, members: [], map: 0 }; lobbies.set(l.code, l); }
+    if (!l) { l = { code: newCode(), host: me.id, members: [], map: PLAY_MAPS[0] }; lobbies.set(l.code, l); }
     if (l.match) me.spec = true; // в идущий матч — зрителем
     l.members.push(me);
     memberOf.set(ws, { lobby: l, me });
@@ -124,7 +125,25 @@ function onMessage(ws: WebSocket, raw: string) {
   else if (m.t === 'faction') { if (m.f === 'random') me.random = true; else if (isFaction(m.f) && PLAYABLE.includes(m.f)) { me.faction = m.f; me.random = false; } }
   else if (m.t === 'spec') { if (m.on || l.members.filter(x => !x.spec).length < MAX_PLAYERS) { me.spec = !!m.on; me.ready = me.spec; } }
   else if (l.host !== me.id) return err('Только хост');
-  else if (m.t === 'map') { if (Number.isInteger(m.m) && MAPS[m.m]) l.map = m.m; }
+  else if (m.t === 'scene' && process.env.NODE_ENV !== 'production') { // разработка: показательный бой тиранидов и Инквизиции у турелей, хост смотрит
+    const side = (faction: Member['faction'], name: string): Member => ({ id: randomBytes(4).toString('hex'), name, captain: cleanCaptain({}), ready: true, bot: false, faction });
+    if (Number.isInteger(m.m) && MAPS[m.m!]) l.map = m.m!;
+    l.members = [side('tyranids', 'Тираниды'), side('inquisition', 'Инквизиция'), { ...me, spec: true, ready: true }];
+    memberOf.set(ws, { lobby: l, me: l.members[2] });
+    startMatch(l);
+    const st = l.match!.state, cx = MAP.w / 2, cy = MAP.h / 2;
+    for (const p of st.players) Object.assign(p, { req: 1e5, energy: 1e5, tier: 3 });
+    st.units = st.units.filter(u => u.kind === 'hq');
+    const army: Record<number, Kind[]> = { 0: ['guard', 'guard', 'support', 'heavy', 'elite', 'mveh'], 1: ['guard', 'support', 'heavy', 'elite', 'mveh', 'hveh'] };
+    for (const o of [0, 1]) {
+      const dir = o ? 1 : -1, tx = cx + dir * 22;
+      for (const dy of [-8, 8]) spawn(st, o, 'turret', tx, cy + dy).build = 1; // турели мода стреляют своими стволами
+      const ids = army[o].map((k, i) => { const u = spawn(st, o, k, cx + dir * 45, cy - 15 + i * 6); u.hit = 99; return u.id; });
+      applyCmd(st, o, { c: 'amove', ids, x: cx - dir * 22, y: cy }); // атакой на турели противника
+    }
+    return;
+  }
+  else if (m.t === 'map') { if (Number.isInteger(m.m) && PLAY_MAPS.includes(m.m)) l.map = m.m; }
   else if (m.t === 'bot') {
     if (l.members.filter(x => !x.spec).length >= MAX_PLAYERS) return err('Лобби заполнено');
     l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({}), ready: true, bot: true, faction: PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)] });
@@ -145,6 +164,7 @@ const PROD = process.env.NODE_ENV === 'production';
 const TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.woff2': 'font/woff2', '.ico': 'image/x-icon' };
 /** Продакшен: отдаём собранный клиент (npm run build → dist), неизвестные пути — index.html. */
 async function serveStatic(req: IncomingMessage, res: ServerResponse) {
+  if (req.url?.startsWith('/ua/')) return serveUa(req, res);
   const dist = join(root, 'dist'), path = normalize(decodeURIComponent((req.url ?? '/').split('?')[0])).replace(/^(\.\.[/\\])+/, '');
   const file = join(dist, path === '/' ? 'index.html' : path);
   const body = file.startsWith(dist) ? await readFile(file).catch(() => null) : null;
@@ -154,16 +174,17 @@ async function serveStatic(req: IncomingMessage, res: ServerResponse) {
 const http = PROD
   ? createServer((req, res) => void serveStatic(req, res))
   : await devServer(); // vite нужен только в разработке
-/** Разработка: Vite + файлы мода Ultimate Apocalypse из ua/ по /ua/… (в git и в сборку не попадают). */
+/** Разработка: Vite + файлы мода по /ua/…. */
 async function devServer() {
   const vite = await (await import('vite')).createServer({ root: root + 'client', server: { middlewareMode: true, hmr: { port: 24678 }, fs: { allow: [root] } }, appType: 'spa' });
-  const ua = join(root, 'ua');
-  return createServer(async (req, res) => {
-    if (!req.url?.startsWith('/ua/')) return vite.middlewares(req, res);
-    const file = join(ua, normalize(decodeURIComponent(req.url.slice(4).split('?')[0])).replace(/^(\.\.[/\\])+/, ''));
-    const body = file.startsWith(ua) ? await readFile(file).catch(() => null) : null;
-    res.writeHead(body ? 200 : 404, { 'content-type': 'application/octet-stream' }); res.end(body);
-  });
+  return createServer((req, res) => (req.url?.startsWith('/ua/') ? void serveUa(req, res) : vite.middlewares(req, res)));
+}
+/** Файлы мода по /ua/…: полный ua/ (разработка) или отобранный ua-slim/ (tools/ua-slim.ts — его кладут на сервер). В git не попадают. */
+async function serveUa(req: IncomingMessage, res: ServerResponse) {
+  const rel = normalize(decodeURIComponent(req.url!.slice(4).split('?')[0])).replace(/^(\.\.[/\\])+/, '');
+  let body: Buffer | null = null;
+  for (const dir of [join(root, 'ua'), join(root, 'ua-slim')]) { const file = join(dir, rel); if (file.startsWith(dir) && (body = await readFile(file).catch(() => null))) break; }
+  res.writeHead(body ? 200 : 404, { 'content-type': 'application/octet-stream', 'cache-control': 'public, max-age=86400' }); res.end(body);
 }
 const wss = new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 });
 http.on('upgrade', (req, sock, head) => {

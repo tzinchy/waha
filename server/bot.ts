@@ -1,4 +1,4 @@
-import { hpOf, statOf, fromOf, PRODUCERS, GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
+import { UA_ARM, UA_RESEARCH, canReinforce, hpOf, statOf, fromOf, PRODUCERS, GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
 
 /** Бот играет по тем же правилам: казармы, второй строитель, посты на точках, гвардия с пополнением, атака на штаб. */
 export function botThink(s: State, me: number): void {
@@ -23,7 +23,7 @@ export function botThink(s: State, me: number): void {
   const of = (k: Kind) => mine.filter(u => u.kind === k);
   const army0 = mine.filter(u => !isStruct(u.kind) && u.kind !== 'builder').length;
   const builders = of('builder'), guards = of('guard'), barracks = of('barracks');
-  const req = pl.faction === 'clockwork' ? pl.energy : pl.req; // Династии платят всё энергией
+  const req = pl.req;
   const dir = Math.atan2(MAP.h / 2 - hq.y, MAP.w / 2 - hq.x);
   const d = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
@@ -52,7 +52,7 @@ export function botThink(s: State, me: number): void {
   const P0 = P; // техцех с тира III, верфь титана с тира IV
   for (const [k, t, a] of [['motorpool', 3, 2.0], ['yard', 4, -2.0]] as const) if (P0.tier >= t && !of(k).length && (!site || k === 'yard') && builders.length) // верфь — даже если идёт другая стройка; перебор мест, пока одно не подойдёт
     for (const [da, r] of [[0, 18], [0.7, 20], [-0.7, 20], [1.4, 24], [-1.4, 24], [2.6, 22], [3.14, 26], [0, 28]]) if (!applyCmd(s, me, { c: 'build', ids: (idle.length ? idle : builders).map(b => b.id), kind: k, x: hq.x + Math.cos(dir + a + da) * r, y: hq.y + Math.sin(dir + a + da) * r })) break;
-  const big = (pl.faction === 'orks' && Math.random() < 0.5 ? 'bomber' : 'titan') as Kind; // Орда строит и Бомбовоз
+  const big: Kind = 'titan';
   const yard = of('yard').find(y => y.build >= 1 && !y.que.length), titanTime = P.tier >= 4 && army0 >= 6 && !of('yard').some(y => y.que.length); // IV тир и армия есть — копим на титана, пока он не в очереди
   if (yard && s.points[0]?.owner === me) applyCmd(s, me, { c: 'train', id: yard.id, k: big });
   if ((!prio || pl.energy < 600) && barracks.some(b => b.build >= 1) && !site && idle.length && (req >= 140 || pl.energy < 200) && of('foundry').length + of('pump').length < (saving ? 2 : GEN_CAP)) { // энергия: генератор на каждый свободный якорь — жилы, свои точки, штаб
@@ -67,11 +67,14 @@ export function botThink(s: State, me: number): void {
     applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: key as 'key1', x: hq.x + Math.cos(dir - 1.2) * (8 + P.tier * 4), y: hq.y + Math.sin(dir - 1.2) * (8 + P.tier * 4) });
   }
   const F = s.players[me].faction; // особые постройки фракции
-  if (!prio && !saving && !titanTime && F === 'orks' && of('rturret').length < 2 && !site && idle.length && req >= 160) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'rturret', x: hq.x + Math.cos(dir + 0.5) * 12, y: hq.y + Math.sin(dir + 0.5) * 12 });
-  if (F === 'clockwork') applyCmd(s, me, { c: 'ascend' });
+  const UR = UA_RESEARCH[F]; // исследования UA: свободное здание, ресурсов с запасом — изучаем первое недоступное (раз в ход, чтобы не съесть всю казну)
+  if (UR && !saving && req > 400) for (const b of mine) {
+    if (!isStruct(b.kind) || b.build < 1 || b.q > 0 || b.que.length) continue;
+    const r = UR.findIndex((x, i) => x.at === b.kind && !P0.ur?.includes(i) && x.cost < req - 250 && x.energy < pl.energy - 150);
+    if (r >= 0 && !applyCmd(s, me, { c: 'uar', id: b.id, r })) break;
+  }
   const uniq = ({ order: 'battery', clockwork: 'pylon', ashen: 'pyre', eldar: 'aegis', tyranids: 'bell' } as const)[F as 'order'];
   if (!prio && !saving && !titanTime && uniq && P.tier >= 2 && !of(uniq).length && !site && idle.length) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: uniq, x: hq.x + Math.cos(dir - 0.5) * 12, y: hq.y + Math.sin(dir - 0.5) * 12 });
-  if (!titanTime && F === 'ashen' && P.tier >= 3 && !of('warpgate').length && !site && idle.length) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'warpgate', x: hq.x + Math.cos(dir + 2.6) * 16, y: hq.y + Math.sin(dir + 2.6) * 16 }); // Врата Варпа
   if (of('deity').length && s.units.some(e => e.owner !== me && e.hp > 0 && of('deity').some(g => Math.hypot(g.x - e.x, g.y - e.y) < 10))) applyCmd(s, me, { c: 'timestop' });
   const turrets = of('turret'), tSpot = [...[0.3, -0.3, 1.2, -1.2].map(a => ({ x: hq.x + Math.cos(dir + a) * 11, y: hq.y + Math.sin(dir + a) * 11 })), // турели: у штаба, потом у своих точек
     ...s.points.filter((p, i) => i !== 0 && p.owner === me).map(p => ({ x: p.x + Math.cos(Math.atan2(hq.y - p.y, hq.x - p.x)) * 6, y: p.y + Math.sin(Math.atan2(hq.y - p.y, hq.x - p.x)) * 6 }))]
@@ -86,8 +89,9 @@ export function botThink(s: State, me: number): void {
   if (broken && idle.length && !site) applyCmd(s, me, { c: 'assist', ids: [idle[0].id], id: broken.id }); // ремонт
 
   if (s.tick % 100 !== (me * 7) % 100) return; // приказы армии раз в 5 секунд
-  const squads = mine.filter(u => SQUADS.has(u.kind)), hurt = squads.filter(g => g.hp < hpOf(g));
+  const squads = mine.filter(u => SQUADS.has(u.kind)), hurt = mine.filter(g => canReinforce(s, g)); // и отряды мода: добрать до максимума
   if (hurt.length && (!saving && !titanTime || req > 400)) applyCmd(s, me, { c: 'reinforce', ids: hurt.map(g => g.id) });
+  if (!saving && !titanTime) for (const u of mine) { const A = UA_ARM[u.f!]?.[u.kind]; if (A) A.opts.some((_, w) => applyCmd(s, me, { c: 'uaw', id: u.id, w: A.opts.length - 1 - w }) === undefined); } // стволы отрядам UA: сначала поздние (сильнее)
   if (!saving && !titanTime && s.players[me].tier >= 2 && squads.length) applyCmd(s, me, { c: 'gear', ids: squads.map(u => u.id), g: 0 }); // гранаты
   const near = s.units.find(e => e.owner !== me && e.hp > 0 && !isStruct(e.kind) && squads.some(q => q.ch[0] > 0 && Math.hypot(q.x - e.x, q.y - e.y) < 16));
   if (near) applyCmd(s, me, { c: 'throw', ids: squads.map(u => u.id), g: 0, x: near.x, y: near.y });

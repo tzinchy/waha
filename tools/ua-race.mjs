@@ -47,7 +47,8 @@ function parse(file) {
 const get = (t, ...path) => path.reduce((o, k) => (o && typeof o === 'object' ? o[hash(k)] : undefined), t);
 const entries = (t) => (t && typeof t === 'object' ? Object.values(t).filter((v) => v && typeof v === 'object') : []);
 
-const ucs = Object.fromEntries(R.ucs.flatMap((f) => readFileSync(`ua/${R.mod}/Locale/English/${f}`, 'utf16le').replace(/^\uFEFF/, '').split(/\r?\n/)).map((l) => l.split('\t')).filter((a) => a.length > 1).map(([k, ...v]) => [k, v.join('\t').trim()]));
+const ucsFiles = [...new Set([...R.ucs, ...readdirSync(`ua/${R.mod}/Locale/English`).filter((f) => f.endsWith('.ucs'))])]; // все тексты мода: описания лежат в разных файлах
+const ucs = Object.fromEntries(ucsFiles.flatMap((f) => readFileSync(`ua/${R.mod}/Locale/English/${f}`, 'utf16le').replace(/^\uFEFF/, '').split(/\r?\n/)).map((l) => l.split('\t')).filter((a) => a.length > 1).map(([k, ...v]) => [k, v.join('\t').trim()]));
 const text = (id) => (typeof id === 'string' && id.startsWith('$') ? ucs[id.slice(1)] ?? '' : '');
 const lua = (p) => p.replace(/\.lua$/i, '.rgd').replace(/\\/g, '/').replace(/^(data:?\/*)?(attrib\/)?/i, ''); // бывает с префиксом data\attrib\
 
@@ -69,6 +70,9 @@ function weapon(path) {
     range: get(t, 'max_range') ?? 0, minRange: get(t, 'min_range') ?? 0, reload: get(t, 'reload_time') ?? 1, accuracy: get(t, 'accuracy') ?? 1,
     min: dmg[hash('min_damage')] ?? 0, max: dmg[hash('max_damage')] ?? 0, pierce: dmg[hash('armour_piercing')] ?? 0, morale: dmg[hash('morale_damage')] ?? 0,
     melee: !!get(t, 'melee_weapon'), aoe: get(t, 'area_effect', 'area_effect_information', 'radius') ?? 0, vs: pierce(dmg),
+    cost: get(t, 'cost', 'cost', 'requisition') ?? 0, power: get(t, 'cost', 'cost', 'power') ?? 0, time: get(t, 'cost', 'time_seconds') ?? 0, // цена апгрейда ствола
+    icon: get(t, 'ui_info', 'icon_name') ?? '', // кнопка ствола в панели отряда
+    requires: [...new Set((JSON.stringify(get(t, 'requirements') ?? {}).match(/(research|addons|ebps\\\\races\\\\[a-z_]+\\\\structures)\\\\[a-z0-9_]+/gi) ?? []).map((r) => r.replace(/^.*\\/, '')))], // что нужно изучить или построить
   };
 }
 
@@ -89,24 +93,28 @@ function entity(path) {
     if (list.length) hardpoints.push(list);
   }
   return {
+    id: path.replace(/^.*\\|\.lua$/gi, ''), // имя юнита в моде: по нему модификаторы исследований находят цель
     name: text(get(t, 'ui_ext', 'ui_info', 'screen_name_id')), icon: get(t, 'ui_ext', 'ui_info', 'icon_name') ?? '',
     model: (JSON.stringify(t).match(/"((?:art(?:\\\\|\/))?races(?:\\\\|\/)[a-z_]+(?:\\\\|\/)(?:troops|structures)(?:\\\\|\/)[A-Za-z0-9_]+)"/i)?.[1] ?? '').replace(/\\\\/g, '/').replace(/^art\//i, '').toLowerCase(),
     hp: get(t, 'health_ext', 'hitpoints') ?? 0, armour: get(t, 'health_ext', 'armour') ?? 0, regen: get(t, 'health_ext', 'regeneration_rate') ?? 0,
     speed: get(t, 'moving_ext', 'speed_max') ?? 0, sight: get(t, 'sight_ext', 'sight_radius') ?? 0,
-    cost: cost[hash('cost')]?.[hash('requisition')] ?? 0, time: cost[hash('time_seconds')] ?? 0, hardpoints,
+    cost: cost[hash('cost')]?.[hash('requisition')] ?? 0, power: cost[hash('cost')]?.[hash('power')] ?? 0, time: cost[hash('time_seconds')] ?? 0, hardpoints,
   };
 }
 
 function squad(name) {
   const t = parse(`sbps/races/${R.race}/${name}.rgd`), lo = get(t, 'squad_loadout_ext') ?? {};
   const trooper = get(t, 'squad_loadout_ext', 'trooper_base', 'type');
-  return { min: lo[hash('unit_min')] ?? 1, max: lo[hash('unit_max')] ?? 1, reinforce: get(t, 'squad_reinforce_ext', 'cost', 'cost', 'requisition') ?? 0, unit: entity(trooper) };
+  return { min: lo[hash('unit_min')] ?? 1, max: lo[hash('unit_max')] ?? 1, reinforce: get(t, 'squad_reinforce_ext', 'cost', 'cost', 'requisition') ?? 0,
+    ups: get(t, 'squad_reinforce_ext', 'max_upgrades') ?? 0, // сколько бойцов отряда можно перевооружить
+    unit: entity(trooper) };
 }
 
 function building(name) {
   const t = parse(`ebps/races/${R.race}/structures/${name}.rgd`), e = entity(`ebps\\races\\${R.race}\\structures\\${name}.lua`);
   const refs = JSON.stringify(t).match(/research\\\\[a-z0-9_]+|sbps\\\\races\\\\[a-z_]+\\\\[a-z0-9_]+/gi) ?? [];
-  return { ...e, spawns: [...new Set(refs.filter((r) => r.startsWith('sbps')).map((r) => r.replace(/^.*\\/, '')))], research: [...new Set(refs.filter((r) => r.startsWith('research')).map((r) => r.replace(/^.*\\/, '')))] };
+  const addons = [...new Set((JSON.stringify(get(t, 'addon_ext') ?? {}).match(/addons\\\\[a-z0-9_]+/gi) ?? []).map((r) => r.replace(/^.*\\/, '')))];
+  return { ...e, spawns: [...new Set(refs.filter((r) => r.startsWith('sbps')).map((r) => r.replace(/^.*\\/, '')))], research: [...new Set(refs.filter((r) => r.startsWith('research')).map((r) => r.replace(/^.*\\/, '')))], addons, req: reqs2(get(t, 'requirement_ext', 'requirements')) };
 }
 
 // все отряды и здания расы; ключ — имя файла без префикса расы
@@ -115,6 +123,39 @@ const list = (dir) => readdirSync(ROOT + dir).filter((f) => f.endsWith('.rgd') &
 const out = { squads: {}, buildings: {} };
 for (const f of list(`sbps/races/${R.race}`)) try { out.squads[strip(f)] = squad(f.replace('.rgd', '')); } catch (e) { console.warn('отряд', f, e.message); }
 for (const f of list(`ebps/races/${R.race}/structures`)) try { out.buildings[strip(f)] = building(f.replace('.rgd', '')); } catch (e) { console.warn('здание', f, e.message); }
+// исследования, которые ведут здания расы: модификаторы (что, на сколько, умножить/прибавить, на кого), цена, время, требования
+function research(name, dir = 'research') {
+  const t = parse(`${dir}/${name}.rgd`), tc = get(t, 'time_cost') ?? {}, mods = [];
+  for (const m of entries(get(t, 'modifiers'))) {
+    const ref = Object.values(m).find((v) => typeof v === 'string' && /^modifiers\\/.test(v)) ?? '';
+    if (!ref || /no_modifier/.test(ref)) continue;
+    const usage = JSON.stringify(m[hash('usage_type')] ?? '');
+    mods.push({ type: ref.replace(/^modifiers\\|_modifier\.lua$|\.lua$/g, ''), value: m[hash('value')] ?? 0, add: /addition/.test(usage), target: m[hash('target_type_name')] ?? '', on: (JSON.stringify(m[hash('application_type')] ?? '').match(/apply_to_([a-z_]+)\.lua/) ?? [])[1] ?? '' });
+  }
+  const reqs = JSON.stringify(get(t, 'requirements') ?? {}).match(/(research|addons|ebps\\\\races\\\\[a-z_]+\\\\structures)\\\\[a-z0-9_]+/gi) ?? [];
+  return { name: text(get(t, 'ui_info', 'screen_name_id')), info: text(get(t, 'ui_info', 'help_text_list', 'text_01')) || text(get(t, 'ui_info', 'help_text_id')), icon: get(t, 'ui_info', 'icon_name') ?? '',
+    cost: tc[hash('cost')]?.[hash('requisition')] ?? 0, power: tc[hash('cost')]?.[hash('power')] ?? 0, time: tc[hash('time_seconds')] ?? 0, requires: [...new Set(reqs.map((r) => r.replace(/^.*\\/, '')))], req: reqs2(get(t, 'requirements')), mods };
+}
+/** Требования мода по видам: построено здание, одно из двух зданий, есть аддон (у любого здания игрока или у этого), изучено исследование. ids — имена файлов мода. */
+function reqs2(table) {
+  const out = [];
+  for (const e of entries(table)) {
+    const vals = Object.values(e).filter((v) => typeof v === 'string'), type = vals.map((v) => v.match(/^requirements\\([a-z_]+)\.lua$/i)?.[1]).find(Boolean);
+    if (!type || type === 'required_none') continue;
+    const ids = vals.map((v) => v.match(/^(?:data\\attrib\\)?(?:ebps|addons|research)\\(?:.*\\)?([a-z0-9_]+)\.lua$/i)?.[1]).filter(Boolean);
+    const t = { required_structure: 'structure', required_structure_either: 'either', global_required_addon: 'addon', local_required_addon: 'local_addon', local_required_addon_exclusive: 'no_local_addon', required_research: 'research', required_structure_ratio: 'structure' }[type] ?? type;
+    if (ids.length) out.push({ t, ids });
+  }
+  return out;
+}
+out.research = {};
+for (const [bk, b] of Object.entries(out.buildings)) for (const r of b.research) if (!out.research[r]) try { out.research[r] = { ...research(r), building: bk }; } catch (e) { console.warn('исследование', r, e.message); }
+// аддоны зданий: покупаются у здания (в DoW — достройка), модификаторы и требования как у исследований
+const addon = (name) => research(name, 'addons');
+out.addons = {};
+for (const [bk, b] of Object.entries(out.buildings)) for (const a of b.addons) if (!out.addons[a]) try { out.addons[a] = { ...addon(a), building: bk }; } catch (e) { console.warn('аддон', a, e.message); }
+// требования отрядов (squad_requirement_ext) — отдельным проходом, чтобы не трогать squad()
+for (const f of list(`sbps/races/${R.race}`)) { const k = strip(f); if (out.squads[k]) try { out.squads[k].req = reqs2(get(parse(`sbps/races/${R.race}/${f}`), 'squad_requirement_ext', 'requirements')); } catch { /* без требований */ } }
 const file = join('shared', `ua-${process.argv[2] ?? 'tyranids'}.ts`);
 writeFileSync(file, `// Сгенерировано tools/ua-race.mjs из ${R.title}. Не править руками.\nexport const ${R.name} = ${JSON.stringify(out, null, 1)} as const;\n`);
-console.log('ok', file, Object.keys(out.squads).length, 'отрядов,', Object.keys(out.buildings).length, 'зданий');
+console.log('ok', file, Object.keys(out.squads).length, 'отрядов,', Object.keys(out.buildings).length, 'зданий,', Object.keys(out.research).length, 'исследований');

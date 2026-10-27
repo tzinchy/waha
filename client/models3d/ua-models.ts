@@ -1,9 +1,9 @@
 // Расы из модов DoW: родные модели, анимации и иконки (.whm/.rsh/.tga из ua/, сервер разработки отдаёт их по /ua/).
 // Какой вид каким отрядом мода закрыт — MOD_RACES в shared/sim.ts (оттуда же модель и иконка); здесь — только папки мода и слои оружия.
-// Файлов нет (прод-сборка, моды не распакованы) — ничего не грузится и остаются процедурные модели.
+// Файлов нет (на сервере нет ua/ или ua-slim/) — ничего не грузится и остаются процедурные модели.
 import * as THREE from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { buildWhm, meshVisible, parseRsh, parseWhm } from '../whm.ts';
+import { buildWhm, meshVisible, parseRsh, parseWhe, parseWhm, wheClips, type Whe } from '../whm.ts';
 import { MOD_RACES, UA_WEAPONS, type Kind } from '../../shared/sim.ts';
 import type { FactionId } from '../../shared/factions.ts';
 import type { FactionId as Pack } from './faction-models.ts';
@@ -16,7 +16,7 @@ type Art = {
   extra?: Partial<Record<Kind, string>>; // постройки, которых нет в моде, — подходящая модель из набора
   legend?: string[][]; // слои легенд по номеру призыва
 };
-const ART: Partial<Record<FactionId, Art>> = {
+export const ART: Partial<Record<FactionId, Art>> = {
   tyranids: {
     base: ['/ua/UltimateApocalypse_THB/data/', '/ua/Tyranids_Art/Data/'],
     layers: { heavy: ['vis_devourer', 'vis_scythingtalons', 'vis_crest_1'], support: ['vis_vis_devourer'], elite: ['vis_rendingclaws'], mveh: ['vis_bs', 'vis_stfr'], hveh: ['vis_dvfr', 'vis_dvbk'], captain: ['vis_bw', 'vis_extcaparace'] },
@@ -46,6 +46,7 @@ const WANT: Record<string, RegExp[]> = {
 
 type Template = ReturnType<typeof buildWhm>;
 const templates = new Map<string, Template>(); // ключ — база мода + путь модели
+const whes = new Map<string, Whe>(); // дерево действий модели (.whe): какой клип DoW ставит на выстрел и удар
 const textures = new Map<string, Promise<THREE.Texture | null>>();
 const icons = new Map<string, string>(); // ключ — фракция/вид[/вариант]
 
@@ -68,11 +69,26 @@ async function load(base: string[], model: string) {
   const res = await first(base, 'art/ebps/' + model + '.whm');
   if (!res) return;
   const m = parseWhm(await res.arrayBuffer());
+  const whe = await first(base, 'art/ebps/' + model + '.whe').catch(() => null);
+  if (whe) try { whes.set(model, parseWhe(await whe.arrayBuffer())); } catch { /* без дерева — клипы по именам */ }
   const paths = [...new Set(m.meshes.flatMap((s) => s.groups.map((g) => g.texture.toLowerCase())))];
   const tex = new Map(await Promise.all(paths.map(async (p) => [p, await texture(base, p)] as const)));
   templates.set(model, buildWhm(m, (p) => tex.get(p) ?? null));
 }
 
+/** Несжатый TGA 24/32 бита (иконки и виды сверху карт DoW) → холст. */
+export function tgaCanvas(b: ArrayBuffer) {
+  const v = new DataView(b), w = v.getUint16(12, true), h = v.getUint16(14, true), bpp = v.getUint8(16) / 8, top = v.getUint8(17) & 0x20, o = 18 + v.getUint8(0);
+  if (v.getUint8(2) !== 2 || (bpp !== 3 && bpp !== 4)) return null;
+  const img = new ImageData(w, h), src = new Uint8Array(b, o, w * h * bpp);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const s = ((top ? y : h - 1 - y) * w + x) * bpp, d = (y * w + x) * 4;
+    img.data[d] = src[s + 2]; img.data[d + 1] = src[s + 1]; img.data[d + 2] = src[s]; img.data[d + 3] = bpp === 4 ? src[s + 3] : 255;
+  }
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h; c.getContext('2d')!.putImageData(img, 0, 0);
+  return c;
+}
 /** Несжатый TGA 24/32 бита (иконки модов такие) → data:-URL PNG. */
 function tgaUrl(b: ArrayBuffer) {
   const v = new DataView(b), w = v.getUint16(12, true), h = v.getUint16(14, true), bpp = v.getUint8(16) / 8, top = v.getUint8(17) & 0x20, o = 18 + v.getUint8(0);
@@ -95,7 +111,7 @@ async function loadIcon(key: string, base: string[], icon: string) {
 }
 
 /** Модель и иконка вида у фракции мода (легенда — по номеру призыва). */
-function entry(f: FactionId, kind: Kind, variant = 0) {
+export function entry(f: FactionId, kind: Kind, variant = 0) {
   const race = MOD_RACES[f as keyof typeof MOD_RACES], art = ART[f];
   if (!race || !art) return null;
   const id = kind === 'legend' ? race.legends[variant] : (race.unit as Partial<Record<Kind, string>>)[kind], b = (race.build as Partial<Record<Kind, string>>)[kind];
@@ -104,11 +120,18 @@ function entry(f: FactionId, kind: Kind, variant = 0) {
   return model ? { art, model, icon: (u as { icon?: string } | undefined)?.icon ?? '' } : null;
 }
 
+/** Иконка мода по пути из его данных (ствол в панели отряда): грузится при первом запросе, до того — null. */
+const asked = new Set<string>();
+export function uaArtIcon(f: FactionId, icon: string) {
+  const key = `${f}/i/${icon}`, base = ART[f]?.base;
+  if (!icons.has(key) && base && icon && !asked.has(key)) { asked.add(key); void loadIcon(key, base, icon).catch(() => {}); }
+  return icons.get(key) ?? null;
+}
 /** Иконка мода для вида или null (мода нет / ещё грузится). */
 export const uaIcon = (kind: Kind, variant = 0, f: FactionId = 'tyranids') => icons.get(`${f}/${kind}${kind === 'legend' ? '/' + variant : ''}`) ?? null;
 
 /** Грузит модели и иконки всех рас из модов один раз; запускается при открытии страницы, до начала матча. */
-export const uaReady = import.meta.env.DEV ? Promise.all((Object.keys(ART) as FactionId[]).flatMap((f) => {
+export const uaReady = typeof fetch !== 'undefined' && typeof document !== 'undefined' ? Promise.all((Object.keys(ART) as FactionId[]).flatMap((f) => {
   const race = MOD_RACES[f as keyof typeof MOD_RACES], kinds = [...Object.keys(race.unit), ...Object.keys(race.build), ...Object.keys(ART[f]!.extra ?? {})] as Kind[];
   const all = [...kinds.map((k) => [k, 0] as const), ...race.legends.map((_, i) => ['legend', i] as const)];
   return all.flatMap(([k, v]) => {
@@ -124,7 +147,7 @@ export class UAActor {
   private meshes: THREE.Object3D[] = [];
   private clip: THREE.AnimationClip | null = null;
   private picks = new Map<string, THREE.AnimationClip | null>();
-  constructor(private t: Template, private layers: string[], private buildTime = 1) {
+  constructor(private t: Template, private layers: string[], private buildTime = 1, private whe?: Whe, private weapons: string[] = []) {
     const model = clone(t.root);
     model.traverse((o) => { if ((o as THREE.SkinnedMesh).isSkinnedMesh) this.meshes.push(o); });
     this.root.add(model);
@@ -134,6 +157,11 @@ export class UAActor {
   private pick(motion: string) {
     if (!this.picks.has(motion)) {
       const clips = this.t.clips.filter((c) => !SKIP.test(c.name));
+      // выстрел и удар — как в моде: клип из дерева действий .whe под стволы этого юнита
+      const act = this.whe && (motion === 'shoot' ? 'default' : motion === 'attack' ? 'melee_attack' : '');
+      const own = act ? wheClips(this.whe!, act, { moving: false, firing: motion === 'shoot' }, this.weapons).filter((n) => /fire|firing|shoot|melee|attack|strike/i.test(n) && !/aim|track|^vis|^ref/i.test(n)) // прицел и видимость — вспомогательные слои, играем сам выстрел
+        .map((n) => this.t.clips.find((c) => c.name.toLowerCase() === n.toLowerCase())).find(Boolean) : undefined;
+      if (own) { this.picks.set(motion, own); return own; }
       this.picks.set(motion, (WANT[motion] ?? []).concat(WANT.idle).map((re) => clips.find((c) => re.test(c.name))).find(Boolean) ?? this.t.clips[0] ?? null);
     }
     return this.picks.get(motion)!;
@@ -170,5 +198,5 @@ export function uaActor(pack: Pack, kind: Kind, variant?: string, buildTime = 1,
   const f = PACK_RACE[pack], e = f && entry(f, kind, kind === 'legend' ? Number(variant?.slice(6)) || 0 : 0), t = e && templates.get(e.model);
   if (!e || !t) return null;
   const layers = (kind === 'legend' && e.art.legend?.[Number(variant?.slice(6)) || 0]) || (kind === 'captain' && variant && e.art.hero?.[variant]) || e.art.tier?.[kind]?.(Math.min(3, level)) || e.art.layers?.[kind] || autoLayers(t, f!, kind);
-  return () => new UAActor(t, layers, buildTime);
+  return () => new UAActor(t, layers, buildTime, whes.get(e.model), UA_WEAPONS[f!]?.[kind]);
 }

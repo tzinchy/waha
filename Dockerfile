@@ -19,6 +19,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY shared ./shared
 COPY server ./server
+COPY ua-slim ./ua-slim
 USER node
 EXPOSE 12340
 HEALTHCHECK --interval=30s --timeout=3s CMD node -e "fetch('http://localhost:'+process.env.PORT).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

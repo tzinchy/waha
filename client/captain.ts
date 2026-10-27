@@ -4,7 +4,7 @@ import { PACK, type FactionId } from '../shared/factions.ts';
 import { Live3D } from './snap3d.ts';
 
 export class CaptainPreview {
-  private faction: FactionId = 'order';
+  private faction: FactionId = 'tyranids';
   private live: Live3D;
   constructor(el: HTMLElement) { this.live = new Live3D(el); }
   setFaction(f: FactionId) { this.faction = f; this.live.set(PACK[f]); }

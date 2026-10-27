@@ -19,6 +19,8 @@ export const has3d = (k: Kind) => k in UNIT_ROLE || k in STRUCT_ROLE;
 /** Наклон высоты: сколько экранных пикселей даёт метр высоты относительно метра земли. */
 const HEIGHT = 0.85;
 type Actor = { root: THREE.Group; pose: (m: never, t: number) => void };
+/** Движения игры, которые модель мода (UAActor) понимает: клип ищется по дереву .whe и именам. */
+const UA_MOTIONS = ['idle', 'walk', 'run', 'shoot', 'attack', 'death', 'build', 'work', 'capture', 'hit'];
 type Entry = { args: Parameters<World3D['add']>; kind: Kind; group: THREE.Group; actors: Actor[]; structure: boolean; motions: Set<string>; mode: string; t0: number; dead: number; scale: number; veil?: boolean };
 
 export class World3D {
@@ -68,7 +70,7 @@ export class World3D {
     group.scale.setScalar(scale);
     group.traverse(o => { o.frustumCulled = false; const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && !Array.isArray(m)) m.side = THREE.DoubleSide; }); // косоугольная проекция зеркалит обход граней — рисуем обе стороны
     this.scene.add(group);
-    this.entries.set(id, { args, kind, group, actors, structure: !!sr, motions: new Set(sr ? STRUCTURE_ROLE_MOTIONS[sr] : ROLE_MOTIONS[ur!]), mode: '', t0: 0, dead: 0, scale });
+    this.entries.set(id, { args, kind, group, actors, structure: !!sr, motions: new Set(ua ? UA_MOTIONS : sr ? STRUCTURE_ROLE_MOTIONS[sr] : ROLE_MOTIONS[ur!]), mode: '', t0: 0, dead: 0, scale }); // модель мода сама подбирает клип под любое движение
   }
 
   /** Кадр юнита: место, поворот, анимация. build — доля готовности стройки (кадры «build» по готовности). alive — сколько бойцов отряда живо. */
@@ -93,7 +95,7 @@ export class World3D {
       const dead = opts.alive !== undefined && i >= opts.alive;
       a.root.visible = !dead || t < 1.5;
       if (e.structure && m === 'build') a.pose('build' as never, (opts.build ?? 0) * structureMotionDuration('build'));
-      else a.pose((dead ? this.pick(e, 'death') : m) as never, dead ? Math.min(t, 1.2) : t);
+      else a.pose((dead ? this.pick(e, 'death') : m) as never, dead ? Math.min(t, 1.2) : t + (!e.structure && !dead ? i * 0.37 : 0)); // бойцы отряда не в ногу, как в DoW
     });
   }
 

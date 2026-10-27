@@ -2,11 +2,11 @@
 import type { C2S, LobbyInfo, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import type { CaptainCfg } from '../shared/sim.ts';
 import { CaptainPreview } from './captain.ts';
-import { uaIcon } from './models3d/ua-models.ts';
+import { uaIcon, uaReady } from './models3d/ua-models.ts';
 import { Game, pxIcon, ready2d, uaImg } from './game2d.ts';
 import { archFor, FACTIONS, PLAYABLE, type FactionId } from '../shared/factions.ts';
 import { voice } from './voice.ts';
-import { MAPS, setMap } from '../shared/mapdata.ts';
+import { MAPS, PLAY_MAPS, setMap } from '../shared/mapdata.ts';
 import { audio } from './audio.ts';
 import { nextTheme, setTheme, themeName } from './theme.ts';
 
@@ -66,7 +66,7 @@ function show(screen: 'menu' | 'lobby' | 'game') {
 
 function onMsg(m: S2C) {
   if (m.t === 'lobby') { lobby = m; if (!game) renderLobby(); }
-  else if (m.t === 'start') startGame(m.slot, m.players, m.map ?? 0);
+  else if (m.t === 'start') startGame(m.slot, m.players, m.map ?? PLAY_MAPS[0]);
   else if (m.t === 'snap') game?.onSnap(m.s);
   else if (m.t === 'left') { lobby = null; show('menu'); }
   else if (m.t === 'lobbies') renderLobbies(m.list);
@@ -74,7 +74,7 @@ function onMsg(m: S2C) {
   else if (m.t === 'error') { if (game) game.alert('warn', m.msg); else toast(m.msg); audio.error(); }
 }
 
-function startGame(slot: number, players: LobbyPlayer[], map = 0) {
+function startGame(slot: number, players: LobbyPlayer[], map = PLAY_MAPS[0]) {
   setMap(map); // карта матча: до создания игры
   game?.destroy();
   $('result').classList.add('hidden');
@@ -95,6 +95,8 @@ $('result-back').onclick = () => {
 // ---------- меню и лобби ----------
 const player = () => ({ name: nameIn.value, captain: cfg });
 $('create').onclick = () => { store.set('waha.name', nameIn.value); connect(() => tx({ t: 'create', ...player() })); };
+if (import.meta.env.DEV && new URLSearchParams(location.search).has('scene')) void uaReadyScene(); // разработка: /?scene — показательный бой у турелей
+async function uaReadyScene() { await uaReady; connect(() => { tx({ t: 'create', ...player() }); tx({ t: 'scene', m: Number(new URLSearchParams(location.search).get('scene')) || undefined }); }); }
 const joinCode = (code: string) => { store.set('waha.name', nameIn.value); connect(() => tx({ t: 'join', code, ...player() })); };
 $('join').onclick = () => {
   const code = $<HTMLInputElement>('code').value.trim();
@@ -113,7 +115,7 @@ function showPing(ms: number) {
 }
 setInterval(() => { if (ws?.readyState === 1) tx({ t: 'ping', at: performance.now() }); }, 2000);
 setInterval(() => { if (!$('menu').classList.contains('hidden') && !document.hidden && ws?.readyState !== 0) connect(() => tx({ t: 'list' })); }, 3000); // readyState 0: сокет ещё подключается — второй не открываем
-const arena = new URLSearchParams(location.search).get('arena'); // ?arena=order,orks — показательный бой без сервера
+const arena = new URLSearchParams(location.search).get('arena'); // ?arena=tyranids,inquisition — показательный бой без сервера
 if (arena !== null) import('./arena.ts').then(m => m.runArena(arena, $('game')));
 else connect(() => tx({ t: 'list' }));
 
@@ -143,7 +145,7 @@ function renderLobby() {
   $('spec').textContent = me.spec ? 'Играть' : 'Зритель';
   $('ready').textContent = me.ready ? 'Не готов' : 'Готов';
   $('ready').classList.toggle('lc-btn--ghost', !me.ready);
-  $('maps').innerHTML = MAPS.map((mp, i) => `<button class="lc-btn lc-btn--sm ${i === lobby!.map ? '' : 'lc-btn--ghost'}" data-map="${i}" ${host ? '' : 'disabled'} title="${mp.info}">${mp.name}</button>`).join('');
+  $('maps').innerHTML = PLAY_MAPS.map(i => [MAPS[i], i] as const).map(([mp, i]) => `<button class="lc-btn lc-btn--sm ${i === lobby!.map ? '' : 'lc-btn--ghost'}" data-map="${i}" ${host ? '' : 'disabled'} title="${mp.info}">${mp.name}</button>`).join('');
   $('map-info').textContent = MAPS[lobby.map]?.info ?? '';
   $('maps').querySelectorAll<HTMLElement>('[data-map]').forEach(b => { b.onclick = () => tx({ t: 'map', m: Number(b.dataset.map) }); });
   $('addbot').classList.toggle('hidden', !host);
