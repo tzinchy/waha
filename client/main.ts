@@ -2,8 +2,9 @@
 import type { C2S, LobbyInfo, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import type { CaptainCfg } from '../shared/sim.ts';
 import { CaptainPreview } from './captain.ts';
-import { Game, pxIcon, ready2d } from './game2d.ts';
-import { archFor, FACTIONS, FACTION_IDS, type FactionId } from '../shared/factions.ts';
+import { uaIcon } from './models3d/ua-models.ts';
+import { Game, pxIcon, ready2d, uaImg } from './game2d.ts';
+import { archFor, FACTIONS, PLAYABLE, type FactionId } from '../shared/factions.ts';
 import { voice } from './voice.ts';
 import { MAPS, setMap } from '../shared/mapdata.ts';
 import { audio } from './audio.ts';
@@ -118,13 +119,13 @@ else connect(() => tx({ t: 'list' }));
 
 /** Выбор фракции: карточки с силуэтом капитана, тема интерфейса и превью меняются вместе с выбором. */
 function renderFactions(mine: FactionId, random = false) {
-  $('factions').innerHTML = FACTION_IDS.map(f => `<button class="lc-btn lc-btn--sm ${f === mine && !random ? '' : 'lc-btn--ghost'}" data-f="${f}" title="${FACTIONS[f].mech}">${svgFor(f)}${FACTIONS[f].name}</button>`).join('')
-    + `<button class="lc-btn lc-btn--sm ${random ? '' : 'lc-btn--ghost'}" data-f="random" title="Раса выпадет случайно при старте матча">? Случайная</button>`;
+  $('factions').innerHTML = PLAYABLE.map(f => `<button class="lc-btn lc-btn--sm ${f === mine && !random ? '' : 'lc-btn--ghost'}" data-f="${f}" title="${FACTIONS[f].mech}">${svgFor(f)}${FACTIONS[f].name}</button>`).join('')
+    + (PLAYABLE.length > 1 ? `<button class="lc-btn lc-btn--sm ${random ? '' : 'lc-btn--ghost'}" data-f="random" title="Раса выпадет случайно при старте матча">? Случайная</button>` : '');
   $('factions').querySelectorAll<HTMLElement>('[data-f]').forEach(b => { b.onclick = () => tx({ t: 'faction', f: b.dataset.f as FactionId | 'random' }); });
   $('faction-mech').textContent = random ? 'Раса выпадет случайно при старте матча.' : FACTIONS[mine].mech;
   if (faction !== mine) { faction = mine; setTheme(FACTIONS[mine].theme); preview.setFaction(mine); paintTheme(); preview.set({ ...cfg, arch: archFor(mine, cfg.arch) }); }
 }
-const svgFor = (f: FactionId) => pxIcon(f, 'captain', true); // пиксельный капитан фракции
+const svgFor = (f: FactionId) => { const ua = uaIcon('captain', 0, f); return ua ? uaImg(ua) : pxIcon(f, 'captain', true); }; // пиксельный капитан фракции (у тиранидов — иконка мода)
 
 function renderLobby() {
   if (!lobby) return;

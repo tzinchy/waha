@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DOOM, archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, BCELL, footRect, wallCells, flies, producible, FACTION_ONLY, TRIBUTE, isStruct, type Kind, type State } from './sim.ts';
+import { FROM_FAC, statOf, DOOM, archOf, resourceCost, ROLES, CAPTURE_TIME, TIER_TIME, KINDS, setMap, snapshotFor, hurt, spawn, RESEARCH, TIER_UP, RAGE_MAX, applyCmd, members, maxHp, newState, step, DT, START_REQ, STATS, POINTS, RELICS, VENTS, MAPS, BCELL, footRect, wallCells, flies, producible, FACTION_ONLY, TRIBUTE, isStruct, type Kind, type State } from './sim.ts';
 
 const run = (s: State, sec: number) => { for (let i = 0; i < sec / DT; i++) step(s); };
 const unit = (s: State, owner: number, kind: Kind) => s.units.find(u => u.owner === owner && u.kind === kind)!;
@@ -736,13 +736,13 @@ test('каждая фракция может заказать каждого ю�
     const s = newState(2, [f, 'order']), p = s.players[0], hq = unit(s, 0, 'hq');
     p.cheat = true; p.relics = 5; // реликварии держим (реликвии не копятся)
     p.tier = 5; s.points[0].owner = 0; // титан — только с критической точкой
-    const homes = (['barracks', 'motorpool', 'yard', ...(f === 'ashen' ? ['warpgate'] : [])] as Kind[]).map((k, i) => { const b = spawn(s, 0, k, hq.x + 20 + i * 18, hq.y + 20); b.build = 1; return b; });
+    const homes = ([...new Set(['barracks', 'motorpool', 'yard', ...(f === 'ashen' ? ['warpgate'] : []), ...Object.values(FROM_FAC[f] ?? {}).filter(k => k !== 'hq')])] as Kind[]).map((k, i) => { const b = spawn(s, 0, k, hq.x + 20 + i * 18, hq.y + 20); b.build = 1; return b; });
     for (const b of [hq, ...homes]) for (const k of producible(b.kind, f)) {
       Object.assign(p, { req: 1e6, energy: 1e6, relics: 1e3 });
       for (const u of s.units) if (u.owner === 0 && !isStruct(u.kind) && u.kind !== 'builder') u.hp = 0; // освободить лимит
       run(s, 0.2);
       assert.equal(applyCmd(s, 0, { c: 'train', id: b.id, k }), undefined, `${f}: заказ ${k} в ${b.kind}`);
-      run(s, STATS[k].time + 2);
+      run(s, statOf(k, f).time + 2);
       assert.ok(s.units.some(u => u.owner === 0 && u.kind === k && u.hp > 0), `${f}: ${k} вышел из ${b.kind}`);
     }
     for (const a of Object.keys(ARCH_OPTS[f]) as ('assault' | 'commander' | 'mystic')[]) {

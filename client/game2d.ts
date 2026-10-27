@@ -1,8 +1,9 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import { World3D, has3d } from './world3d.ts';
+import { uaIcon } from './models3d/ua-models.ts';
 import { ARCHS, CAPTAIN_COST, HERO, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
-import { GEN_CAP, genAnchor, SCAN, PORTAL, MEGA_SHOT, LIGHTHOUSE, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { NO_BUILD, GEN_CAP, genAnchor, SCAN, PORTAL, MEGA_SHOT, LIGHTHOUSE, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { BUILD_NAME, PX_PACK, ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -77,6 +78,7 @@ const EXTRA_PX: Record<string, PxRole> = { khorne: 'elite', nurgle: 'elite', tze
 const GOD_ART: Partial<Record<Kind, string>> = { warpgate: 'Factions/rift.svg', khorne: 'px/khorne/elite', nurgle: 'px/nurgle/elite', tzeentch: 'px/tzeentch/sniper', slaanesh: 'px/slaanesh/scout' };
 /** Путь к силуэту юнита: по фракции, уровню и (у капитана) оружию. */
 export function artFor(kind: Kind, faction: FactionId, lvl = 1, arch: Arch = 'commander', variant = 0) {
+  if (has3d(kind)) { const icon = uaIcon(kind, variant, faction); if (icon) return icon; } // иконка расы из мода (data:-URL), если мод распакован
   const a = FACTIONS[faction].art;
   if (kind === 'legend') return FACTIONS[faction].legendArt[variant] ?? FACTIONS[faction].legendArt[0];
   if (kind === 'deity') return arch === 'assault' ? 'px/nightbringer/captain' : 'px/deceiver/captain'; // К'тан по сборке
@@ -180,13 +182,14 @@ const PX_BY_ART = new Map<string, [FactionId, PxRole]>(FACTION_IDS.flatMap(f => 
   ...(Object.keys(PX_ROLE) as Kind[]).filter(k => ROSTER[f][k as 'sniper']?.art).map(k => [ROSTER[f][k as 'sniper'].art, [f, pxRole(k, f)]])] as [string, [FactionId, PxRole]][]).concat(Object.entries(EXTRA_PX).map(([p, r]) => [`px/${p}/${r}`, [p as FactionId, r]]))); // и весь состав армии
 
 /** SVG капитана по оружию (Меч — Штурм, Молот — Командор), для превью в редакторе. */
-export const captainSvg = (a: Arch, f: FactionId = 'order') => svgCache.get(artFor('captain', f, 1, a)) ?? '';
+export const captainSvg = (a: Arch, f: FactionId = 'order') => { const p = artFor('captain', f, 1, a); return p.startsWith('data:') ? uaImg(p) : svgCache.get(p) ?? ''; };
 /** Чужой силуэт (Ордена) у другой фракции — перекрасить в её цвета. */
 export const needsTint = (path: string, f: FactionId) => f !== 'order' && path.startsWith('Units/');
 /** Маленький силуэт для HUD: живой SVG, чтобы палитра art-* применилась. */
-const miniArt = (path: string) => (PX_BY_ART.has(path) ? pxIcon(...PX_BY_ART.get(path)!) : (svgCache.get(path) ?? '').replace('<svg ', '<svg class="lc-art" '));
+export const uaImg = (path: string) => `<svg class="lc-art" viewBox="0 0 64 64"><image href="${path}" width="64" height="64"/></svg>`; // в svg — чтобы HUD задавал размер, как у остальных силуэтов
+const miniArt = (path: string) => (path.startsWith('data:') ? uaImg(path) : PX_BY_ART.has(path) ? pxIcon(...PX_BY_ART.get(path)!) : (svgCache.get(path) ?? '').replace('<svg ', '<svg class="lc-art" '));
 /** Портрет: голова и плечи силуэта крупно (обрезка viewBox у фигур 120×164). */
-const portrait = (path: string) => (PX_BY_ART.has(path) ? pxIcon(...PX_BY_ART.get(path)!, true) : miniArt(path).replace(/viewBox="0 -12 120 164"/, 'viewBox="14 -10 92 92"'));
+const portrait = (path: string) => (path.startsWith('data:') ? uaImg(path) : PX_BY_ART.has(path) ? pxIcon(...PX_BY_ART.get(path)!, true) : miniArt(path).replace(/viewBox="0 -12 120 164"/, 'viewBox="14 -10 92 92"'));
 
 /** Буквы точек на карте и в полосе очков: [0] — критическая. */
 const PT_LETTERS = ['Д', 'А', 'В', 'Б', 'Г', 'Е', 'Ж', 'З', 'И', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С'];
@@ -346,6 +349,7 @@ export class Game {
       `;
       this.root.append(style);
     }
+    for (const [x, y] of VENTS) this.w3d.vent(x, y, 4.5); // жилы под термогенератор — в 3D, как slag deposit в Soulstorm
     [...POINTS, ...RELICS].forEach(([x, y], i) => {
       const relic = i >= POINTS.length;
       const ring = document.createElement('div'), fill = document.createElement('div');
@@ -378,10 +382,10 @@ export class Game {
     const el = document.createElement('div');
     el.className = 'w2d-unit ' + (owner === this.slot ? 'ally' : 'enemy');
     el.style.setProperty('--team', owner === this.slot ? 'var(--verdigris-500)' : 'var(--blood-300)'); // союзник патина, враг кровь (пресет)
-    const r = STATS[kind].radius;
+    const r = statOf(kind, this.fac(owner)).radius;
     const sel = document.createElement('div'); sel.className = 'w2d-sel';
     const range = document.createElement('div'); range.className = 'w2d-range';
-    const rr = STATS[kind].range + STATS[kind].radius + (kind === 'turret' ? TURRET_FAC[this.fac(owner)]?.range ?? 0 : 0);
+    const rr = statOf(kind, this.fac(owner)).range + statOf(kind, this.fac(owner)).radius + (kind === 'turret' ? TURRET_FAC[this.fac(owner)]?.range ?? 0 : 0);
     Object.assign(range.style, { width: rr * 2 * S + 'px', height: rr * 2 * S * 0.55 + 'px' });
     el.append(range);
     const ring = document.createElement('div'); ring.className = 'w2d-ring';
@@ -390,7 +394,7 @@ export class Game {
     const pl = this.players[owner], artPath = artFor(kind, pl.faction ?? 'order', 1, arch ?? pl.captain.arch, variant);
     const svgs: SVGElement[] = [], px: Px[] = [];
     const in3d = has3d(kind); // живая модель: в DOM остаются только полоса здоровья и кольца
-    if (in3d) this.w3d.add(id, PACK[pl.faction ?? 'order'], kind, widthOf(kind, pl.faction ?? 'order'), (FORM[kind] ?? [[0, 0]]).map(([ox, oy]) => [ox, oy]), kind === 'captain' || kind === 'deity' ? archFor(pl.faction ?? 'order', arch ?? pl.captain.arch) : undefined); // у сборок героя свой силуэт, у К'тана — свой бог
+    if (in3d) this.w3d.add(id, PACK[pl.faction ?? 'order'], kind, widthOf(kind, pl.faction ?? 'order'), (FORM[kind] ?? [[0, 0]]).map(([ox, oy]) => [ox, oy]), kind === 'captain' || kind === 'deity' ? archFor(pl.faction ?? 'order', arch ?? pl.captain.arch) : kind === 'legend' ? `legend${variant}` : undefined); // у сборок героя свой силуэт, у К'тана — свой бог, у легенд — своя модель
     for (const [ox, oy] of in3d ? [] : FORM[kind] ?? [[0, 0]]) {
       if (isPx(kind, pl.faction ?? 'order')) { const f = pl.faction ?? 'order', r = pxRole(kind, f)!, p = pxSprite(f, r, pxScale(kind, f, r)); p.el.style.transform = `translate(${ox * S}px, ${oy * S * 0.6}px)`; body.append(p.el); px.push(p); continue; } // пиксельный атлас фракции
       const a = art(artPath, widthOf(kind, pl.faction ?? 'order') * S);
@@ -406,7 +410,7 @@ export class Game {
     if (kind === 'titan' && !px[0]) { bar.style.bottom = widthOf(kind, pl.faction ?? 'order') * 1.36 * S + 'px'; el.classList.add('titan'); } // полоса над головой титана
     el.append(ring, sel, body, bar);
     this.place2(el, x, y);
-    return { id, owner, kind, el, body, svgs, px, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0, prod: 0, gear: 0, ch: [0, 0, 0], gcd: 0, sh: 0, frozen: 0, carry: 0, rise: 0, off: false, arch: kind === 'captain' ? arch ?? pl.captain.arch : undefined };
+    return { id, owner, kind, el, body, svgs, px, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind, this.fac(owner)), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0, prod: 0, gear: 0, ch: [0, 0, 0], gcd: 0, sh: 0, frozen: 0, carry: 0, rise: 0, off: false, arch: kind === 'captain' ? arch ?? pl.captain.arch : undefined };
   }
 
   private scans: number[][] = [];
@@ -600,7 +604,7 @@ export class Game {
     const own = (k: Kind) => [...this.views.values()].find(v => v.owner === this.slot && v.kind === k);
     const slots = [...this.views.values()].filter(v => v.owner === this.slot && !v.dead && (v.hero || v.kind === 'legend')).sort((a, b) => a.id - b.id).map(h => {
       const name = h.kind === 'legend' ? FACTIONS[this.fac()].legends[h.q] ?? 'Легенда' : this.nameOf(h);
-      return `<button class="w2d-port w2d-hero${h.kind === 'legend' ? ' legend' : ''}${this.sel.has(h.id) ? ' on' : ''}${h.hero?.pts ? ' pts' : ''}" data-focus="${h.id}" title="${name.replace(/[<>&"]/g, '')}${h.hero ? `, ур. ${h.hero.lvl}${h.hero.pts ? `, очков прокачки: ${h.hero.pts}` : ''}` : ''}: клик — выбрать">${portrait(h.artPath)}${h.hero ? `<em>${h.hero.lvl}</em>` : ''}<i style="--v:${Math.max(0, h.hp / maxHp(h.kind)) * 100}%"></i></button>`;
+      return `<button class="w2d-port w2d-hero${h.kind === 'legend' ? ' legend' : ''}${this.sel.has(h.id) ? ' on' : ''}${h.hero?.pts ? ' pts' : ''}" data-focus="${h.id}" title="${name.replace(/[<>&"]/g, '')}${h.hero ? `, ур. ${h.hero.lvl}${h.hero.pts ? `, очков прокачки: ${h.hero.pts}` : ''}` : ''}: клик — выбрать">${portrait(h.artPath)}${h.hero ? `<em>${h.hero.lvl}</em>` : ''}<i style="--v:${Math.max(0, h.hp / this.mhp(h)) * 100}%"></i></button>`;
     });
     const heroes = $('hud-heroes'), hh = slots.join('');
     if (heroes.innerHTML !== hh) heroes.innerHTML = hh;
@@ -608,8 +612,8 @@ export class Game {
     box.classList.toggle('hidden', !ti);
     if (ti) {
       if (box.dataset.id !== String(ti.id)) { box.dataset.id = String(ti.id); box.innerHTML = `<button class="w2d-port" id="titan-port" title="Титан: клик — выбрать и навести камеру">${portrait(ti.artPath)}<i></i></button><div><b>${this.kindName('titan', this.fac())}</b><small id="titan-hp"></small></div>`; $('titan-port').onclick = () => this.focus(ti.id); }
-      (box.querySelector('i') as HTMLElement).style.setProperty('--v', Math.max(0, ti.hp / maxHp('titan')) * 100 + '%');
-      $('titan-hp').textContent = `${Math.round(ti.hp)} / ${maxHp('titan')}`;
+      (box.querySelector('i') as HTMLElement).style.setProperty('--v', Math.max(0, ti.hp / maxHp('titan', this.fac(ti.owner))) * 100 + '%');
+      $('titan-hp').textContent = `${Math.round(ti.hp)} / ${maxHp('titan', this.fac(ti.owner))}`;
     }
   }
   private focus(id: number) { const v = this.views.get(id); if (!v) return; this.sel.clear(); this.sel.add(id); this.cam.x = v.x; this.cam.y = v.y; this.renderCmd(); }
@@ -711,7 +715,7 @@ export class Game {
   /** Сколько сегментов стены можно оплатить сейчас (Династии платят энергией). */
   private wallBudget() { const one = this.price(STATS.wall.cost); return Math.floor(Math.min(one.cost ? this.req / one.cost : Infinity, one.en ? this.energy / one.en : Infinity)); }
   /** Секунд до выхода юнита из здания по проценту готовности. */
-  private qLeft(k: Kind, pct: number) { return Math.max(0, Math.ceil(STATS[k].time * (ROLES[k]?.from === 'barracks' && this.research & (1 << 1) ? 0.85 : 1) * (1 - pct / 100))); }
+  private qLeft(k: Kind, pct: number) { return Math.max(0, Math.ceil(statOf(k, this.fac()).time * (ROLES[k]?.from === 'barracks' && this.research & (1 << 1) ? 0.85 : 1) * (1 - pct / 100))); }
   /** Очередь здания в карточке (как в Soulstorm): первый слот крупно с полосой и секундами, затем ожидающие, пустые слоты показывают, сколько ещё влезет. Клик — отменить. */
   private queueSlots(v: View) {
     const q = this.qk[v.id] ?? [], f = this.fac();
@@ -721,6 +725,9 @@ export class Game {
   }
 
   private fac(owner = this.slot): FactionId { return this.players[owner]?.faction ?? 'order'; }
+  /** Статы и полное здоровье вида у фракции владельца (у рас из модов свои). */
+  private st(v: { kind: Kind; owner: number }) { return statOf(v.kind, this.fac(v.owner)); }
+  private mhp(v: { kind: Kind; owner: number }) { return maxHp(v.kind, this.fac(v.owner)); }
 
   private selected() { return [...this.sel].map(id => this.views.get(id)).filter((v): v is View => !!v); }
 
@@ -816,7 +823,7 @@ export class Game {
       }
       if (st.kind === 'gate') {
         const onField = own('legend');
-        F.legends.forEach((n, v) => c.push({ act: 'sum' + v, name: n, hot: String(v + 1), art: F.legendArt[v], ...this.price(0, LEGEND_COST[v].energy, LEGEND_COST[v].relics), info: F.legendInfo[v] + '. Призыв 20 с, виден всем.', req: onField ? 'Легенда уже на поле' : st.q > 0 && st.q - 1 !== v ? 'Врата заняты' : undefined, prog: st.q - 1 === v ? st.prod : undefined }));
+        F.legends.forEach((n, v) => c.push({ act: 'sum' + v, name: n, hot: String(v + 1), art: artFor('legend', this.fac(), 1, undefined, v), ...this.price(0, LEGEND_COST[v].energy, LEGEND_COST[v].relics), info: F.legendInfo[v] + '. Призыв 20 с, виден всем.', req: onField ? 'Легенда уже на поле' : st.q > 0 && st.q - 1 !== v ? 'Врата заняты' : undefined, prog: st.q - 1 === v ? st.prod : undefined }));
       }
       if (st.kind === 'post') {
         const up = POST_UP[st.lvl];
@@ -832,15 +839,15 @@ export class Game {
       { act: 'amove', name: 'Атака', hot: 'Q', icon: ICON.attack, info: 'Идти и атаковать всех врагов по пути.', active: this.amove });
     if (sel.some(v => v.kind === 'builder')) c.push({ act: 'buildmenu', name: 'Строить', hot: 'C', icon: ICON.build, info: 'Меню построек: экономика, армия, оборона, святыни.' });
     else c.push({ act: '', name: '', hot: '', icon: '' });
-    const guards = sel.filter(v => SQUADS.has(v.kind)), hurt = guards.filter(v => v.hp < maxHp(v.kind));
-    if (guards.length) c.push({ act: 'reinforce', name: 'Пополнить', hot: 'R', icon: ICON.reinforce, ...this.price(hurt.reduce((n, v) => n + Math.ceil((maxHp(v.kind) - v.hp) / STATS[v.kind].hp) * Math.round(REINFORCE_COST * STATS[v.kind].cost / 100), 0)), req: hurt.length ? undefined : 'Отряды полные', info: 'Добрать бойцов в отряды. Нужно быть рядом со своей постройкой.' });
+    const guards = sel.filter(v => SQUADS.has(v.kind)), hurt = guards.filter(v => v.hp < this.mhp(v));
+    if (guards.length) c.push({ act: 'reinforce', name: 'Пополнить', hot: 'R', icon: ICON.reinforce, ...this.price(hurt.reduce((n, v) => n + Math.ceil((this.mhp(v) - v.hp) / this.st(v).hp) * Math.round(REINFORCE_COST * this.st(v).cost / 100), 0)), req: hurt.length ? undefined : 'Отряды полные', info: 'Добрать бойцов в отряды. Нужно быть рядом со своей постройкой.' });
     if (guards.length) GEAR.forEach((G, g) => { // снаряжение отряда (SquadWargear): купить или бросить
-      const NAMES: Record<FactionId, string[]> = { order: ['Осколочные гранаты', 'Мелта-бомба', 'Дымовые гранаты'], eldar: ['Плазменные гранаты', 'Хаймарский заряд', 'Теневой покров'], tyranids: ['Кислотный сгусток', 'Споровая мина', 'Споровое облако'], clockwork: ['Гравитационная сфера', 'Заряд распада', 'Туман времени'], orks: ['Бахалка', 'Связка бахалок', 'Дымовуха'], ashen: ['Сосуд с серой', 'Адский заряд', 'Пепельный дым'] };
+      const NAMES: Record<FactionId, string[]> = { order: ['Осколочные гранаты', 'Мелта-бомба', 'Дымовые гранаты'], inquisition: ['Психогранаты', 'Мелта-бомба', 'Дымовые гранаты'], eldar: ['Плазменные гранаты', 'Хаймарский заряд', 'Теневой покров'], tyranids: ['Кислотный сгусток', 'Споровая мина', 'Споровое облако'], clockwork: ['Гравитационная сфера', 'Заряд распада', 'Туман времени'], orks: ['Бахалка', 'Связка бахалок', 'Дымовуха'], ashen: ['Сосуд с серой', 'Адский заряд', 'Пепельный дым'] };
       const name = NAMES[this.fac()][g], owned = guards.filter(v => v.gear & (1 << g)), ch = owned.reduce((n, v) => n + v.ch[g], 0), cd = Math.min(...owned.map(v => v.gcd), 99);
       if (owned.length) c.push({ act: 'throw:' + g, name, hot: ['G', 'H', 'J'][g], icon: GEAR_ICON[g], info: `Бросок до ${G.range} м, радиус ${G.r} м.${g === 2 ? ' Дым: стрельба в облаке и по нему — вдвое слабее.' : ' Задевает и своих.'}`, req: ch ? undefined : 'Нет зарядов', cd: cd > 0 && cd < 99 ? cd : 0, cdMax: G.cd, queue: ch, active: this.throwG === g });
       else c.push({ act: 'gear:' + g, name: 'Купить: ' + name, hot: ['G', 'H', 'J'][g], icon: GEAR_ICON[g], ...this.price(G.cost * guards.length, G.energy * guards.length), info: `${G.charges} заряд(а), перезарядка ${G.cd} с. Покупается у штаба, казарм или капитана.`, req: this.tier < 2 ? 'Нужен тир II' : undefined });
     });
-    const fix = sel.some(v => v.kind === 'builder') ? [...this.views.values()].filter(v => v.owner === this.slot && v.build >= 1 && (isStruct(v.kind) || VEHICLES.has(v.kind)) && v.hp < maxHp(v.kind) - 1) : [];
+    const fix = sel.some(v => v.kind === 'builder') ? [...this.views.values()].filter(v => v.owner === this.slot && v.build >= 1 && (isStruct(v.kind) || VEHICLES.has(v.kind)) && v.hp < this.mhp(v) - 1) : [];
     if (fix.length) c.push({ act: 'repair', name: 'Ремонт', hot: 'E', icon: ICON.build, info: `Починить ближайшее повреждённое (${fix.length}). Или ПКМ по своей постройке/технике.` });
     for (const k of ['guard', 'captain', ...(this.fac() === 'orks' ? ['lveh'] : [])] as Kind[]) {
       const vs = sel.filter(v => v.kind === k), up = UPGRADES[k];
@@ -885,7 +892,7 @@ export class Game {
     const own = (k: Kind) => [...this.views.values()].some(v => v.owner === this.slot && v.kind === k);
     const keyKind = (): Kind | null => { for (let t = 1; t <= Math.min(this.tier, 4); t++) if (!own(('key' + t) as Kind)) return ('key' + t) as Kind; return this.tier >= 5 && !own('gate') ? 'gate' : null; };
     const card = (k: Buildable, name: string, hot: string, info: string, req?: string) => {
-      const p = this.price(STATS[k].cost, ENERGY_COST[k] ?? 0), lack = (n: number, have: number) => (n > have ? ' class="lack"' : '');
+      const p = this.price(statOf(k, this.fac()).cost, ENERGY_COST[k] ?? 0), lack = (n: number, have: number) => (n > have ? ' class="lack"' : '');
       const cost = req ? `<span>${req}</span>` : [p.cost ? `<span${lack(p.cost, this.req)}>◆ ${p.cost}</span>` : '', p.en ? `<span${lack(p.en, this.energy)}>ϟ ${p.en}</span>` : '', `<span>⧗ ${STATS[k].time} с</span>`].join('');
       return { k, html: `<button class="lc-bcard${req ? ' lc-bcard--locked' : ''}" data-act="${req ? '' : k}" data-tipname="${name}" data-tipinfo="${info}${req ? ` ${req}.` : ''}" ${req ? 'aria-disabled="true"' : ''} ${this.place === k ? 'aria-pressed="true"' : ''}>${miniArt(artFor(k as Kind, this.fac(), 1))}<span><span class="lc-bcard__name">${name}</span><span class="lc-bcard__cost">${cost}</span></span><kbd>${hot}</kbd></button>` };
     };
@@ -893,7 +900,7 @@ export class Game {
       ['Экономика', [card('post', BUILD_NAME[this.fac()].post, 'P', `Ставится на захваченную точку: держит её и даёт +2 ${this.incomeRes()}/с.`), card('foundry', BUILD_NAME[this.fac()].foundry, 'F', '+2 энергии/с. Ставится у своей точки или построек.'), card('pump', BUILD_NAME[this.fac()].pump, 'N', '+4 энергии/с. На жилу или у своей точки.')]],
       ['Армия', [card('barracks', BUILD_NAME[this.fac()].barracks, 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`), card('motorpool', PROD_NAME[this.fac()].motorpool, 'T', 'Вся техника и артиллерия фракции. Тир III.', this.tier < 3 ? 'Нужен тир III' : undefined), card('yard', PROD_NAME[this.fac()].yard, 'U', 'Строит титана. Одна армия — один титан. Тир IV.', this.tier < 4 ? 'Нужен тир IV' : undefined),
         ...(this.fac() === 'ashen' ? [card('warpgate', 'Врата Варпа', 'J', 'Призыв демонов четырёх богов: Слаанеш и Кхорн с тира III, Нургл и Тзинч — с тира IV, пока держите ключевую точку.', this.tier < 3 ? 'Нужен тир III' : undefined)] : [])]],
-      ['Оборона', [card('turret', BUILD_NAME[this.fac()].turret, 'Y', TURRET_FAC[this.fac()]?.info ?? 'Стреляет сама, голова поворачивается к цели.'), card('wall', 'Стена', 'L', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
+      ['Оборона', [...(NO_BUILD[this.fac()]?.includes('turret') ? [] : [card('turret', BUILD_NAME[this.fac()].turret, 'Y', TURRET_FAC[this.fac()]?.info ?? 'Стреляет сама, голова поворачивается к цели.')]), ...(NO_BUILD[this.fac()]?.includes('wall') ? [] : [card('wall', 'Стена', 'L', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined)]), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
         ...(this.fac() === 'orks' ? [card('rturret', 'Ракетная бочка', 'R', 'Ракеты по площади. Копит Ярость.'), card('fturret', 'Огнемётная печь', 'O', 'Жжёт в упор. Копит Ярость.')] : []),
         ...(this.fac() === 'order' ? [card('battery', 'Батарея «Громобой»', 'R', 'Стационарная артиллерия: 40 м, мёртвая зона 8 м, урон по площади.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ...(this.fac() === 'clockwork' ? [card('pylon', 'Гаусс-пилон', 'R', 'Дальний луч 30 м: пробивает технику и здания.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
@@ -905,6 +912,7 @@ export class Game {
       ['Святыни', (() => {
         const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — когда пали штабы и все здания найма.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra]; })()],
     ];
+    for (const t of tabs) t[1] = t[1].filter(c => !NO_BUILD[this.fac()]?.includes(c.k)); // у рас UA — только их постройки из UA
     const tab = tabs[this.buildTab] ?? tabs[0];
     return `<div class="lc-buildhead">${miniArt(artFor('builder', this.fac()))}<div><div class="lc-buildhead__who">${F.builder} ×${bs.length}</div><div class="lc-buildhead__meta">скорость стройки ×${bs.length}</div></div><button class="lc-btn lc-btn--sm lc-btn--ghost" data-act="cmdgrid">Команды ▸</button></div>`
       + `<div class="lc-tabs" role="tablist">${tabs.map(([n, cs], i) => `<button role="tab" data-tab="${i}" aria-selected="${i === this.buildTab}">${n}${cs.length ? '' : ' ·'}</button>`).join('')}</div>`
@@ -915,8 +923,8 @@ export class Game {
   /** Карточка выбранного (пресет UnitCard); группа — сетка малых портретов. */
   private cardHtml(sel: View[]) {
     if (!sel.length) return '';
-    if (sel.length > 1) return `<div class="w2d-group">${sel.slice(0, 18).map(v => `<button class="w2d-gp${v.owner !== this.slot ? ' foe' : ''}" data-pick="${v.id}">${miniArt(v.artPath)}<i style="--v:${Math.max(0, v.hp / maxHp(v.kind)) * 100}%"></i></button>`).join('')}${sel.length > 18 ? `<span class="w2d-more">+${sel.length - 18}</span>` : ''}</div>`;
-    const v = sel[0], st = STATS[v.kind], foe = v.owner !== this.slot, max = maxHp(v.kind), hp = Math.max(0, Math.round(v.hp));
+    if (sel.length > 1) return `<div class="w2d-group">${sel.slice(0, 18).map(v => `<button class="w2d-gp${v.owner !== this.slot ? ' foe' : ''}" data-pick="${v.id}">${miniArt(v.artPath)}<i style="--v:${Math.max(0, v.hp / this.mhp(v)) * 100}%"></i></button>`).join('')}${sel.length > 18 ? `<span class="w2d-more">+${sel.length - 18}</span>` : ''}</div>`;
+    const v = sel[0], st = this.st(v), foe = v.owner !== this.slot, max = this.mhp(v), hp = Math.max(0, Math.round(v.hp));
     const melee = isMelee(v.kind, this.fac(v.owner));
     const cls = v.kind === 'captain' ? `Герой · ур. ${foe ? '?' : this.cap.lvl}` : v.kind === 'builder' ? 'Строитель' : v.kind === 'guard' ? `Пехота · ${melee ? 'ближний бой' : 'стрелки'}` : v.kind === 'legend' ? 'Легенда' : ({ deity: 'Бог · летает', titan: 'Титан', arty: `Артиллерия · мёртвая зона ${MIN_RANGE.arty} м`, lveh: 'Лёгкая техника', mveh: 'Средняя техника', hveh: 'Тяжёлая техника', sniper: 'Снайпер', heavy: 'Тяжёлое оружие', support: 'Поддержка', elite: 'Тяжёлая элита', healer: 'Целитель' } as Partial<Record<Kind, string>>)[v.kind] ?? 'Постройка';
     const stats: [string, string][] = [];
@@ -925,7 +933,7 @@ export class Game {
     if (st.dmg && v.kind !== 'mine') {
       const base = guardMelee ? MELEE_GUARD.dmg : v.kind === 'post' && v.lvl >= 3 ? 14 : st.dmg;
       const damage = base * (tf?.dmg ?? 1) * (v.lvl > 1 ? LVL2.dmg[v.kind] ?? 1 : 1);
-      const count = SQUADS.has(v.kind) ? members(v.kind, v.hp) : 1;
+      const count = SQUADS.has(v.kind) ? members(v.kind, v.hp, this.fac(v.owner)) : 1;
       const range = (guardMelee ? MELEE_GUARD.range : v.kind === 'post' && v.lvl >= 3 ? 12 : st.range + (tf?.range ?? 0) + (v.lvl > 1 ? tf?.up?.range ?? 0 : 0)) + (v.lvl > 1 ? LVL2.range[v.kind] ?? 0 : 0);
       const specialRange = v.kind === 'captain' && v.arch === 'mystic' || v.kind === 'deity' && v.arch !== 'assault';
       stats.push(['ЗАЛП (БАЗА)', SQUADS.has(v.kind) ? `${statNumber(damage)}×${count} = ${statNumber(damage * count)}` : statNumber(damage)], ['ИНТЕРВАЛ', statNumber(guardMelee ? MELEE_GUARD.cd : st.cd * (tf?.cd ?? 1)) + ' с'], ['ДАЛ.', specialRange ? 'по архетипу' : statNumber(range) + ' м'], ['ОРУЖИЕ', damageName[weaponType]]);
@@ -933,11 +941,11 @@ export class Game {
     if (v.kind === 'mine') stats.push(['ВЗРЫВ (БАЗА)', statNumber(st.dmg)]);
     stats.push(['БРОНЯ', armorName[armorOf(v.kind)]]);
     if (st.speed) stats.push(['СКОР. (БАЗА)', statNumber(guardMelee ? MELEE_GUARD.speed : st.speed)]);
-    if (SQUADS.has(v.kind)) stats.push(['БОЙЦЫ', `${members(v.kind, v.hp)}/${st.n}`]);
+    if (SQUADS.has(v.kind)) stats.push(['БОЙЦЫ', `${members(v.kind, v.hp, this.fac(v.owner))}/${st.n}`]);
     if (v.lvl > 1) stats.push(['УР.', `<b class="up">▲${v.lvl}</b>`]);
     if (isStruct(v.kind) && v.build < 1) stats.push(['СТРОЙКА', `${Math.round(v.build * 100)}%`]);
     if (v.hero && !foe) stats.push(['ОПЫТ', v.hero.lvl >= MAX_LVL ? 'предел' : `${v.hero.xp}/${xpNeed(v.hero.lvl)}`], ...(v.hero.pts ? [['ОЧКИ', `<b class="up">${v.hero.pts}</b>`] as [string, string]] : [])); // прокачка — кнопка P в панели команд
-    return `<div class="lc-unit${foe ? ' foe' : ''}"><div class="lc-unit__portrait">${miniArt(v.artPath)}<span class="lc-unit__rank">${['I', 'II', 'III'][Math.min(2, v.lvl - 1)]}</span></div><div><h3 class="lc-unit__name">${this.nameOf(v).replace(/[<>&]/g, '')}</h3><p class="lc-unit__class">${cls}${foe ? ' · враг' : ''}</p><div class="lc-vitals"><div class="lc-vitals__bar" style="--v:${(hp / max) * 100}%"></div><div class="lc-vitals__nums"><span>Здоровье</span><span><b>${hp}/${max}</b></span></div></div><p class="lc-unit__stats" title="Основное оружие: база с улучшением модели и фракционным модификатором, до аур, исследований, бонусов героя и защиты цели.">${stats.map(([a, b]) => `<span>${a} <b>${b}</b></span>`).join('')}</p>${st.dmg && v.kind !== 'mine' ? `<p class="lc-unit__class" title="Множители типа оружия: ${weaponCounters(weaponType)}. Дополнительная защита цели применяется отдельно.">По броне: ${weaponCounters(weaponType, true)}</p>${CLOSE[v.kind] ? `<p class="lc-unit__class">Дополнительное оружие до ${CLOSE[v.kind]!.range} м.${v.kind === 'heavy' || v.kind === 'hveh' ? ' Против брони сохраняется более эффективный ствол.' : ''}</p>` : ''}` : ''}${!foe && isStruct(v.kind) && v.build >= 1 && (producible(v.kind).length || v.kind === 'hq' || v.kind === 'barracks') ? this.queueSlots(v) : ''}</div></div>`;
+    return `<div class="lc-unit${foe ? ' foe' : ''}"><div class="lc-unit__portrait">${miniArt(v.artPath)}<span class="lc-unit__rank">${['I', 'II', 'III'][Math.min(2, v.lvl - 1)]}</span></div><div><h3 class="lc-unit__name">${this.nameOf(v).replace(/[<>&]/g, '')}</h3><p class="lc-unit__class">${cls}${foe ? ' · враг' : ''}</p><div class="lc-vitals"><div class="lc-vitals__bar" style="--v:${(hp / max) * 100}%"></div><div class="lc-vitals__nums"><span>Здоровье</span><span><b>${hp}/${max}</b></span></div></div><p class="lc-unit__stats" title="Основное оружие: база с улучшением модели и фракционным модификатором, до аур, исследований, бонусов героя и защиты цели.">${stats.map(([a, b]) => `<span>${a} <b>${b}</b></span>`).join('')}</p>${st.dmg && v.kind !== 'mine' ? `<p class="lc-unit__class" title="Множители типа оружия: ${weaponCounters(weaponType)}. Дополнительная защита цели применяется отдельно.">По броне: ${weaponCounters(weaponType, true)}</p>${CLOSE[v.kind] ? `<p class="lc-unit__class">Дополнительное оружие до ${CLOSE[v.kind]!.range} м.${v.kind === 'heavy' || v.kind === 'hveh' ? ' Против брони сохраняется более эффективный ствол.' : ''}</p>` : ''}` : ''}${!foe && isStruct(v.kind) && v.build >= 1 && (producible(v.kind, this.fac(v.owner)).length || v.kind === 'hq' || v.kind === 'barracks') ? this.queueSlots(v) : ''}</div></div>`;
   }
 
   private renderCmd() {
@@ -1004,7 +1012,7 @@ export class Game {
     if (act === 'fireground') { this.throwG = 8; this.root.style.cursor = 'crosshair'; return; } // прицел огня по земле
     if (act.startsWith('throw:')) { this.throwG = Number(act.slice(6)); this.root.style.cursor = 'crosshair'; return; }
     if (act === 'repair') {
-      const b = sel.find(v => v.kind === 'builder'), fix = [...this.views.values()].filter(v => v.owner === this.slot && v.build >= 1 && (isStruct(v.kind) || VEHICLES.has(v.kind)) && v.hp < maxHp(v.kind) - 1);
+      const b = sel.find(v => v.kind === 'builder'), fix = [...this.views.values()].filter(v => v.owner === this.slot && v.build >= 1 && (isStruct(v.kind) || VEHICLES.has(v.kind)) && v.hp < this.mhp(v) - 1);
       if (b && fix.length) this.cmd({ c: 'assist', ids: [...this.sel], id: fix.sort((p, q) => Math.hypot(p.x - b.x, p.y - b.y) - Math.hypot(q.x - b.x, q.y - b.y))[0].id });
       return;
     }
@@ -1149,8 +1157,8 @@ export class Game {
     for (const v of this.views.values()) {
       if (!want(v)) continue;
       const size = widthOf(v.kind, this.fac(v.owner)); // кликаем по силуэту: высокие танки и титаны — по корпусу, а не только у ног
-      const cy = v.y - (isStruct(v.kind) ? STATS[v.kind].radius * 0.6 : Math.max(0.8, size * 0.4));
-      const d = Math.hypot(w.x - v.x, w.y - cy), reach = Math.max(STATS[v.kind].radius + (isStruct(v.kind) ? 1.5 : 1.2), isStruct(v.kind) ? 0 : size * 0.5, minReach);
+      const cy = v.y - (isStruct(v.kind) ? this.st(v).radius * 0.6 : Math.max(0.8, size * 0.4));
+      const d = Math.hypot(w.x - v.x, w.y - cy), reach = Math.max(this.st(v).radius + (isStruct(v.kind) ? 1.5 : 1.2), isStruct(v.kind) ? 0 : size * 0.5, minReach);
       if (d < reach && d / reach < bd) { bd = d / reach; best = v; }
     }
     return best;
@@ -1224,11 +1232,11 @@ export class Game {
       const taken = vs.some(v => v.kind === 'post' && Math.hypot(v.x - x, v.y - y) < 2);
       return { x, y, ok: (this.pointOwner[i] === this.slot || this.pointOwner[i] < 0) && !taken };
     }
-    if (this.place === 'pump' || this.place === 'foundry') { // один генератор на точку: насос на свободную жилу, литейня у своей точки или штаба
+    if (this.place === 'pump' || this.place === 'foundry') { // обычный генератор — где угодно, термо — на свободную жилу
       const pts = [...POINTS, ...RELICS].map(([x, y], i) => ({ x, y, owner: this.pointOwner[i] ?? -1 }));
-      const an = genAnchor(pts, structs, this.slot, g.x, g.y, this.place), p = an?.vent ? { x: an.x, y: an.y } : g;
+      const an = this.place === 'pump' ? genAnchor(pts, structs, this.slot, g.x, g.y, this.place) : undefined, p = an ? { x: an.x, y: an.y } : g;
       const gens = structs.filter(v => v.owner === this.slot && (v.kind === 'pump' || v.kind === 'foundry')).length;
-      return { ...p, ok: !!an && gens < GEN_CAP && footFree(structs, this.place, p.x, p.y) };
+      return { ...p, ok: (this.place === 'foundry' || !!an) && gens < GEN_CAP && footFree(structs, this.place, p.x, p.y) };
     }
     if (this.place === 'wall') return { ...g, ok: wallOk(structs, this.slot, g.x, g.y) };
     if (['mine', 'wallgate', 'bunker', 'portal'].includes(this.place ?? '')) return { ...g, ok: footFree(structs, this.place!, g.x, g.y) && !vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 20) };
@@ -1251,7 +1259,7 @@ export class Game {
     if (sel.length === 1 && isStruct(sel[0].kind)) return;
     const enemy = this.pick(sx, sy, v => v.owner !== this.slot && !v.dead);
     if (enemy) { this.markTarget(enemy, 'attack'); return this.cmd({ c: 'attack', ids, id: enemy.id, q }); }
-    const site = this.pick(sx, sy, v => v.owner === this.slot && !v.dead && (isStruct(v.kind) || VEHICLES.has(v.kind)) && (v.build < 1 || v.hp < maxHp(v.kind) - 1)); // стройка или ремонт
+    const site = this.pick(sx, sy, v => v.owner === this.slot && !v.dead && (isStruct(v.kind) || VEHICLES.has(v.kind)) && (v.build < 1 || v.hp < this.mhp(v) - 1)); // стройка или ремонт
     if (site && sel.some(v => v.kind === 'builder')) { this.markTarget(site, 'assist'); return this.cmd({ c: 'assist', ids, id: site.id, q }); }
     const p = this.toWorld(sx, sy);
     // Clicking near a capture marker snaps the move command to its center.
@@ -1276,7 +1284,7 @@ export class Game {
   private markTarget(v: View, tone: 'attack' | 'assist') {
     const sel = v.el.querySelector<HTMLElement>('.w2d-sel');
     sel?.animate([{ opacity: 1 }, { opacity: 0.2 }, { opacity: 1 }, { opacity: 0.2 }, { opacity: 1 }, { opacity: 0 }], { duration: 1300 });
-    this.marker(v.x, v.y, tone === 'attack' ? 'attack' : 'move', STATS[v.kind].radius + 1.2); // стрелки сходятся на цели
+    this.marker(v.x, v.y, tone === 'attack' ? 'attack' : 'move', this.st(v).radius + 1.2); // стрелки сходятся на цели
     v.el.classList.remove('tgt-attack', 'tgt-assist'); void v.el.offsetWidth; v.el.classList.add('tgt-' + tone);
     clearTimeout(Number(v.el.dataset.tgt)); v.el.dataset.tgt = String(window.setTimeout(() => v.el.classList.remove('tgt-' + tone), 1300));
   }
@@ -1304,7 +1312,7 @@ export class Game {
 
   /** Видит ли игрок точку: в обзоре своих войск и построек (тот же расчёт, что на сервере). */
   private inSight(x: number, y: number) {
-    for (const v of this.views.values()) if (v.owner === this.slot && !v.dead && Math.hypot(v.x - x, v.y - y) < Math.max(STATS[v.kind].sight, isStruct(v.kind) ? 12 : 10)) return true;
+    for (const v of this.views.values()) if (v.owner === this.slot && !v.dead && Math.hypot(v.x - x, v.y - y) < Math.max(this.st(v).sight, isStruct(v.kind) ? 12 : 10)) return true;
     if (this.scans.some(([sx, sy, sr]) => Math.hypot(sx / 10 - x, sy / 10 - y) < (sr ?? MEGA_SHOT.reveal))) return true;
     return this.ownPoints().some(([px, py]) => Math.hypot(px - x, py - y) < SIGHT_STRUCT);
   }
@@ -1320,7 +1328,7 @@ export class Game {
     x.fillStyle = 'rgba(6,5,9,0.6)'; x.fillRect(0, 0, c.width, c.height); // рельеф под туманом должен читаться
     x.globalCompositeOperation = 'destination-out';
     const holes: string[] = [];
-    const eyes = [...[...this.views.values()].filter(v => v.owner === this.slot && !v.dead).map(v => ({ x: v.x, y: v.y, r: Math.max(STATS[v.kind].sight, isStruct(v.kind) ? 12 : 10) })),
+    const eyes = [...[...this.views.values()].filter(v => v.owner === this.slot && !v.dead).map(v => ({ x: v.x, y: v.y, r: Math.max(this.st(v).sight, isStruct(v.kind) ? 12 : 10) })),
       ...this.ownPoints().map(([x, y]) => ({ x, y, r: SIGHT_STRUCT })), ...this.scans.map(([x, y, r]) => ({ x: x / 10, y: y / 10, r: r ?? MEGA_SHOT.reveal }))]; // засвет: дальний удар и засвет из штаба
     for (const v of eyes) {
       const r = v.r + (this.research & (1 << 11) ? 4 : 0);
@@ -1389,7 +1397,7 @@ export class Game {
     for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, l = len * (0.5 + Math.random()); h += `<line class="w2d-sparkline" x1="${x}" y1="${y}" x2="${x + Math.cos(a) * l}" y2="${y + Math.sin(a) * l * 0.7}" stroke="${col}" style="animation-delay:${delay}ms"/>`; }
     return h;
   }
-  private nearest(x: number, y: number) { let best: View | undefined, bd = 3; for (const v of this.views.values()) { const d = Math.hypot(v.tx - x, v.ty - y); if (d < bd + STATS[v.kind].radius && !v.dead) { bd = d; best = v; } } return best; }
+  private nearest(x: number, y: number) { let best: View | undefined, bd = 3; for (const v of this.views.values()) { const d = Math.hypot(v.tx - x, v.ty - y); if (d < bd + this.st(v).radius && !v.dead) { bd = d; best = v; } } return best; }
   /** Попадание: силуэт вспыхивает и отшатывается от удара (сильнее — от тяжёлого). */
   private hitFlash(v: View, fx: number, dx: number) {
     const heavy = fx >= 10 || fx === 1 || fx === 4, push = (heavy ? 6 : 2) * Math.sign(dx || 1);
@@ -1399,7 +1407,7 @@ export class Game {
 
   /** Голова турели (FactionTurrets): целится в ближайшего врага в радиусе — разворот и наклон ствола; без цели осматривает сектор. */
   private aimHead(v: View, now: number) {
-    const range = (STATS[v.kind].range || 12) + 4;
+    const range = (this.st(v).range || 12) + 4;
     let tgt: View | null = null, bd = range;
     for (const o of this.views.values()) {
       if (o.owner === v.owner || o.dead || o.kind === 'mine') continue;
@@ -1486,8 +1494,8 @@ export class Game {
         if ((v.kind === 'turret' || v.kind === 'post') && v.build >= 1) this.aimHead(v, now);
       } else {
         if (!v.px.length) v.body.classList.toggle('flip', Math.cos(v.f) < -0.1); // силуэты смотрят вправо; атласы — по своей строке направления
-        const building = !moving && v.kind === 'builder' && sites.some(s => s.owner === v.owner && Math.hypot(s.x - v.x, s.y - v.y) < STATS[s.kind].radius + 3.5);
-        const n = members(v.kind, v.hp);
+        const building = !moving && v.kind === 'builder' && sites.some(s => s.owner === v.owner && Math.hypot(s.x - v.x, s.y - v.y) < this.st(s).radius + 3.5);
+        const n = members(v.kind, v.hp, this.fac(v.owner));
         const atk = ({ 1: 'chop', 2: 'claw', 5: 'thrust', 3: 'beam', 11: 'beam', 13: 'beam', 4: 'cast' } as Record<number, string>)[v.atkFx ?? -1] ?? (v.kind === 'guard' && !v.melee ? 'recoil' : 'attack'); // анимация по оружию
         const flyer = flies(v.kind, this.fac(v.owner)) || (v.kind === 'titan' && this.fac(v.owner) === 'clockwork'), heavyWalk = !flyer && (v.kind === 'titan' || v.kind === 'hveh');
         const anim = v.dead ? 'death' : v.rise > 0 ? 'ritual' : building ? 'work' : now < v.atkUntil ? atk : moving ? (heavyWalk ? 'stride' : flyer ? 'hover' : 'walk') : flyer ? 'hover' : 'idle';
@@ -1501,7 +1509,7 @@ export class Game {
           (sv.parentElement as HTMLElement).classList.toggle('fallen', !alive);
         });
       }
-      const ratio = Math.max(0, Math.min(1, v.hp / maxHp(v.kind)));
+      const ratio = Math.max(0, Math.min(1, v.hp / this.mhp(v)));
       const show = !v.dead && (v.build < 1 || ratio < 1 || this.sel.has(v.id));
       v.bar.classList.toggle('hidden', !show);
       v.fg.style.setProperty('--v', (v.build < 1 ? v.build : ratio) * 100 + '%');

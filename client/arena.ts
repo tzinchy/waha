@@ -1,11 +1,12 @@
-// Показательный бой без сервера: /?arena=order,orks — две армии полным составом сходятся в центре карты.
+// Показательный бой без сервера: /?arena=order,orks — две армии полным составом сходятся в центре карты; &units=titan — только эти виды (через запятую).
 // Симуляция идёт прямо в браузере (shared/sim.ts), клиент игры смотрит как зритель: видно все выстрелы, взрывы и пожары.
 import { Game, ready2d } from './game2d.ts';
 import { FACTIONS, isFaction, type FactionId } from '../shared/factions.ts';
-import { DT, MAP, applyCmd, isStruct, newState, producible, setMap, snapshot, spawn, step, type Kind, type State } from '../shared/sim.ts';
+import { DT, MAP, NO_BUILD, PRODUCERS, applyCmd, isStruct, newState, producible, setMap, snapshot, spawn, step, type Kind, type State } from '../shared/sim.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 
-const ARMY = (f: FactionId): Kind[] => ['captain', ...producible('barracks'), ...producible('motorpool'), 'titan', ...(f === 'ashen' ? producible('warpgate') : [])];
+const only = new URLSearchParams(location.search).get('units')?.split(',').filter(Boolean) as Kind[] | undefined;
+const ARMY = (f: FactionId): Kind[] => only ?? ['captain', ...new Set([...PRODUCERS].filter(b => !NO_BUILD[f]?.includes(b as never)).flatMap(b => producible(b, f)).filter(k => k !== 'builder'))]; // весь состав фракции из её зданий (у рас UA — только из зданий UA)
 
 /** Выставить обе армии строем друг напротив друга и дать приказ «атака с ходу» навстречу. */
 function deploy(s: State) {

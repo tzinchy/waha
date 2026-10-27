@@ -195,12 +195,12 @@ test('засвет открывает скрытых порталом, обыч�
   assert.ok(Math.hypot(guard.x - arty.x, guard.y - arty.y) < d0 - 10, 'обстрелянный отряд идёт на стрелка');
 });
 
-test('генераторы: один на точку, жилу или штаб; титан не занимает лимит техники', async () => {
+test('генераторы: обычный где угодно, термо — один на свободную жилу; титан не занимает лимит техники', async () => {
   const { VENTS, legion } = await import('./sim.ts');
   const s = newState(2), p = s.players[0], hq = s.units.find(u => u.owner === 0 && u.kind === 'hq')!, b = s.units.find(u => u.owner === 0 && u.kind === 'builder')!;
   Object.assign(p, { req: 1e4, energy: 1e4 });
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: hq.x + 8, y: hq.y + 3 }), undefined);
-  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: hq.x - 8, y: hq.y + 6 }) ?? '', /один генератор/);
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: hq.x - 60, y: hq.y + 40 }), undefined, 'обычный генератор — в любом месте');
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'pump', x: VENTS[0][0] + 2, y: VENTS[0][1] }), undefined);
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'pump', x: VENTS[0][0] - 2, y: VENTS[0][1] }) ?? '', /жил/);
   spawn(s, 0, 'titan', hq.x + 30, hq.y + 30);

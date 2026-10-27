@@ -1,4 +1,4 @@
-import { PRODUCERS, GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
+import { hpOf, statOf, fromOf, PRODUCERS, GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
 
 /** Бот играет по тем же правилам: казармы, второй строитель, посты на точках, гвардия с пополнением, атака на штаб. */
 export function botThink(s: State, me: number): void {
@@ -40,14 +40,15 @@ export function botThink(s: State, me: number): void {
     const free = s.points.filter(p => p.owner === me && !s.units.some(u => u.kind === 'post' && u.hp > 0 && d(u, p) < 2)).sort((a, b) => d(a, hq) - d(b, hq))[0];
     if (free) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'post', x: free.x, y: free.y });
   }
-  if (builders.length + hq.que.filter(k => k === 'builder').length < 4) applyCmd(s, me, { c: 'train', id: hq.id, k: 'builder' });
+  const nest = mine.find(u => u.kind === fromOf('builder', s.players[me].faction) && u.build >= 1); // у тиранидов рипперы выходят из Пула переработки
+  if (nest && builders.length + nest.que.filter(k => k === 'builder').length < 4) applyCmd(s, me, { c: 'train', id: nest.id, k: 'builder' });
   const P = s.players[me], key = ('key' + Math.min(P.tier, 4)) as Kind, up = TIER_UP[P.tier];
   if (up && hq.upg < 0 && of(up.key).some(k => k.build >= 1)) { // тир — первым делом: ключевое здание готово, качаемся сразу, как хватает
     if (up.seal && !has(P, 15)) { const k4 = of('key4').find(k => k.build >= 1 && !k.q); if (k4) applyCmd(s, me, { c: 'research', id: k4.id, r: 3 }); } // Печать Вознесения
     else applyCmd(s, me, { c: 'upgrade', id: hq.id });
   }
   const prio = P.tier >= 3 && !of('motorpool').length ? 'motorpool' : P.tier >= 4 && !of('yard').length ? 'yard' : undefined; // техцех и верфь — раньше турелей и генераторов
-  const saving = !!prio && army0 >= 4 || !!up && hq.upg < 0 && army0 >= 4 && (of(up.key).some(k => k.build >= 1) || !of(key).length && req < STATS[key].cost + 100); // копим на тир и ключевое здание
+  const saving = !!prio && army0 >= 4 || !!up && hq.upg < 0 && army0 >= 4 && (of(up.key).some(k => k.build >= 1) || !of(key).length && req < statOf(key, s.players[me].faction).cost + 100); // копим на тир и ключевое здание
   const P0 = P; // техцех с тира III, верфь титана с тира IV
   for (const [k, t, a] of [['motorpool', 3, 2.0], ['yard', 4, -2.0]] as const) if (P0.tier >= t && !of(k).length && (!site || k === 'yard') && builders.length) // верфь — даже если идёт другая стройка; перебор мест, пока одно не подойдёт
     for (const [da, r] of [[0, 18], [0.7, 20], [-0.7, 20], [1.4, 24], [-1.4, 24], [2.6, 22], [3.14, 26], [0, 28]]) if (!applyCmd(s, me, { c: 'build', ids: (idle.length ? idle : builders).map(b => b.id), kind: k, x: hq.x + Math.cos(dir + a + da) * r, y: hq.y + Math.sin(dir + a + da) * r })) break;
@@ -81,11 +82,11 @@ export function botThink(s: State, me: number): void {
     const opts = producible(b.kind, F).filter(k => ROLES[k]!.tier <= s.players[me].tier);
     if (opts.length) applyCmd(s, me, { c: 'train', id: b.id, k: opts[Math.floor(Math.random() * opts.length)] });
   }
-  const broken = mine.find(u => (isStruct(u.kind) || VEHICLES.has(u.kind)) && u.build >= 1 && u.hp < maxHp(u.kind) * 0.6);
+  const broken = mine.find(u => (isStruct(u.kind) || VEHICLES.has(u.kind)) && u.build >= 1 && u.hp < hpOf(u) * 0.6);
   if (broken && idle.length && !site) applyCmd(s, me, { c: 'assist', ids: [idle[0].id], id: broken.id }); // ремонт
 
   if (s.tick % 100 !== (me * 7) % 100) return; // приказы армии раз в 5 секунд
-  const squads = mine.filter(u => SQUADS.has(u.kind)), hurt = squads.filter(g => g.hp < maxHp(g.kind));
+  const squads = mine.filter(u => SQUADS.has(u.kind)), hurt = squads.filter(g => g.hp < hpOf(g));
   if (hurt.length && (!saving && !titanTime || req > 400)) applyCmd(s, me, { c: 'reinforce', ids: hurt.map(g => g.id) });
   if (!saving && !titanTime && s.players[me].tier >= 2 && squads.length) applyCmd(s, me, { c: 'gear', ids: squads.map(u => u.id), g: 0 }); // гранаты
   const near = s.units.find(e => e.owner !== me && e.hp > 0 && !isStruct(e.kind) && squads.some(q => q.ch[0] > 0 && Math.hypot(q.x - e.x, q.y - e.y) < 16));

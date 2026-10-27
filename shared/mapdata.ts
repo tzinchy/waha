@@ -1,5 +1,8 @@
 // Карты. «Разлом Святого Шпиля», 240×240 м (пресет MapExample): зеркальная по центру, точки, реликварии, жилы, рельеф.
 // Общая для симуляции (позиции) и клиента (рисование).
+import { MAP_ILLUSION } from './map-illusion.ts';
+import { MAP_ZERO } from './map-zero.ts';
+import { MAP_FROSTBITE } from './map-frostbite.ts';
 const RIFT_MAP = { w: 240, h: 240 };
 const RIFT_HQ_POS = [[30, 30], [210, 210], [210, 30], [30, 210]];
 const RIFT_POINTS = [[120, 120], [120, 45], [120, 195], [45, 120], [195, 120], [75, 168], [165, 72],
@@ -68,6 +71,7 @@ const BASE_MAPS: MapDef[] = [
     blocks: [[0, 0, 72, 72], [64, 64, 80, 80], [248, 0, 72, 72], [176, 64, 80, 80], [0, 248, 72, 72], [64, 176, 80, 80], [248, 248, 72, 72], [176, 176, 80, 80]] },
 ];
 export const MAPS: MapDef[] = [grow(BASE_MAPS[0], 5 / 3), grow(BASE_MAPS[1], 3 / 2)].map(m => ({ ...m, info: m.info.replace(/^\d+×\d+ м/, `${m.map.w}×${m.map.h} м`) })); // карты крупнее: 400×400 и 480×480 — до первой стычки дольше
+MAPS.push(MAP_ZERO, MAP_FROSTBITE, MAP_ILLUSION); // 1×1 из Dawn of War / UA (2p_absolute_zero — зимняя на двух холмах, 2p_frostbite_river, 2p_illusion_of_grandeur): tools/ua-map.mjs
 /** Текущая карта. ponytail: общая на процесс; сервер выставляет её перед каждым шагом своего лобби (расчёт синхронный). Поле State, если появится асинхронность. */
 export let MAP = MAPS[0].map, HQ_POS = MAPS[0].hq, POINTS = MAPS[0].points, RELICS = MAPS[0].relics, VENTS = MAPS[0].vents;
 export let ROADS = MAPS[0].roads, RIVER = MAPS[0].river, BRIDGES = MAPS[0].bridges, PLATEAUS = MAPS[0].plateaus, RUINS = MAPS[0].ruins, CRATERS = MAPS[0].craters, COVER = MAPS[0].cover;

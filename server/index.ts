@@ -9,7 +9,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { MAPS, setMap, applyCmd, newState, snapshot, snapshotFor, step, DT, MAX_PLAYERS, type CaptainCfg, type State } from '../shared/sim.ts';
 import type { C2S, LobbyPlayer, S2C } from '../shared/protocol.ts';
 import { botThink } from './bot.ts';
-import { FACTION_IDS, archFor, isFaction } from '../shared/factions.ts';
+import { PLAYABLE, archFor, isFaction } from '../shared/factions.ts';
 
 type Member = LobbyPlayer & { ws?: WebSocket; left?: boolean };
 type Match = { state: State; slots: Member[]; timer: NodeJS.Timeout };
@@ -52,7 +52,7 @@ function leave(ws: WebSocket) {
 
 function startMatch(l: Lobby) {
   const fighters = l.members.filter(m => !m.spec);
-  for (const m of fighters) if (m.random) m.faction = FACTION_IDS[Math.floor(Math.random() * FACTION_IDS.length)]; // случайная раса выпадает при старте
+  for (const m of fighters) if (m.random) m.faction = PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)]; // случайная раса выпадает при старте
   setMap(l.map); // карта лобби — до создания состояния
   const state = newState(fighters.length, fighters.map(m => m.faction), fighters.map(m => archFor(m.faction, m.captain.arch)));
   state.dev = process.env.NODE_ENV !== 'production'; // чит F9 только в разработке
@@ -101,7 +101,7 @@ function onMessage(ws: WebSocket, raw: string) {
       if (!l) return err('Лобби не найдено');
       if (!l.match && l.members.filter(x => !x.spec).length >= MAX_PLAYERS) return err('Лобби заполнено');
     }
-    const me: Member = { id: randomBytes(4).toString('hex'), name: cleanName(m.name), captain: cleanCaptain(m.captain), ready: false, bot: false, faction: 'order', ws };
+    const me: Member = { id: randomBytes(4).toString('hex'), name: cleanName(m.name), captain: cleanCaptain(m.captain), ready: false, bot: false, faction: PLAYABLE[0], ws };
     if (!l) { l = { code: newCode(), host: me.id, members: [], map: 0 }; lobbies.set(l.code, l); }
     if (l.match) me.spec = true; // в идущий матч — зрителем
     l.members.push(me);
@@ -121,13 +121,13 @@ function onMessage(ws: WebSocket, raw: string) {
   if (l.match) return;
   if (m.t === 'captain') me.captain = cleanCaptain(m.captain);
   else if (m.t === 'ready') me.ready = !!m.ready;
-  else if (m.t === 'faction') { if (m.f === 'random') me.random = true; else if (isFaction(m.f)) { me.faction = m.f; me.random = false; } }
+  else if (m.t === 'faction') { if (m.f === 'random') me.random = true; else if (isFaction(m.f) && PLAYABLE.includes(m.f)) { me.faction = m.f; me.random = false; } }
   else if (m.t === 'spec') { if (m.on || l.members.filter(x => !x.spec).length < MAX_PLAYERS) { me.spec = !!m.on; me.ready = me.spec; } }
   else if (l.host !== me.id) return err('Только хост');
   else if (m.t === 'map') { if (Number.isInteger(m.m) && MAPS[m.m]) l.map = m.m; }
   else if (m.t === 'bot') {
     if (l.members.filter(x => !x.spec).length >= MAX_PLAYERS) return err('Лобби заполнено');
-    l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({}), ready: true, bot: true, faction: FACTION_IDS[1 + Math.floor(Math.random() * (FACTION_IDS.length - 1))] });
+    l.members.push({ id: randomBytes(4).toString('hex'), name: 'Бот', captain: cleanCaptain({}), ready: true, bot: true, faction: PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)] });
   } else if (m.t === 'kick') {
     const k = l.members.find(p => p.id === m.id);
     if (k && k !== me) { l.members = l.members.filter(p => p !== k); if (k.ws) { memberOf.delete(k.ws); send(k.ws, { t: 'left' }); } }
@@ -153,7 +153,18 @@ async function serveStatic(req: IncomingMessage, res: ServerResponse) {
 }
 const http = PROD
   ? createServer((req, res) => void serveStatic(req, res))
-  : createServer((await (await import('vite')).createServer({ root: root + 'client', server: { middlewareMode: true, hmr: { port: 24678 }, fs: { allow: [root] } }, appType: 'spa' })).middlewares); // vite нужен только в разработке
+  : await devServer(); // vite нужен только в разработке
+/** Разработка: Vite + файлы мода Ultimate Apocalypse из ua/ по /ua/… (в git и в сборку не попадают). */
+async function devServer() {
+  const vite = await (await import('vite')).createServer({ root: root + 'client', server: { middlewareMode: true, hmr: { port: 24678 }, fs: { allow: [root] } }, appType: 'spa' });
+  const ua = join(root, 'ua');
+  return createServer(async (req, res) => {
+    if (!req.url?.startsWith('/ua/')) return vite.middlewares(req, res);
+    const file = join(ua, normalize(decodeURIComponent(req.url.slice(4).split('?')[0])).replace(/^(\.\.[/\\])+/, ''));
+    const body = file.startsWith(ua) ? await readFile(file).catch(() => null) : null;
+    res.writeHead(body ? 200 : 404, { 'content-type': 'application/octet-stream' }); res.end(body);
+  });
+}
 const wss = new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 });
 http.on('upgrade', (req, sock, head) => {
   if (req.url === '/ws') wss.handleUpgrade(req, sock, head, ws => wss.emit('connection', ws));

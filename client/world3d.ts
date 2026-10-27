@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { FactionActor, ROLE_MOTIONS, motionDuration, type Motion, type UnitRole, type FactionId as Pack } from './models3d/faction-models.ts';
 import { StructureActor, STRUCTURE_ROLE_MOTIONS, structureMotionDuration, type StructureMotion, type StructureRole } from './models3d/structure-models.ts';
 import { NuclearBlastActor } from './models3d/effect-models.ts';
+import { uaActor, uaReady } from './models3d/ua-models.ts';
 import type { Kind } from '../shared/sim.ts';
 
 /** Вид юнита → роль модели. Чего здесь нет (мины), рисуется по-старому. */
@@ -18,7 +19,7 @@ export const has3d = (k: Kind) => k in UNIT_ROLE || k in STRUCT_ROLE;
 /** Наклон высоты: сколько экранных пикселей даёт метр высоты относительно метра земли. */
 const HEIGHT = 0.85;
 type Actor = { root: THREE.Group; pose: (m: never, t: number) => void };
-type Entry = { kind: Kind; group: THREE.Group; actors: Actor[]; structure: boolean; motions: Set<string>; mode: string; t0: number; dead: number; scale: number; veil?: boolean };
+type Entry = { args: Parameters<World3D['add']>; kind: Kind; group: THREE.Group; actors: Actor[]; structure: boolean; motions: Set<string>; mode: string; t0: number; dead: number; scale: number; veil?: boolean };
 
 export class World3D {
   readonly canvas = document.createElement('canvas');
@@ -40,22 +41,25 @@ export class World3D {
     const rim = new THREE.DirectionalLight(0x9fb3c8, 1.2); rim.position.set(6, 8, -12); this.scene.add(rim);
     this.camera.matrixAutoUpdate = false; this.camera.matrixWorldAutoUpdate = false; // вид задаём проекцией напрямую
     if (import.meta.env.DEV) (window as unknown as { __w3d: World3D }).__w3d = this; // отладка в консоли
+    void uaReady.then(() => { for (const e of [...this.entries.values()]) if (!e.dead) this.add(...e.args); }); // модели мода догрузились позже, чем появились первые юниты
   }
 
   /** Новый юнит или постройка. offs — смещения бойцов отряда в метрах (как в 2D-строю). */
-  add(id: number, pack: Pack, kind: Kind, widthM: number, offs: [number, number][] = [[0, 0]], variant?: 'assault' | 'commander' | 'mystic', level = 1) {
+  add(id: number, pack: Pack, kind: Kind, widthM: number, offs: [number, number][] = [[0, 0]], variant?: 'assault' | 'commander' | 'mystic' | `legend${number}`, level = 1) {
+    const args: Parameters<World3D['add']> = [id, pack, kind, widthM, offs, variant, level];
     this.remove(id);
     pack = GOD_PACK[kind] ?? pack;
     if (kind === 'deity') pack = variant === 'assault' ? 'nightbringer' : 'deceiver'; // К'тан по сборке капитана: штурм — Несущий Ночь с косой, иначе золотой Обманщик
     const ur = UNIT_ROLE[kind], sr = STRUCT_ROLE[kind];
     if (!ur && !sr) return;
     const group = new THREE.Group(), actors: Actor[] = [];
+    const ua = uaActor(pack, kind, variant, structureMotionDuration('build'), level); // родные модели рас из модов DoW, если моды распакованы
     for (const [ox, oy] of sr ? [[0, 0]] : offs) {
-      const a = (sr ? new StructureActor(pack, sr, level) : new FactionActor(pack, ur!, variant)) as unknown as Actor;
+      const a = (ua ? ua() : sr ? new StructureActor(pack, sr, level) : new FactionActor(pack, ur!, variant?.startsWith('legend') ? undefined : variant as 'assault')) as unknown as Actor;
       a.root.position.set(ox, 0, oy);
       group.add(a.root); actors.push(a);
     }
-    const key = pack + '/' + (sr ?? ur) + (variant ?? ''), base = this.native.get(key) ?? (() => {
+    const key = pack + '/' + (ua ? kind : sr ?? ur) + (variant ?? ''), base = this.native.get(key) ?? (() => {
       const b = new THREE.Box3().setFromObject(actors[0].root), s = b.getSize(new THREE.Vector3()), w = Math.max(0.3, Math.min(s.x, s.z) * 0.5 + Math.max(s.x, s.z) * 0.5);
       this.native.set(key, w); return w;
     })();
@@ -64,7 +68,7 @@ export class World3D {
     group.scale.setScalar(scale);
     group.traverse(o => { o.frustumCulled = false; const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && !Array.isArray(m)) m.side = THREE.DoubleSide; }); // косоугольная проекция зеркалит обход граней — рисуем обе стороны
     this.scene.add(group);
-    this.entries.set(id, { kind, group, actors, structure: !!sr, motions: new Set(sr ? STRUCTURE_ROLE_MOTIONS[sr] : ROLE_MOTIONS[ur!]), mode: '', t0: 0, dead: 0, scale });
+    this.entries.set(id, { args, kind, group, actors, structure: !!sr, motions: new Set(sr ? STRUCTURE_ROLE_MOTIONS[sr] : ROLE_MOTIONS[ur!]), mode: '', t0: 0, dead: 0, scale });
   }
 
   /** Кадр юнита: место, поворот, анимация. build — доля готовности стройки (кадры «build» по готовности). alive — сколько бойцов отряда живо. */
@@ -94,20 +98,39 @@ export class World3D {
   }
 
   /** Точки захвата как в Soulstorm: каменная платформа с флагштоком; флаг поднимается при захвате и окрашивается в цвет владельца. */
-  private points = new Map<number, { a: StructureActor; g: THREE.Group }>();
+  private points = new Map<number, { a: StructureActor; g: THREE.Group; relic: boolean; rings: THREE.Object3D[] }>();
   point(i: number, x: number, y: number, kind: 'normal' | 'key' | 'relic', widthM: number) {
-    const a = new StructureActor('legion', kind === 'relic' ? 'resource_point' : 'capture_point', 1, { primary: 0x5b5246, metal: 0x3e3933, trim: kind === 'key' ? 0xd8a24a : 0x9c8a62, glow: 0xb9c3c6 });
+    const a = new StructureActor('legion', kind === 'relic' ? 'resource_point' : 'capture_point', kind === 'key' ? 2 : 1, { primary: 0x5b5246, metal: 0x3e3933, trim: kind === 'key' ? 0xd8a24a : 0x9c8a62, glow: kind === 'relic' ? 0x5dff8a : 0xb9c3c6 }); // ключевая — с пилонами, реликвия — зелёная
     const g = new THREE.Group(); g.add(a.root); g.position.set(x, 0, y);
     const b = new THREE.Box3().setFromObject(a.root).getSize(new THREE.Vector3());
     g.scale.setScalar(widthM / Math.max(0.5, b.x, b.z));
     g.traverse(o => { o.frustumCulled = false; const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && !Array.isArray(m)) m.side = THREE.DoubleSide; });
-    this.scene.add(g); this.points.set(i, { a, g });
+    const rings: THREE.Object3D[] = []; g.traverse(o => { if (o.name === 'CaptureRing') rings.push(o); });
+    this.scene.add(g); this.points.set(i, { a, g, relic: kind === 'relic', rings });
+  }
+  /** Жила (slag deposit) под термогенератор: тёмная порода с раскалёнными трещинами, свечение пульсирует. */
+  private vents: THREE.MeshStandardMaterial[] = [];
+  vent(x: number, y: number, widthM: number) {
+    const g = new THREE.Group(), rock = new THREE.MeshStandardMaterial({ color: 0x2b2420, roughness: 0.95 });
+    const lava = new THREE.MeshStandardMaterial({ color: 0xff7a1a, emissive: 0xff5a00, emissiveIntensity: 1.8, roughness: 0.6 });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.15, 0.12, 9), rock); base.position.y = 0.06; g.add(base);
+    for (let i = 0; i < 6; i++) { // трещины лучами от центра
+      const crack = new THREE.Mesh(new THREE.BoxGeometry(0.06 + (i % 2) * 0.04, 0.03, 0.7 + (i % 3) * 0.15), lava);
+      const a = i * Math.PI / 3 + (i % 2) * 0.3; crack.position.set(Math.sin(a) * 0.45, 0.13, Math.cos(a) * 0.45); crack.rotation.y = a; g.add(crack);
+    }
+    const pool = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.05, 10), lava); pool.position.y = 0.14; g.add(pool);
+    for (let i = 0; i < 5; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.16 + (i % 2) * 0.08), rock), a = i * 1.3; r.position.set(Math.sin(a) * 0.95, 0.12, Math.cos(a) * 0.95); g.add(r); }
+    g.position.set(x, 0, y); g.scale.setScalar(widthM / 2.2);
+    g.traverse(o => { o.frustumCulled = false; });
+    this.scene.add(g); this.vents.push(lava);
   }
   /** color — цвет владельца или захватчика (null — нейтральная), prog — доля захвата 0..1. */
   pointState(i: number, color: number | null, owned: boolean, prog: number, now: number) {
     const p = this.points.get(i);
     if (!p) return;
-    p.a.cloth.color.setHex(color ?? 0x8a8174); p.a.glow.color.setHex(color ?? 0xb9c3c6); p.a.glow.emissive.setHex(color ?? 0x55606a);
+    const idle = p.relic ? 0x5dff8a : 0xb9c3c6; // реликвия без хозяина светится зелёным
+    p.a.cloth.color.setHex(color ?? 0x8a8174); p.a.glow.color.setHex(color ?? idle); p.a.glow.emissive.setHex(color ?? (p.relic ? 0x2bbf55 : 0x55606a));
+    for (const r of p.rings) r.visible = color !== null; // кольца на земле горят у захвата и у владельца (как в DoW), у ничьей точки — нет
     if (owned && prog <= 0) p.a.pose('idle', (now / 1000) % 2.4); // флаг поднят и полощется
     else p.a.pose('capture', (owned ? 1 - prog : prog) * structureMotionDuration('capture') * 0.8); // флаг ползёт вверх при захвате и вниз, когда чужие сбивают
   }
@@ -142,6 +165,7 @@ export class World3D {
       e.actors.forEach(a => a.pose(e.mode as never, Math.min(t, e.structure ? 1.2 : 1.6)));
       if (t > 1.8) this.remove(id);
     }
+    for (const m of this.vents) m.emissiveIntensity = 1.5 + Math.sin(now / 350) * 0.5; // жилы дышат жаром
     this.blasts = this.blasts.filter(b => { const t = (now - b.t0) / 1000; if (t > b.a.duration) { this.scene.remove(b.a.root); return false; } b.a.pose('explode', t); return true; });
     const sx = (2 * S * zoom) / w, sy = (2 * S * zoom) / h, dz = 2 / (mapH + 120);
     // x → вправо; y экрана = (z − cy − HEIGHT·высота); глубина: ближе к зрителю тот, у кого больше z и выше точка

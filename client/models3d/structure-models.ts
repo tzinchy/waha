@@ -132,18 +132,35 @@ export class StructureActor {
       return node;
     };
 
-    if (role === 'capture_point' || role === 'resource_point') {
-      mesh(this.body, new THREE.CylinderGeometry(1.02, 1.12, 0.17, 12), metal, [0, 0.085, 0]);
-      const ring = mesh(this.body, new THREE.TorusGeometry(0.85, 0.045, 4, 16), trim, [0, 0.19, 0]);
-      ring.rotation.x = Math.PI / 2;
-      for (let i = 0; i < 6; i++) {
-        const angle = i * Math.PI / 3;
-        mesh(this.body, new THREE.BoxGeometry(0.15, 0.12, 0.26), primary, [Math.sin(angle) * 0.86, 0.25, Math.cos(angle) * 0.86]).rotation.y = angle;
+    if (role === 'capture_point') { // как в Dawn of War: восьмигранный помост с латунным кольцом, крест из четырёх лучей с латунными торцами, тумба с экраном, шест со знаменем
+      mesh(this.body, new THREE.CylinderGeometry(0.72, 0.82, 0.16, 8), metal, [0, 0.08, 0]);
+      mesh(this.body, new THREE.CylinderGeometry(0.5, 0.5, 0.05, 8), primary, [0, 0.185, 0]);
+      const rim = mesh(this.body, new THREE.TorusGeometry(0.68, 0.045, 4, 8), trim, [0, 0.17, 0]);
+      rim.rotation.x = Math.PI / 2; rim.rotation.z = Math.PI / 8;
+      for (let i = 0; i < 8; i++) { const a = (i + 0.5) * Math.PI / 4; mesh(this.body, new THREE.BoxGeometry(0.07, 0.05, 0.07), trim, [Math.sin(a) * 0.6, 0.2, Math.cos(a) * 0.6]); } // латунные заклёпки
+      for (let i = 0; i < 4; i++) { // четыре луча креста
+        const arm = this.joint(this.body, `Arm${i}`, [0, 0, 0]);
+        arm.rotation.y = i * Math.PI / 2;
+        mesh(arm, new THREE.BoxGeometry(0.16, 0.08, 0.95), metal, [0, 0.05, 1.2]);
+        mesh(arm, new THREE.BoxGeometry(0.06, 0.02, 0.95), trim, [0, 0.1, 1.2]);
+        mesh(arm, new THREE.BoxGeometry(0.3, 0.17, 0.3), trim, [0, 0.085, 1.72]);
+        mesh(arm, new THREE.BoxGeometry(0.16, 0.04, 0.16), metal, [0, 0.18, 1.72]);
       }
-      if (role === 'capture_point') {
-        mesh(this.body, new THREE.CylinderGeometry(0.04, 0.07, 2.8, 8), trim, [0, 1.58, 0]);
-        mesh(this.body, new THREE.OctahedronGeometry(0.15), glow, [0, 3.09, 0]);
-        this.flag = this.joint(this.body, 'FlagRaise', [0.07, 2.58, 0]);
+      mesh(this.body, new THREE.BoxGeometry(0.42, 0.48, 0.42), metal, [0, 0.45, 0]); // тумба
+      mesh(this.body, new THREE.BoxGeometry(0.46, 0.05, 0.46), trim, [0, 0.7, 0]);
+      mesh(this.body, new THREE.BoxGeometry(0.22, 0.18, 0.02), glow, [0, 0.47, 0.215]); // зелёный экран когитатора
+      for (const r of [1.35, 2.0]) { const ring = mesh(this.body, new THREE.TorusGeometry(r, 0.05, 3, 48), glow, [0, 0.02, 0]); ring.rotation.x = Math.PI / 2; ring.name = 'CaptureRing'; } // кольца захвата на земле — цвет захватчика
+      mesh(this.body, new THREE.CylinderGeometry(0.035, 0.05, 2.5, 8), trim, [0, 1.95, 0]); // шест
+      mesh(this.body, new THREE.BoxGeometry(0.62, 0.04, 0.04), trim, [0.3, 3.15, 0]); // перекладина знамени
+      mesh(this.body, new THREE.OctahedronGeometry(0.09), trim, [0, 3.25, 0]);
+      if (this.level > 1) for (let i = 0; i < 4; i++) { // ключевая точка (Critical Location): на торцах креста — пилоны с огнями
+        const a = i * Math.PI / 2 + Math.PI / 4, x = Math.sin(a) * 1.55, z = Math.cos(a) * 1.55;
+        mesh(this.body, new THREE.BoxGeometry(0.26, 1.3, 0.26), metal, [x, 0.65, z]);
+        mesh(this.body, new THREE.BoxGeometry(0.32, 0.08, 0.32), trim, [x, 1.32, z]);
+        mesh(this.body, new THREE.OctahedronGeometry(0.11), glow, [x, 1.5, z]);
+      }
+      {
+        this.flag = this.joint(this.body, 'FlagRaise', [0.07, 3.12, 0]); // знамя висит с перекладины
         for (let i = 0; i < 4; i++) {
           const panel = this.joint(this.flag, `FlagPanel${i}`, [i * 0.21, 0, 0]);
           mesh(panel, new THREE.BoxGeometry(0.22, 0.66 - i * 0.025, 0.025), cloth, [0.105, -0.27, 0]);
@@ -151,6 +168,17 @@ export class StructureActor {
           this.flagPanels.push(panel);
         }
       }
+    } else if (role === 'resource_point') { // реликвия, как в Dawn of War: древний обелиск на круглом помосте, над ним — зелёный кристалл
+      mesh(this.body, new THREE.CylinderGeometry(1.02, 1.12, 0.17, 12), metal, [0, 0.085, 0]);
+      const ring = mesh(this.body, new THREE.TorusGeometry(0.85, 0.045, 4, 16), trim, [0, 0.19, 0]);
+      ring.rotation.x = Math.PI / 2;
+      for (let i = 0; i < 6; i++) {
+        const angle = i * Math.PI / 3;
+        mesh(this.body, new THREE.BoxGeometry(0.15, 0.12, 0.26), primary, [Math.sin(angle) * 0.86, 0.25, Math.cos(angle) * 0.86]).rotation.y = angle;
+      }
+      const obelisk = mesh(this.body, new THREE.CylinderGeometry(0.12, 0.3, 1.6, 4), metal, [0, 0.97, 0]); obelisk.rotation.y = Math.PI / 4;
+      mesh(this.body, new THREE.BoxGeometry(0.06, 0.9, 0.02), glow, [0, 0.95, 0.19]); // руны
+      const halo = mesh(this.body, new THREE.TorusGeometry(1.25, 0.04, 3, 40), glow, [0, 0.02, 0]); halo.rotation.x = Math.PI / 2;
     } else {
       const model = factionBuilding(faction, role as BuildingRole, this.level);
       this.body.add(model);
@@ -207,10 +235,10 @@ export class StructureActor {
         mesh(crystal, new THREE.OctahedronGeometry(0.2 + (i % 2) * 0.08), glow, [0, 0.1, 0]).scale.y = 2;
         crystal.rotation.z = Math.sin(angle) * 0.24;
       }
-    } else {
+    } else if (role !== 'capture_point') {
       const core = mesh(this.energy, faction === 'scrap' ? new THREE.BoxGeometry(0.18, 0.18, 0.18) : new THREE.OctahedronGeometry(0.14), glow, [0, 0, 0]);
       core.scale.y = faction === 'necrons' ? 1.8 : 1;
-      const energyRing = mesh(this.energy, new THREE.TorusGeometry(role === 'capture_point' ? 0.61 : 0.23, 0.025, 4, 12), trim, [0, 0, 0]);
+      const energyRing = mesh(this.energy, new THREE.TorusGeometry(0.23, 0.025, 4, 12), trim, [0, 0, 0]);
       energyRing.rotation.x = Math.PI / 2;
     }
     for (let i = 0; i < 5; i++) {

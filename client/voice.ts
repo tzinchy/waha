@@ -4,6 +4,7 @@ import type { Kind } from '../shared/sim.ts';
 
 type Ev = 'select' | 'move' | 'attack' | 'ready' | 'hurt';
 const LINES: Record<FactionId, Record<Ev, string[]>> = {
+  inquisition: { select: ['Ордо Маллеус слушает.', 'Мы — щит человечества.', 'Император защищает.'], move: ['Выдвигаемся.', 'Во имя Святой Инквизиции.'], attack: ['Изгнать демона!', 'Очистить ересь!', 'Нет пощады нечистому!'], ready: ['Серые Рыцари прибыли.', 'Отряд готов.'], hurt: ['Нас теснят!'] },
   order: { select: ['Слушаю, брат-капитан.', 'Мы — молот Императора.', 'Во имя Императора.', 'Приказывайте.'], move: ['Выдвигаемся.', 'Будет исполнено.', 'Строем — вперёд.'], attack: ['Очистить ересь!', 'Огонь по врагу!', 'За Императора!'], ready: ['Отделение готово.', 'Прибыли по вашему зову.', 'Мы не знаем страха.'], hurt: ['Держать строй!', 'Нас теснят!'] },
   clockwork: { select: ['Механизм заведён.', 'Тик… так.', 'Династия внемлет.'], move: ['По графику.', 'Шестерни в ходу.', 'Время движется.'], attack: ['Ваше время вышло.', 'Остановить их.', 'Стереть.'], ready: ['Пробуждение завершено.', 'Заводка окончена.'], hurt: ['Повреждение корпуса!'] },
   orks: { select: ['Чё надо, босс?', 'Ну, мы тута!', 'Ваагх?'], move: ['Топаем!', 'Ща всё будет!', 'Пошли, пацаны!'], attack: ['Ваа-агх!', 'Мочи их!', 'Бей, круши!'], ready: ['Мы готовы драцца!', 'Кто тут главный? Мы!'], hurt: ['Ой, больно же!'] },
@@ -11,7 +12,7 @@ const LINES: Record<FactionId, Record<Ev, string[]>> = {
   tyranids: { select: ['Разум улья слышит.', 'Рой голоден.', 'Синапс отвечает.'], move: ['Рой движется.', 'Ползём.', 'Улей направляет.'], attack: ['Поглотить!', 'Рвите добычу!', 'Биомасса!'], ready: ['Рой пробудился.', 'Улей растёт.'], hurt: ['Рой истекает кислотой!'] },
   ashen: { select: ['Пепел шепчет.', 'Говори, смертный.', 'Синклит здесь.'], move: ['Тени расступаются.', 'Мы скользим.', 'Как пожелаешь.'], attack: ['Сжечь дотла.', 'Их души — наши.', 'Порча!'], ready: ['Мы явились из Разлома.', 'Жар пробуждён.'], hurt: ['Пепел осыпается!'] },
 };
-const TONE: Record<FactionId, { pitch: number; rate: number }> = { order: { pitch: 0.9, rate: 1 }, clockwork: { pitch: 0.7, rate: 0.85 }, orks: { pitch: 0.6, rate: 1.25 }, eldar: { pitch: 1.2, rate: 1.15 }, tyranids: { pitch: 0.4, rate: 0.85 }, ashen: { pitch: 0.75, rate: 0.9 } };
+const TONE: Record<FactionId, { pitch: number; rate: number }> = { order: { pitch: 0.9, rate: 1 }, inquisition: { pitch: 0.85, rate: 0.95 }, clockwork: { pitch: 0.7, rate: 0.85 }, orks: { pitch: 0.6, rate: 1.25 }, eldar: { pitch: 1.2, rate: 1.15 }, tyranids: { pitch: 0.4, rate: 0.85 }, ashen: { pitch: 0.75, rate: 0.9 } };
 const BIG = new Set<Kind>(['titan', 'hveh', 'legend', 'elite', 'healer']);
 
 let last = 0, enabled = true, ruVoice: SpeechSynthesisVoice | null = null;
