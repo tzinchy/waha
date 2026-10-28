@@ -105,7 +105,7 @@ test('команды: чужими юнитами управлять нельз�
   applyCmd(s, 0, { c: 'move', ids: [enemy.id], x: 50, y: 50 });
   assert.equal(enemy.order, null);
   const b = unit(s, 0, 'builder');
-  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: 90, y: 90 }) ?? '', /рядом со штабом/);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: 100, y: 150 }) ?? '', /рядом со штабом/);
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: 30, y: 30 }) ?? '', /точки/);
   assert.equal(applyCmd(s, 0, { c: 'move', ids: [captainAt(s, 0).id], x: NaN, y: 1 }), undefined);
   assert.equal(captainAt(s, 0).order, null);
@@ -183,7 +183,7 @@ test('сетка построек: здание привязано к клетк
   assert.deepEqual([bar.x, bar.y], [(f.x0 + f.n / 2) * BCELL, (f.y0 + f.n / 2) * BCELL], 'центр на сетке');
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: bar.x, y: bar.y + (f.n - 1) * BCELL }), 'Место занято', 'следы пересекаются');
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: bar.x, y: bar.y + f.n * BCELL }), undefined, 'вплотную по клеткам можно');
-  const cap = captainAt(s, 0), w = spawn(s, 0, 'barracks', 100, 90), g = footRect('barracks', w.x, w.y); // открытая земля Absolute Zero
+  const cap = captainAt(s, 0), w = spawn(s, 0, 'barracks', 100, 90), g = footRect('barracks', w.x, w.y); // открытая земля «Перевала»
   [cap.x, cap.y] = [w.x - 12, w.y];
   applyCmd(s, 0, { c: 'move', ids: [cap.id], x: w.x + 12, y: w.y });
   for (let i = 0; i < 6 / DT; i++) {

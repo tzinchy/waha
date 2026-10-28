@@ -18,7 +18,7 @@ function advance(s: State, seconds: number) {
   for (let i = 0; i < Math.round(seconds / DT); i++) step(s);
 }
 function duel(attacker: Kind, target: Kind, distance: number, retaliate = false, factions?: FactionId[]) {
-  const s = arena(factions), victim = spawn(s, 1, target, 40 + distance, 40), source = spawn(s, 0, attacker, 40, 40); // открытая земля Absolute Zero
+  const s = arena(factions), victim = spawn(s, 1, target, 40 + distance, 40), source = spawn(s, 0, attacker, 40, 40); // открытая земля «Перевала»
   if (!retaliate) victim.frozen = 1e6;
   assert.equal(applyCmd(s, 0, { c: 'attack', ids: [source.id], id: victim.id }), undefined);
   return { s, source, victim };

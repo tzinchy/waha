@@ -79,19 +79,6 @@ async function load(base: string[], model: string) {
   templates.set(model, buildWhm(m, (p) => tex.get(p) ?? null));
 }
 
-/** Несжатый TGA 24/32 бита (иконки и виды сверху карт DoW) → холст. */
-export function tgaCanvas(b: ArrayBuffer) {
-  const v = new DataView(b), w = v.getUint16(12, true), h = v.getUint16(14, true), bpp = v.getUint8(16) / 8, top = v.getUint8(17) & 0x20, o = 18 + v.getUint8(0);
-  if (v.getUint8(2) !== 2 || (bpp !== 3 && bpp !== 4)) return null;
-  const img = new ImageData(w, h), src = new Uint8Array(b, o, w * h * bpp);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const s = ((top ? y : h - 1 - y) * w + x) * bpp, d = (y * w + x) * 4;
-    img.data[d] = src[s + 2]; img.data[d + 1] = src[s + 1]; img.data[d + 2] = src[s]; img.data[d + 3] = bpp === 4 ? src[s + 3] : 255;
-  }
-  const c = document.createElement('canvas');
-  c.width = w; c.height = h; c.getContext('2d')!.putImageData(img, 0, 0);
-  return c;
-}
 /** Несжатый TGA 24/32 бита (иконки модов такие) → data:-URL PNG. */
 function tgaUrl(b: ArrayBuffer) {
   const v = new DataView(b), w = v.getUint16(12, true), h = v.getUint16(14, true), bpp = v.getUint8(16) / 8, top = v.getUint8(17) & 0x20, o = 18 + v.getUint8(0);

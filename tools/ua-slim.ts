@@ -1,19 +1,17 @@
-// Отбор из ua/ только того, что клиент реально грузит: модели (.whm/.whe), их текстуры (.rsh), иконки (.tga), земля карт (.tga + .sgb),
+// Отбор из ua/ только того, что клиент реально грузит: модели (.whm/.whe), их текстуры (.rsh), иконки (.tga),
 // эффекты выстрелов и ударов (art/fx/*.lua из событий .whe и попаданий оружия .events + их текстуры) и карта попаданий fx-hits.json.
-// Копирует в ua-slim/ с той же структурой — её можно отдавать по /ua/ вместо ua/ (8+ ГБ). Запуск: npx tsx tools/ua-slim.ts [карта…]
-// Без аргументов — земля Absolute Zero. ua/ не трогает. Для tools/ua-race.mjs и ua-map.mjs по-прежнему нужен полный ua/ (attrib, Locale, .sgb).
+// Копирует в ua-slim/ с той же структурой — её можно отдавать по /ua/ вместо ua/ (8+ ГБ). Запуск: npx tsx tools/ua-slim.ts
+// ua/ не трогает. Для tools/ua-race.mjs по-прежнему нужен полный ua/ (attrib, Locale).
 import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { ART, entry, fireMotions } from '../client/models3d/ua-models.ts';
 import { eventsFile, FX_BASES, fxFile, fxTextures, parseFxLua, texAlts } from '../client/models3d/ua-fx.ts';
 import { parseWhe, parseWhm } from '../client/whm.ts';
 import { MOD_RACES, UA_WEAPONS, type Kind } from '../shared/sim.ts';
-import { MAPS } from '../shared/mapdata.ts';
 import type { FactionId } from '../shared/factions.ts';
 
 const read = (rel: string) => { const b = readFileSync(join('ua', rel)); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); };
 const fxs = new Set<string>(); // пути эффектов из событий
-const maps = process.argv.slice(2).length ? process.argv.slice(2) : ['zero'];
 const files = new Set<string>(); // пути от /ua/
 /** Первый существующий файл в папках мода (как first() в клиенте); регистр в путях бывает разный — пробуем как есть и в нижнем. */
 const find = (bases: string[], path: string) => {
@@ -36,7 +34,6 @@ for (const f of Object.keys(ART) as FactionId[]) {
     for (const ext of ['.tga', '.TGA']) { const r = e.icon && find(e.art.base, 'art/ui/ingame/' + e.icon.replace(/\\/g, '/').replace(/\.tga$/i, '') + ext); if (r) { files.add(r); break; } }
   }
 }
-for (const m of MAPS) if (m.ground && maps.includes(m.id)) for (const ext of ['.tga', '.sgb']) files.add(m.ground.replace(/^\/ua\//, '').replace(/\.tga$/i, ext)); // текстура + рельеф (.sgb)
 // попадания: в .rgd оружия после type_surface\tp_<поверхность>.lua идёт путь события (art/events/…); ponytail: по порядку строк, без разбора хэшей
 const hits: Record<string, Record<string, string>> = {};
 for (const w of new Set(Object.values(UA_WEAPONS).flatMap((by) => Object.values(by ?? {}).flat()))) {
@@ -67,4 +64,4 @@ for (const rel of files) {
   const to = join('ua-slim', rel);
   mkdirSync(dirname(to), { recursive: true }); copyFileSync(join('ua', rel), to); bytes += statSync(to).size;
 }
-console.log('ok ua-slim:', files.size, 'файлов,', (bytes / 1e6).toFixed(0), 'МБ; земля карт:', maps.join(', '));
+console.log('ok ua-slim:', files.size, 'файлов,', (bytes / 1e6).toFixed(0), 'МБ');
