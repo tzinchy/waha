@@ -1,7 +1,7 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import { World3D, has3d } from './world3d.ts';
-import { tgaCanvas, uaArtIcon, uaIcon } from './models3d/ua-models.ts';
+import { UA_SCALE, tgaCanvas, uaArtIcon, uaIcon } from './models3d/ua-models.ts';
 import { GROUND } from '../shared/mapdata.ts';
 import { ARCHS, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
 import { UA_BASE, UA_SETUP, inherit, MOD_RACES, UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, popOf, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
@@ -10,6 +10,7 @@ import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
 import { paintDow, paintMap } from './mappaint.ts';
 import { voice } from './voice.ts';
+import { UA_SIZE } from './models3d/ua-sizes.ts';
 
 const S = 26; // пикселей мира на единицу симуляции
 /** Цвет выстрелов фракции: [трассер/огонь, луч/свечение] — чтобы с первого взгляда было видно, кто стреляет. */
@@ -63,7 +64,9 @@ export const SLOT_COLORS = [0x4fa392, 0xe0675c, 0xe0a53a, 0xb9c3c6];
 // ширина силуэта в мире (единиц симуляции); сами силуэты — по фракции игрока (shared/factions.ts)
 const WIDTH: Record<string, number> = { doom: 8, plague: 10, bell: 3.8, captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, motorpool: 9, yard: 14, legend: 6, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
 /** Ширина силуэта на карте = рост в метрах (все силуэты дизайн-системы в одном поле 120×164): Стражник 2.4 м, титан — 26–34 м. */
-const widthOf = (kind: Kind, f: FactionId) => (kind === 'titan' ? ROSTER[f].titanM : kind === 'turret' && f === 'tyranids' ? 5.4 : ROLES[kind]?.meters && !WIDTH[kind] ? ROLES[kind]!.meters : WIDTH[kind] ?? 2.4);
+/** Модель мода, как её рисует World3D (UA_SCALE): [ширина, высота] в метрах игры или undefined (нет модели). */
+const uaSize = (kind: Kind, f: FactionId) => { const z = MOD_RACES[f as keyof typeof MOD_RACES] ? UA_SIZE[`${f}/${kind}`] : undefined; return z && ([z[0] * UA_SCALE, z[1] * UA_SCALE] as const); };
+const widthOf = (kind: Kind, f: FactionId) => uaSize(kind, f)?.[0] ?? (kind === 'titan' ? ROSTER[f].titanM : kind === 'turret' && f === 'tyranids' ? 5.4 : ROLES[kind]?.meters && !WIDTH[kind] ? ROLES[kind]!.meters : WIDTH[kind] ?? 2.4);
 /** Постройки, нарисованные для каждой фракции (tools/sprites.py); у Ордена — исходные из дизайн-системы. */
 const FAC_BUILD = new Set<Kind>(['key1', 'key2', 'key3', 'key4', 'gate', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine']);
 const NEUTRAL: Partial<Record<Kind, [string, string]>> = {
@@ -427,9 +430,10 @@ export class Game {
     const bar = document.createElement('div'); bar.className = 'lc-vitals w2d-bar';
     const fg = document.createElement('div'); fg.className = 'lc-vitals__bar'; bar.append(fg);
     bar.style.width = Math.max(40, Math.min(widthOf(kind, pl.faction ?? 'tyranids'), 9) * S * (isStruct(kind) ? 0.7 : 1)) + 'px';
-    if (in3d) bar.style.top = -(widthOf(kind, pl.faction ?? 'tyranids') * S * (isStruct(kind) ? 0.7 : 1.15) + 10) + 'px'; // над моделью
+    const uz = uaSize(kind, pl.faction ?? 'tyranids');
+    if (in3d) bar.style.top = -((uz ? uz[1] * 0.9 : widthOf(kind, pl.faction ?? 'tyranids') * (isStruct(kind) ? 0.7 : 1.15)) * S + 10) + 'px'; // над моделью (юнит мода — по её высоте)
     else if (px[0]) bar.style.top = -((px[0].ay - px[0].top) * px[0].sc + 10) + 'px'; // над макушкой атласа, по центру опорной точки
-    if (kind === 'titan' && !px[0]) { bar.style.bottom = widthOf(kind, pl.faction ?? 'tyranids') * 1.36 * S + 'px'; el.classList.add('titan'); } // полоса над головой титана
+    if (kind === 'titan' && !px[0] && !uz) { bar.style.bottom = widthOf(kind, pl.faction ?? 'tyranids') * 1.36 * S + 'px'; el.classList.add('titan'); } // полоса над головой титана
     el.append(ring, sel, body, bar);
     this.place2(el, x, y);
     return { id, owner, kind, el, body, svgs, px, bar, fg, sel, x, y, tx: x, ty: y, f: 0, hp: maxHp(kind, this.fac(owner)), build: 1, q: 0, dead: false, lvl: 1, upg: -1, atkUntil: 0, artPath, prog: 0, prod: 0, gear: 0, ch: [0, 0, 0], gcd: 0, sh: 0, frozen: 0, carry: 0, rise: 0, off: false, arch: kind === 'captain' ? arch ?? pl.captain.arch : undefined };
@@ -538,7 +542,9 @@ export class Game {
     if (best) { best.atkUntil = now + (melee ? 1300 : 700); best.shotAt = now; best.melee = melee; best.atkFx = fx; }
     if (this.shots.length > 120) return;
     const ns = 'http://www.w3.org/2000/svg', g = document.createElementNS(ns, 'g');
-    const h = best && !isStruct(best.kind) ? 1.2 : 2.2, X1 = x1 * S, Y1 = (y1 - h) * S, X2 = x2 * S, Y2 = (y2 - 1) * S;
+    const hv = melee ? this.nearest(x2, y2) : undefined, hr = hv && isStruct(hv.kind) ? (foot(hv.kind) * BCELL) / 2 : 0, hd = Math.hypot(x1 - x2, y1 - y2); // удар по зданию — у его края со стороны бойца, а не в центре под моделью
+    const hx = hr && hd > hr ? x2 + ((x1 - x2) / hd) * hr : x2, hy = hr && hd > hr ? y2 + ((y1 - y2) / hd) * hr : y2;
+    const h = best && !isStruct(best.kind) ? 1.2 : 2.2, X1 = x1 * S, Y1 = (y1 - h) * S, X2 = hx * S, Y2 = (hy - 1) * S;
     const dir = Math.sign(X2 - X1) || 1;
     const wf = best && MOD_RACES[this.fac(best.owner) as keyof typeof MOD_RACES] ? UA_WEAPONS[this.fac(best.owner)]?.[best.kind] ?? [] : [], tv = wf.length ? this.nearest(x2, y2) : undefined;
     const surf = !tv ? '' : isStruct(tv.kind) ? 'stone' : this.fac(tv.owner) === 'tyranids' ? 'flesh' : VEHICLES.has(UA_BASE[tv.kind] ?? tv.kind) ? 'heavy_metal_armour' : 'light_metal_armour'; // поверхность цели — как type_surface в DoW
@@ -570,7 +576,8 @@ export class Game {
     else g.innerHTML = [0, 1, 2].map(i => `<line class="w2d-tracer" x1="${X1}" y1="${Y1 + i * 3}" x2="${X2 + (i - 1) * 6}" y2="${Y2 + (i - 1) * 4}" style="animation-delay:${i * 50}ms"/>`).join('') + this.sparks(X2, Y2, 4, '#ffd38a', 10); // очередь
     if (fx === 0 || fx === 14) g.innerHTML += this.sparks(X2, Y2, 3, '#ffe2a0', 8);
     if (ua) g.innerHTML = ua + this.sparks(X2, Y2, 3, '#ffe2a0', 8); // расы UA: снаряд вместо линий (выше — две цепочки, вторая перезаписывает первую)
-    if (mod?.shot) g.innerHTML = mod.hit || melee ? '' : this.sparks(X2, Y2, 3, '#ffe2a0', 8); // эффекты мода заменяют рисованные; нет попадания из мода — искры в цели
+    if (mod?.shot && !melee) g.innerHTML = mod.hit ? '' : this.sparks(X2, Y2, 3, '#ffe2a0', 8); // эффекты мода заменяют рисованные; нет попадания из мода — искры в цели
+    else if (mod?.hit && melee) g.innerHTML = ''; // удар: попадания в рукопашную в моде нет (они в архивах DoW) — рисованные когти/рубка остаются
     else if (mod?.hit) g.innerHTML = ua;
     if (best) { // цвет выстрела — по фракции стрелка; оружие по площади рисует кольцо взрыва в свой радиус
       const c = SHOT_COLOR[this.fac(best.owner)]; g.style.setProperty('--art-fire', c[0]); g.style.setProperty('--art-glow', c[1]);

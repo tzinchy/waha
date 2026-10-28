@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { FactionActor, ROLE_MOTIONS, motionDuration, type Motion, type UnitRole, type FactionId as Pack } from './models3d/faction-models.ts';
 import { StructureActor, STRUCTURE_ROLE_MOTIONS, structureMotionDuration, type StructureMotion, type StructureRole } from './models3d/structure-models.ts';
 import { NuclearBlastActor } from './models3d/effect-models.ts';
-import { uaActor, uaReady, type UAActor } from './models3d/ua-models.ts';
+import { UA_SCALE, uaActor, uaReady, type UAActor } from './models3d/ua-models.ts';
 import { FxLayer, fxVisible, hitVisible, HITS, loadEvents } from './models3d/ua-fx.ts';
 import { inherit, type Kind } from '../shared/sim.ts';
 
@@ -60,11 +60,12 @@ export class World3D {
       a.root.position.set(ox, 0, oy);
       group.add(a.root); actors.push(a);
     }
-    const key = pack + '/' + (ua ? kind : sr ?? ur) + (variant ?? ''), base = this.native.get(key) ?? (() => {
+    const key = pack + '/' + (ua ? kind : sr ?? ur) + (variant ?? ''), base = ua ? 1 : this.native.get(key) ?? (() => {
       const b = new THREE.Box3().setFromObject(actors[0].root), s = b.getSize(new THREE.Vector3()), w = Math.max(0.3, Math.min(s.x, s.z) * 0.5 + Math.max(s.x, s.z) * 0.5);
       this.native.set(key, w); return w;
     })();
-    const scale = (widthM / base) * (kind === 'legend' ? 1.3 : 1);
+    // модели мода — в метрах DoW, все в одном масштабе UA_SCALE: соотношение размеров как в игре (улей больше Тирана, Карнифекс больше гаунта)
+    const scale = ua ? UA_SCALE : (widthM / base) * (kind === 'legend' ? 1.3 : 1);
     for (const a of actors) { a.root.position.multiplyScalar(1 / scale); } // строй — в метрах игры, модель — в своих
     group.scale.setScalar(scale);
     group.traverse(o => { o.frustumCulled = false; const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && !Array.isArray(m)) m.side = THREE.DoubleSide; }); // косоугольная проекция зеркалит обход граней — рисуем обе стороны
@@ -157,7 +158,8 @@ export class World3D {
     const e = this.entries.get(id), t = to === undefined ? undefined : this.entries.get(to);
     if (!e) return { shot: false, hit: false };
     e.aim = new THREE.Vector3(x, (t?.h ?? 1.2) * 0.5, y);
-    const shot = !!(e.actors[0] as Partial<UAActor>).fxEvents?.(melee ? 'attack' : 'shoot').some(x => (melee || 'fx_other' in x.e) && fxVisible(x.e.fx)), // снаряд мода (или удар) виден — рисованный не нужен ev = this.hits[weapon]?.[surface];
+    const shot = !!(e.actors[0] as Partial<UAActor>).fxEvents?.(melee ? 'attack' : 'shoot').some(x => (melee || 'fx_other' in x.e) && fxVisible(x.e.fx)), // снаряд мода (или удар) виден — рисованный не нужен
+      ev = this.hits[weapon]?.[surface];
     if (ev) {
       const from = e.group.position.clone().setY(e.h * 0.5), at = e.aim.clone(), q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), from.clone().sub(at).normalize()); // брызги — навстречу стрелку
       setTimeout(() => void loadEvents(ev).then(list => { for (const x of list?.values() ?? []) if (x.fx) void this.fx.play(x.fx, at, q, t?.scale ?? e.scale); }), melee ? 0 : this.fx.flight(from, at) * 1000);
@@ -172,7 +174,8 @@ export class World3D {
       if (!ev?.length || (alive !== undefined && i >= alive)) return;
       for (const { e: x, t: at } of ev) if (at > prev + off && at <= t + off) {
         const mk = x.marker ? (a as UAActor).marker(x.marker) : undefined, pos = new THREE.Vector3(), q = new THREE.Quaternion();
-        if (mk) { mk.updateWorldMatrix(true, false); mk.getWorldPosition(pos); q.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 1).transformDirection(mk.matrixWorld)); } // ось эффекта — +Z маркера (мир зеркален по x — поворот не разложить) else pos.copy(e.group.position).setY(e.h * 0.6);
+        if (mk) { mk.updateWorldMatrix(true, false); mk.getWorldPosition(pos); q.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 1).transformDirection(mk.matrixWorld)); } // ось эффекта — +Z маркера (мир зеркален по x — поворот не разложить)
+        else pos.copy(e.group.position).setY(e.h * 0.6);
         void this.fx.play(x.fx, pos, q, e.scale, 'fx_other' in x ? e.aim : undefined);
       }
     });
