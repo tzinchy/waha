@@ -4,7 +4,7 @@ import { World3D, has3d } from './world3d.ts';
 import { UA_SCALE, tgaCanvas, uaArtIcon, uaIcon } from './models3d/ua-models.ts';
 import { GROUND } from '../shared/mapdata.ts';
 import { ARCHS, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
-import { UA_BASE, UA_SETUP, inherit, MOD_RACES, UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, popOf, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { armedStat, UA_BASE, UA_SETUP, inherit, MOD_RACES, UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, popOf, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { BUILD_NAME, PX_PACK, ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -699,6 +699,8 @@ export class Game {
     this.sq = new Map((s.sq ?? []).map(r => [r[0], r.slice(1)]));
     this.mo = new Map((s.mo ?? []).map(r => [r[0], [r[1], r[2]]]));
     this.wu = new Map((s.wu ?? []).map(r => [r[0], r.slice(1)]));
+    this.armSt.clear();
+    for (const [id, w] of this.wu) { const v = this.views.get(id), a = v && armedStat(this.fac(v.owner), v.kind, w.slice(2)); if (a) this.armSt.set(id, a); } // как armRange в симуляции
     this.capHud(me);
     this.drawMini(s);
     $('hud-energy').textContent = String(this.energy);
@@ -782,7 +784,8 @@ export class Game {
   private uaReq(k: Kind, at?: number) { const f = this.fac(), r = UA_REQ[f]?.[k]; return r ? uaMissing(f, r, this.uaHave(), at === undefined ? 0 : this.ad.get(at) ?? 0) : undefined; }
   private fac(owner = this.slot): FactionId { return this.players[owner]?.faction ?? 'tyranids'; }
   /** Статы и полное здоровье вида у фракции владельца (у рас из модов свои). */
-  private st(v: { kind: Kind; owner: number }) { return statOf(v.kind, this.fac(v.owner)); }
+  private st(v: { kind: Kind; owner: number; id?: number }) { return (v.id !== undefined && this.armSt.get(v.id)) || statOf(v.kind, this.fac(v.owner)); } // купленный стрелковый ствол — своя дальность
+  private armSt = new Map<number, ReturnType<typeof statOf>>();
   private wu = new Map<number, number[]>(); // стволы отрядов UA: id → [ставится (-1 нет), %, куплено по вариантам UA_ARM…]
   private mo = new Map<number, number[]>(); // мораль отрядов UA из снимка: id → [%, надломлен]
   private sq = new Map<number, number[]>(); // отряды из снимка: id → [HP бойца, бойцов, предел пополнения]

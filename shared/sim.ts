@@ -765,11 +765,12 @@ export function armOf(u: Unit): { dmg: number; vs: Record<Armor, number> } | und
   A.opts.forEach((o, i) => { const c = Math.min(u.wu![i] ?? 0, n - (used.get(o.h) ?? 0)); if (c <= 0) return; used.set(o.h, (used.get(o.h) ?? 0) + c); d += c * o.d; for (const a of ARMORS) v[a] += c * o.dv[a]; });
   return { dmg: Math.max(0.1, d / (A.d0 * n)), vs: Object.fromEntries(ARMORS.map(a => [a, Math.max(0, v[a] / Math.max(1e-6, d))])) as Record<Armor, number> };
 }
-/** Рукопашный по умолчанию отряд UA купил стрелковый ствол — бьёт с его дальности (как в DoW: боец со стволом стреляет, сходится врукопашную сам). */
-function armRange(u: Unit) {
-  const A = UA_ARM[u.f!]?.[u.kind], base = statOf(u.kind, u.f), r = Math.max(0, ...(A?.opts ?? []).map((o, i) => ((u.wu?.[i] ?? 0) > 0 ? o.range : 0)));
-  u.st = r > base.range ? { ...base, range: r } : undefined;
+/** Статы бойца с купленными стволами (или undefined — как у вида): рукопашный по умолчанию отряд UA купил стрелковый ствол — бьёт с его дальности (как в DoW: боец со стволом стреляет, сходится врукопашную сам). */
+export function armedStat(f: FactionId | undefined, k: Kind, wu: readonly number[] | undefined): Stat | undefined {
+  const A = f && UA_ARM[f]?.[k], base = statOf(k, f), r = Math.max(0, ...(A ? A.opts : []).map((o, i) => ((wu?.[i] ?? 0) > 0 ? o.range : 0)));
+  return r > base.range ? { ...base, range: r } : undefined;
 }
+const armRange = (u: Unit) => { u.st = armedStat(u.f, u.kind, u.wu); };
 /** Требования ствола мода: исследования UA изучены, здания построены; аддоны штаба — тир (hq_addon_N → N+1, прочие → 2). Неизвестные (схемы без модификаторов) пока не держат. */
 export function armReq(s: State, owner: number, req: string[]) {
   const p = s.players[owner], f = p.faction, race = MOD_RACES[f as keyof typeof MOD_RACES], R = UA_RESEARCH[f] ?? [];
