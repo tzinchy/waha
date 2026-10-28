@@ -111,7 +111,7 @@ test('команды: чужими юнитами управлять нельз�
   assert.equal(enemy.order, null);
   const b = unit(s, 0, 'builder');
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: 100, y: 150 }) ?? '', /рядом со штабом/);
-  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: 30, y: 30 }) ?? '', /точки/);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: 60, y: 60 }) ?? '', /точки/);
   assert.equal(applyCmd(s, 0, { c: 'move', ids: [captainAt(s, 0).id], x: NaN, y: 1 }), undefined);
   assert.equal(captainAt(s, 0).order, null);
 });

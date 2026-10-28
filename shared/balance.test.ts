@@ -108,7 +108,7 @@ test('генераторы: обычный где угодно, термо — �
   const s = freeState(2), p = s.players[0], hq = s.units.find(u => u.owner === 0 && u.kind === 'hq')!, b = s.units.find(u => u.owner === 0 && u.kind === 'builder')!;
   Object.assign(p, { req: 1e4, energy: 1e4 });
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: hq.x + 8, y: hq.y + 3 }), undefined);
-  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: 40, y: 40 }), undefined, 'обычный генератор — в любом месте (открытое поле карты)');
+  assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'foundry', x: 80, y: 80 }), undefined, 'обычный генератор — в любом месте (открытое поле карты)');
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'pump', x: VENTS[0][0] + 2, y: VENTS[0][1] }), undefined);
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'pump', x: VENTS[0][0] - 2, y: VENTS[0][1] }) ?? '', /жил/);
   spawn(s, 0, 'titan', hq.x + 30, hq.y + 30);

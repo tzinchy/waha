@@ -1,4 +1,4 @@
-import { UA_ARM, UA_RESEARCH, canReinforce, hpOf, statOf, fromOf, PRODUCERS, GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
+import { MOD_RACES, UA_ADDONS, UA_ARM, UA_REQ, UA_RESEARCH, type UAReq, canReinforce, hpOf, statOf, fromOf, PRODUCERS, GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
 
 /** Бот играет по тем же правилам: казармы, второй строитель, посты на точках, гвардия с пополнением, атака на штаб. */
 export function botThink(s: State, me: number): void {
@@ -27,7 +27,27 @@ export function botThink(s: State, me: number): void {
   const dir = Math.atan2(MAP.h / 2 - hq.y, MAP.w / 2 - hq.x);
   const d = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
-  if (!barracks.length && builders.length && req >= STATS.barracks.cost) {
+  const F0 = pl.faction, UR0 = UA_RESEARCH[F0] ?? [], UA0 = UA_ADDONS[F0] ?? [];
+  /** Требования мода к зданию (исследование, аддон): ставим недостающее в своём свободном здании, где оно ведётся (у Инквизиции казармы — после «Темпоральной силы» в штабе). */
+  const unlock = (r: UAReq | undefined, depth = 0): void => {
+    if (!r || depth > 2) return;
+    for (const q of r) for (const id of q.ids) {
+      if (q.t === 'structure' || q.t === 'either') { // здания-требования строим у штаба (у Инквизиции — Астра Телепатика до казарм)
+        const B = MOD_RACES[F0 as keyof typeof MOD_RACES]?.build as Record<string, string> | undefined, k = B && (Object.keys(B).find(x => id === B[x] || id.endsWith('_' + B[x])) as Kind | undefined);
+        if (!k || mine.some(u => u.kind === k) || !builders.length) { if (q.t === 'either') break; continue; }
+        if (!mine.some(u => isStruct(u.kind) && u.build < 1)) for (const [a, r] of [[1.6, 16], [-1.6, 16], [2.4, 18], [-2.4, 18], [3.1, 20], [0.9, 22], [-0.9, 22]]) if (!applyCmd(s, me, { c: 'build', ids: builders.map(b => b.id), kind: k as 'key1', x: hq.x + Math.cos(dir + a) * r, y: hq.y + Math.sin(dir + a) * r })) return;
+        unlock(UA_REQ[F0]?.[k], depth + 1); return;
+      }
+      const list = q.t === 'research' ? UR0 : q.t === 'addon' || q.t === 'local_addon' ? UA0 : null, i = list ? list.findIndex(x => x.id === id) : -1;
+      if (!list || i < 0 || (q.t === 'research' ? pl.ur?.includes(i) : mine.some(u => ((u.ad ?? 0) & (1 << i)) !== 0 || u.q === 5000 + i))) continue;
+      if (q.t === 'research' && mine.some(u => u.q === 1000 + i)) continue; // уже идёт
+      const b = mine.find(u => isStruct(u.kind) && u.build >= 1 && !u.q && !u.que.length && list[i].ats.includes(u.kind));
+      if (!b || applyCmd(s, me, q.t === 'research' ? { c: 'uar', id: b.id, r: i } : { c: 'uaa', id: b.id, a: i })) unlock(list[i].req, depth + 1);
+    }
+  };
+  const firstArmy = producible('hq', F0).some(k => k !== 'builder' && !isStruct(k)) || of('barracks').some(b => b.build >= 1); // есть где нанять первый отряд
+  if (army0 >= 2 || req > 400 || !firstArmy) for (const k of ['barracks', 'key' + Math.min(pl.tier, 4), 'motorpool', 'yard'] as Kind[]) if (!of(k).length) unlock(UA_REQ[F0]?.[k]); // сначала отряд на точки, потом тех
+  if (!barracks.length && builders.length && req >= statOf('barracks', F0).cost) {
     for (const [r, a] of [[14, 0.6], [14, -0.6], [17, 1.1], [17, -1.1]]) {
       const err = applyCmd(s, me, { c: 'build', ids: builders.map(b => b.id), kind: 'barracks', x: hq.x + Math.cos(dir + a) * r, y: hq.y + Math.sin(dir + a) * r });
       if (!err) return;
@@ -36,12 +56,12 @@ export function botThink(s: State, me: number): void {
   const site = mine.find(u => isStruct(u.kind) && u.build < 1);
   const idle = builders.filter(b => !b.order);
   if (site) for (const b of idle) applyCmd(s, me, { c: 'assist', ids: [b.id], id: site.id });
-  else if (idle.length && req >= STATS.post.cost) {
+  else if (idle.length && req >= statOf('post', F0).cost) {
     const free = s.points.filter(p => p.owner === me && !s.units.some(u => u.kind === 'post' && u.hp > 0 && d(u, p) < 2)).sort((a, b) => d(a, hq) - d(b, hq))[0];
     if (free) applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'post', x: free.x, y: free.y });
   }
   const nest = mine.find(u => u.kind === fromOf('builder', s.players[me].faction) && u.build >= 1); // у тиранидов рипперы выходят из Пула переработки
-  if (nest && builders.length + nest.que.filter(k => k === 'builder').length < 4) applyCmd(s, me, { c: 'train', id: nest.id, k: 'builder' });
+  if (nest && builders.length + nest.que.filter(k => k === 'builder').length < (army0 >= 2 ? 4 : req >= 250 ? 2 : 1)) applyCmd(s, me, { c: 'train', id: nest.id, k: 'builder' }); // без армии — двое рабочих: павших не перекупаем на всё влияние
   const P = s.players[me], key = ('key' + Math.min(P.tier, 4)) as Kind, up = TIER_UP[P.tier];
   if (up && hq.upg < 0 && of(up.key).some(k => k.build >= 1)) { // тир — первым делом: ключевое здание готово, качаемся сразу, как хватает
     if (up.seal && !has(P, 15)) { const k4 = of('key4').find(k => k.build >= 1 && !k.q); if (k4) applyCmd(s, me, { c: 'research', id: k4.id, r: 3 }); } // Печать Вознесения
@@ -81,9 +101,9 @@ export function botThink(s: State, me: number): void {
     .filter(q => !turrets.some(t => d(t, q) < 8));
   if ((!prio && !saving && !titanTime || req > 600) && turrets.length < (P.tier + 1) * 2 && !site && idle.length && req >= 180) for (const q of tSpot.slice(0, 4)) if (!applyCmd(s, me, { c: 'build', ids: idle.map(b => b.id), kind: 'turret', x: q.x, y: q.y })) break; // первое свободное место
   if (!saving && !titanTime && s.players[me].tier > 1) for (const u of [...of('post'), ...of('turret'), ...guards]) if (u.lvl < 2 && u.upg < 0 && s.players[me].req >= 150) applyCmd(s, me, { c: 'upgrade', id: u.id });
-  if (!saving && !titanTime) for (const b of [...barracks, ...of('motorpool'), ...of('warpgate')]) if (b.build >= 1 && b.que.length < 2) { // смешанный состав: всё, что открыто тиром
-    const opts = producible(b.kind, F).filter(k => ROLES[k]!.tier <= s.players[me].tier);
-    if (opts.length) applyCmd(s, me, { c: 'train', id: b.id, k: opts[Math.floor(Math.random() * opts.length)] });
+  if (!saving && !titanTime) for (const b of mine) if (PRODUCERS.has(b.kind) && b.build >= 1 && b.que.length < 2 && !b.q) { // смешанный состав из всех зданий найма мода (у тиранид генокрады — в улье); что не открыто требованиями — сервер откажет
+    const opts = producible(b.kind, F).filter(k => k !== 'builder' && !isStruct(k) && (ROLES[k]?.tier ?? 1) <= s.players[me].tier);
+    for (let t = 0; t < 3 && opts.length; t++) if (!applyCmd(s, me, { c: 'train', id: b.id, k: opts[Math.floor(Math.random() * opts.length)] })) break;
   }
   const broken = mine.find(u => (isStruct(u.kind) || VEHICLES.has(u.kind)) && u.build >= 1 && u.hp < hpOf(u) * 0.6);
   if (broken && idle.length && !site) applyCmd(s, me, { c: 'assist', ids: [idle[0].id], id: broken.id }); // ремонт
