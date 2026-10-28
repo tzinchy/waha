@@ -773,7 +773,9 @@ export class Game {
   }
   private sight(v: { id: number; kind: Kind; owner: number }) { return v.owner === this.slot ? sightOf(this.me(), { kind: v.kind, f: this.fac(), ad: this.ad.get(v.id) }) : this.st(v).sight; }
   private uaMelee(k: Kind, f = this.fac()) { return statOf(k, f).range <= 3; } // рукопашник мода: дальность как у удара
-  private uaReq(k: Kind, at?: number) { const f = this.fac(), r = UA_REQ[f]?.[k]; return r ? uaMissing(f, r, this.uaHave(), at === undefined ? 0 : this.ad.get(at) ?? 0) : undefined; }
+  private uaReq(k: Kind, at?: number) { const f = this.fac(), r = UA_REQ[f]?.[k]; return r ? uaMissing(f, r, this.uaHave(), at === undefined ? 0 : this.ad.get(at) ?? 0, this.bName) : undefined; }
+  /** Имя постройки своей расы, как в меню строителя (ключевые здания и врата — по FACTIONS). */
+  private bName = (k: Kind) => { const F = FACTIONS[this.fac()]; return /^key[1-4]$/.test(k) ? F.keys[Number(k[3]) - 1] : k === 'gate' ? F.gate : this.kindName(k, this.fac()); };
   private fac(owner = this.slot): FactionId { return this.players[owner]?.faction ?? 'tyranids'; }
   /** Статы и полное здоровье вида у фракции владельца (у рас из модов свои). */
   private st(v: { kind: Kind; owner: number; id?: number }) { return (v.id !== undefined && this.armSt.get(v.id)) || statOf(v.kind, this.fac(v.owner)); } // купленный стрелковый ствол — своя дальность
@@ -801,7 +803,7 @@ export class Game {
   }
 
   private kindName(k: Kind, f: FactionId) {
-    const uaName = (f: FactionId, k: Kind) => { const r = MOD_RACES[f as keyof typeof MOD_RACES]; return r?.data.squads[(r.unit as Partial<Record<Kind, string>>)[k] ?? '']?.unit.name || undefined; }; // отряд UA сверх ролей — имя из мода
+    const uaName = (f: FactionId, k: Kind) => { const r = MOD_RACES[f as keyof typeof MOD_RACES], id = (r?.unit as Partial<Record<Kind, string>> | undefined)?.[k] ?? (k.startsWith('ua:') ? k.split(':')[2] : ''); return r?.data.squads[id]?.unit.name || (id ? id.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()) : undefined); }; // без имени в моде — имя отряда мода словами (Stormtroopers) // отряд UA сверх ролей — имя из мода
     const F = FACTIONS[f], R = ROSTER[f] as unknown as Record<string, { name: string } | undefined>;
     if (!isStruct(k) && uaName(f, k)) return uaName(f, k)!; // отряды рас UA — имя из мода (имена ролей игры путали: «Сёстры-экзорцистки» вместо Astropath)
     return k in BUILD_NAME[f] ? BUILD_NAME[f][k as 'post'] : k === 'builder' ? F.builder : k === 'guard' ? F.guard : k === 'hq' ? HQ_NAME[f] : k === 'motorpool' || k === 'yard' ? PROD_NAME[f][k] : k === 'doom' ? DOOM_OF[f].name : R[k]?.name ?? KIND_NAME[k] ?? uaName(f, k) ?? k;
@@ -862,9 +864,14 @@ export class Game {
             info: `Герой расы. ${statOf('captain', this.fac()).hp} HP. Павшего героя заказывают заново.` });
         });
       }
+      if (st.kind === 'hq' && heroAt !== 'hq') { // герой нанимается не в штабе (как в моде) — подсказка, где его искать
+        const o = ARCH_OPTS[this.fac()][main], h = [...this.views.values()].some(v => v.owner === this.slot && v.kind === 'captain' && !v.dead);
+        if (o) c.push({ act: '', name: o.name, hot: '', art: artFor('captain', this.fac(), 1, main), req: h ? 'Уже в армии' : `Нанимается в здании «${this.bName(heroAt)}»`, info: `Герой расы — как в UA, нанимается в здании «${this.bName(heroAt)}» (строится сразу, нужен только штаб).` });
+      }
       if (st.kind === 'hq') {
-        const t = TIER_UP[this.tier], keyOk = t && own(t.key) && [...this.views.values()].some(v => v.owner === this.slot && v.kind === t.key && v.build >= 1);
-        if (!t) c.push({ act: '', name: 'Высший тир', hot: '', icon: ICON.tier, info: 'Тир V достигнут.' });
+        const t = UA_REQ[this.fac()] ? undefined : TIER_UP[this.tier], keyOk = t && own(t.key) && [...this.views.values()].some(v => v.owner === this.slot && v.kind === t.key && v.build >= 1);
+        if (UA_REQ[this.fac()]) { /* раса UA: тир — аддоны штаба мода (ниже), тиров игры нет */ }
+        else if (!t) c.push({ act: '', name: 'Высший тир', hot: '', icon: ICON.tier, info: 'Тир V достигнут.' });
         else {
           const req = !keyOk ? `Нужно здание «${F.keys[this.tier - 1]}»` : t.seal && !(this.research & (1 << 15)) ? 'Нужно исследование «Печать Вознесения»' : undefined;
           c.push({ act: 'tier', name: `Тир ${R[this.tier]}`, hot: 'U', icon: ICON.tier, ...this.price(t.cost, t.energy, t.relics), req, prog: st.upg >= 0 ? st.upg : undefined, info: 'Улучшение штаба открывает новые постройки, исследования и войска.' });
@@ -874,7 +881,7 @@ export class Game {
       if (UA) UA.forEach((x, a) => { // аддоны UA этого здания (достройки; у штаба — переход тира)
         if (!x.ats.includes(st.kind)) return;
         const done = (mask & (1 << a)) !== 0, busy = !done && ((st.q > 0 && st.q !== 5000 + a) || !!this.qk[st.id]?.length);
-        const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask);
+        const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask, this.bName);
         c.push({ act: done || busy || miss ? '' : 'uaa:' + a, name: x.name, hot: '', icon: x.at === 'hq' ? ICON.tier : ICON.build, ...(done ? {} : this.price(x.cost, x.energy)), done,
           info: `Аддон${st.kind === 'turret' ? ' на все турели' : ''}. ${x.info.replace(/^- /, '')} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 5000 + a ? st.prod : undefined, left: st.q === 5000 + a ? Math.ceil(x.time * (1 - st.prod / 100)) : undefined });
       });
@@ -883,7 +890,7 @@ export class Game {
         const mine = UR.map((x, r) => ({ x, r })).filter(({ x }) => x.ats.includes(st.kind)).sort((a, b) => +this.ur.includes(a.r) - +this.ur.includes(b.r));
         for (const { x, r } of mine.slice(0, Math.max(0, 12 - c.length))) {
           const done = this.ur.includes(r), busy = !done && ((st.q > 0 && st.q !== 1000 + r) || !!this.qk[st.id]?.length);
-          const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask);
+          const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask, this.bName);
           c.push({ act: done || busy || miss ? '' : 'uar:' + r, name: x.name, hot: '', icon: ICON.research, ...(done ? {} : this.price(x.cost, x.energy)), done,
             info: `${x.info.replace(/^- /, '')} ${x.info ? '(' + uaModsInfo(x) + ')' : uaModsInfo(x)} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 1000 + r ? st.prod : undefined, left: st.q === 1000 + r ? Math.ceil(x.time * (1 - st.prod / 100)) : undefined });
         }
@@ -953,6 +960,10 @@ export class Game {
     const keyKind = (): Kind | null => { for (let t = 1; t <= Math.min(this.tier, 4); t++) if (!own(('key' + t) as Kind)) return ('key' + t) as Kind; return this.tier >= 5 && !own('gate') ? 'gate' : null; };
     const card = (k: Buildable, name: string, hot: string, info: string, req?: string) => {
       if (UA_REQ[this.fac()]?.[k]) req = this.uaReq(k); // раса UA — требования мода вместо тиров
+      if (UA_REQ[this.fac()]) { // раса UA — что здание нанимает по моду (тексты игры про тиры к ней не относятся)
+        const f = this.fac(), who = [...(HERO_AT[f] === k ? [Object.values(ARCH_OPTS[f])[0]?.name ?? 'герой'] : []), ...producible(k as Kind, f).filter(x => x !== 'builder').map(x => this.kindName(x, f))];
+        if (who.length) info = `Нанимает: ${who.join(', ')}.`;
+      }
       const p = this.price(statOf(k, this.fac()).cost, energyOf(k, this.fac())), lack = (n: number, have: number) => (n > have ? ' class="lack"' : '');
       const cost = req ? `<span>${req}</span>` : [p.cost ? `<span${lack(p.cost, this.req)}>◆ ${p.cost}</span>` : '', p.en ? `<span${lack(p.en, this.energy)}>ϟ ${p.en}</span>` : '', `<span>⧗ ${statOf(k, this.fac()).time} с</span>`].join('');
       return { k, html: `<button class="lc-bcard${req ? ' lc-bcard--locked' : ''}" data-act="${req ? '' : k}" data-tipname="${name}" data-tipinfo="${info}${req ? ` ${req}.` : ''}" ${req ? 'aria-disabled="true"' : ''} ${this.place === k ? 'aria-pressed="true"' : ''}>${miniArt(artFor(k as Kind, this.fac(), 1))}<span><span class="lc-bcard__name">${name}</span><span class="lc-bcard__cost">${cost}</span></span><kbd>${hot}</kbd></button>` };

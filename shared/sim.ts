@@ -385,9 +385,18 @@ export function addonWeapon(u: Unit) {
 export type UAHave = { built: (k: Kind) => boolean; addon: (i: number) => boolean; research: (i: number) => boolean };
 /** Чего не хватает по требованиям UA (текст для подсказки) или undefined. local — маска аддонов здания, у которого заказ.
  *  ponytail: требование к тому, чего у нас нет (здание/исследование/аддон мода без пары в игре), считается выполненным — иначе ветка закрыта навсегда. */
-export function uaMissing(f: FactionId, req: UAReq | undefined, have: UAHave, local = 0): string | undefined {
+export function uaMissing(f: FactionId, req: UAReq | undefined, have: UAHave, local = 0, label?: (k: Kind) => string): string | undefined {
   const I = UA_IDX[f];
   if (!I || !req) return;
+  // где это взять: здание — его имя в игре, исследование и аддон — в каких зданиях (иначе «Нужно: Temporal Power» не объясняет, куда идти)
+  const L = (k: Kind) => label?.(k) ?? I.name.get([...I.kind].find(([, v]) => v === k)?.[0] ?? '') ?? k;
+  const where = (t: string, id: string) => {
+    if (t === 'structure' || t === 'either') { const k = I.kind.get(id); return k ? `«${L(k)}»` : I.name.get(id) || id; }
+    const x = t === 'research' ? UA_RESEARCH[f]?.[I.research.get(id) ?? -1] : UA_ADDONS[f]?.[I.addon.get(id) ?? -1], n = I.name.get(id) || id;
+    if (!x) return n;
+    const at = x.ats.filter(k => !UA_REQ[f]?.[k]?.some(q => q.ids.includes(id))); // не в здании, которое само требует это (телепортер ждёт «Темпоральную силу» — её там не изучить)
+    return `${t === 'research' ? 'исследование' : 'аддон'} «${n}» (${(at.length ? at : x.ats).map(k => L(k)).join(' / ')})`;
+  };
   const ok = (t: string, id: string) => {
     if (t === 'structure' || t === 'either') { const k = I.kind.get(id); return k === undefined || have.built(k); }
     if (t === 'research') { const i = I.research.get(id); return i === undefined || have.research(i); }
@@ -396,7 +405,7 @@ export function uaMissing(f: FactionId, req: UAReq | undefined, have: UAHave, lo
     return t === 'addon' ? have.addon(i) : t === 'local_addon' ? (local & (1 << i)) !== 0 : t === 'no_local_addon' ? (local & (1 << i)) === 0 : true;
   };
   for (const r of req) if (!(r.t === 'either' ? r.ids.some(id => ok(r.t, id)) : r.ids.every(id => ok(r.t, id)))) {
-    const miss = r.ids.filter(id => !ok(r.t, id)).map(id => I.name.get(id) || id);
+    const miss = [...new Set(r.ids.filter(id => !ok(r.t, id)).map(id => where(r.t, id)))];
     return r.t === 'no_local_addon' ? `Уже есть: ${r.ids.map(id => I.name.get(id) || id).join(', ')}` : `Нужно: ${miss.join(r.t === 'either' ? ' или ' : ', ')}`;
   }
 }

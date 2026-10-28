@@ -14,8 +14,8 @@ type Art = { captain: [string, string]; // устарело: см. CAPTAIN_ART
 /** Ключевые здания тиров I–IV, Врата (тир V) и три легенды — по таблице FactionTiers. */
 type Tiers = { keys: [string, string, string, string]; gate: string; legends: [string, string, string]; legendInfo: [string, string, string]; legendArt: [string, string, string] };
 export const FACTIONS: Record<FactionId, { name: string; theme: string; art: Art; builder: string; guard: string; mech: string } & Tiers> = {
-  inquisition: { name: 'Инквизиция', keys: ['Либрариум', 'Дозор Инквизиции', 'Телепортариум Орбиталис', 'Священный артефакт'], gate: 'Телепортариум', legends: ['Брат-капитан', 'Библиарий Серых Рыцарей', 'Капеллан Серых Рыцарей'], legendInfo: ['', '', ''], legendArt: ['Units/legend-irena.svg', 'Units/legend-magister.svg', 'Units/legend-seraph.svg'], theme: 'dark', builder: 'Архитекторы', guard: 'Серые Рыцари', mech: 'Ordo Malleus из Ultimate Apocalypse: отряды, здания, исследования и баланс — из мода', art: { captain: ['Units/captain-crown.svg', 'Units/captain-spire.svg'], builder: 'Units/mason.svg', guard: 'Units/guard.svg', hq: 'Buildings/cathedral.svg', barracks: 'Buildings/barracks.svg', turret: ['Turrets/order-t1.svg', 'Turrets/order-t2.svg'] } },
-  tyranids: { name: 'Тираниды', keys: ['Выводковый шпиль тиранид', 'Капиллярная башня', 'Чрево ксенотипов', 'Улей генокрадов'], gate: 'Споровый шпиль', legends: ['Рой-лорд', 'Смертельный прыгун', 'Старый Одноглазый'], legendInfo: ['', '', ''], legendArt: ['Factions/lord-of-ash.svg', 'Factions/ashen-swarm.svg', 'Factions/ashen-prelate.svg'], theme: 'ashen', builder: 'Рипперы', guard: 'Хормагаунты', mech: 'Тираниды из Ultimate Apocalypse: отряды, здания, исследования и баланс — из мода', art: { captain: [px('tyranids', 'captain'), px('tyranids', 'captain')], builder: px('tyranids', 'builder'), guard: px('tyranids', 'guard'), hq: 'Factions/ashen-hq.svg', barracks: 'Factions/rift.svg', turret: ['Turrets/ashen-idol.svg', 'Turrets/ashen-idol.svg'] } },
+  inquisition: { name: 'Инквизиция', keys: ['Либрариум', 'Астра Телепатика', 'Святилище Императора', 'Центр ядерного оружия'], gate: 'Указ об очищении', legends: ['Брат-капитан', 'Библиарий Серых Рыцарей', 'Капеллан Серых Рыцарей'], legendInfo: ['', '', ''], legendArt: ['Units/legend-irena.svg', 'Units/legend-magister.svg', 'Units/legend-seraph.svg'], theme: 'dark', builder: 'Архитекторы', guard: 'Серые Рыцари', mech: 'Ordo Malleus из Ultimate Apocalypse: отряды, здания, исследования и баланс — из мода', art: { captain: ['Units/captain-crown.svg', 'Units/captain-spire.svg'], builder: 'Units/mason.svg', guard: 'Units/guard.svg', hq: 'Buildings/cathedral.svg', barracks: 'Buildings/barracks.svg', turret: ['Turrets/order-t1.svg', 'Turrets/order-t2.svg'] } },
+  tyranids: { name: 'Тираниды', keys: ['Выводковый улей', 'Капиллярная башня', 'Улей-манипулятор', 'Инкубатор'], gate: 'Туннельные норы', legends: ['Рой-лорд', 'Смертельный прыгун', 'Старый Одноглазый'], legendInfo: ['', '', ''], legendArt: ['Factions/lord-of-ash.svg', 'Factions/ashen-swarm.svg', 'Factions/ashen-prelate.svg'], theme: 'ashen', builder: 'Рипперы', guard: 'Хормагаунты', mech: 'Тираниды из Ultimate Apocalypse: отряды, здания, исследования и баланс — из мода', art: { captain: [px('tyranids', 'captain'), px('tyranids', 'captain')], builder: px('tyranids', 'builder'), guard: px('tyranids', 'guard'), hq: 'Factions/ashen-hq.svg', barracks: 'Factions/rift.svg', turret: ['Turrets/ashen-idol.svg', 'Turrets/ashen-idol.svg'] } },
 };
 export const FACTION_IDS = Object.keys(FACTIONS) as FactionId[];
 export const isFaction = (f: unknown): f is FactionId => typeof f === 'string' && f in FACTIONS;
@@ -39,13 +39,13 @@ export const CAPTAIN_ART: Record<FactionId, Record<'assault' | 'commander' | 'my
 };
 /** Отдельные производственные здания: техцех (вся техника) и верфь титана. */
 export const PROD_NAME: Record<FactionId, { motorpool: string; yard: string }> = {
-  inquisition: { motorpool: 'Домус Астра Телепатика', yard: 'Домус Астра Навигацио' },
-  tyranids: { motorpool: 'Камера карнифексов', yard: 'Нора тригона' },
+  inquisition: { motorpool: 'Дозор Инквизиции', yard: 'Башня Титаникус Механикум' },
+  tyranids: { motorpool: 'Камера карнифексов', yard: 'Камера ассимиляции' },
 };
 /** Названия построек по фракциям, как в Dawn of War: казармы, пост на точке, генераторы, турель. */
 export const BUILD_NAME: Record<FactionId, Record<'barracks' | 'post' | 'foundry' | 'pump' | 'turret', string>> = {
-  inquisition: { barracks: 'Телепортер Серых Рыцарей', post: 'Имперская икона', foundry: 'Варп-генератор', pump: 'Варп-реактор', turret: 'Указ об очищении' },
-  tyranids: { barracks: 'Выводковый улей гаунтов', post: 'Споровая труба', foundry: 'Пул переработки', pump: 'Магмовый выход', turret: 'Споровая мортира' },
+  inquisition: { barracks: 'Телепортер Серых Рыцарей', post: 'Икона очищения', foundry: 'Варп-генератор', pump: 'Варп-реактор', turret: 'Турель с тяжёлым болтером' },
+  tyranids: { barracks: 'Улей гаунтов', post: 'Споровая труба', foundry: 'Пул переработки', pump: 'Магмовый выход', turret: 'Споровая мортира' },
 };
 /** Название штаба фракции (второй и третий строятся с тира II). */
 /** Сверхоружие фракций (тир V): имя, суть, силуэт постройки. */
@@ -53,7 +53,7 @@ export const DOOM_OF: Record<FactionId, { name: string; info: string; art: strin
   inquisition: { name: 'Экстерминатус', info: 'залп с ударного крейсера: 3500 урона в 12 м', art: 'Buildings/observatory.svg' },
   tyranids: { name: 'Споровый ливень', info: '800 урона в 18 м и облако кислотных спор на 20 с', art: 'Factions/ashen-doom.svg' },
 };
-export const HQ_NAME: Record<FactionId, string> = { tyranids: 'Шпиль улья', inquisition: 'Башня Инквизитора' };
+export const HQ_NAME: Record<FactionId, string> = { tyranids: 'Шпиль улья', inquisition: 'Башня Ордо Маллеус' }; // названия построек — переводы имён зданий мода
 /** Герой расы — как в UA: один (Inquisitor Lord, Hive Tyrant), без сборок, аур и бонусов игры; статы, цена и стволы — из мода. */
 export const ARCH_OPTS: Record<FactionId, Partial<Record<'assault' | 'commander' | 'mystic', { name: string; info: string }>>> = {
   inquisition: { commander: { name: 'Inquisitor Lord', info: '' } },
