@@ -883,7 +883,7 @@ export class Game {
         const done = (mask & (1 << a)) !== 0, busy = !done && ((st.q > 0 && st.q !== 5000 + a) || !!this.qk[st.id]?.length);
         const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask, this.bName);
         c.push({ act: done || busy || miss ? '' : 'uaa:' + a, name: x.name, hot: '', icon: x.at === 'hq' ? ICON.tier : ICON.build, ...(done ? {} : this.price(x.cost, x.energy)), done,
-          info: `Аддон${st.kind === 'turret' ? ' на все турели' : ''}. ${x.info.replace(/^- /, '')} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 5000 + a ? st.prod : undefined, left: st.q === 5000 + a ? Math.ceil(x.time * (1 - st.prod / 100)) : undefined });
+          info: `Аддон${st.kind === 'turret' ? ' на все турели' : ''}. ${x.info.replace(/^- /, '')} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 5000 + a ? st.prod : undefined, left: st.q === 5000 + a ? Math.max(0, Math.ceil(x.time * (1 - st.prod / 100))) : undefined });
       });
       const UR = UA_RESEARCH[this.fac()];
       if (UR) { // исследования UA этого здания: сначала неизученные
@@ -892,7 +892,7 @@ export class Game {
           const done = this.ur.includes(r), busy = !done && ((st.q > 0 && st.q !== 1000 + r) || !!this.qk[st.id]?.length);
           const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask, this.bName);
           c.push({ act: done || busy || miss ? '' : 'uar:' + r, name: x.name, hot: '', icon: ICON.research, ...(done ? {} : this.price(x.cost, x.energy)), done,
-            info: `${x.info.replace(/^- /, '')} ${x.info ? '(' + uaModsInfo(x) + ')' : uaModsInfo(x)} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 1000 + r ? st.prod : undefined, left: st.q === 1000 + r ? Math.ceil(x.time * (1 - st.prod / 100)) : undefined });
+            info: `${x.info.replace(/^- /, '')} ${x.info ? '(' + uaModsInfo(x) + ')' : uaModsInfo(x)} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 1000 + r ? st.prod : undefined, left: st.q === 1000 + r ? Math.max(0, Math.ceil(x.time * (1 - st.prod / 100))) : undefined });
         }
       }
       if (st.kind === 'gate') {

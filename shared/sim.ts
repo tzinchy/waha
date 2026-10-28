@@ -1940,12 +1940,13 @@ function cleanup(s: State) {
   if (alive.length <= 1) s.winner = alive.length ? alive[0] : -1;
 }
 
-const prodPct = (u: Unit) => u.q <= 0 || u.kind === 'legend' ? 0
+const prodPct = (u: Unit) => Math.min(100, u.q <= 0 || u.kind === 'legend' ? 0
+  : u.q >= 5000 ? Math.floor((u.prog / (UA_ADDONS[u.f!]?.[u.q - 5000]?.time ?? 1)) * 100) // аддон UA (раньше попадал в ветку исследований: время 1 с — процент за 100, обратный отсчёт в минус)
   : u.q >= 1000 ? Math.floor((u.prog / (UA_RESEARCH[u.f!]?.[u.q - 1000]?.time ?? 1)) * 100)
   : u.q > 100 ? Math.floor((u.prog / UNLOCKS[u.q - 101].time) * 100)
   : /^key/.test(u.kind) && !u.que.length ? Math.floor((u.prog / researchCost(u.q - 1).time) * 100)
   : u.kind === 'gate' ? Math.floor((u.prog / SUMMON_TIME) * 100)
-  : u.que[0] ? Math.floor((u.prog / statOf(u.que[0], u.f).time) * 100) : 0;
+  : u.que[0] ? Math.floor((u.prog / statOf(u.que[0], u.f).time) * 100) : 0);
 
 /** Компактный снимок для сети: целые числа вместо float, чтобы JSON был короче. */
 export type Snap = { mo?: number[][]; ad?: number[][]; wu?: number[][]; sq?: number[][]; ur?: number[][]; d: number[]; ss: number[][]; mg: number[][]; tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; qk: Record<number, number[]>; sm: number[][]; ps: number[][]; sc?: number[][] };

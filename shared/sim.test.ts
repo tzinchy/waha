@@ -390,6 +390,17 @@ test('пополнение отрядов UA: павшие возвращают�
   assert.ok(Math.abs(ctl.players[0].req - p.req - sq.cost * (2 + sq.max - 6)) < 1, 'каждый боец — по цене пополнения мода');
 });
 
+test('прогресс аддона в снимке — от его времени: не за 100%, обратный отсчёт не уходит в минус', async () => {
+  const { UA_ADDONS, snapshot } = await import('./sim.ts');
+  const s = freeState(2, ['inquisition', 'inquisition']), hq = unit(s, 0, 'hq');
+  const t = spawn(s, 0, 'turret', hq.x + 20, hq.y); t.build = 1;
+  const a = UA_ADDONS.inquisition!.findIndex(x => x.id === 'inquisition_turret_addon'), time = UA_ADDONS.inquisition![a].time;
+  assert.equal(applyCmd(s, 0, { c: 'uaa', id: t.id, a }), undefined);
+  run(s, time / 2);
+  const pct = snapshot(s).u.find(r => r[0] === t.id)![12]; // [12] — найм/исследование/аддон, %
+  assert.ok(pct >= 40 && pct <= 60, `половина времени аддона — около 50%, а не ${pct}%`);
+});
+
 test('аддоны UA: турель Инквизиции — ракетная по требованиям мода, ствол меняется, дальность растёт', async () => {
   const { UA_ADDONS, addonWeapon, uaMissing, UA_REQ } = await import('./sim.ts');
   const s = freeState(2, ['inquisition', 'inquisition']), p = s.players[0], hq = unit(s, 0, 'hq');
