@@ -5,7 +5,7 @@ type Chunk = { type: string; id: string; ver: number; name: string; start: numbe
 export type WhmBone = { name: string; parent: number; pos: number[]; quat: number[] };
 export type WhmMesh = { name: string; bone: number; pos: Float32Array; normal: Float32Array; uv: Float32Array; skinIndex: Uint16Array; skinWeight: Float32Array; groups: { texture: string; index: Uint16Array }[] };
 export type WhmAnim = { name: string; duration: number; bones: { name: string; pos: number[][]; rot: number[][] }[]; vis: { name: string; keys: number[][] }[] };
-export type Whm = { bones: WhmBone[]; meshes: WhmMesh[]; anims: WhmAnim[] };
+export type Whm = { bones: WhmBone[]; meshes: WhmMesh[]; anims: WhmAnim[]; markers: { name: string; parent: string; m: number[] }[] };
 
 class Reader {
   p = 0;
@@ -20,7 +20,7 @@ class Reader {
 }
 
 /** Плоский обход дерева чанков: FOLD-чанки раскрываются, DATA отдаются с границами данных. */
-function chunks(v: DataView, start: number, end: number, out: (c: Chunk, path: string[]) => void, path: string[] = []) {
+export function chunks(v: DataView, start: number, end: number, out: (c: Chunk, path: string[]) => void, path: string[] = []) {
   const r = new Reader(v);
   r.p = start;
   while (r.p + 20 <= end) {
@@ -32,14 +32,14 @@ function chunks(v: DataView, start: number, end: number, out: (c: Chunk, path: s
   }
 }
 
-function header(buf: ArrayBuffer) {
+export function header(buf: ArrayBuffer) {
   const v = new DataView(buf);
   if (new TextDecoder().decode(new Uint8Array(buf, 0, 12)) !== 'Relic Chunky') throw new Error('не Relic Chunky');
   return v;
 }
 
 export function parseWhm(buf: ArrayBuffer): Whm {
-  const v = header(buf), out: Whm = { bones: [], meshes: [], anims: [] };
+  const v = header(buf), out: Whm = { bones: [], meshes: [], anims: [], markers: [] };
   const attach = new Map<string, number>();
   let anim: WhmAnim | null = null, slice = '';
   chunks(v, 24, buf.byteLength, (c, path) => {
@@ -51,6 +51,7 @@ export function parseWhm(buf: ArrayBuffer): Whm {
     if (c.type !== 'DATA') return;
     try { // кусок другого формата (бывает у моделей UA) пропускаем — модель грузится без него
     if (c.id === 'SKEL') for (let i = 0, n = r.u32(); i < n; i++) out.bones.push({ name: r.str(), parent: r.i32(), pos: r.floats(3), quat: r.floats(4) });
+    else if (c.id === 'MARK') for (let i = 0, n = r.u32(); i < n; i++) out.markers.push({ name: r.str(), parent: r.str(), m: r.floats(12) }); // маркеры эффектов: кость-родитель, поворот 3×3 и сдвиг
     else if (c.id === 'DATA' && parent === 'MSGR') for (let i = 0, n = r.u32(); i < n; i++) { const name = r.str(); r.u32(); attach.set(name, r.i32()); }
     else if (c.id === 'DATA' && parent === 'MSLC') out.meshes.push(readMesh(r, slice));
     else if (c.id === 'DATA' && parent === 'ANIM' && anim) readAnim(r, anim, out.anims);
@@ -63,15 +64,17 @@ export function parseWhm(buf: ArrayBuffer): Whm {
 /** .whe — дерево действий DoW: действие → движения по условиям (ветки if/elseif/else), движение → клип .whm, условие → классы.
  *  Класс — переменная юнита: скорость, «стреляет», стоящее в точке крепления оружие (первое имя — это оружие, второе — по умолчанию). */
 type WheBranch = { to: string; k: number; c: string }; // k: 0 if, 1 elseif, 2 else, 3 всегда
-export type Whe = { motions: Map<string, { anim?: string; kids?: string[] }>; actions: Map<string, { motions: WheBranch[]; branches: WheBranch[] }>; conds: Map<string, string[]>; classes: Map<string, { v: string; a?: string; b?: string }> };
+export type Whe = { motions: Map<string, { anim?: string; kids?: string[]; ev?: [string, number][] }>; events: Map<string, Record<string, string>>; actions: Map<string, { motions: WheBranch[]; branches: WheBranch[] }>; conds: Map<string, string[]>; classes: Map<string, { v: string; a?: string; b?: string }> };
 export function parseWhe(buf: ArrayBuffer): Whe {
-  const v = header(buf), out: Whe = { motions: new Map(), actions: new Map(), conds: new Map(), classes: new Map() };
+  const v = header(buf), out: Whe = { motions: new Map(), events: new Map(), actions: new Map(), conds: new Map(), classes: new Map() };
   chunks(v, 24, buf.byteLength, (c) => {
     if (c.type !== 'DATA') return;
     const r = new Reader(v);
     r.p = c.start;
     try {
-      if (c.id === 'MTON') { if (r.u32()) out.motions.set(c.name, { anim: r.str() }); else out.motions.set(c.name, { kids: Array.from({ length: r.u32() }, () => { const s = r.str(); r.f32(); return s; }) }); }
+      // события движения (вспышка у ствола, снаряд, звук) — имя и время от начала клипа, с; сами события — EVNT (ключ → значение)
+      if (c.id === 'MTON') { const t = r.u32(); if (t) { /* t — число строк: клип и слои видимости */ const m = { anim: r.str(), ev: [] as [string, number][] }; out.motions.set(c.name, m); for (let i = 1; i < t; i++) r.str(); r.u32(); r.u8(); for (let i = 0, n = r.u32(); i < n; i++) m.ev.push([r.str(), r.f32()]); } else out.motions.set(c.name, { kids: Array.from({ length: r.u32() }, () => { const s = r.str(); r.f32(); return s; }) }); }
+      else if (c.id === 'EVNT') { const e: Record<string, string> = {}; for (let i = 0, n = r.u32(); i < n; i++) e[r.str()] = r.str(); out.events.set(c.name, e); }
       else if (c.id === 'COND') out.conds.set(c.name, Array.from({ length: r.u32() }, () => r.str()));
       else if (c.id === 'CLAS') { const t = r.u32(), cl: { v: string; a?: string; b?: string } = { v: r.str() }; if (t === 2) { r.u32(); cl.a = r.str(); cl.b = r.str(); } out.classes.set(c.name, cl); }
       else if (c.id === 'ACTS') {
@@ -83,8 +86,8 @@ export function parseWhe(buf: ArrayBuffer): Whe {
   return out;
 }
 
-/** Клипы, которые DoW включил бы для действия (default — по состоянию), в порядке дерева. weapons — стволы юнита (имена файлов оружия). */
-export function wheClips(w: Whe, action: string, state: { moving: boolean; firing: boolean }, weapons: string[]) {
+/** Движения, которые DoW включил бы для действия (default — по состоянию), в порядке дерева. weapons — стволы юнита (имена файлов оружия). */
+export function wheMotions(w: Whe, action: string, state: { moving: boolean; firing: boolean }, weapons: string[]) {
   const on = (name: string) => {
     const c = w.classes.get(name);
     if (!c) return false;
@@ -101,9 +104,11 @@ export function wheClips(w: Whe, action: string, state: { moving: boolean; firin
   const motions: string[] = [];
   const run = (a: string, d: number) => { const x = w.actions.get(a); if (!x || d > 8) return; each(x.motions, (m) => motions.push(m)); each(x.branches, (b) => run(b, d + 1)); };
   run(action, 0);
-  const anim = (m: string, d = 0): string | undefined => { const x = w.motions.get(m); return !x || d > 6 ? undefined : x.anim ?? (x.kids?.[0] && anim(x.kids[0], d + 1)); };
-  return motions.map((m) => anim(m)).filter((a): a is string => !!a);
+  const leaf = (m: string, d = 0): string | undefined => { const x = w.motions.get(m); return !x || d > 6 ? undefined : x.anim ? m : x.kids?.[0] && leaf(x.kids[0], d + 1); };
+  return motions.map((m) => leaf(m)).filter((a): a is string => !!a); // листья: у них клип и события
 }
+/** Клипы этих движений. */
+export const wheClips = (...a: Parameters<typeof wheMotions>) => wheMotions(...a).map((m) => a[0].motions.get(m)!.anim!);
 
 function readMesh(r: Reader, name: string): WhmMesh {
   r.u32(); r.u8(); r.u32(); r.u32();
@@ -214,6 +219,11 @@ export function buildWhm(m: Whm, texture: (path: string) => THREE.Texture | null
     return o;
   });
   m.bones.forEach((b, i) => (b.parent >= 0 ? bones[b.parent] : root).add(bones[i]));
+  for (const k of m.markers) { // маркер (ствол, рот) — пустой узел на кости: к нему DoW цепляет эффекты событий .whe
+    const o = new THREE.Object3D(), r = k.m, at = bones.find((b) => b.name === k.parent) ?? root;
+    o.name = k.name; o.matrix.makeBasis(new THREE.Vector3(r[0], r[1], r[2]), new THREE.Vector3(r[3], r[4], r[5]), new THREE.Vector3(r[6], r[7], r[8])).setPosition(r[9], r[10], r[11]);
+    o.matrix.decompose(o.position, o.quaternion, o.scale); at.add(o);
+  }
   root.updateMatrixWorld(true);
   const skeleton = new THREE.Skeleton(bones);
   const mats = new Map<string, THREE.Material>();

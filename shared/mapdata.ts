@@ -1,6 +1,8 @@
-// Карта игры — одна: Absolute Zero из Dawn of War / Ultimate Apocalypse (shared/map-zero.ts, tools/ua-map.mjs).
+// Карты из Dawn of War / Ultimate Apocalypse (tools/ua-map.mjs): Absolute Zero и Valley of Emperors.
 // Общая для симуляции (позиции) и клиента (рисование).
 import { MAP_ZERO } from './map-zero.ts';
+import { MAP_VALLEY } from './map-valley.ts';
+import { MAP_ARENA } from './map-arena.ts';
 
 type Pt = [number, number];
 type Rect = [number, number, number, number]; // x, y, w, h — непроходимые скалы
@@ -9,9 +11,9 @@ export type MapDef = {
   hq: number[][]; points: number[][]; relics: number[][]; vents: number[][];
   roads: Pt[][]; river: Pt[]; bridges: Pt[]; plateaus: Pt[][]; ruins: { walls: [number, number, number, number][]; pillars: Pt[] }[]; craters: [number, number, number][]; cover: [number, number, number][]; blocks: Rect[];
 };
-export const MAPS: MapDef[] = [MAP_ZERO];
+export const MAPS: MapDef[] = [MAP_ZERO, MAP_VALLEY, MAP_ARENA];
 /** Карты, которые видят игроки. */
-export const PLAY_MAPS = [0];
+export const PLAY_MAPS = [2]; // играют на «Перевале»; карты DoW (0, 1) — для тестов и разработки
 export let MAP = MAPS[0].map, HQ_POS = MAPS[0].hq, POINTS = MAPS[0].points, RELICS = MAPS[0].relics, VENTS = MAPS[0].vents;
 export let ROADS = MAPS[0].roads, RIVER = MAPS[0].river, BRIDGES = MAPS[0].bridges, PLATEAUS = MAPS[0].plateaus, RUINS = MAPS[0].ruins, CRATERS = MAPS[0].craters, COVER = MAPS[0].cover;
 export let BLOCKS: Rect[] = MAPS[0].blocks;

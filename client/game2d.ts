@@ -3,12 +3,12 @@
 import { World3D, has3d } from './world3d.ts';
 import { tgaCanvas, uaArtIcon, uaIcon } from './models3d/ua-models.ts';
 import { GROUND } from '../shared/mapdata.ts';
-import { ARCHS, CAPTAIN_COST, HERO, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
-import { UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, LIGHTHOUSE, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { ARCHS, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
+import { UA_BASE, UA_SETUP, inherit, MOD_RACES, UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, popOf, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { BUILD_NAME, PX_PACK, ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
-import { paintMap } from './mappaint.ts';
+import { paintDow, paintMap } from './mappaint.ts';
 import { voice } from './voice.ts';
 
 const S = 26; // пикселей мира на единицу симуляции
@@ -19,7 +19,7 @@ const keyOf = (e: KeyboardEvent) => /^Key[A-Z]$/.test(e.code) ? e.code.slice(3).
 const $ = (id: string) => document.getElementById(id)!;
 
 /** Ячейка сетки команд (пресет CommandGrid) и её подсказка (Tooltip). */
-type Cell = { act: string; name: string; hot: string; icon?: string; art?: string; cost?: number; en?: number; rel?: number; ok?: boolean; info?: string; req?: string; done?: boolean; prog?: number; cd?: number; cdMax?: number; active?: boolean; ult?: boolean; queue?: number };
+type Cell = { act: string; name: string; hot: string; icon?: string; art?: string; cost?: number; en?: number; rel?: number; ok?: boolean; info?: string; req?: string; done?: boolean; prog?: number; left?: number; cd?: number; cdMax?: number; active?: boolean; ult?: boolean; queue?: number };
 const ico = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 /** Иконки команд из пресета CommandGrid (одна форма — один смысл). */
 const ICON = {
@@ -44,10 +44,10 @@ const GEAR_ICON = [
   ico('<rect x="5" y="9" width="14" height="10" fill="currentColor"/><path d="M12 9V4M9 4h6" fill="none" stroke="currentColor" stroke-width="2"/>'),
   ico('<circle cx="8" cy="14" r="4" fill="currentColor"/><circle cx="15" cy="12" r="5" fill="currentColor" opacity=".7"/><circle cx="12" cy="8" r="3" fill="currentColor" opacity=".5"/>'),
 ];
-const KIND_NAME: Partial<Record<Kind, string>> = { bomber: 'Бомбовоз «Большой Бадабум»', spire: 'Башня Кабала', portal: 'Теневой портал', warpgate: 'Врата Варпа', khorne: 'Кровопускатели Кхорна', nurgle: 'Чумоносцы Нургла', tzeentch: 'Розовые ужасы Тзинча', slaanesh: 'Демонетки Слаанеш', lighthouse: 'Вокс-маяк', obelisk: 'Обелиск Вечности', megagun: 'Мега-Пушка', plague: 'Споровый улей', battery: 'Батарея «Громобой»', pylon: 'Гаусс-пилон', pyre: 'Огненная яма', bell: 'Синаптический шпиль', deity: 'Бог-Механизм', aegis: 'Теневое поле', rturret: 'Ракетная бочка', fturret: 'Огнемётная печь', hq: 'Штаб', barracks: 'Казарма', post: 'Реликварий', turret: 'Турель', foundry: 'Литейня', pump: 'Глубинный насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Крипта-бункер', mine: 'Мина' };
+const KIND_NAME: Partial<Record<Kind, string>> = { bomber: 'Бомбовоз «Большой Бадабум»', plague: 'Споровый улей', bell: 'Синаптический шпиль', hq: 'Штаб', barracks: 'Казарма', post: 'Реликварий', turret: 'Турель', foundry: 'Литейня', pump: 'Глубинный насос', wall: 'Стена', wallgate: 'Ворота', bunker: 'Крипта-бункер', mine: 'Мина' };
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 const damageName: Record<DmgType, string> = { small: 'стрелковое', sniper: 'снайперское', heavy: 'противотанковое', melee: 'ближний бой', blast: 'взрывное' };
-const armorName: Record<Armor, string> = { inf: 'пехота', hinf: 'тяжёлая пехота', light: 'лёгкая техника', veh: 'бронетехника', titan: 'титан', struct: 'здание' };
+const armorName: Record<Armor, string> = { inf: 'пехота', hinf: 'тяжёлая пехота', light: 'лёгкая техника', veh: 'бронетехника', titan: 'титан', struct: 'здание', cmd: 'командир' };
 const statNumber = (value: number) => String(Math.round(value * 100) / 100);
 const weaponCounters = (type: DmgType, compact = false) => Object.entries(VS[type]).filter(([armor]) => !compact || ['inf', 'veh', 'struct'].includes(armor)).map(([armor, value]) => `${armorName[armor as Armor]} ×${statNumber(value)}`).join(' · ');
 function weaponModInfo(faction: FactionId, kind: Kind) {
@@ -61,37 +61,31 @@ export const SLOT_COLORS = [0x4fa392, 0xe0675c, 0xe0a53a, 0xb9c3c6];
 
 // какой силуэт из пресетов у какого юнита, его ширина в мире и сколько бойцов в отряде
 // ширина силуэта в мире (единиц симуляции); сами силуэты — по фракции игрока (shared/factions.ts)
-const WIDTH: Record<string, number> = { spire: 12, portal: 6, warpgate: 8, doom: 8, lighthouse: 10, obelisk: 16, megagun: 14, plague: 10, battery: 4.4, pylon: 3.4, pyre: 3.8, bell: 3.8, deity: 9, aegis: 3.2, rturret: 3.6, fturret: 3.6, captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, motorpool: 9, yard: 14, legend: 6, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
+const WIDTH: Record<string, number> = { doom: 8, plague: 10, bell: 3.8, captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, motorpool: 9, yard: 14, legend: 6, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
 /** Ширина силуэта на карте = рост в метрах (все силуэты дизайн-системы в одном поле 120×164): Стражник 2.4 м, титан — 26–34 м. */
 const widthOf = (kind: Kind, f: FactionId) => (kind === 'titan' ? ROSTER[f].titanM : kind === 'turret' && f === 'tyranids' ? 5.4 : ROLES[kind]?.meters && !WIDTH[kind] ? ROLES[kind]!.meters : WIDTH[kind] ?? 2.4);
 /** Постройки, нарисованные для каждой фракции (tools/sprites.py); у Ордена — исходные из дизайн-системы. */
 const FAC_BUILD = new Set<Kind>(['key1', 'key2', 'key3', 'key4', 'gate', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine']);
 const NEUTRAL: Partial<Record<Kind, [string, string]>> = {
-  lighthouse: ['Buildings/beacon.svg', 'Buildings/beacon.svg'], obelisk: ['Factions/obelisk.svg', 'Factions/obelisk.svg'], megagun: ['Defenses/scrapgun.svg', 'Defenses/scrapgun.svg'], plague: ['Buildings/banner.svg', 'Buildings/banner.svg'], spire: ['Defenses/battery.svg', 'Defenses/battery.svg'],
-  battery: ['Defenses/battery.svg', 'Defenses/battery.svg'], pylon: ['Turrets/clockwork-t2.svg', 'Turrets/clockwork-t2.svg'], pyre: ['Turrets/ashen-t2.svg', 'Turrets/ashen-t2.svg'], bell: ['Buildings/beacon.svg', 'Buildings/beacon.svg'],
-  aegis: ['Defenses/shieldgen.svg', 'Defenses/shieldgen.svg'], rturret: ['Defenses/rocketbarrel.svg', 'Defenses/rocketbarrel.svg'], fturret: ['Turrets/orks-t2.svg', 'Turrets/orks-t2.svg'],
+  plague: ['Buildings/banner.svg', 'Buildings/banner.svg'],
+  bell: ['Buildings/beacon.svg', 'Buildings/beacon.svg'],
   wall: ['Defenses/wall.svg', 'Defenses/wall.svg'], wallgate: ['Defenses/gate.svg', 'Defenses/gate.svg'], bunker: ['Defenses/bunker.svg', 'Defenses/bunker.svg'], mine: ['Defenses/mine.svg', 'Defenses/mine.svg'],
   key1: ['Buildings/scriptorium.svg', 'Buildings/scriptorium.svg'], key2: ['Buildings/forge.svg', 'Buildings/forge.svg'], key3: ['Buildings/observatory.svg', 'Buildings/observatory.svg'],
   key4: ['Buildings/reliqhall.svg', 'Buildings/reliqhall.svg'], gate: ['Buildings/gate.svg', 'Buildings/gate.svg'], post: ['Defenses/point-1.svg', 'Defenses/point-2.svg'], foundry: ['Buildings/foundry.svg', 'Buildings/foundry.svg'], pump: ['Buildings/pump.svg', 'Buildings/pump.svg'] };
-/** Демоны четырёх богов и их Врата: силуэты Пепельного культа. */
-/** Демоны богов и К'таны — атласы своих пакетов (запечены из 3D, client/bake.ts). */
-const EXTRA_PX: Record<string, PxRole> = { khorne: 'elite', nurgle: 'elite', tzeentch: 'sniper', slaanesh: 'scout', nightbringer: 'captain', deceiver: 'captain' };
-const GOD_ART: Partial<Record<Kind, string>> = { warpgate: 'Factions/rift.svg', khorne: 'px/khorne/elite', nurgle: 'px/nurgle/elite', tzeentch: 'px/tzeentch/sniper', slaanesh: 'px/slaanesh/scout' };
 /** Путь к силуэту юнита: по фракции, уровню и (у капитана) оружию. */
 export function artFor(kind: Kind, faction: FactionId, lvl = 1, arch: Arch = 'commander', variant = 0) {
   if (has3d(kind)) { const icon = uaIcon(kind, variant, faction); if (icon) return icon; } // иконка расы из мода (data:-URL), если мод распакован
+  if (UA_BASE[kind]) return artFor(UA_BASE[kind]!, faction, lvl, arch); // отряд UA сверх ролей: пока иконка мода не загрузилась — силуэт базового вида
   const a = FACTIONS[faction].art;
   if (kind === 'legend') return FACTIONS[faction].legendArt[variant] ?? FACTIONS[faction].legendArt[0];
-  if (kind === 'deity') return arch === 'assault' ? 'px/nightbringer/captain' : 'px/deceiver/captain'; // К'тан по сборке
   if (kind === 'doom') return DOOM_OF[faction].art;
   if (kind === 'bomber') return artFor('jet', faction); // свой портрет пока не нарисован
   if (kind in ROSTER[faction] && typeof (ROSTER[faction] as Record<string, unknown>)[kind] === 'object') return ROSTER[faction][kind as 'sniper'].art;
   if (kind === 'captain') return CAPTAIN_ART[faction][archFor(faction, arch)] ?? a.captain[0];
-  if (kind in GOD_ART) return GOD_ART[kind]!;
   if (kind === 'turret') return a.turret[lvl > 1 ? 1 : 0];
   if (kind === 'post') return lvl >= 3 ? 'Defenses/point-3.svg' : lvl === 2 ? 'Defenses/point-2.svg' : 'Defenses/point-1.svg';
   const af = ART_BASE[faction] ?? faction; // у новых рас — здания старшей расы, перекрашенные палитрой .pal-<фракция>
-  if (af !== 'order' && FAC_BUILD.has(kind) || kind === 'motorpool' || kind === 'yard' || af === 'clockwork' && kind === 'pylon' || af === 'orks' && kind === 'fturret') return `Buildings/${af}/${kind}.svg`; // свои постройки у каждой фракции
+  if (af !== 'order' && FAC_BUILD.has(kind) || kind === 'motorpool' || kind === 'yard') return `Buildings/${af}/${kind}.svg`; // свои постройки у каждой фракции
   if (NEUTRAL[kind]) return NEUTRAL[kind]![lvl > 1 ? 1 : 0];
   return a[kind as 'builder' | 'guard' | 'hq' | 'barracks'];
 }
@@ -100,10 +94,11 @@ const FORM: Partial<Record<Kind, [number, number][]>> = {
   sniper: [[0.4, -0.3], [-0.5, 0.4]], heavy: [[0.7, 0], [-0.2, -0.6], [-0.4, 0.6]], support: [[0.3, -0.3], [-0.4, 0.4]], elite: [[0.8, 0], [-0.3, -0.7], [-0.4, 0.7]],
   builder: [[0.3, -0.4], [-0.3, 0.4]],
 };
+inherit(FORM);
 
 const svgCache = new Map<string, string>();
 /** Загружает все силуэты один раз. */
-const ALL_ART = new Set<string>([...Object.values(DOOM_OF).map(d => d.art), 'Factions/obelisk.svg', ...Object.values(CAPTAIN_ART).flatMap(o => Object.values(o)), 'Factions/deity.svg', ...Object.values(ROSTER).flatMap(r => Object.values(r).flatMap(v => (typeof v === 'object' ? [v.art] : []))), ...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...Object.values(NEUTRAL).flat(), ...(['clockwork', 'orks', 'ashen'] as const).flatMap(f => [...FAC_BUILD].map(k => `Buildings/${f}/${k}.svg`)), ...Object.keys(FACTIONS).flatMap(f => [`Buildings/${f}/motorpool.svg`, `Buildings/${f}/yard.svg`]), 'Buildings/clockwork/pylon.svg', 'Buildings/orks/fturret.svg', 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
+const ALL_ART = new Set<string>([...Object.values(DOOM_OF).map(d => d.art), ...Object.values(CAPTAIN_ART).flatMap(o => Object.values(o)), ...Object.values(ROSTER).flatMap(r => Object.values(r).flatMap(v => (typeof v === 'object' ? [v.art] : []))), ...Object.values(FACTIONS).flatMap(f => [...f.legendArt, ...f.art.captain, f.art.builder, f.art.guard, f.art.hq, f.art.barracks, ...f.art.turret]), ...(Object.values(NEUTRAL) as [string, string][]).flat(), ...(['ashen'] as const).flatMap(f => [...FAC_BUILD].map(k => `Buildings/${f}/${k}.svg`)), ...Object.keys(FACTIONS).flatMap(f => [`Buildings/${f}/motorpool.svg`, `Buildings/${f}/yard.svg`]), 'Defenses/point-3.svg', 'Buildings/reliquary.svg']);
 export const ready2d = Promise.all([...ALL_ART].filter(p => !p.startsWith('px/')) // px/… — атлас, а не SVG-файл
   .map(p => fetch('/ds/assets/' + p).then(r => r.text()).then(t => svgCache.set(p, t)))).then(() => pxLoad); // и метаданные атласов (размер кадра, опора)
 
@@ -136,6 +131,7 @@ type PxRole = 'scout' | 'captain' | 'guard' | 'builder' | 'sniper' | 'heavy' | '
 const PX_STRUCT = new Set<PxRole>(['hq', 'barracks', 'factory', 'armory', 'generator', 'relic', 'post', 'turret', 'wall', 'gate']);
 /** Вид юнита → роль атласа. Поддержки (support) в пакете нет — у неё остаётся векторный силуэт. */
 const PX_ROLE: Partial<Record<Kind, PxRole>> = { hq: 'hq', barracks: 'barracks', motorpool: 'factory', yard: 'factory', key1: 'armory', key2: 'armory', key3: 'armory', key4: 'armory', foundry: 'generator', pump: 'generator', post: 'post', turret: 'turret', wall: 'wall', wallgate: 'gate', gate: 'relic', captain: 'captain', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan', air: 'flyer', jet: 'aircraft', bomber: 'aircraft' };
+inherit(PX_ROLE);
 export const pxRole = (k: Kind, _f: FactionId): PxRole | undefined => PX_ROLE[k];
 export const isPx = (k: Kind, f?: FactionId): boolean => { const r = PX_ROLE[k]; return !!r && (!PX_STRUCT.has(r) || (!!f && PX_META.has(pxKey(f, r)))); }; // здания — только когда их атлас уже есть
 /** Данные атласа из idle.json: кадр, опора, рамка фигуры (лицом к зрителю) — для масштаба, полосы здоровья и иконок. */
@@ -145,9 +141,9 @@ const PX_OLD: Partial<Record<PxRole, [number, number]>> = { captain: [30, 34], g
 const PX_VEH = new Set<PxRole>(['transport', 'walker', 'tank', 'artillery', 'titan']);
 const pxOld = (r: PxRole): PxMeta => { const [top, w] = PX_OLD[r] ?? [30, 60], ay = PX_VEH.has(r) ? 78 : 87; return { cell: 128, ax: 64, ay, bx: 64 - w / 2, by: top, bw: w, bh: ay - top, ext: 'png' }; };
 const PX_META = new Map<string, PxMeta>();
-const pxKey = (f: FactionId, r: PxRole) => `${PX_PACK[f] ?? f}/${r}`; // f — фракция или сразу пакет (EXTRA_PX)
+const pxKey = (f: FactionId, r: PxRole) => `${PX_PACK[f] ?? f}/${r}`; 
 export const pxMeta = (f: FactionId, r: PxRole): PxMeta => PX_META.get(pxKey(f, r)) ?? pxOld(r);
-const pxLoad = Promise.all([...FACTION_IDS.flatMap(f => [...new Set([...Object.values(PX_ROLE), 'flamer'] as PxRole[])].map(r => [f, r] as const)), ...Object.entries(EXTRA_PX).map(([f, r]) => [f as FactionId, r] as const)].map(([f, r]) =>
+const pxLoad = Promise.all([...FACTION_IDS.flatMap(f => [...new Set([...Object.values(PX_ROLE), 'flamer'] as PxRole[])].map(r => [f, r] as const))].map(([f, r]) =>
   fetch(`/models/factions/${pxKey(f, r)}/sprites/idle.json`).then(res => (res.ok ? res.json() : null)).then(j => {
     if (!j) return;
     const b = (j.frames?.[1]?.[0] ?? j.frames?.[0]?.[0])?.bbox, ext = String(j.image ?? 'idle.png').split('.').pop()!;
@@ -180,7 +176,7 @@ export const pxIcon = (f: FactionId, role: PxRole, head = false) => {
 };
 /** Путь силуэта → пиксельный атлас (капитаны всех сборок, стрелки, строители). */
 const PX_BY_ART = new Map<string, [FactionId, PxRole]>(FACTION_IDS.flatMap(f => [[FACTIONS[f].art.guard, [f, 'guard']], [FACTIONS[f].art.builder, [f, 'builder']], ...Object.values(CAPTAIN_ART[f]).map(p => [p, [f, 'captain']]),
-  ...(Object.keys(PX_ROLE) as Kind[]).filter(k => ROSTER[f][k as 'sniper']?.art).map(k => [ROSTER[f][k as 'sniper'].art, [f, pxRole(k, f)]])] as [string, [FactionId, PxRole]][]).concat(Object.entries(EXTRA_PX).map(([p, r]) => [`px/${p}/${r}`, [p as FactionId, r]]))); // и весь состав армии
+  ...(Object.keys(PX_ROLE) as Kind[]).filter(k => ROSTER[f][k as 'sniper']?.art).map(k => [ROSTER[f][k as 'sniper'].art, [f, pxRole(k, f)]])] as [string, [FactionId, PxRole]][])); // и весь состав армии
 
 /** SVG капитана по оружию (Меч — Штурм, Молот — Командор), для превью в редакторе. */
 export const captainSvg = (a: Arch, f: FactionId = 'tyranids') => { const p = artFor('captain', f, 1, a); return p.startsWith('data:') ? uaImg(p) : svgCache.get(p) ?? ''; };
@@ -213,13 +209,14 @@ type View = {
   id: number; owner: number; kind: Kind; el: HTMLElement; body: HTMLElement; svgs: SVGElement[]; bar: HTMLElement; fg: HTMLElement; sel: HTMLElement;
   x: number; y: number; tx: number; ty: number; f: number; hp: number; build: number; q: number; dead: boolean; lvl: number; upg: number;
   hero?: { lvl: number; xp: number; pts: number; abil: number; cd: number[] }; // у героя — свой прогресс (из снимка, 25+)
-  atkUntil: number; lvl3d?: number; melee?: boolean; atkFx?: number; respawn?: number; arch?: Arch; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; px: Px[]; prog: number; prod: number;
+  atkUntil: number; shotAt?: number; lvl3d?: number; melee?: boolean; atkFx?: number; respawn?: number; arch?: Arch; aim?: number; gear: number; ch: number[]; gcd: number; sh: number; frozen: number; carry: number; rise: number; off: boolean; dome?: HTMLElement; shBar?: HTMLElement; artPath: string; px: Px[]; prog: number; prod: number;
 };
 
-/** Выстрел рас UA: снаряд летит от ствола к цели (вспышка, полёт, попадание) — вид по оружию мода, а не линия-луч.
- *  ponytail: класс по имени ствола; точнее — эффекты из .whe/art/fx мода (docs/UA-TODO.md, 19). */
+const MELEE_W = /melee|hammerhand|halberd|knife|fist|claw|talon|sword|staff|dummy/;
+/** Выстрел рас UA, когда у ствола нет эффектов мода (они из оригинальной DoW, её в ua/ нет): снаряд от ствола к цели по классу оружия.
+ *  Эффекты мода (art/fx по событиям .whe и попаданиям оружия) рисует world3d — World3D.fire. */
 function uaShot(weapons: string[], X1: number, Y1: number, X2: number, Y2: number, dist: number) {
-  const w = weapons.find(x => x && !/melee|hammerhand|halberd|knife|fist|claw|talon|sword|staff|dummy/.test(x)) ?? weapons[0] ?? '', t = Math.min(0.45, 0.08 + dist * 0.006).toFixed(2), path = `M${X1} ${Y1} L${X2} ${Y2}`;
+  const w = weapons.find(x => x && !MELEE_W.test(x)) ?? weapons[0] ?? '', t = Math.min(0.45, 0.08 + dist * 0.006).toFixed(2), path = `M${X1} ${Y1} L${X2} ${Y2}`;
   const fly = (cls: string, r: number, n: number, gap: number, p = path) => Array.from({ length: n }, (_, i) =>
     `<circle class="${cls}" r="${r}" opacity="0"><set attributeName="opacity" to="1" begin="${(i * gap).toFixed(2)}s"/><animateMotion dur="${t}s" begin="${(i * gap).toFixed(2)}s" fill="freeze" path="${p}"/><set attributeName="opacity" to="0" begin="${(+t + i * gap).toFixed(2)}s"/></circle>`).join('');
   const muzzle = `<circle class="w2d-muzzle" cx="${X1}" cy="${Y1}" r="4"/>`, hit = (r: number, late = +t) => `<circle class="w2d-boomcore" cx="${X2}" cy="${Y2}" r="${r}" style="animation-delay:${late}s"/>`;
@@ -338,12 +335,12 @@ export class Game {
     const tex = (this.mapTex = paintMap()); // текстура земли масштабируется браузером со сглаживанием
     Object.assign(tex.style, { position: 'absolute', left: '0', top: '0', width: MAP.w * S + 'px', height: MAP.h * S + 'px', imageRendering: 'auto' });
     this.ground.append(tex);
-    if (GROUND) void fetch(GROUND).then(r => (r.ok ? r.arrayBuffer() : null)).then(b => { // карта из DoW: её собственный вид сверху вместо нарисованной земли
+    const get = (u: string) => fetch(u).then(r => (r.ok ? r.arrayBuffer() : null));
+    if (GROUND) void Promise.all([get(GROUND), get(GROUND.replace(/\.tga$/i, '.sgb'))]).then(([b, sgb]) => { // карта из DoW: её текстура и рельеф вместо нарисованной земли
       const img = b && tgaCanvas(b);
-      if (!img) return;
-      tex.getContext('2d')!.drawImage(img, 0, 0, tex.width, tex.height);
-      const mini = document.querySelector('#mini-svg image');
-      if (mini) { const t = document.createElement('canvas'); t.width = t.height = 200; t.getContext('2d')!.drawImage(img, 0, 0, 200, 200); mini.setAttribute('href', t.toDataURL()); }
+      if (!img || !sgb) return;
+      const t = paintDow(tex, img, sgb), mini = document.querySelector('#mini-svg image');
+      if (mini) mini.setAttribute('href', t.toDataURL());
     }).catch(() => undefined);
     this.ground.insertAdjacentHTML('beforeend', mapSvg());
     // Three distinct capture-site silhouettes and a command/capture animation layer.
@@ -538,12 +535,15 @@ export class Game {
     let best: View | undefined, bd = 4; // стрелок — ближайший к началу выстрела (модели мода крупнее: ×DOW_M)
     for (const v of this.views.values()) { const d = Math.hypot(v.tx - x1, v.ty - y1); if (d < bd && !v.dead) { bd = d; best = v; } }
     const melee = fx === 1 || fx === 2 || fx === 5;
-    if (best) { best.atkUntil = now + (melee ? 1300 : 700); best.melee = melee; best.atkFx = fx; }
+    if (best) { best.atkUntil = now + (melee ? 1300 : 700); best.shotAt = now; best.melee = melee; best.atkFx = fx; }
     if (this.shots.length > 120) return;
     const ns = 'http://www.w3.org/2000/svg', g = document.createElementNS(ns, 'g');
     const h = best && !isStruct(best.kind) ? 1.2 : 2.2, X1 = x1 * S, Y1 = (y1 - h) * S, X2 = x2 * S, Y2 = (y2 - 1) * S;
     const dir = Math.sign(X2 - X1) || 1;
-    const ua = best && !melee && [0, 3, 10, 11, 14].includes(fx) ? uaShot(UA_WEAPONS[this.fac(best.owner)]?.[best.kind] ?? [], X1, Y1, X2, Y2, Math.hypot(x2 - x1, y2 - y1)) : '';
+    const wf = best && MOD_RACES[this.fac(best.owner) as keyof typeof MOD_RACES] ? UA_WEAPONS[this.fac(best.owner)]?.[best.kind] ?? [] : [], tv = wf.length ? this.nearest(x2, y2) : undefined;
+    const surf = !tv ? '' : isStruct(tv.kind) ? 'stone' : this.fac(tv.owner) === 'tyranids' ? 'flesh' : VEHICLES.has(UA_BASE[tv.kind] ?? tv.kind) ? 'heavy_metal_armour' : 'light_metal_armour'; // поверхность цели — как type_surface в DoW
+    const mod = best && wf.length ? this.w3d.fire(best.id, x2, y2, tv?.id, wf.find(w => MELEE_W.test(w) === melee) ?? wf[0], surf, melee) : undefined; // эффекты мода: вспышка, снаряд, попадание
+    const ua = best && !melee && !mod?.shot && [0, 3, 10, 11, 14].includes(fx) ? uaShot(UA_WEAPONS[this.fac(best.owner)]?.[best.kind] ?? [], X1, Y1, X2, Y2, Math.hypot(x2 - x1, y2 - y1)) : '';
     if (fx === 0) g.innerHTML = `<line class="w2d-tracer" x1="${X1}" y1="${Y1}" x2="${X2}" y2="${Y2}"/><circle class="w2d-muzzle" cx="${X1}" cy="${Y1}" r="5"/>`;
     else if (fx === 1) g.innerHTML = `<path class="w2d-slash" d="M${X2 - 14 * dir} ${Y2 - 30} Q${X2 + 22 * dir} ${Y2 - 14} ${X2 + 6 * dir} ${Y2 + 18}"/><ellipse class="w2d-dust" cx="${X2}" cy="${Y2 + 20}" rx="18" ry="6"/>`;
     else if (fx === 2) g.innerHTML = [-8, 0, 8].map(o => `<path class="w2d-claw" d="M${X2 - 16 * dir + o} ${Y2 - 26} Q${X2 + 10 * dir + o} ${Y2 - 8} ${X2 + o} ${Y2 + 16}"/>`).join('') + `<circle class="w2d-spark" cx="${X2}" cy="${Y2}" r="4"/>`;
@@ -570,6 +570,8 @@ export class Game {
     else g.innerHTML = [0, 1, 2].map(i => `<line class="w2d-tracer" x1="${X1}" y1="${Y1 + i * 3}" x2="${X2 + (i - 1) * 6}" y2="${Y2 + (i - 1) * 4}" style="animation-delay:${i * 50}ms"/>`).join('') + this.sparks(X2, Y2, 4, '#ffd38a', 10); // очередь
     if (fx === 0 || fx === 14) g.innerHTML += this.sparks(X2, Y2, 3, '#ffe2a0', 8);
     if (ua) g.innerHTML = ua + this.sparks(X2, Y2, 3, '#ffe2a0', 8); // расы UA: снаряд вместо линий (выше — две цепочки, вторая перезаписывает первую)
+    if (mod?.shot) g.innerHTML = mod.hit || melee ? '' : this.sparks(X2, Y2, 3, '#ffe2a0', 8); // эффекты мода заменяют рисованные; нет попадания из мода — искры в цели
+    else if (mod?.hit) g.innerHTML = ua;
     if (best) { // цвет выстрела — по фракции стрелка; оружие по площади рисует кольцо взрыва в свой радиус
       const c = SHOT_COLOR[this.fac(best.owner)]; g.style.setProperty('--art-fire', c[0]); g.style.setProperty('--art-glow', c[1]);
       const aoe = ROLES[best.kind]?.aoe ?? STRUCT_AOE[best.kind];
@@ -688,10 +690,11 @@ export class Game {
     this.ur = s.ur?.[this.slot] ?? [];
     this.ad = new Map((s.ad ?? []).map(([id, m]) => [id, m] as [number, number]));
     this.sq = new Map((s.sq ?? []).map(r => [r[0], r.slice(1)]));
+    this.mo = new Map((s.mo ?? []).map(r => [r[0], [r[1], r[2]]]));
     this.wu = new Map((s.wu ?? []).map(r => [r[0], r.slice(1)]));
     this.capHud(me);
     this.drawMini(s);
-    $('hud-energy').textContent = String(this.energy); $('hud-relics').textContent = String(this.relics);
+    $('hud-energy').textContent = String(this.energy);
     const f = this.fac(), extra = $('hud-extra');
     extra.innerHTML = f === 'tyranids' ? 'Синапс' : 'Силовая броня · не ведают страха';
     extra.title = FACTIONS[f].mech;
@@ -701,7 +704,7 @@ export class Game {
     for (const u of s.u) if (u[1] === this.slot) { if (u[2] === 1) builders++; else if (u[2] === 2) guards++; else if (u[2] === 0 && u[5] <= 0) dead = true; }
     $('hud-req').textContent = String(this.req);
     $('hud-builders').textContent = `${builders}/${CAP.builder}`;
-    const pop = [0, 0], add = (k: Kind) => { if (!ROLES[k]?.one) pop[VEHICLES.has(k) || k === 'arty' ? 1 : 0] += ROLES[k]?.pop ?? 0; }; // титаны — свой слот // пехота и техника — раздельные лимиты
+    const pop = [0, 0], add = (k: Kind) => { if (!ROLES[k]?.one) pop[VEHICLES.has(k) || k === 'arty' ? 1 : 0] += popOf(k, this.fac()); }; // титаны — свой слот // пехота и техника — раздельные лимиты
     for (const u of s.u) if (u[1] === this.slot) add(KINDS[u[2]]);
     for (const q of Object.values(s.qk ?? {})) for (const k of q) add(KINDS[k]);
     const bonus = this.research & (1 << 12) ? 6 : 0, um = uaMods(this.me()); // лимиты из исследований UA — как legionCap на сервере
@@ -774,6 +777,7 @@ export class Game {
   /** Статы и полное здоровье вида у фракции владельца (у рас из модов свои). */
   private st(v: { kind: Kind; owner: number }) { return statOf(v.kind, this.fac(v.owner)); }
   private wu = new Map<number, number[]>(); // стволы отрядов UA: id → [ставится (-1 нет), %, куплено по вариантам UA_ARM…]
+  private mo = new Map<number, number[]>(); // мораль отрядов UA из снимка: id → [%, надломлен]
   private sq = new Map<number, number[]>(); // отряды из снимка: id → [HP бойца, бойцов, предел пополнения]
   private mhp(v: { id?: number; kind: Kind; owner: number }) { const q = v.id !== undefined ? this.sq.get(v.id) : undefined; return q ? q[0] * q[1] : maxHp(v.kind, this.fac(v.owner)); }
   /** Живых бойцов: по размеру отряда с сервера (отряды UA растут пополнением), иначе по штату. */
@@ -795,8 +799,10 @@ export class Game {
   }
 
   private kindName(k: Kind, f: FactionId) {
+    const uaName = (f: FactionId, k: Kind) => { const r = MOD_RACES[f as keyof typeof MOD_RACES]; return r?.data.squads[(r.unit as Partial<Record<Kind, string>>)[k] ?? '']?.unit.name || undefined; }; // отряд UA сверх ролей — имя из мода
     const F = FACTIONS[f], R = ROSTER[f] as unknown as Record<string, { name: string } | undefined>;
-    return k in BUILD_NAME[f] ? BUILD_NAME[f][k as 'post'] : k === 'builder' ? F.builder : k === 'guard' ? F.guard : k === 'hq' ? HQ_NAME[f] : k === 'motorpool' || k === 'yard' ? PROD_NAME[f][k] : k === 'doom' ? DOOM_OF[f].name : R[k]?.name ?? KIND_NAME[k] ?? k;
+    if (!isStruct(k) && uaName(f, k)) return uaName(f, k)!; // отряды рас UA — имя из мода (имена ролей игры путали: «Сёстры-экзорцистки» вместо Astropath)
+    return k in BUILD_NAME[f] ? BUILD_NAME[f][k as 'post'] : k === 'builder' ? F.builder : k === 'guard' ? F.guard : k === 'hq' ? HQ_NAME[f] : k === 'motorpool' || k === 'yard' ? PROD_NAME[f][k] : k === 'doom' ? DOOM_OF[f].name : R[k]?.name ?? KIND_NAME[k] ?? uaName(f, k) ?? k;
   }
   private nameOf(v: View) {
     const F = FACTIONS[this.fac(v.owner)];
@@ -833,23 +839,23 @@ export class Game {
         builder: 'Строит, чинит постройки и технику.', guard: isMelee('guard', this.fac()) ? 'Линейная пехота ближнего боя.' : 'Линейная пехота, стрелки.',
         sniper: 'Снайпер: против пехоты издалека; вблизи переключается на второе оружие.', heavy: dmgOf('heavy', this.fac()) === 'heavy' ? 'Противотанковое оружие: против техники и зданий. Дополнительное стрелковое доступно вблизи; против брони сохраняется более эффективный ствол.' : 'Антипехотное оружие: против пехоты; бронетехнику почти не пробивает.', support: 'Поддержка: снижает урон по союзникам рядом, может нести дым.',
         elite: 'Тяжёлая элита: держит удар, бьёт в упор.', healer: 'Целитель: лечит отряды в 15 м на 5%/с.', lveh: 'Лёгкая техника: разведка, захват точек, охота на строителей.',
-        mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: `Артиллерия: ${STATS.arty.range + (modOf(this.fac(), 'arty')?.range ?? 0)} м, по площади, в упор не стреляет — нужна разведка и прикрытие.`, titan: 'Титан: один на армию, давит пехоту шагами.', air: 'Авиация: быстрый отряд, летит над скалами и стенами — рейды по тылам.', jet: 'Самолёт: самый быстрый, летит высоко над всем, бьёт технику; постройки сбивают его втрое сильнее, по зданиям бьёт вполсилы.', bomber: 'Бомбовоз Орды: огромный самолёт титан-класса, мини-атомки по 9 м, земля горит. Нужна критическая точка; турели и тяжёлое оружие бьют по нему сильнее.',
-        khorne: 'Кровопускатели Кхорна: рубят в ближнем бою, бьют сильнее всех демонов.', nurgle: 'Чумоносцы Нургла: медленные, очень живучие, гниль лечит их 2%/с.', tzeentch: 'Розовые ужасы Тзинча: варп-пламя на 16 м по площади.', slaanesh: 'Демонетки Слаанеш: самые быстрые, частые удары когтями.' };
-      if (UA_SQ[this.fac()]) for (const k of ['support', 'sniper'] as Kind[]) ROLE_INFO[k] = this.uaMelee(k) ? 'Боевой отряд ближнего боя.' : 'Боевой отряд стрелков.'; // у рас UA роли игры — только слоты: «поддержка» и «снайпер» тут обычные бойцы мода
+        mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: `Артиллерия: ${STATS.arty.range + (modOf(this.fac(), 'arty')?.range ?? 0)} м, по площади, в упор не стреляет — нужна разведка и прикрытие.`, titan: 'Титан: один на армию, давит пехоту шагами.', air: 'Авиация: быстрый отряд, летит над скалами и стенами — рейды по тылам.', jet: 'Самолёт: самый быстрый, летит высоко над всем, бьёт технику; постройки сбивают его втрое сильнее, по зданиям бьёт вполсилы.', bomber: 'Бомбовоз Орды: огромный самолёт титан-класса, мини-атомки по 9 м, земля горит. Нужна критическая точка; турели и тяжёлое оружие бьют по нему сильнее.' };
+      if (UA_SQ[this.fac()]) for (const k of ['support', 'sniper', ...(Object.keys(UA_BASE) as Kind[]).filter(k => SQUADS.has(k))] as Kind[]) ROLE_INFO[k] = this.uaMelee(k) ? 'Боевой отряд ближнего боя.' : 'Боевой отряд стрелков.'; // у рас UA роли игры — только слоты: «поддержка» и «снайпер» тут обычные бойцы мода
+      inherit(ROLE_INFO); // отряды UA сверх ролей — описание роли базового вида
       producible(st.kind, this.fac()).forEach((k, i) => {
         const r = ROLES[k]!, n = this.qk[st.id]?.filter(q => q === KINDS.indexOf(k)).length ?? 0, now = this.qk[st.id]?.[0] === KINDS.indexOf(k);
         const researching = (/^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length) || st.q > 100;
         c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k, this.me()), trainEnergy(this.fac(), k, this.me()), r.relics ?? 0),
-          info: `${ROLE_INFO[k] ?? ''}${modOf(this.fac(), k) ? ' ' + weaponModInfo(this.fac(), k) : ''}${CLOSE[k] ? ` Дополнительное оружие до ${CLOSE[k]!.range} м.${k === 'heavy' || k === 'hveh' ? ' Против брони сохраняется более эффективный ствол.' : ''}` : ''}${SETUP.has(k) ? ' На ходу не стреляет.' : ''} Легион: ${r.pop}.`, req: UA_REQ[this.fac()]?.[k] ? this.uaReq(k, st.id) ?? (researching ? 'Здание уже исследует' : undefined) : this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
+          info: `${ROLE_INFO[k] ?? ''}${modOf(this.fac(), k) ? ' ' + weaponModInfo(this.fac(), k) : ''}${CLOSE[k] && !UA_SQ[this.fac()] ? ` Дополнительное оружие до ${CLOSE[k]!.range} м.${k === 'heavy' || k === 'hveh' ? ' Против брони сохраняется более эффективный ствол.' : ''}` : ''}${(UA_SQ[this.fac()] ? UA_SETUP[this.fac()]?.[k] : SETUP.has(k)) ? ` На ходу не стреляет, развёртывание ${UA_SETUP[this.fac()]?.[k] ?? ''} с.` : ''} Легион: ${popOf(k, this.fac())}.`, req: UA_REQ[this.fac()]?.[k] ? this.uaReq(k, st.id) ?? (researching ? 'Здание уже исследует' : undefined) : this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined, left: now ? this.qLeft(k, st.prod) : undefined });
       });
       if (st.kind === 'hq' || st.kind === 'barracks') { // герои заказываются в зданиях (Soulstorm): главный — в штабе, остальные архетипы — в казармах
         const main = archFor(this.fac(), this.players[this.slot]?.captain.arch ?? 'commander');
         (Object.keys(ARCH_OPTS[this.fac()]) as Arch[]).filter(a => (a === main) === (st.kind === 'hq')).forEach((a, i) => {
           const o = ARCH_OPTS[this.fac()][a]!, h = [...this.views.values()].find(v => v.owner === this.slot && (v.kind === 'captain' || v.kind === 'deity') && (v.arch ?? main) === a);
-          const pr = a === main ? this.price(CAPTAIN_COST.cost, CAPTAIN_COST.energy) : this.price(HERO.cost, HERO.energy, HERO.relics);
-          const req = h && !h.dead ? 'Уже в армии' : h?.respawn ? `Можно заказать через ${h.respawn} с` : a !== main && this.tier < HERO.tier ? 'Нужен тир II' : undefined;
-          c.push({ act: 'hero:' + a, name: h?.dead ? `Вернуть: ${o.name}` : a === main ? 'Капитан' : o.name, hot: a === main ? 'K' : ['N', 'M'][i] ?? '', art: artFor('captain', this.fac(), 1, a), ...pr, req,
-            info: `${a === main ? 'Главный герой армии.' : 'Второй герой фракции.'} ${o.info} Павшего героя заказывают заново — уровень и способности сохраняются.` });
+          const pr = this.price(trainCost(this.fac(), 'captain', this.me()), trainEnergy(this.fac(), 'captain', this.me())); // герой — по цене мода
+          const req = h && !h.dead ? 'Уже в армии' : h?.respawn ? `Можно заказать через ${h.respawn} с` : undefined;
+          c.push({ act: 'hero:' + a, name: h?.dead ? `Вернуть: ${o.name}` : o.name, hot: a === main ? 'K' : ['N', 'M'][i] ?? '', art: artFor('captain', this.fac(), 1, a), ...pr, req,
+            info: `Герой расы. ${statOf('captain', this.fac()).hp} HP. Павшего героя заказывают заново.` });
         });
       }
       if (st.kind === 'hq') {
@@ -866,7 +872,7 @@ export class Game {
         const done = (mask & (1 << a)) !== 0, busy = !done && ((st.q > 0 && st.q !== 5000 + a) || !!this.qk[st.id]?.length);
         const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask);
         c.push({ act: done || busy || miss ? '' : 'uaa:' + a, name: x.name, hot: '', icon: x.at === 'hq' ? ICON.tier : ICON.build, ...(done ? {} : this.price(x.cost, x.energy)), done,
-          info: `Аддон${st.kind === 'turret' ? ' на все турели' : ''}. ${x.info.replace(/^- /, '')} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 5000 + a ? st.prod : undefined });
+          info: `Аддон${st.kind === 'turret' ? ' на все турели' : ''}. ${x.info.replace(/^- /, '')} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 5000 + a ? st.prod : undefined, left: st.q === 5000 + a ? Math.ceil(x.time * (1 - st.prod / 100)) : undefined });
       });
       const UR = UA_RESEARCH[this.fac()];
       if (UR) { // исследования UA этого здания: сначала неизученные
@@ -875,30 +881,11 @@ export class Game {
           const done = this.ur.includes(r), busy = !done && ((st.q > 0 && st.q !== 1000 + r) || !!this.qk[st.id]?.length);
           const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask);
           c.push({ act: done || busy || miss ? '' : 'uar:' + r, name: x.name, hot: '', icon: ICON.research, ...(done ? {} : this.price(x.cost, x.energy)), done,
-            info: `${x.info.replace(/^- /, '')} ${x.info ? '(' + uaModsInfo(x) + ')' : uaModsInfo(x)} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 1000 + r ? st.prod : undefined });
+            info: `${x.info.replace(/^- /, '')} ${x.info ? '(' + uaModsInfo(x) + ')' : uaModsInfo(x)} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 1000 + r ? st.prod : undefined, left: st.q === 1000 + r ? Math.ceil(x.time * (1 - st.prod / 100)) : undefined });
         }
-      }
-      if (/^key[1-4]$/.test(st.kind)) {
-        const k = Number(st.kind[3]);
-        for (let r = 0; r < 4; r++) {
-          if (UR && (k - 1) * 4 + r !== 15) continue; // у рас UA — свои исследования; общая «Печать Вознесения» остаётся (открывает тир V)
-          const i = (k - 1) * 4 + r, done = !!(this.research & (1 << i)), training = !!this.qk[st.id]?.length, busy = st.q > 0 && st.q - 1 !== i;
-          c.push({ act: done ? '' : 'res' + r, name: RESEARCH[i], hot: String(r + 1), icon: ICON.research, ...(done ? {} : this.price(researchCost(i).cost, researchCost(i).energy)), info: RESEARCH_INFO[i], done, req: training ? 'Здание нанимает войска' : busy ? 'Здание уже исследует' : undefined, prog: !training && st.q - 1 === i ? st.prod : undefined });
-        }
-      }
-      if (st.kind === 'hq') { // открытия и сверхоружие — всё в штабе
-        UNLOCKS.forEach((U, u) => { const done = !!(this.unlock & (1 << u)), busy = st.q > 100 && st.q !== 101 + u;
-          c.push({ act: done ? '' : 'unlock:' + u, name: U.name, hot: String(1 + u), icon: ICON.research, ...(done ? {} : this.price(U.cost, U.energy, U.relics)), done, info: `Дорогое открытие: ${U.info}. ${U.time} с.`, req: this.tier < U.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][U.tier - 1]}` : busy ? 'Штаб уже исследует' : this.qk[st.id]?.length ? 'Штаб нанимает войска' : undefined, prog: st.q === 101 + u ? st.prod : undefined }); });
-        c.push({ act: this.scanCd > 0 ? '' : 'scan', name: 'Засвет', hot: 'O', icon: ICON.attack, ...this.price(0, SCAN.energy), active: this.throwG === 10, info: `Открывает круг ${SCAN.r} м на ${SCAN.t} с в любой точке карты — видно и скрытых порталом. Артиллерия бьёт по засвеченному (по зданиям на 15 м дальше). Перезарядка ${SCAN.cd} с.`, req: this.scanCd > 0 ? `Перезарядка ${this.scanCd} с` : undefined });
-        if (this.unlock & 2) c.push({ act: this.doomPct >= 100 ? 'strike' : '', name: DOOM_OF[this.fac()].name, hot: 'Y', icon: ABIL_ICON[5], ult: true, ...this.price(0, DOOM_SHOT), info: `Удар в любую точку карты: ${DOOM_OF[this.fac()].info}. Заряд 3 минуты; все получат предупреждение за 6 с.`, req: this.doomPct < 100 ? `Заряд ${this.doomPct}%` : undefined, prog: this.doomPct < 100 ? this.doomPct : undefined, active: this.throwG === 9 });
       }
       if (st.kind === 'gate') {
         const onField = own('legend');
-        F.legends.forEach((n, v) => c.push({ act: 'sum' + v, name: n, hot: String(v + 1), art: artFor('legend', this.fac(), 1, undefined, v), ...this.price(0, LEGEND_COST[v].energy, LEGEND_COST[v].relics), info: F.legendInfo[v] + '. Призыв 20 с, виден всем.', req: onField ? 'Легенда уже на поле' : st.q > 0 && st.q - 1 !== v ? 'Врата заняты' : undefined, prog: st.q - 1 === v ? st.prod : undefined }));
-      }
-      if (st.kind === 'post') {
-        const up = POST_UP[st.lvl];
-        if (up) c.push({ act: 'upgrade', name: up.name, hot: 'U', icon: ICON.tier, ...this.price(up.cost, up.energy), req: this.tier < up.tier ? 'Нужен тир II' : undefined, prog: st.upg >= 0 ? st.upg : undefined, info: st.lvl === 1 ? `Доход точки +1 ${this.incomeRes()}/с, броня, захват дольше.` : 'Бастион: своя турель 12 м.' });
       }
       const up = upOf(this.fac(), st.kind);
       if (up) c.push({ act: st.lvl >= 2 ? '' : 'upgrade', name: up.name, hot: 'U', icon: ICON.tier, ...(st.lvl >= 2 ? {} : this.price(up.cost, up.energy, up.relics)), done: st.lvl >= 2, req: this.tier < up.tier ? `Нужен тир ${up.tier}` : undefined, prog: st.upg >= 0 ? st.upg : undefined, info: 'Больше урона, брони и дальности.' });
@@ -952,7 +939,7 @@ export class Game {
     const shade = x.prog !== undefined ? 100 - x.prog : x.cd ? (x.cd / (x.cdMax ?? x.cd)) * 100 : 0;
     const icon = x.art ? miniArt(x.art) : x.icon;
     const cost = x.done ? '✓' : x.cost || x.en || x.rel ? [x.cost ? `◆${x.cost}` : '', x.en ? `ϟ${x.en}` : '', x.rel ? `⌂${x.rel}` : ''].filter(Boolean).join(' ') : '';
-    return `<button class="${cls}" data-act="${x.act}" data-hot="${x.hot.toLowerCase()}" ${x.active ? 'aria-pressed="true"' : ''} ${locked ? 'aria-disabled="true"' : ''} style="--cd:${shade}%">${icon}<span class="lc-cmd__key">${x.hot}</span>${cost ? `<span class="lc-cmd__cost">${cost}</span>` : ''}${cooling ? `<span class="lc-cmd__timer">${x.prog !== undefined ? x.prog + '%' : x.cd}</span>` : ''}${x.queue ? `<span class="lc-cmd__charges">${x.queue}</span>` : ''}</button>`;
+    return `<button class="${cls}" data-act="${x.act}" data-hot="${x.hot.toLowerCase()}" ${x.active ? 'aria-pressed="true"' : ''} ${locked ? 'aria-disabled="true"' : ''} style="--cd:${shade}%">${icon}<span class="lc-cmd__key">${x.hot}</span>${cost ? `<span class="lc-cmd__cost">${cost}</span>` : ''}${cooling ? `<span class="lc-cmd__timer">${x.left !== undefined ? x.left + ' с' : x.prog !== undefined ? x.prog + '%' : x.cd}</span>` : ''}${x.queue ? `<span class="lc-cmd__charges">${x.queue}</span>` : ''}</button>`;
   }
 
   /** Меню строителя: как в Dawn of War / UA — все постройки в одном окне, без вкладок по типу. */
@@ -971,8 +958,6 @@ export class Game {
       ['Армия', [card('barracks', BUILD_NAME[this.fac()].barracks, 'B', `Нанимает: ${F.guard}. Строится рядом со штабом.`), card('motorpool', PROD_NAME[this.fac()].motorpool, 'T', 'Вся техника и артиллерия фракции. Тир III.', this.tier < 3 ? 'Нужен тир III' : undefined), card('yard', PROD_NAME[this.fac()].yard, 'U', 'Строит титана. Одна армия — один титан. Тир IV.', this.tier < 4 ? 'Нужен тир IV' : undefined),
         ]],
       ['Оборона', [...(NO_BUILD[this.fac()]?.includes('turret') ? [] : [card('turret', BUILD_NAME[this.fac()].turret, 'Y', TURRET_FAC[this.fac()]?.info ?? 'Стреляет сама, голова поворачивается к цели.')]), ...(NO_BUILD[this.fac()]?.includes('wall') ? [] : [card('wall', 'Стена', 'L', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined)]), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
-        ...((m => m ? [card(m as Buildable, this.kindName(m as Kind, this.fac()), 'M', ({ lighthouse: `Открывает ${STATS.lighthouse.sight} м вокруг; союзники в ${LIGHTHOUSE.r} м получают на ${Math.round((1 - LIGHTHOUSE.armor) * 100)}% меньше урона.`, obelisk: `Луч ${STATS.obelisk.dmg} на ${STATS.obelisk.range} м, пробивает технику и здания.`, megagun: `Снаряды ${STATS.megagun.dmg} по площади 6 м, дальность ${STATS.megagun.range} м.`, plague: `Враги в ${PLAGUE.r} м теряют ${PLAGUE.pct * 100}% здоровья в секунду.`, spire: 'Сторожит базу и держит поле под прицелом.' } as Record<string, string>)[m] + ` Раз в ${MEGA_SHOT.cd} с бьёт ближайшего врага в ${MEGA_SHOT.range} м (${MEGA_SHOT.dmg} по площади ${MEGA_SHOT.aoe} м) и засвечивает место удара. Строится 2 минуты — все игроки видят стройку.`, this.tier < 4 ? 'Нужен тир IV' : !(this.unlock & 1) ? 'Исследуйте «Мегапостройки» в штабе' : undefined)] : [])(({ order: 'lighthouse', clockwork: 'obelisk', orks: 'megagun', tyranids: 'plague', eldar: 'spire', ashen: 'spire' } as Record<string, string>)[this.fac()])),
-        ...(this.fac() === 'tyranids' ? [card('bell', 'Синаптический шпиль', 'R', 'Враги в 14 м медленнее и бьют слабее.', this.tier < 2 ? 'Нужен тир II' : undefined)] : []),
         ]],
       ['Святыни', (() => {
         const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — когда пали штабы и все здания найма.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra]; })()],
@@ -1002,7 +987,8 @@ export class Game {
       stats.push(['ЗАЛП (БАЗА)', SQUADS.has(v.kind) ? `${statNumber(damage)}×${count} = ${statNumber(damage * count)}` : statNumber(damage)], ['ИНТЕРВАЛ', statNumber(guardMelee ? MELEE_GUARD.cd : st.cd * (tf?.cd ?? 1)) + ' с'], ['ДАЛ.', specialRange ? 'по архетипу' : statNumber(range) + ' м'], ['ОРУЖИЕ', damageName[weaponType]]);
     }
     if (v.kind === 'mine') stats.push(['ВЗРЫВ (БАЗА)', statNumber(st.dmg)]);
-    stats.push(['БРОНЯ', armorName[armorOf(v.kind)]]);
+    stats.push(['БРОНЯ', armorName[armorOf(v.kind, this.fac(v.owner))]]);
+    const mo = this.mo.get(v.id); if (mo) stats.push(['МОРАЛЬ', mo[1] ? `${mo[0]}% · надломлен` : `${mo[0]}%`]); // как в UA: надломленный отряд мажет и бежит быстрее
     if (st.speed) stats.push(['СКОР. (БАЗА)', statNumber(guardMelee ? MELEE_GUARD.speed : st.speed)]);
     if (this.reinforceable(v)) stats.push(['БОЙЦЫ', `${this.cnt(v)}/${this.sq.get(v.id)?.[2] ?? st.n}`]); // живых / максимум отряда
     if (v.lvl > 1) stats.push(['УР.', `<b class="up">▲${v.lvl}</b>`]);
@@ -1361,7 +1347,7 @@ export class Game {
   private specHud(s: Snap) {
     const rows = this.players.map((p, i) => {
       const pl = s.pl[i] ?? [], alive = pl[1], units = s.u.filter(u => u[1] === i && !isStruct(KINDS[u[2]])).length;
-      return `<div class="w2d-specrow${alive ? '' : ' out'}"><i style="background:${hex(SLOT_COLORS[i])}"></i><b>${p.name.replace(/[<>&]/g, '')}</b><span>${FACTIONS[p.faction ?? 'tyranids'].name}</span><span>тир ${['I', 'II', 'III', 'IV', 'V'][(pl[2] ?? 1) - 1]}</span><span>◆${pl[0] ?? 0} ϟ${pl[3] ?? 0} ⌂${pl[4] ?? 0}</span><span>войск ${units}</span><span class="vp">${s.vp?.[i] ?? 0} оч.</span></div>`;
+      return `<div class="w2d-specrow${alive ? '' : ' out'}"><i style="background:${hex(SLOT_COLORS[i])}"></i><b>${p.name.replace(/[<>&]/g, '')}</b><span>${FACTIONS[p.faction ?? 'tyranids'].name}</span><span>тир ${['I', 'II', 'III', 'IV', 'V'][(pl[2] ?? 1) - 1]}</span><span>◆${pl[0] ?? 0} ϟ${pl[3] ?? 0} ⌂${pl[4] ?? 0}</span><span>войск ${units}</span></div>`;
     }).join('');
     const html = `<div class="w2d-spechead">РЕЖИМ ПРОСМОТРА · без тумана · колесо — масштаб, WASD или стрелки — камера</div>${rows}`;
     if ($('hud-players').innerHTML !== html) $('hud-players').innerHTML = html;
@@ -1398,14 +1384,12 @@ export class Game {
     this.miniFog.innerHTML = holes.join('');
   }
 
-  /** Победные очки (CapturePoint): ромбы точек по буквам, перетягивание «мы — сильнейший враг» и счёт. */
+  /** Точки захвата: ромбы по буквам в цвете владельца. */
   private renderScore(s: Snap) {
-    const me = s.vp?.[Math.max(0, this.slot)] ?? 0, foe = Math.max(0, ...(s.vp ?? []).filter((_, i) => i !== Math.max(0, this.slot) && s.pl[i]?.[1])); // зритель: первый игрок против сильнейшего
     const L = PT_LETTERS;
     const ally = Math.max(0, this.slot); // зритель смотрит со стороны первого игрока
     const pts = s.p.slice(0, POINTS.length).map(([o], i) => `<span class="lc-score__pt${o >= 0 && o === ally ? ' lc-score__pt--ally' : o >= 0 ? ' lc-score__pt--enemy' : ''}"><span>${L[i]}</span></span>`).join('');
-    const total = Math.max(1, me + foe);
-    const html = `<div class="lc-score__points">${pts}</div><div class="lc-score__tug"><i class="ally" style="width:${(me / total) * 100}%"></i><i class="enemy" style="width:${(foe / total) * 100}%"></i></div><div class="lc-score__nums"><span class="ally">${me}</span><span class="goal">победные очки · перевес по точкам</span><span class="enemy">${foe}</span></div>`;
+    const html = `<div class="lc-score__points">${pts}</div>`;
     if (html !== this.scoreHtml) { this.scoreHtml = html; $('hud-score').innerHTML = html; }
   }
   private scoreHtml = '';
@@ -1542,7 +1526,7 @@ export class Game {
       v.el.style.transform = `translate(${v.x * S}px, ${v.y * S}px)`;
       v.el.style.zIndex = String(Math.round(v.y * 10));
       if (isStruct(v.kind)) {
-        this.w3d.update(v.id, v.x, v.y, v.f, v.build < 1 ? 'build' : now < v.atkUntil ? 'shoot' : 'idle', now, { build: v.build, ghost: v.el.classList.contains('ghost') });
+        this.w3d.update(v.id, v.x, v.y, v.f, v.build < 1 ? 'build' : now < v.atkUntil ? 'shoot' : 'idle', now, { build: v.build, ghost: v.el.classList.contains('ghost'), shot: v.shotAt });
         for (const p of v.px) pxFrame(p, this.fac(v.owner), v.build < 1 ? 'build' : now < v.atkUntil && v.kind === 'turret' ? 'shoot' : 'idle', v.f, now, v.build < 1 ? v.build : undefined); // здание из атласа: растёт кадрами стройки
         const clip = v.build < 1 ? `inset(${(1 - v.build) * 100}% 0 0 0)` : '';
         for (const sv of v.svgs) if (sv.style.clipPath !== clip) sv.style.clipPath = clip; // здание растёт снизу вверх (Construction); у .w2d-body нулевой размер — режем сам SVG
@@ -1556,7 +1540,7 @@ export class Game {
         const atk = ({ 1: 'chop', 2: 'claw', 5: 'thrust', 3: 'beam', 11: 'beam', 13: 'beam', 4: 'cast' } as Record<number, string>)[v.atkFx ?? -1] ?? (v.kind === 'guard' && !v.melee ? 'recoil' : 'attack'); // анимация по оружию
         const flyer = flies(v.kind, this.fac(v.owner)), heavyWalk = !flyer && (v.kind === 'titan' || v.kind === 'hveh');
         const anim = v.dead ? 'death' : v.rise > 0 ? 'ritual' : building ? 'work' : now < v.atkUntil ? atk : moving ? (heavyWalk ? 'stride' : flyer ? 'hover' : 'walk') : flyer ? 'hover' : 'idle';
-        if (v.frozen <= 0) this.w3d.update(v.id, v.x, v.y, v.f, v.dead ? 'death' : building ? 'work' : now < v.atkUntil ? (v.melee ? 'attack' : 'shoot') : moving ? 'walk' : 'idle', now, { alive: n, fly: flies(v.kind, this.fac(v.owner)) });
+        if (v.frozen <= 0) this.w3d.update(v.id, v.x, v.y, v.f, v.dead ? 'death' : building ? 'work' : now < v.atkUntil ? (v.melee ? 'attack' : 'shoot') : moving ? 'walk' : 'idle', now, { alive: n, fly: flies(v.kind, this.fac(v.owner)), shot: v.shotAt });
         if (v.frozen <= 0) v.px.forEach((p, i) => pxFrame(p, this.fac(v.owner), i >= n || v.dead ? 'death' : anim === 'work' ? 'work' : now < v.atkUntil ? (v.kind === 'captain' ? 'attack' : v.kind === 'builder' ? 'idle' : 'shoot') : moving ? (v.kind === 'captain' ? 'run' : 'walk') : 'idle', v.f, now));
         v.svgs.forEach((sv, i) => {
           const alive = i < n;

@@ -26,21 +26,22 @@ function withGuard(s: State) {
   return unit(s, 0, 'guard');
 }
 
-test('старт: штаб и строители, капитан заказывается в штабе и после гибели сам не встаёт (как в Soulstorm)', () => {
+test('старт: штаб и строители, герой заказывается в штабе по цене мода и после гибели сам не встаёт', () => {
   const s = freeState(2), p = s.players[0];
   for (const k of ['hq', 'builder'] as Kind[]) assert.ok(unit(s, 0, k), k);
   assert.ok(!s.units.some(u => u.kind === 'captain'), 'капитана на старте нет');
   assert.equal(newState(2).players[0].req, START_REQ, 'стартовые ресурсы');
   assert.equal(applyCmd(s, 0, { c: 'hero', a: p.arch }), undefined, 'заказ в штабе');
   assert.match(applyCmd(s, 0, { c: 'hero', a: p.arch }) ?? '', /уже/, 'второй раз в очередь не встаёт');
-  run(s, STATS.captain.time + 1);
+  run(s, statOf('captain', p.faction).time + 1);
   const c = unit(s, 0, 'captain');
   assert.ok(c && c.hp > 0, 'капитан вышел из штаба');
-  c.hero!.lvl = 4; c.hp = 0; run(s, 60);
+  assert.equal(c.hp, statOf('captain', p.faction).hp, 'HP героя — из мода');
+  c.hp = 0; run(s, 60);
   assert.ok(c.hp <= 0, 'павший сам не возрождается');
   assert.equal(applyCmd(s, 0, { c: 'hero', a: p.arch }), undefined, 'павшего заказывают заново');
-  run(s, STATS.captain.time + 1);
-  assert.ok(c.hp > 0 && unit(s, 0, 'captain') === c && c.hero!.lvl === 4, 'встаёт тот же герой, уровень сохранён');
+  run(s, statOf('captain', p.faction).time + 1);
+  assert.equal(c.hp, statOf('captain', p.faction).hp, 'павший встаёт с полным HP мода');
 });
 
 test('штаб нанимает строителя за requisition', () => {
@@ -193,62 +194,7 @@ test('сетка построек: здание привязано к клетк
   assert.ok(Math.hypot(cap.x - (w.x + 12), cap.y - w.y) < 1, 'обошёл и дошёл');
 });
 
-test('прокачка точки: столп → укреплённый → бастион, центр не укрепить', () => {
-  const s = freeState(2);
-  const p = s.players[0], b = unit(s, 0, 'builder');
-  p.req = 5000; p.energy = 5000; p.tier = 2; s.points[1].owner = 0;
-  applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: POINTS[1][0], y: POINTS[1][1] });
-  run(s, 40); // карта крупнее: строителю дальше идти
-  const post = unit(s, 0, 'post');
-  assert.equal(applyCmd(s, 0, { c: 'upgrade', id: post.id }), undefined);
-  run(s, 13);
-  assert.equal(post.lvl, 2);
-  assert.equal(applyCmd(s, 0, { c: 'upgrade', id: post.id }), undefined);
-  run(s, 13);
-  assert.equal(post.lvl, 3);
-  assert.match(applyCmd(s, 0, { c: 'upgrade', id: post.id }) ?? '', /бастион/);
-});
-
-test('капитан: опыт за убийства и точки, уровни, дерево способностей и Вихрь', () => {
-  const s = freeState(2);
-  const p = s.players[0], cap = captainAt(s, 0), h = cap.hero!;
-  assert.equal(h.lvl, 1); assert.equal(h.pts, 1);
-  assert.match(applyCmd(s, 0, { c: 'learn', a: 4 }) ?? '', /предыдущая|уровень/);
-  assert.equal(applyCmd(s, 0, { c: 'learn', a: 3 }), undefined);
-  assert.match(applyCmd(s, 0, { c: 'learn', a: 0 }) ?? '', /очков/);
-  const e = unit(s, 1, 'builder');
-  [e.x, e.y] = [cap.x + 1, cap.y];
-  run(s, 40);
-  assert.ok(!s.units.includes(e), 'строитель врага убит');
-  assert.equal(h.xp, 5);
-  [cap.x, cap.y] = POINTS[3];
-  run(s, 13);
-  assert.equal(s.points[3].owner, 0);
-  assert.equal(h.xp, 30, 'захват точки +25');
-  h.xp = 95; const ec = captainAt(s, 1); [ec.x, ec.y] = [cap.x + 3, cap.y]; ec.by = 0; ec.hp = 0; run(s, 0.1);
-  assert.equal(h.lvl, 2); assert.equal(h.xp, 35); assert.equal(h.pts, 1, 'новый уровень — очко');
-  const far = spawn(s, 0, 'captain', 20, 20); far.arch = 'assault';
-  const ec2 = spawn(s, 1, 'guard', cap.x + 2, cap.y); ec2.by = 0; ec2.hp = 0; run(s, 0.1);
-  assert.equal(far.hero!.xp, 0, 'опыт — героям рядом с боем, у каждого свой');
-  assert.equal(applyCmd(s, 0, { c: 'learn', a: 0, id: far.id }), undefined, 'своё дерево у каждого героя');
-  assert.ok(far.hero!.abil & 1 && !(h.abil & 1));
-  h.lvl = 4; p.tier = 2;
-  assert.equal(applyCmd(s, 0, { c: 'learn', a: 4, id: cap.id }), undefined);
-  const foe = unit(s, 1, 'hq'), hp = foe.hp;
-  [cap.x, cap.y] = [foe.x + 5, foe.y];
-  assert.equal(applyCmd(s, 0, { c: 'ability', a: 4, id: cap.id }), undefined);
-  assert.ok(foe.hp <= hp - 150, 'Вихрь ранит');
-  assert.match(applyCmd(s, 0, { c: 'ability', a: 4 }) ?? '', /Перезарядка/);
-});
-
-test('победные очки тают у того, кто держит меньше точек, но не убивают; туман войны прячет далёких врагов', () => {
-  const s = freeState(2);
-  s.points.forEach((p, i) => { if (!p.relic) p.owner = i === 0 ? 1 : i % 2; }); // у игрока 1 больше точек и центр
-  const vp0 = s.vp[0];
-  run(s, 10);
-  assert.ok(s.vp[0] < vp0 - 10, 'очки игрока 0 тают'); // VP_RATE 0.5 × перевес ≥ 2 точек × 10 с assert.equal(s.vp[1], 500);
-  s.vp[0] = 1; run(s, 5);
-  assert.equal(s.vp[0], 0); assert.equal(s.players[0].alive, true, 'без очков не проигрывают: только когда пали все штабы'); assert.equal(s.winner, null);
+test('туман войны прячет далёких врагов', () => {
   const f = freeState(2), far = unit(f, 1, 'hq');
   const snap = snapshotFor(f, 0);
   assert.ok(!snap.u.some(r => r[0] === far.id), 'чужой штаб в тумане');
@@ -271,15 +217,11 @@ test('точки: турели вокруг своей точки, у крити
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: s.points[0].x, y: s.points[0].y }) ?? '', /критической/);
 });
 
-test('здоровье по лестнице, стены укрепляются, артиллерия не бьёт в упор', () => {
+test('здоровье по лестнице, артиллерия не бьёт в упор', () => {
   const tot = (k: Parameters<typeof maxHp>[0]) => maxHp(k);
   assert.ok(tot('guard') < tot('titan') && tot('hq') < tot('titan'), 'титан крепче всех'); // остальная лестница — как в моде
   const s = freeState(2, ['inquisition', 'inquisition']);
   const p = s.players[0], hq = unit(s, 0, 'hq'); p.req = 1e4; p.tier = 2;
-  const w1 = spawn(s, 0, 'wall', hq.x + 15, hq.y), w2 = spawn(s, 0, 'wall', hq.x + 15, hq.y + 2);
-  assert.equal(applyCmd(s, 0, { c: 'upgrade', id: w1.id }), undefined);
-  run(s, 7);
-  assert.equal(w1.lvl, 2); assert.equal(w2.lvl, 2, 'укрепились все стены');
   // артиллерия: цель в 6 м — не стреляет, в 30 м — стреляет
   const art = spawn(s, 0, 'arty', 120, 150), near = spawn(s, 1, 'guard', 126, 150), hp0 = near.hp;
   run(s, 3);
@@ -319,29 +261,6 @@ test('отмена найма из очереди возвращает ресу�
   assert.ok(p.req >= 1000, 'влияние вернулось (плюс доход за 2 с)');
 });
 
-test('второй герой: другой архетип — в казармах с тира II, свой бонус, один на армию; легенда и титан — вместе с ним', () => {
-  const s = freeState(2, ['inquisition', 'inquisition'], ['commander', 'commander']), p = s.players[0];
-  p.cheat = true; p.relics = 5; // реликварии держим (реликвии не копятся)
-  Object.assign(p, { req: 1e4, energy: 1e4, relics: 50 });
-  captainAt(s, 0);
-  assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /тир II/);
-  p.tier = 5;
-  assert.match(applyCmd(s, 0, { c: 'hero', a: 'commander' }) ?? '', /уже/, 'главный уже в армии');
-  assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /казармы/, 'второго героя заказывают в казармах');
-  const bar = spawn(s, 0, 'barracks', unit(s, 0, 'hq').x + 14, unit(s, 0, 'hq').y);
-  assert.equal(applyCmd(s, 0, { c: 'hero', a: 'assault' }), undefined);
-  assert.deepEqual(bar.que, ['captain']);
-  run(s, STATS.captain.time + 1);
-  const heroes = s.units.filter(u => u.owner === 0 && u.kind === 'captain');
-  assert.equal(heroes.length, 2);
-  assert.equal(archOf(s, heroes[1]), 'assault');
-  assert.match(applyCmd(s, 0, { c: 'hero', a: 'assault' }) ?? '', /уже/);
-  const hq = unit(s, 0, 'hq'), yard = spawn(s, 0, 'yard', hq.x - 20, hq.y), gate = spawn(s, 0, 'gate', hq.x + 20, hq.y);
-  s.points[0].owner = 0; p.energy = 2e4;
-  assert.equal(applyCmd(s, 0, { c: 'train', id: yard.id, k: 'titan' }), undefined);
-  assert.equal(applyCmd(s, 0, { c: 'summon', id: gate.id, v: 0 }), undefined, 'легенда вместе с титаном и героями');
-});
-
 test('очередь приказов (Shift): юнит выполняет приказы по порядку, обычный приказ очередь сбрасывает', () => {
   const s = freeState(2), b = unit(s, 0, 'builder'), [x0, y0] = [b.x, b.y];
   applyCmd(s, 0, { c: 'move', ids: [b.id], x: x0 + 10, y: y0 });
@@ -364,6 +283,7 @@ test('каждая фракция может заказать каждого ю�
     for (const b of [hq, ...homes]) for (const k of producible(b.kind, f)) {
       Object.assign(p, { req: 1e6, energy: 1e6, relics: 1e3 });
       for (const u of s.units) if (u.owner === 0 && !isStruct(u.kind) && u.kind !== 'builder') u.hp = 0; // освободить лимит
+      for (const u of s.units) if (u.owner === 1) u.hp = 1e9; // титаны мода (Imperator) сносят штаб за секунды — враг не должен пасть посреди проверки
       run(s, 0.2);
       assert.equal(applyCmd(s, 0, { c: 'train', id: b.id, k }), undefined, `${f}: заказ ${k} в ${b.kind}`);
       run(s, statOf(k, f).time + 2);
@@ -493,4 +413,16 @@ test('аддон турели — общее улучшение: ставитс�
   assert.ok(t3.ad! & (1 << a), 'новая турель — сразу с улучшением');
   assert.ok(!((foe.ad ?? 0) & (1 << a)), 'у противника нет');
   assert.match(applyCmd(s, 0, { c: 'uaa', id: t2.id, a }) ?? '', /Уже/);
+});
+
+test('мораль как в UA: урон по морали надламывает отряд Инквизиции, тираниды бесстрашны, надлом проходит', async () => {
+  const { UA_MOR } = await import('./sim.ts');
+  assert.ok(!UA_MOR.tyranids?.support, 'у термагантов морали нет');
+  const s = freeState(2, ['inquisition', 'tyranids']), st = spawn(s, 0, 'support', 150, 128), mc = UA_MOR.inquisition!.support!;
+  for (let i = 0; i < 4; i++) spawn(s, 1, 'support', 175, 120 + i * 5).hit = 99;
+  for (let i = 0; i < 40 / DT && st.brk === undefined && st.hp > 0; i++) step(s);
+  assert.ok(st.brk !== undefined, 'под огнём отряд надломился');
+  for (const u of s.units) if (u.owner === 1 && !isStruct(u.kind)) u.hp = 0;
+  st.hp = 1e5; run(s, mc.minTime + (mc.minMorale / mc.rate) + 2);
+  assert.equal(st.brk, undefined, 'вне боя мораль вернулась, надлом прошёл');
 });

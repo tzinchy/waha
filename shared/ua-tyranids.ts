@@ -6,6 +6,8 @@ export const UA_TYRANIDS = {
    "max": 4,
    "reinforce": 200,
    "ups": 2,
+   "cap": 4,
+   "support": 0,
    "unit": {
     "id": "tyranids_biovores",
     "name": "Biovores",
@@ -13,6 +15,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/biovore",
     "hp": 800,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 1.5,
     "speed": 16,
     "sight": 25,
@@ -32,6 +35,8 @@ export const UA_TYRANIDS = {
        "max": 600,
        "pierce": 0,
        "morale": 80,
+       "setup": 1,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 6,
        "vs": {
@@ -40,7 +45,8 @@ export const UA_TYRANIDS = {
         "light": 16,
         "veh": 6,
         "titan": 11,
-        "struct": 10
+        "struct": 10,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -59,6 +65,8 @@ export const UA_TYRANIDS = {
        "max": 350,
        "pierce": 0,
        "morale": 90,
+       "setup": 1,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 8,
        "vs": {
@@ -67,7 +75,8 @@ export const UA_TYRANIDS = {
         "light": 90,
         "veh": 75,
         "titan": 50,
-        "struct": 40
+        "struct": 40,
+        "cmd": 24
        },
        "cost": 20,
        "power": 70,
@@ -89,6 +98,8 @@ export const UA_TYRANIDS = {
        "max": 1350,
        "pierce": 2,
        "morale": 160,
+       "setup": 1,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 4,
        "vs": {
@@ -97,7 +108,8 @@ export const UA_TYRANIDS = {
         "light": 15,
         "veh": 10,
         "titan": 5,
-        "struct": 10
+        "struct": 10,
+        "cmd": 9.600000381469727
        },
        "cost": 40,
        "power": 100,
@@ -120,6 +132,8 @@ export const UA_TYRANIDS = {
        "max": 600,
        "pierce": 0,
        "morale": 50,
+       "setup": 1,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 10,
        "vs": {
@@ -128,7 +142,8 @@ export const UA_TYRANIDS = {
         "light": 16,
         "veh": 6,
         "titan": 11,
-        "struct": 10
+        "struct": 10,
+        "cmd": 20
        },
        "cost": 20,
        "power": 40,
@@ -162,6 +177,8 @@ export const UA_TYRANIDS = {
    "max": 6,
    "reinforce": 170,
    "ups": 0,
+   "cap": 6,
+   "support": 0,
    "unit": {
     "id": "tyranids_broodlord",
     "name": "Broodlord",
@@ -169,6 +186,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/broodlord",
     "hp": 1900,
     "armour": 101,
+    "armourType": "infantry_heavy_high",
     "regen": 2,
     "speed": 18,
     "sight": 25,
@@ -188,6 +206,8 @@ export const UA_TYRANIDS = {
        "max": 248,
        "pierce": 10,
        "morale": 26,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -196,7 +216,8 @@ export const UA_TYRANIDS = {
         "light": 40,
         "veh": 20,
         "titan": 20,
-        "struct": 15
+        "struct": 15,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -215,6 +236,8 @@ export const UA_TYRANIDS = {
        "max": 480,
        "pierce": 3,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -223,7 +246,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 55,
         "titan": 70,
-        "struct": 35
+        "struct": 35,
+        "cmd": 60
        },
        "cost": 0,
        "power": 0,
@@ -260,6 +284,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 4,
    "unit": {
     "id": "tyranids_carnifex",
     "name": "Carnifex",
@@ -267,6 +293,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/carnifex",
     "hp": 6800,
     "armour": 102,
+    "armourType": "vehicle_high",
     "regen": 4,
     "speed": 16,
     "sight": 35,
@@ -286,6 +313,8 @@ export const UA_TYRANIDS = {
        "max": 203,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -294,7 +323,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 45,
         "titan": 15,
-        "struct": 17
+        "struct": 17,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -313,6 +343,8 @@ export const UA_TYRANIDS = {
        "max": 658,
        "pierce": 0,
        "morale": 62,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 3,
        "vs": {
@@ -321,7 +353,8 @@ export const UA_TYRANIDS = {
         "light": 25,
         "veh": 10,
         "titan": 5.5,
-        "struct": 9
+        "struct": 9,
+        "cmd": 20
        },
        "cost": 120,
        "power": 0,
@@ -340,6 +373,8 @@ export const UA_TYRANIDS = {
        "max": 760,
        "pierce": 5,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -348,7 +383,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 60,
         "titan": 22,
-        "struct": 12
+        "struct": 12,
+        "cmd": 12
        },
        "cost": 120,
        "power": 0,
@@ -369,6 +405,8 @@ export const UA_TYRANIDS = {
        "max": 203,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -377,7 +415,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 45,
         "titan": 15,
-        "struct": 17
+        "struct": 17,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -396,6 +435,8 @@ export const UA_TYRANIDS = {
        "max": 283,
        "pierce": 12,
        "morale": 90,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -404,7 +445,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 65,
         "titan": 30,
-        "struct": 35
+        "struct": 35,
+        "cmd": 10
        },
        "cost": 100,
        "power": 0,
@@ -425,6 +467,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -433,7 +477,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -452,6 +497,8 @@ export const UA_TYRANIDS = {
        "max": 800,
        "pierce": 10,
        "morale": 90,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 5,
        "vs": {
@@ -460,7 +507,8 @@ export const UA_TYRANIDS = {
         "light": 90,
         "veh": 80,
         "titan": 25,
-        "struct": 25
+        "struct": 25,
+        "cmd": 12
        },
        "cost": 120,
        "power": 0,
@@ -483,6 +531,8 @@ export const UA_TYRANIDS = {
        "max": 60,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -491,7 +541,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 45,
         "titan": 15,
-        "struct": 35
+        "struct": 35,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -512,6 +563,8 @@ export const UA_TYRANIDS = {
        "max": 60,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -520,7 +573,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 45,
         "titan": 15,
-        "struct": 35
+        "struct": 35,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -557,6 +611,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 2,
    "unit": {
     "id": "tyranids_carnifex_khazi",
     "name": "Hellfex (Carnifex)",
@@ -564,6 +620,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/carnifex_khazi",
     "hp": 3200,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 4,
     "speed": 16,
     "sight": 35,
@@ -583,6 +640,8 @@ export const UA_TYRANIDS = {
        "max": 35,
        "pierce": 0,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0.44999998807907104,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -591,7 +650,8 @@ export const UA_TYRANIDS = {
         "light": 25,
         "veh": 40,
         "titan": 25,
-        "struct": 20
+        "struct": 20,
+        "cmd": 18.600000381469727
        },
        "cost": 25,
        "power": 0,
@@ -610,6 +670,8 @@ export const UA_TYRANIDS = {
        "max": 450,
        "pierce": 2,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.4000000059604645,
        "melee": false,
        "aoe": 6,
        "vs": {
@@ -618,7 +680,8 @@ export const UA_TYRANIDS = {
         "light": 15,
         "veh": 20,
         "titan": 35,
-        "struct": 30
+        "struct": 30,
+        "cmd": 18.600000381469727
        },
        "cost": 70,
        "power": 0,
@@ -639,6 +702,8 @@ export const UA_TYRANIDS = {
        "max": 35,
        "pierce": 0,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0.44999998807907104,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -647,7 +712,8 @@ export const UA_TYRANIDS = {
         "light": 25,
         "veh": 40,
         "titan": 25,
-        "struct": 20
+        "struct": 20,
+        "cmd": 18.600000381469727
        },
        "cost": 25,
        "power": 0,
@@ -666,6 +732,8 @@ export const UA_TYRANIDS = {
        "max": 300,
        "pierce": 5,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0.550000011920929,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -674,7 +742,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 60,
         "titan": 22,
-        "struct": 12
+        "struct": 12,
+        "cmd": 12
        },
        "cost": 80,
        "power": 0,
@@ -698,6 +767,8 @@ export const UA_TYRANIDS = {
        "max": 203,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -706,7 +777,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 45,
         "titan": 15,
-        "struct": 17
+        "struct": 17,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -737,6 +809,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 2,
    "unit": {
     "id": "tyranids_carnifex_skiller",
     "name": "Screamer Killer (Carnifex)",
@@ -744,6 +818,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/carnifex_skiller",
     "hp": 3400,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 2.5,
     "speed": 16,
     "sight": 35,
@@ -763,6 +838,8 @@ export const UA_TYRANIDS = {
        "max": 203,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -771,7 +848,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 45,
         "titan": 15,
-        "struct": 17
+        "struct": 17,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -792,6 +870,8 @@ export const UA_TYRANIDS = {
        "max": 203,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -800,7 +880,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 45,
         "titan": 15,
-        "struct": 17
+        "struct": 17,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -831,6 +912,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_carnifex_tervigon",
     "name": "Tervigon (Carnifex)",
@@ -838,6 +921,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/carnifex_uber",
     "hp": 12000,
     "armour": 100,
+    "armourType": "monster_high",
     "regen": 4,
     "speed": 22,
     "sight": 35,
@@ -857,6 +941,8 @@ export const UA_TYRANIDS = {
        "max": 900,
        "pierce": 8,
        "morale": 150,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -865,7 +951,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 65,
         "titan": 45,
-        "struct": 35
+        "struct": 35,
+        "cmd": 10
        },
        "cost": 100,
        "power": 0,
@@ -886,6 +973,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -894,7 +983,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -915,6 +1005,8 @@ export const UA_TYRANIDS = {
        "max": 900,
        "pierce": 8,
        "morale": 150,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -923,7 +1015,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 65,
         "titan": 45,
-        "struct": 35
+        "struct": 35,
+        "cmd": 10
        },
        "cost": 100,
        "power": 0,
@@ -944,6 +1037,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -952,7 +1047,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -983,6 +1079,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_carnifex_uber",
     "name": "Uberfex (Carnifex)",
@@ -990,6 +1088,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/carnifex_uber",
     "hp": 16000,
     "armour": 100,
+    "armourType": "monster_high",
     "regen": 10,
     "speed": 22,
     "sight": 45,
@@ -1009,6 +1108,8 @@ export const UA_TYRANIDS = {
        "max": 900,
        "pierce": 8,
        "morale": 150,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1017,7 +1118,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 65,
         "titan": 45,
-        "struct": 35
+        "struct": 35,
+        "cmd": 10
        },
        "cost": 100,
        "power": 0,
@@ -1036,6 +1138,8 @@ export const UA_TYRANIDS = {
        "max": 1300,
        "pierce": 5,
        "morale": 67,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1044,7 +1148,8 @@ export const UA_TYRANIDS = {
         "light": 90,
         "veh": 75,
         "titan": 40,
-        "struct": 10
+        "struct": 10,
+        "cmd": 10
        },
        "cost": 120,
        "power": 0,
@@ -1065,6 +1170,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1073,7 +1180,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -1092,6 +1200,8 @@ export const UA_TYRANIDS = {
        "max": 1200,
        "pierce": 10,
        "morale": 90,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 7,
        "vs": {
@@ -1100,7 +1210,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 15,
         "titan": 10,
-        "struct": 10
+        "struct": 10,
+        "cmd": 50
        },
        "cost": 250,
        "power": 0,
@@ -1123,6 +1234,8 @@ export const UA_TYRANIDS = {
        "max": 900,
        "pierce": 8,
        "morale": 150,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1131,7 +1244,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 65,
         "titan": 45,
-        "struct": 35
+        "struct": 35,
+        "cmd": 10
        },
        "cost": 100,
        "power": 0,
@@ -1150,6 +1264,8 @@ export const UA_TYRANIDS = {
        "max": 980,
        "pierce": 8,
        "morale": 180,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1158,7 +1274,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 40,
         "titan": 45,
-        "struct": 75
+        "struct": 75,
+        "cmd": 10
        },
        "cost": 275,
        "power": 0,
@@ -1181,6 +1298,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1189,7 +1308,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -1220,6 +1340,8 @@ export const UA_TYRANIDS = {
    "max": 15,
    "reinforce": 30,
    "ups": 0,
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "tyranids_gargoyle",
     "name": "Gargoyles",
@@ -1227,6 +1349,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/gargoyle",
     "hp": 195,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 48,
     "sight": 55,
@@ -1246,6 +1369,8 @@ export const UA_TYRANIDS = {
        "max": 16.399999618530273,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1254,7 +1379,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 15,
         "titan": 5.5,
-        "struct": 7
+        "struct": 7,
+        "cmd": 18
        },
        "cost": 10,
        "power": 0,
@@ -1275,6 +1401,8 @@ export const UA_TYRANIDS = {
        "max": 14,
        "pierce": 0,
        "morale": 3,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1283,7 +1411,8 @@ export const UA_TYRANIDS = {
         "light": 30,
         "veh": 10,
         "titan": 9,
-        "struct": 4
+        "struct": 4,
+        "cmd": 18
        },
        "cost": 10,
        "power": 0,
@@ -1322,6 +1451,16 @@ export const UA_TYRANIDS = {
    "max": 8,
    "reinforce": 15,
    "ups": 0,
+   "morale": {
+    "max": 200,
+    "rate": 0,
+    "minTime": 12,
+    "minMorale": 30,
+    "acc": 0.20000000298023224,
+    "speed": 1.2000000476837158
+   },
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "tyranids_gargoyle",
     "name": "Gargoyles",
@@ -1329,6 +1468,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/gargoyle",
     "hp": 195,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 48,
     "sight": 55,
@@ -1348,6 +1488,8 @@ export const UA_TYRANIDS = {
        "max": 16.399999618530273,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1356,7 +1498,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 15,
         "titan": 5.5,
-        "struct": 7
+        "struct": 7,
+        "cmd": 18
        },
        "cost": 10,
        "power": 0,
@@ -1377,6 +1520,8 @@ export const UA_TYRANIDS = {
        "max": 14,
        "pierce": 0,
        "morale": 3,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1385,7 +1530,8 @@ export const UA_TYRANIDS = {
         "light": 30,
         "veh": 10,
         "titan": 9,
-        "struct": 4
+        "struct": 4,
+        "cmd": 18
        },
        "cost": 10,
        "power": 0,
@@ -1418,6 +1564,8 @@ export const UA_TYRANIDS = {
    "max": 25,
    "reinforce": 3,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_gaunt_won",
     "name": "Spinegaunt (Without Number)",
@@ -1425,6 +1573,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/spinegaunt",
     "hp": 133,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 30,
     "sight": 25,
@@ -1444,6 +1593,8 @@ export const UA_TYRANIDS = {
        "max": 12,
        "pierce": 2,
        "morale": 3,
+       "setup": 0,
+       "moveAcc": 0.6000000238418579,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1452,7 +1603,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -1473,6 +1625,8 @@ export const UA_TYRANIDS = {
        "max": 13,
        "pierce": 0,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1481,7 +1635,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -1512,6 +1667,8 @@ export const UA_TYRANIDS = {
    "max": 4,
    "reinforce": 40,
    "ups": 0,
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "tyranids_genestealer",
     "name": "Genestealers",
@@ -1519,6 +1676,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/genestealer",
     "hp": 350,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 18,
     "sight": 25,
@@ -1538,6 +1696,8 @@ export const UA_TYRANIDS = {
        "max": 50,
        "pierce": 0,
        "morale": 16,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1546,7 +1706,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -1565,6 +1726,8 @@ export const UA_TYRANIDS = {
        "max": 120,
        "pierce": 0,
        "morale": 15,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1573,7 +1736,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 40,
         "titan": 70,
-        "struct": 10
+        "struct": 10,
+        "cmd": 60
        },
        "cost": 0,
        "power": 0,
@@ -1591,6 +1755,8 @@ export const UA_TYRANIDS = {
    "max": 4,
    "reinforce": 40,
    "ups": 0,
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "tyranids_genestealer_max",
     "name": "Genestealers",
@@ -1598,6 +1764,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/genestealer",
     "hp": 350,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 18,
     "sight": 25,
@@ -1617,6 +1784,8 @@ export const UA_TYRANIDS = {
        "max": 50,
        "pierce": 0,
        "morale": 16,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1625,7 +1794,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -1644,6 +1814,8 @@ export const UA_TYRANIDS = {
        "max": 120,
        "pierce": 0,
        "morale": 15,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1652,7 +1824,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 40,
         "titan": 70,
-        "struct": 10
+        "struct": 10,
+        "cmd": 60
        },
        "cost": 0,
        "power": 0,
@@ -1683,6 +1856,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_hierophant",
     "name": "Hierophant Bio Titan",
@@ -1690,6 +1865,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/tyranids_hierophant",
     "hp": 30775,
     "armour": 103,
+    "armourType": "titan",
     "regen": 30,
     "speed": 16,
     "sight": 50,
@@ -1709,6 +1885,8 @@ export const UA_TYRANIDS = {
        "max": 242,
        "pierce": 5,
        "morale": 35,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1717,7 +1895,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 70,
         "titan": 25,
-        "struct": 20
+        "struct": 20,
+        "cmd": 25
        },
        "cost": 80,
        "power": 0,
@@ -1736,6 +1915,8 @@ export const UA_TYRANIDS = {
        "max": 495,
        "pierce": 5,
        "morale": 55,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1744,7 +1925,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 70,
         "titan": 25,
-        "struct": 20
+        "struct": 20,
+        "cmd": 25
        },
        "cost": 250,
        "power": 0,
@@ -1765,6 +1947,8 @@ export const UA_TYRANIDS = {
        "max": 242,
        "pierce": 5,
        "morale": 35,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1773,7 +1957,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 70,
         "titan": 25,
-        "struct": 20
+        "struct": 20,
+        "cmd": 25
        },
        "cost": 80,
        "power": 0,
@@ -1792,6 +1977,8 @@ export const UA_TYRANIDS = {
        "max": 495,
        "pierce": 5,
        "morale": 55,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1800,7 +1987,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 70,
         "titan": 25,
-        "struct": 20
+        "struct": 20,
+        "cmd": 25
        },
        "cost": 250,
        "power": 0,
@@ -1821,6 +2009,8 @@ export const UA_TYRANIDS = {
        "max": 2378,
        "pierce": 14,
        "morale": 300,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 10,
        "vs": {
@@ -1829,7 +2019,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 80,
         "titan": 40,
-        "struct": 40
+        "struct": 40,
+        "cmd": 30
        },
        "cost": 0,
        "power": 0,
@@ -1848,6 +2039,8 @@ export const UA_TYRANIDS = {
        "max": 3091,
        "pierce": 18,
        "morale": 400,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 10,
        "vs": {
@@ -1856,7 +2049,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 80,
         "titan": 40,
-        "struct": 40
+        "struct": 40,
+        "cmd": 30
        },
        "cost": 500,
        "power": 0,
@@ -1877,6 +2071,8 @@ export const UA_TYRANIDS = {
        "max": 2378,
        "pierce": 14,
        "morale": 300,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 10,
        "vs": {
@@ -1885,7 +2081,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 80,
         "titan": 40,
-        "struct": 40
+        "struct": 40,
+        "cmd": 30
        },
        "cost": 0,
        "power": 0,
@@ -1904,6 +2101,8 @@ export const UA_TYRANIDS = {
        "max": 3091,
        "pierce": 18,
        "morale": 400,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 10,
        "vs": {
@@ -1912,7 +2111,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 80,
         "titan": 40,
-        "struct": 40
+        "struct": 40,
+        "cmd": 30
        },
        "cost": 500,
        "power": 0,
@@ -1933,6 +2133,8 @@ export const UA_TYRANIDS = {
        "max": 670,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 7,
        "vs": {
@@ -1941,7 +2143,8 @@ export const UA_TYRANIDS = {
         "light": 150,
         "veh": 75,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 50
        },
        "cost": 50,
        "power": 0,
@@ -1962,6 +2165,8 @@ export const UA_TYRANIDS = {
        "max": 670,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 7,
        "vs": {
@@ -1970,7 +2175,8 @@ export const UA_TYRANIDS = {
         "light": 150,
         "veh": 75,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 50
        },
        "cost": 50,
        "power": 0,
@@ -1991,6 +2197,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1999,7 +2207,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2018,6 +2227,8 @@ export const UA_TYRANIDS = {
        "max": 470,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 7,
        "vs": {
@@ -2026,7 +2237,8 @@ export const UA_TYRANIDS = {
         "light": 150,
         "veh": 75,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 50
        },
        "cost": 1000,
        "power": 0,
@@ -2047,6 +2259,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2055,7 +2269,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2074,6 +2289,8 @@ export const UA_TYRANIDS = {
        "max": 1003,
        "pierce": 10,
        "morale": 90,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 5,
        "vs": {
@@ -2082,7 +2299,8 @@ export const UA_TYRANIDS = {
         "light": 90,
         "veh": 90,
         "titan": 25,
-        "struct": 25
+        "struct": 25,
+        "cmd": 12
        },
        "cost": 300,
        "power": 0,
@@ -2125,6 +2343,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_hierophant_max",
     "name": "Hierophant Bio Titan",
@@ -2132,6 +2352,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/tyranids_hierophant",
     "hp": 30775,
     "armour": 103,
+    "armourType": "titan",
     "regen": 30,
     "speed": 16,
     "sight": 50,
@@ -2151,6 +2372,8 @@ export const UA_TYRANIDS = {
        "max": 242,
        "pierce": 5,
        "morale": 35,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2159,7 +2382,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 70,
         "titan": 25,
-        "struct": 20
+        "struct": 20,
+        "cmd": 25
        },
        "cost": 80,
        "power": 0,
@@ -2178,6 +2402,8 @@ export const UA_TYRANIDS = {
        "max": 495,
        "pierce": 5,
        "morale": 55,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2186,7 +2412,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 70,
         "titan": 25,
-        "struct": 20
+        "struct": 20,
+        "cmd": 25
        },
        "cost": 250,
        "power": 0,
@@ -2207,6 +2434,8 @@ export const UA_TYRANIDS = {
        "max": 242,
        "pierce": 5,
        "morale": 35,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2215,7 +2444,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 70,
         "titan": 25,
-        "struct": 20
+        "struct": 20,
+        "cmd": 25
        },
        "cost": 80,
        "power": 0,
@@ -2234,6 +2464,8 @@ export const UA_TYRANIDS = {
        "max": 495,
        "pierce": 5,
        "morale": 55,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2242,7 +2474,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 70,
         "titan": 25,
-        "struct": 20
+        "struct": 20,
+        "cmd": 25
        },
        "cost": 250,
        "power": 0,
@@ -2263,6 +2496,8 @@ export const UA_TYRANIDS = {
        "max": 2378,
        "pierce": 14,
        "morale": 300,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 10,
        "vs": {
@@ -2271,7 +2506,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 80,
         "titan": 40,
-        "struct": 40
+        "struct": 40,
+        "cmd": 30
        },
        "cost": 0,
        "power": 0,
@@ -2290,6 +2526,8 @@ export const UA_TYRANIDS = {
        "max": 3091,
        "pierce": 18,
        "morale": 400,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 10,
        "vs": {
@@ -2298,7 +2536,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 80,
         "titan": 40,
-        "struct": 40
+        "struct": 40,
+        "cmd": 30
        },
        "cost": 500,
        "power": 0,
@@ -2319,6 +2558,8 @@ export const UA_TYRANIDS = {
        "max": 2378,
        "pierce": 14,
        "morale": 300,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 10,
        "vs": {
@@ -2327,7 +2568,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 80,
         "titan": 40,
-        "struct": 40
+        "struct": 40,
+        "cmd": 30
        },
        "cost": 0,
        "power": 0,
@@ -2346,6 +2588,8 @@ export const UA_TYRANIDS = {
        "max": 3091,
        "pierce": 18,
        "morale": 400,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 10,
        "vs": {
@@ -2354,7 +2598,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 80,
         "titan": 40,
-        "struct": 40
+        "struct": 40,
+        "cmd": 30
        },
        "cost": 500,
        "power": 0,
@@ -2375,6 +2620,8 @@ export const UA_TYRANIDS = {
        "max": 670,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 7,
        "vs": {
@@ -2383,7 +2630,8 @@ export const UA_TYRANIDS = {
         "light": 150,
         "veh": 75,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 50
        },
        "cost": 50,
        "power": 0,
@@ -2404,6 +2652,8 @@ export const UA_TYRANIDS = {
        "max": 670,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 7,
        "vs": {
@@ -2412,7 +2662,8 @@ export const UA_TYRANIDS = {
         "light": 150,
         "veh": 75,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 50
        },
        "cost": 50,
        "power": 0,
@@ -2433,6 +2684,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2441,7 +2694,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2460,6 +2714,8 @@ export const UA_TYRANIDS = {
        "max": 470,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 7,
        "vs": {
@@ -2468,7 +2724,8 @@ export const UA_TYRANIDS = {
         "light": 150,
         "veh": 75,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 50
        },
        "cost": 1000,
        "power": 0,
@@ -2489,6 +2746,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2497,7 +2756,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2516,6 +2776,8 @@ export const UA_TYRANIDS = {
        "max": 1003,
        "pierce": 10,
        "morale": 90,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 5,
        "vs": {
@@ -2524,7 +2786,8 @@ export const UA_TYRANIDS = {
         "light": 90,
         "veh": 90,
         "titan": 25,
-        "struct": 25
+        "struct": 25,
+        "cmd": 12
        },
        "cost": 300,
        "power": 0,
@@ -2567,6 +2830,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_hive_tyrant",
     "name": "Hive Tyrant",
@@ -2574,6 +2839,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/hivetyrant",
     "hp": 1900,
     "armour": 100,
+    "armourType": "commander",
     "regen": 41,
     "speed": 12.5,
     "sight": 40,
@@ -2593,6 +2859,8 @@ export const UA_TYRANIDS = {
        "max": 132,
        "pierce": 3,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2601,7 +2869,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 10,
         "titan": 10,
-        "struct": 10
+        "struct": 10,
+        "cmd": 36
        },
        "cost": 0,
        "power": 0,
@@ -2620,6 +2889,8 @@ export const UA_TYRANIDS = {
        "max": 74,
        "pierce": 0,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2628,7 +2899,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 15,
         "titan": 11.100000381469727,
-        "struct": 10
+        "struct": 10,
+        "cmd": 36
        },
        "cost": 25,
        "power": 0,
@@ -2647,6 +2919,8 @@ export const UA_TYRANIDS = {
        "max": 300,
        "pierce": 6,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2655,7 +2929,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 55,
         "titan": 35,
-        "struct": 35
+        "struct": 35,
+        "cmd": 42
        },
        "cost": 0,
        "power": 0,
@@ -2676,6 +2951,8 @@ export const UA_TYRANIDS = {
        "max": 132,
        "pierce": 3,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2684,7 +2961,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 10,
         "titan": 10,
-        "struct": 10
+        "struct": 10,
+        "cmd": 36
        },
        "cost": 0,
        "power": 0,
@@ -2703,6 +2981,8 @@ export const UA_TYRANIDS = {
        "max": 300,
        "pierce": 6,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2711,7 +2991,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 55,
         "titan": 35,
-        "struct": 35
+        "struct": 35,
+        "cmd": 42
        },
        "cost": 0,
        "power": 0,
@@ -2730,6 +3011,8 @@ export const UA_TYRANIDS = {
        "max": 74,
        "pierce": 0,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2738,7 +3021,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 15,
         "titan": 11.100000381469727,
-        "struct": 10
+        "struct": 10,
+        "cmd": 36
        },
        "cost": 25,
        "power": 0,
@@ -2757,6 +3041,8 @@ export const UA_TYRANIDS = {
        "max": 622,
        "pierce": 0,
        "morale": 150,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 3,
        "vs": {
@@ -2765,7 +3051,8 @@ export const UA_TYRANIDS = {
         "light": 25,
         "veh": 10,
         "titan": 5.5,
-        "struct": 9
+        "struct": 9,
+        "cmd": 40
        },
        "cost": 30,
        "power": 0,
@@ -2784,6 +3071,8 @@ export const UA_TYRANIDS = {
        "max": 228,
        "pierce": 5,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2792,7 +3081,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 90,
         "titan": 22,
-        "struct": 20
+        "struct": 20,
+        "cmd": 12
        },
        "cost": 80,
        "power": 0,
@@ -2813,6 +3103,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2821,7 +3113,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2840,6 +3133,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2848,7 +3143,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2867,6 +3163,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2875,7 +3173,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2896,6 +3195,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2904,7 +3205,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2923,6 +3225,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2931,7 +3235,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2952,6 +3257,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2960,7 +3267,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2979,6 +3287,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2987,7 +3297,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3008,6 +3319,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3016,7 +3329,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3035,6 +3349,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3043,7 +3359,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3062,6 +3379,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3070,7 +3389,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3089,6 +3409,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3097,7 +3419,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3122,6 +3445,8 @@ export const UA_TYRANIDS = {
    "max": 12,
    "reinforce": 20,
    "ups": 0,
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "tyranids_hormagaunt",
     "name": "Hormagaunt",
@@ -3129,13 +3454,47 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/hormagaunt",
     "hp": 255,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 18,
     "sight": 25,
     "cost": 25,
     "power": 0,
     "time": 2,
-    "hardpoints": []
+    "hardpoints": [
+     [
+      {
+       "file": "tyranids_melee_hormagaunt",
+       "name": "",
+       "range": 0,
+       "minRange": 0,
+       "reload": 0.6000000238418579,
+       "accuracy": 0.800000011920929,
+       "min": 11.800000190734863,
+       "max": 15.449999809265137,
+       "pierce": 0,
+       "morale": 4,
+       "setup": 0,
+       "moveAcc": 0,
+       "melee": true,
+       "aoe": 0,
+       "vs": {
+        "inf": 65,
+        "hinf": 45,
+        "light": 18,
+        "veh": 1,
+        "titan": 10,
+        "struct": 0,
+        "cmd": 20
+       },
+       "cost": 0,
+       "power": 0,
+       "time": 0,
+       "icon": "space_marine_icons/upgrade",
+       "requires": []
+      }
+     ]
+    ]
    },
    "req": [
     {
@@ -3157,6 +3516,8 @@ export const UA_TYRANIDS = {
    "max": 15,
    "reinforce": 15,
    "ups": 0,
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "tyranids_hormagaunt_max",
     "name": "Hormagaunt",
@@ -3164,6 +3525,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/hormagaunt",
     "hp": 275,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 18,
     "sight": 25,
@@ -3192,6 +3554,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 1,
+   "support": 0,
    "unit": {
     "id": "tyranids_lictor",
     "name": "Lictor",
@@ -3199,6 +3563,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/lictor",
     "hp": 500,
     "armour": 100,
+    "armourType": "infantry_high",
     "regen": 5,
     "speed": 24,
     "sight": 55,
@@ -3218,6 +3583,8 @@ export const UA_TYRANIDS = {
        "max": 105,
        "pierce": 6,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3226,7 +3593,8 @@ export const UA_TYRANIDS = {
         "light": 1,
         "veh": 0,
         "titan": 20,
-        "struct": 6
+        "struct": 6,
+        "cmd": 78
        },
        "cost": 0,
        "power": 0,
@@ -3247,6 +3615,8 @@ export const UA_TYRANIDS = {
        "max": 105,
        "pierce": 6,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3255,7 +3625,8 @@ export const UA_TYRANIDS = {
         "light": 1,
         "veh": 0,
         "titan": 20,
-        "struct": 6
+        "struct": 6,
+        "cmd": 78
        },
        "cost": 0,
        "power": 0,
@@ -3273,6 +3644,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_lictor_alpha",
     "name": "Lictor Alpha",
@@ -3280,6 +3653,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/lictor_alpha",
     "hp": 750,
     "armour": 100,
+    "armourType": "commander",
     "regen": 25,
     "speed": 32,
     "sight": 55,
@@ -3299,6 +3673,8 @@ export const UA_TYRANIDS = {
        "max": 100,
        "pierce": 6,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3307,7 +3683,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 5,
         "titan": 5.5,
-        "struct": 4
+        "struct": 4,
+        "cmd": 60
        },
        "cost": 0,
        "power": 0,
@@ -3328,6 +3705,8 @@ export const UA_TYRANIDS = {
        "max": 100,
        "pierce": 6,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3336,7 +3715,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 5,
         "titan": 5.5,
-        "struct": 4
+        "struct": 4,
+        "cmd": 60
        },
        "cost": 0,
        "power": 0,
@@ -3367,6 +3747,8 @@ export const UA_TYRANIDS = {
    "max": 9,
    "reinforce": 50,
    "ups": 2,
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "tyranids_ravener",
     "name": "Ravener",
@@ -3374,6 +3756,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/ravener",
     "hp": 420,
     "armour": 100,
+    "armourType": "infantry_high",
     "regen": 2,
     "speed": 24,
     "sight": 30,
@@ -3393,6 +3776,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3401,7 +3786,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3420,6 +3806,8 @@ export const UA_TYRANIDS = {
        "max": 100,
        "pierce": 2,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0.4000000059604645,
        "melee": false,
        "aoe": 6,
        "vs": {
@@ -3428,7 +3816,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 15,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18.600000381469727
        },
        "cost": 35,
        "power": 0,
@@ -3450,6 +3839,8 @@ export const UA_TYRANIDS = {
        "max": 552,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 5,
        "vs": {
@@ -3458,7 +3849,8 @@ export const UA_TYRANIDS = {
         "light": 90,
         "veh": 90,
         "titan": 25,
-        "struct": 25
+        "struct": 25,
+        "cmd": 12
        },
        "cost": 85,
        "power": 0,
@@ -3482,6 +3874,8 @@ export const UA_TYRANIDS = {
        "max": 19,
        "pierce": 0,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3490,7 +3884,8 @@ export const UA_TYRANIDS = {
         "light": 30,
         "veh": 5,
         "titan": 10,
-        "struct": 2
+        "struct": 2,
+        "cmd": 28.799999237060547
        },
        "cost": 0,
        "power": 0,
@@ -3509,6 +3904,8 @@ export const UA_TYRANIDS = {
        "max": 89,
        "pierce": 0,
        "morale": 19,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3517,7 +3914,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 55,
         "titan": 30,
-        "struct": 15
+        "struct": 15,
+        "cmd": 20
        },
        "cost": 20,
        "power": 0,
@@ -3540,6 +3938,8 @@ export const UA_TYRANIDS = {
        "max": 19,
        "pierce": 0,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3548,7 +3948,8 @@ export const UA_TYRANIDS = {
         "light": 30,
         "veh": 5,
         "titan": 10,
-        "struct": 2
+        "struct": 2,
+        "cmd": 28.799999237060547
        },
        "cost": 0,
        "power": 0,
@@ -3579,6 +3980,8 @@ export const UA_TYRANIDS = {
    "max": 5,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_ripperswarm",
     "name": "Ripper Swarm",
@@ -3586,6 +3989,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/ripper",
     "hp": 100,
     "armour": 100,
+    "armourType": "infantry_low",
     "regen": 2,
     "speed": 16,
     "sight": 20,
@@ -3605,6 +4009,8 @@ export const UA_TYRANIDS = {
        "max": 6,
        "pierce": 0,
        "morale": 6,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3613,7 +4019,8 @@ export const UA_TYRANIDS = {
         "light": 25,
         "veh": 25,
         "titan": 30,
-        "struct": 50
+        "struct": 50,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -3638,6 +4045,8 @@ export const UA_TYRANIDS = {
    "max": 6,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_ripperswarm_global",
     "name": "Ripper Swarm",
@@ -3645,6 +4054,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/ripper",
     "hp": 100,
     "armour": 100,
+    "armourType": "infantry_low",
     "regen": 2,
     "speed": 16,
     "sight": 20,
@@ -3664,6 +4074,8 @@ export const UA_TYRANIDS = {
        "max": 6,
        "pierce": 0,
        "morale": 6,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3672,7 +4084,8 @@ export const UA_TYRANIDS = {
         "light": 25,
         "veh": 25,
         "titan": 30,
-        "struct": 50
+        "struct": 50,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -3703,6 +4116,8 @@ export const UA_TYRANIDS = {
    "max": 10,
    "reinforce": 2,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_spinegaunt",
     "name": "Spinegaunt",
@@ -3710,6 +4125,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/spinegaunt",
     "hp": 80,
     "armour": 90,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 19,
     "sight": 25,
@@ -3729,6 +4145,8 @@ export const UA_TYRANIDS = {
        "max": 12,
        "pierce": 2,
        "morale": 3,
+       "setup": 0,
+       "moveAcc": 0.6000000238418579,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3737,7 +4155,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -3758,6 +4177,8 @@ export const UA_TYRANIDS = {
        "max": 13,
        "pierce": 0,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3766,7 +4187,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -3797,6 +4219,8 @@ export const UA_TYRANIDS = {
    "max": 10,
    "reinforce": 2,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_spinegaunt_max",
     "name": "Spinegaunt",
@@ -3804,6 +4228,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/spinegaunt",
     "hp": 100,
     "armour": 90,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 19,
     "sight": 25,
@@ -3823,6 +4248,8 @@ export const UA_TYRANIDS = {
        "max": 12,
        "pierce": 2,
        "morale": 3,
+       "setup": 0,
+       "moveAcc": 0.6000000238418579,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3831,7 +4258,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -3852,6 +4280,8 @@ export const UA_TYRANIDS = {
        "max": 13,
        "pierce": 0,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3860,7 +4290,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -3891,6 +4322,8 @@ export const UA_TYRANIDS = {
    "max": 12,
    "reinforce": 25,
    "ups": 0,
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "tyranids_spore_cluster",
     "name": "Spore Cluster",
@@ -3898,6 +4331,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/sporemines",
     "hp": 113,
     "armour": 100,
+    "armourType": "infantry_low",
     "regen": 1,
     "speed": 22,
     "sight": 15,
@@ -3917,6 +4351,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3925,7 +4361,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 0,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3946,6 +4383,8 @@ export const UA_TYRANIDS = {
        "max": 13,
        "pierce": 0,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3954,7 +4393,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -3991,6 +4431,8 @@ export const UA_TYRANIDS = {
    "max": 6,
    "reinforce": 25,
    "ups": 0,
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "tyranids_spore_cluster_max",
     "name": "Spore Cluster",
@@ -3998,6 +4440,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/sporemines",
     "hp": 113,
     "armour": 100,
+    "armourType": "infantry_low",
     "regen": 1,
     "speed": 22,
     "sight": 15,
@@ -4017,6 +4460,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4025,7 +4470,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 0,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -4046,6 +4492,8 @@ export const UA_TYRANIDS = {
        "max": 13,
        "pierce": 0,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4054,7 +4502,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -4091,6 +4540,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_spore_cluster_spam",
     "name": "",
@@ -4098,6 +4549,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/sporemines",
     "hp": 113,
     "armour": 100,
+    "armourType": "infantry_low",
     "regen": 1,
     "speed": 22,
     "sight": 15,
@@ -4117,6 +4569,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4125,7 +4579,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 0,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -4146,6 +4601,8 @@ export const UA_TYRANIDS = {
        "max": 13,
        "pierce": 0,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4154,7 +4611,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -4179,6 +4637,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_swarmlord",
     "name": "Swarmlord",
@@ -4186,6 +4646,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/swarmlord",
     "hp": 21000,
     "armour": 106,
+    "armourType": "commander",
     "regen": 160,
     "speed": 20,
     "sight": 40,
@@ -4205,6 +4666,8 @@ export const UA_TYRANIDS = {
        "max": 630,
        "pierce": 6,
        "morale": 80,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4213,7 +4676,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 55,
         "titan": 50,
-        "struct": 75
+        "struct": 75,
+        "cmd": 50
        },
        "cost": 0,
        "power": 0,
@@ -4234,6 +4698,8 @@ export const UA_TYRANIDS = {
        "max": 630,
        "pierce": 6,
        "morale": 80,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4242,7 +4708,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 55,
         "titan": 50,
-        "struct": 75
+        "struct": 75,
+        "cmd": 50
        },
        "cost": 0,
        "power": 0,
@@ -4263,6 +4730,8 @@ export const UA_TYRANIDS = {
        "max": 630,
        "pierce": 6,
        "morale": 80,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4271,7 +4740,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 55,
         "titan": 50,
-        "struct": 75
+        "struct": 75,
+        "cmd": 50
        },
        "cost": 0,
        "power": 0,
@@ -4292,6 +4762,8 @@ export const UA_TYRANIDS = {
        "max": 630,
        "pierce": 6,
        "morale": 80,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4300,7 +4772,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 55,
         "titan": 50,
-        "struct": 75
+        "struct": 75,
+        "cmd": 50
        },
        "cost": 0,
        "power": 0,
@@ -4331,6 +4804,8 @@ export const UA_TYRANIDS = {
    "max": 12,
    "reinforce": 25,
    "ups": 0,
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "tyranids_termagant",
     "name": "Termagant",
@@ -4338,6 +4813,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/termagaunt",
     "hp": 190,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 17,
     "sight": 25,
@@ -4357,6 +4833,8 @@ export const UA_TYRANIDS = {
        "max": 7.78000020980835,
        "pierce": 2,
        "morale": 1,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4365,7 +4843,8 @@ export const UA_TYRANIDS = {
         "light": 15,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -4384,6 +4863,8 @@ export const UA_TYRANIDS = {
        "max": 16.399999618530273,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4392,7 +4873,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 15,
         "titan": 5.5,
-        "struct": 7
+        "struct": 7,
+        "cmd": 18
        },
        "cost": 10,
        "power": 0,
@@ -4415,6 +4897,8 @@ export const UA_TYRANIDS = {
        "max": 13,
        "pierce": 0,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4423,7 +4907,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -4454,6 +4939,8 @@ export const UA_TYRANIDS = {
    "max": 15,
    "reinforce": 25,
    "ups": 0,
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "tyranids_termagant_max",
     "name": "Termagant",
@@ -4461,6 +4948,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/termagaunt",
     "hp": 200,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 17,
     "sight": 25,
@@ -4480,6 +4968,8 @@ export const UA_TYRANIDS = {
        "max": 7.78000020980835,
        "pierce": 2,
        "morale": 1,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4488,7 +4978,8 @@ export const UA_TYRANIDS = {
         "light": 15,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -4507,6 +4998,8 @@ export const UA_TYRANIDS = {
        "max": 16.399999618530273,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4515,7 +5008,8 @@ export const UA_TYRANIDS = {
         "light": 20,
         "veh": 15,
         "titan": 5.5,
-        "struct": 7
+        "struct": 7,
+        "cmd": 18
        },
        "cost": 10,
        "power": 0,
@@ -4538,6 +5032,8 @@ export const UA_TYRANIDS = {
        "max": 13,
        "pierce": 0,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4546,7 +5042,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -4577,6 +5074,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_trygon",
     "name": "Trygon",
@@ -4584,6 +5083,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/trygon",
     "hp": 13700,
     "armour": 103,
+    "armourType": "monster_high",
     "regen": 25,
     "speed": 36,
     "sight": 40,
@@ -4603,6 +5103,8 @@ export const UA_TYRANIDS = {
        "max": 230,
        "pierce": 10,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4611,7 +5113,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 50,
         "titan": 35,
-        "struct": 19
+        "struct": 19,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -4630,6 +5133,8 @@ export const UA_TYRANIDS = {
        "max": 290,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4638,7 +5143,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 50,
         "titan": 35,
-        "struct": 25
+        "struct": 25,
+        "cmd": 20
        },
        "cost": 100,
        "power": 0,
@@ -4661,6 +5167,8 @@ export const UA_TYRANIDS = {
        "max": 230,
        "pierce": 10,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4669,7 +5177,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 50,
         "titan": 35,
-        "struct": 19
+        "struct": 19,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -4688,6 +5197,8 @@ export const UA_TYRANIDS = {
        "max": 290,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4696,7 +5207,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 50,
         "titan": 35,
-        "struct": 25
+        "struct": 25,
+        "cmd": 20
        },
        "cost": 100,
        "power": 0,
@@ -4719,6 +5231,8 @@ export const UA_TYRANIDS = {
        "max": 230,
        "pierce": 10,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4727,7 +5241,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 50,
         "titan": 35,
-        "struct": 19
+        "struct": 19,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -4746,6 +5261,8 @@ export const UA_TYRANIDS = {
        "max": 290,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4754,7 +5271,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 50,
         "titan": 35,
-        "struct": 25
+        "struct": 25,
+        "cmd": 20
        },
        "cost": 100,
        "power": 0,
@@ -4777,6 +5295,8 @@ export const UA_TYRANIDS = {
        "max": 230,
        "pierce": 10,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4785,7 +5305,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 50,
         "titan": 35,
-        "struct": 19
+        "struct": 19,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -4804,6 +5325,8 @@ export const UA_TYRANIDS = {
        "max": 290,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4812,7 +5335,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 50,
         "titan": 35,
-        "struct": 25
+        "struct": 25,
+        "cmd": 20
        },
        "cost": 100,
        "power": 0,
@@ -4851,6 +5375,8 @@ export const UA_TYRANIDS = {
    "max": 2,
    "reinforce": 220,
    "ups": 2,
+   "cap": 0,
+   "support": 2,
    "unit": {
     "id": "tyranids_tyrant_guard",
     "name": "Tyrant Guard",
@@ -4858,6 +5384,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/tyrant_guard",
     "hp": 2500,
     "armour": 110,
+    "armourType": "monster_med",
     "regen": 12,
     "speed": 16,
     "sight": 30,
@@ -4877,6 +5404,8 @@ export const UA_TYRANIDS = {
        "max": 150,
        "pierce": 0,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4885,7 +5414,8 @@ export const UA_TYRANIDS = {
         "light": 60,
         "veh": 50,
         "titan": 20,
-        "struct": 20
+        "struct": 20,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4904,6 +5434,8 @@ export const UA_TYRANIDS = {
        "max": 200,
        "pierce": 8,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4912,7 +5444,8 @@ export const UA_TYRANIDS = {
         "light": 80,
         "veh": 60,
         "titan": 20,
-        "struct": 20
+        "struct": 20,
+        "cmd": 14.399999618530273
        },
        "cost": 100,
        "power": 0,
@@ -4945,6 +5478,8 @@ export const UA_TYRANIDS = {
    "max": 8,
    "reinforce": 80,
    "ups": 3,
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "tyranids_warrior",
     "name": "Warrior",
@@ -4952,6 +5487,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/warrior",
     "hp": 1100,
     "armour": 101,
+    "armourType": "infantry_high",
     "regen": 2,
     "speed": 16,
     "sight": 30,
@@ -4971,6 +5507,8 @@ export const UA_TYRANIDS = {
        "max": 40,
        "pierce": 0,
        "morale": 16,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4979,7 +5517,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 30,
         "titan": 10,
-        "struct": 10
+        "struct": 10,
+        "cmd": 28.799999237060547
        },
        "cost": 0,
        "power": 0,
@@ -4998,6 +5537,8 @@ export const UA_TYRANIDS = {
        "max": 90,
        "pierce": 0,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5006,7 +5547,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 55,
         "titan": 30,
-        "struct": 15
+        "struct": 15,
+        "cmd": 20
        },
        "cost": 25,
        "power": 0,
@@ -5025,6 +5567,8 @@ export const UA_TYRANIDS = {
        "max": 23,
        "pierce": 0,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0.44999998807907104,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5033,7 +5577,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18.600000381469727
        },
        "cost": 50,
        "power": 0,
@@ -5055,6 +5600,8 @@ export const UA_TYRANIDS = {
        "max": 220,
        "pierce": 2,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.4000000059604645,
        "melee": false,
        "aoe": 6,
        "vs": {
@@ -5063,7 +5610,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18.600000381469727
        },
        "cost": 45,
        "power": 0,
@@ -5085,6 +5633,8 @@ export const UA_TYRANIDS = {
        "max": 210,
        "pierce": 5,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5093,7 +5643,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 48,
         "titan": 22,
-        "struct": 14
+        "struct": 14,
+        "cmd": 12
        },
        "cost": 70,
        "power": 0,
@@ -5117,6 +5668,8 @@ export const UA_TYRANIDS = {
        "max": 40,
        "pierce": 0,
        "morale": 16,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5125,7 +5678,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 30,
         "titan": 10,
-        "struct": 10
+        "struct": 10,
+        "cmd": 28.799999237060547
        },
        "cost": 0,
        "power": 0,
@@ -5146,6 +5700,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5154,7 +5710,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -5173,6 +5730,8 @@ export const UA_TYRANIDS = {
        "max": 634,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 5,
        "vs": {
@@ -5181,7 +5740,8 @@ export const UA_TYRANIDS = {
         "light": 90,
         "veh": 90,
         "titan": 25,
-        "struct": 25
+        "struct": 25,
+        "cmd": 12
        },
        "cost": 85,
        "power": 0,
@@ -5221,6 +5781,8 @@ export const UA_TYRANIDS = {
    "max": 8,
    "reinforce": 80,
    "ups": 3,
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "tyranids_warrior_max",
     "name": "Warrior",
@@ -5228,6 +5790,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/warrior",
     "hp": 1100,
     "armour": 101,
+    "armourType": "infantry_high",
     "regen": 2,
     "speed": 16,
     "sight": 30,
@@ -5247,6 +5810,8 @@ export const UA_TYRANIDS = {
        "max": 40,
        "pierce": 0,
        "morale": 16,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5255,7 +5820,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 30,
         "titan": 10,
-        "struct": 10
+        "struct": 10,
+        "cmd": 28.799999237060547
        },
        "cost": 0,
        "power": 0,
@@ -5274,6 +5840,8 @@ export const UA_TYRANIDS = {
        "max": 90,
        "pierce": 0,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5282,7 +5850,8 @@ export const UA_TYRANIDS = {
         "light": 70,
         "veh": 55,
         "titan": 30,
-        "struct": 15
+        "struct": 15,
+        "cmd": 20
        },
        "cost": 25,
        "power": 0,
@@ -5301,6 +5870,8 @@ export const UA_TYRANIDS = {
        "max": 23,
        "pierce": 0,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0.44999998807907104,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5309,7 +5880,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18.600000381469727
        },
        "cost": 50,
        "power": 0,
@@ -5331,6 +5903,8 @@ export const UA_TYRANIDS = {
        "max": 220,
        "pierce": 2,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.4000000059604645,
        "melee": false,
        "aoe": 6,
        "vs": {
@@ -5339,7 +5913,8 @@ export const UA_TYRANIDS = {
         "light": 10,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18.600000381469727
        },
        "cost": 45,
        "power": 0,
@@ -5361,6 +5936,8 @@ export const UA_TYRANIDS = {
        "max": 210,
        "pierce": 5,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5369,7 +5946,8 @@ export const UA_TYRANIDS = {
         "light": 100,
         "veh": 48,
         "titan": 22,
-        "struct": 14
+        "struct": 14,
+        "cmd": 12
        },
        "cost": 70,
        "power": 0,
@@ -5393,6 +5971,8 @@ export const UA_TYRANIDS = {
        "max": 40,
        "pierce": 0,
        "morale": 16,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5401,7 +5981,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 30,
         "titan": 10,
-        "struct": 10
+        "struct": 10,
+        "cmd": 28.799999237060547
        },
        "cost": 0,
        "power": 0,
@@ -5422,6 +6003,8 @@ export const UA_TYRANIDS = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5430,7 +6013,8 @@ export const UA_TYRANIDS = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -5449,6 +6033,8 @@ export const UA_TYRANIDS = {
        "max": 634,
        "pierce": 10,
        "morale": 60,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 5,
        "vs": {
@@ -5457,7 +6043,8 @@ export const UA_TYRANIDS = {
         "light": 90,
         "veh": 90,
         "titan": 25,
-        "struct": 25
+        "struct": 25,
+        "cmd": 12
        },
        "cost": 85,
        "power": 0,
@@ -5497,6 +6084,8 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "tyranids_woth",
     "name": "Hivemind",
@@ -5504,6 +6093,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/structures/drop_building",
     "hp": 5,
     "armour": 100,
+    "armourType": "hivefleet",
     "regen": -0.20000000298023224,
     "speed": 0,
     "sight": 0,
@@ -5526,6 +6116,16 @@ export const UA_TYRANIDS = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "morale": {
+    "max": 600,
+    "rate": 2,
+    "minTime": 20,
+    "minMorale": 100,
+    "acc": 0.20000000298023224,
+    "speed": 1.2000000476837158
+   },
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "tyranids_zoanthropes",
     "name": "Zoanthrope",
@@ -5533,6 +6133,7 @@ export const UA_TYRANIDS = {
     "model": "races/tyranids/troops/zoanthrope",
     "hp": 5000,
     "armour": 100,
+    "armourType": "infantry_heavy_high",
     "regen": 2,
     "speed": 16,
     "sight": 45,
@@ -5552,6 +6153,8 @@ export const UA_TYRANIDS = {
        "max": 2000,
        "pierce": 10,
        "morale": 200,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 4,
        "vs": {
@@ -5560,7 +6163,8 @@ export const UA_TYRANIDS = {
         "light": 90,
         "veh": 65,
         "titan": 25,
-        "struct": 15
+        "struct": 15,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -5581,6 +6185,8 @@ export const UA_TYRANIDS = {
        "max": 40,
        "pierce": 0,
        "morale": 16,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5589,7 +6195,8 @@ export const UA_TYRANIDS = {
         "light": 50,
         "veh": 30,
         "titan": 10,
-        "struct": 10
+        "struct": 10,
+        "cmd": 28.799999237060547
        },
        "cost": 0,
        "power": 0,
@@ -5630,6 +6237,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/magmavent",
    "hp": 2500,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 5,
    "speed": 0,
    "sight": 40,
@@ -5674,6 +6282,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/stealerhive",
    "hp": 2500,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 5,
    "speed": 0,
    "sight": 30,
@@ -5722,6 +6331,7 @@ export const UA_TYRANIDS = {
    "model": "races/race_tyranid/structures/tyranid_base",
    "hp": 10000,
    "armour": 100,
+   "armourType": "building_high",
    "regen": 8,
    "speed": 0,
    "sight": 40,
@@ -5772,6 +6382,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/capillarytower",
    "hp": 4000,
    "armour": 100,
+   "armourType": "building_super",
    "regen": 5,
    "speed": 0,
    "sight": 5,
@@ -5814,6 +6425,7 @@ export const UA_TYRANIDS = {
    "model": "races/race_tyranid/structures/capillary_tower",
    "hp": 1000,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 5,
    "speed": 0,
    "sight": 10,
@@ -5857,6 +6469,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/heavyhive",
    "hp": 4000,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 5,
    "speed": 0,
    "sight": 30,
@@ -5900,6 +6513,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/reclamationpool",
    "hp": 1000,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 5,
    "speed": 0,
    "sight": 25,
@@ -5942,6 +6556,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/troophive",
    "hp": 2500,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 5,
    "speed": 0,
    "sight": 30,
@@ -5967,6 +6582,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/hq",
    "hp": 5000,
    "armour": 100,
+   "armourType": "building_high",
    "regen": 5,
    "speed": 0,
    "sight": 50,
@@ -6012,6 +6628,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/troops/sporemines",
    "hp": 113,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 1,
    "speed": 0,
    "sight": 10,
@@ -6031,6 +6648,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/relichive",
    "hp": 5000,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 5,
    "speed": 0,
    "sight": 30,
@@ -6075,6 +6693,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/sporechimney",
    "hp": 3200,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 12,
    "speed": 0,
    "sight": 55,
@@ -6103,6 +6722,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/hive_nest",
    "hp": 2400,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 3,
    "speed": 0,
    "sight": 55,
@@ -6122,6 +6742,8 @@ export const UA_TYRANIDS = {
       "max": 354,
       "pierce": 0,
       "morale": 35,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": false,
       "aoe": 5,
       "vs": {
@@ -6130,7 +6752,8 @@ export const UA_TYRANIDS = {
        "light": 20,
        "veh": 10,
        "titan": 50,
-       "struct": 20
+       "struct": 20,
+       "cmd": 30
       },
       "cost": 0,
       "power": 0,
@@ -6149,6 +6772,8 @@ export const UA_TYRANIDS = {
       "max": 765,
       "pierce": 10,
       "morale": 35,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": false,
       "aoe": 5,
       "vs": {
@@ -6157,7 +6782,8 @@ export const UA_TYRANIDS = {
        "light": 70,
        "veh": 50,
        "titan": 15,
-       "struct": 20
+       "struct": 20,
+       "cmd": 12
       },
       "cost": 0,
       "power": 0,
@@ -6199,6 +6825,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/improved_nest",
    "hp": 7400,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 6,
    "speed": 0,
    "sight": 75,
@@ -6218,6 +6845,8 @@ export const UA_TYRANIDS = {
       "max": 1300,
       "pierce": 10,
       "morale": 76,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": false,
       "aoe": 5,
       "vs": {
@@ -6226,7 +6855,8 @@ export const UA_TYRANIDS = {
        "light": 70,
        "veh": 50,
        "titan": 15,
-       "struct": 10
+       "struct": 10,
+       "cmd": 12
       },
       "cost": 0,
       "power": 0,
@@ -6247,6 +6877,8 @@ export const UA_TYRANIDS = {
       "max": 341,
       "pierce": 0,
       "morale": 35,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": false,
       "aoe": 5,
       "vs": {
@@ -6255,7 +6887,8 @@ export const UA_TYRANIDS = {
        "light": 20,
        "veh": 10,
        "titan": 50,
-       "struct": 20
+       "struct": 20,
+       "cmd": 36
       },
       "cost": 0,
       "power": 0,
@@ -6276,6 +6909,8 @@ export const UA_TYRANIDS = {
       "max": 341,
       "pierce": 0,
       "morale": 35,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": false,
       "aoe": 5,
       "vs": {
@@ -6284,7 +6919,8 @@ export const UA_TYRANIDS = {
        "light": 20,
        "veh": 10,
        "titan": 50,
-       "struct": 20
+       "struct": 20,
+       "cmd": 36
       },
       "cost": 0,
       "power": 0,
@@ -6305,6 +6941,8 @@ export const UA_TYRANIDS = {
       "max": 341,
       "pierce": 0,
       "morale": 35,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": false,
       "aoe": 5,
       "vs": {
@@ -6313,7 +6951,8 @@ export const UA_TYRANIDS = {
        "light": 20,
        "veh": 10,
        "titan": 50,
-       "struct": 20
+       "struct": 20,
+       "cmd": 36
       },
       "cost": 0,
       "power": 0,
@@ -6334,6 +6973,8 @@ export const UA_TYRANIDS = {
       "max": 341,
       "pierce": 0,
       "morale": 35,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": false,
       "aoe": 5,
       "vs": {
@@ -6342,7 +6983,8 @@ export const UA_TYRANIDS = {
        "light": 20,
        "veh": 10,
        "titan": 50,
-       "struct": 20
+       "struct": 20,
+       "cmd": 36
       },
       "cost": 0,
       "power": 0,
@@ -6391,6 +7033,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/warriorhive",
    "hp": 2500,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 5,
    "speed": 0,
    "sight": 30,
@@ -6425,6 +7068,7 @@ export const UA_TYRANIDS = {
    "model": "races/tyranids/structures/elitehive",
    "hp": 2500,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 5,
    "speed": 0,
    "sight": 30,

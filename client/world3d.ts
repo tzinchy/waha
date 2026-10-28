@@ -6,22 +6,22 @@ import * as THREE from 'three';
 import { FactionActor, ROLE_MOTIONS, motionDuration, type Motion, type UnitRole, type FactionId as Pack } from './models3d/faction-models.ts';
 import { StructureActor, STRUCTURE_ROLE_MOTIONS, structureMotionDuration, type StructureMotion, type StructureRole } from './models3d/structure-models.ts';
 import { NuclearBlastActor } from './models3d/effect-models.ts';
-import { uaActor, uaReady } from './models3d/ua-models.ts';
-import type { Kind } from '../shared/sim.ts';
+import { uaActor, uaReady, type UAActor } from './models3d/ua-models.ts';
+import { FxLayer, fxVisible, hitVisible, HITS, loadEvents } from './models3d/ua-fx.ts';
+import { inherit, type Kind } from '../shared/sim.ts';
 
 /** Вид юнита → роль модели. Чего здесь нет (мины), рисуется по-старому. */
-export const UNIT_ROLE: Partial<Record<Kind, UnitRole>> = { captain: 'captain', deity: 'captain', legend: 'elite', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', support: 'scout', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan', air: 'flyer', jet: 'aircraft', bomber: 'aircraft', khorne: 'elite', nurgle: 'elite', tzeentch: 'sniper', slaanesh: 'scout' };
-/** Демоны четырёх богов: тело демона в цветах своего бога, у какой бы фракции ни были. */
-export const GOD_PACK: Partial<Record<Kind, Pack>> = { khorne: 'khorne', nurgle: 'nurgle', tzeentch: 'tzeentch', slaanesh: 'slaanesh' };
-export const STRUCT_ROLE: Partial<Record<Kind, StructureRole>> = { hq: 'hq', barracks: 'barracks', bunker: 'barracks', motorpool: 'factory', yard: 'factory', key1: 'armory', key2: 'armory', key3: 'armory', key4: 'armory', foundry: 'generator', pump: 'generator', post: 'post', turret: 'turret', rturret: 'turret', fturret: 'turret', battery: 'turret', pylon: 'turret', pyre: 'turret', wall: 'wall', wallgate: 'gate', gate: 'relic', aegis: 'relic', bell: 'relic', plague: 'relic', lighthouse: 'relic', obelisk: 'relic', megagun: 'turret', warpgate: 'relic', portal: 'relic', spire: 'turret' };
+export const UNIT_ROLE: Partial<Record<Kind, UnitRole>> = { captain: 'captain', legend: 'elite', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', support: 'scout', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan', air: 'flyer', jet: 'aircraft', bomber: 'aircraft' };
+inherit(UNIT_ROLE); // отряды UA сверх ролей — модель роли их базового вида (модель мода всё равно своя)
+export const STRUCT_ROLE: Partial<Record<Kind, StructureRole>> = { hq: 'hq', barracks: 'barracks', bunker: 'barracks', motorpool: 'factory', yard: 'factory', key1: 'armory', key2: 'armory', key3: 'armory', key4: 'armory', foundry: 'generator', pump: 'generator', post: 'post', turret: 'turret', wall: 'wall', wallgate: 'gate', gate: 'relic', bell: 'relic', plague: 'relic' };
 export const has3d = (k: Kind) => k in UNIT_ROLE || k in STRUCT_ROLE;
 
 /** Наклон высоты: сколько экранных пикселей даёт метр высоты относительно метра земли. */
 const HEIGHT = 0.85;
-type Actor = { root: THREE.Group; pose: (m: never, t: number) => void };
+type Actor = { root: THREE.Group; pose: (m: never, t: number) => void; aim?: (yaw: number) => void };
 /** Движения игры, которые модель мода (UAActor) понимает: клип ищется по дереву .whe и именам. */
 const UA_MOTIONS = ['idle', 'walk', 'run', 'shoot', 'attack', 'death', 'build', 'work', 'capture', 'hit'];
-type Entry = { args: Parameters<World3D['add']>; kind: Kind; group: THREE.Group; actors: Actor[]; structure: boolean; motions: Set<string>; mode: string; t0: number; dead: number; scale: number; veil?: boolean };
+type Entry = { args: Parameters<World3D['add']>; kind: Kind; group: THREE.Group; actors: Actor[]; structure: boolean; motions: Set<string>; mode: string; t0: number; dead: number; scale: number; veil?: boolean; h: number; aim?: THREE.Vector3; evT?: number };
 
 export class World3D {
   readonly canvas = document.createElement('canvas');
@@ -43,6 +43,7 @@ export class World3D {
     const rim = new THREE.DirectionalLight(0x9fb3c8, 1.2); rim.position.set(6, 8, -12); this.scene.add(rim);
     this.camera.matrixAutoUpdate = false; this.camera.matrixWorldAutoUpdate = false; // вид задаём проекцией напрямую
     if (import.meta.env.DEV) (window as unknown as { __w3d: World3D }).__w3d = this; // отладка в консоли
+    void HITS.then(h => { this.hits = h; });
     void uaReady.then(() => { for (const e of [...this.entries.values()]) if (!e.dead) this.add(...e.args); }); // модели мода догрузились позже, чем появились первые юниты
   }
 
@@ -50,8 +51,6 @@ export class World3D {
   add(id: number, pack: Pack, kind: Kind, widthM: number, offs: [number, number][] = [[0, 0]], variant?: 'assault' | 'commander' | 'mystic' | `legend${number}`, level = 1) {
     const args: Parameters<World3D['add']> = [id, pack, kind, widthM, offs, variant, level];
     this.remove(id);
-    pack = GOD_PACK[kind] ?? pack;
-    if (kind === 'deity') pack = variant === 'assault' ? 'nightbringer' : 'deceiver'; // К'тан по сборке капитана: штурм — Несущий Ночь с косой, иначе золотой Обманщик
     const ur = UNIT_ROLE[kind], sr = STRUCT_ROLE[kind];
     if (!ur && !sr) return;
     const group = new THREE.Group(), actors: Actor[] = [];
@@ -65,16 +64,16 @@ export class World3D {
       const b = new THREE.Box3().setFromObject(actors[0].root), s = b.getSize(new THREE.Vector3()), w = Math.max(0.3, Math.min(s.x, s.z) * 0.5 + Math.max(s.x, s.z) * 0.5);
       this.native.set(key, w); return w;
     })();
-    const scale = (widthM / base) * (kind === 'legend' ? 1.3 : kind === 'deity' ? 1.6 : 1);
+    const scale = (widthM / base) * (kind === 'legend' ? 1.3 : 1);
     for (const a of actors) { a.root.position.multiplyScalar(1 / scale); } // строй — в метрах игры, модель — в своих
     group.scale.setScalar(scale);
     group.traverse(o => { o.frustumCulled = false; const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && !Array.isArray(m)) m.side = THREE.DoubleSide; }); // косоугольная проекция зеркалит обход граней — рисуем обе стороны
-    this.scene.add(group);
-    this.entries.set(id, { args, kind, group, actors, structure: !!sr, motions: new Set(ua ? UA_MOTIONS : sr ? STRUCTURE_ROLE_MOTIONS[sr] : ROLE_MOTIONS[ur!]), mode: '', t0: 0, dead: 0, scale }); // модель мода сама подбирает клип под любое движение
+    this.scene.add(group); group.updateMatrixWorld(true);
+    this.entries.set(id, { args, kind, group, actors, structure: !!sr, motions: new Set(ua ? UA_MOTIONS : sr ? STRUCTURE_ROLE_MOTIONS[sr] : ROLE_MOTIONS[ur!]), mode: '', t0: 0, dead: 0, scale, h: new THREE.Box3().setFromObject(group).getSize(new THREE.Vector3()).y }); // модель мода сама подбирает клип под любое движение
   }
 
   /** Кадр юнита: место, поворот, анимация. build — доля готовности стройки (кадры «build» по готовности). alive — сколько бойцов отряда живо. */
-  update(id: number, x: number, y: number, face: number, motion: string, now: number, opts: { alive?: number; build?: number; ghost?: boolean; fly?: boolean; veil?: boolean } = {}) {
+  update(id: number, x: number, y: number, face: number, motion: string, now: number, opts: { alive?: number; build?: number; ghost?: boolean; fly?: boolean; veil?: boolean; shot?: number } = {}) {
     const e = this.entries.get(id);
     if (!e || e.dead) return;
     e.group.position.set(x, opts.fly ? (e.kind === 'bomber' ? 12 : e.kind === 'jet' ? 8 : 3) + Math.sin(now / 400 + id) * 0.3 : 0, y); // летуны висят над землёй и покачиваются
@@ -90,8 +89,12 @@ export class World3D {
     if (!e.structure) e.group.rotation.y = Math.PI / 2 - face; // модель смотрит по +Z, угол симуляции — в плоскости x/y
     const m = this.pick(e, motion);
     if (m !== e.mode) { e.mode = m; e.t0 = now; }
+    if ((m === 'shoot' || m === 'attack') && opts.shot && opts.shot > e.t0) e.t0 = opts.shot; // каждый выстрел — клип с начала: темп анимации = перезарядка
     const t = (now - e.t0) / 1000;
+    if ((m === 'shoot' || m === 'attack') && e.aim) this.events(e, m, t, opts.alive);
+    e.evT = t;
     e.actors.forEach((a, i) => {
+      if (e.structure) a.aim?.(Math.PI / 2 - face); // башня к цели (здание не вращается, угол — как у юнитов)
       const dead = opts.alive !== undefined && i >= opts.alive;
       a.root.visible = !dead || t < 1.5;
       if (e.structure && m === 'build') a.pose('build' as never, (opts.build ?? 0) * structureMotionDuration('build'));
@@ -145,6 +148,36 @@ export class World3D {
     this.scene.add(a.root); this.blasts.push({ a, t0: now });
   }
 
+  /** Эффекты из модов (art/fx): вспышки, снаряды, попадания. */
+  private fx = new FxLayer(this.scene);
+  private hits: Record<string, Record<string, string>> = {};
+  /** Выстрел или удар юнита мода в точку (x, y) по цели to: события клипа (вспышка у ствола, снаряд к цели) играет update,
+   *  попадание (.events оружия по поверхности цели) — здесь, после полёта. Ответ — что нарисовано эффектами мода. */
+  fire(id: number, x: number, y: number, to: number | undefined, weapon: string, surface: string, melee: boolean) {
+    const e = this.entries.get(id), t = to === undefined ? undefined : this.entries.get(to);
+    if (!e) return { shot: false, hit: false };
+    e.aim = new THREE.Vector3(x, (t?.h ?? 1.2) * 0.5, y);
+    const shot = !!(e.actors[0] as Partial<UAActor>).fxEvents?.(melee ? 'attack' : 'shoot').some(x => (melee || 'fx_other' in x.e) && fxVisible(x.e.fx)), // снаряд мода (или удар) виден — рисованный не нужен ev = this.hits[weapon]?.[surface];
+    if (ev) {
+      const from = e.group.position.clone().setY(e.h * 0.5), at = e.aim.clone(), q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), from.clone().sub(at).normalize()); // брызги — навстречу стрелку
+      setTimeout(() => void loadEvents(ev).then(list => { for (const x of list?.values() ?? []) if (x.fx) void this.fx.play(x.fx, at, q, t?.scale ?? e.scale); }), melee ? 0 : this.fx.flight(from, at) * 1000);
+    }
+    return { shot, hit: !!ev && hitVisible(ev) };
+  }
+  /** События движения выстрела/удара, чьё время прошло за кадр, — у каждого бойца отряда (со сдвигом, как его клип). */
+  private events(e: Entry, m: string, t: number, alive?: number) {
+    const prev = e.evT !== undefined && e.evT <= t ? e.evT : -1;
+    e.actors.forEach((a, i) => {
+      const ev = (a as Partial<UAActor>).fxEvents?.(m), off = e.structure ? 0 : i * 0.37;
+      if (!ev?.length || (alive !== undefined && i >= alive)) return;
+      for (const { e: x, t: at } of ev) if (at > prev + off && at <= t + off) {
+        const mk = x.marker ? (a as UAActor).marker(x.marker) : undefined, pos = new THREE.Vector3(), q = new THREE.Quaternion();
+        if (mk) { mk.updateWorldMatrix(true, false); mk.getWorldPosition(pos); q.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 1).transformDirection(mk.matrixWorld)); } // ось эффекта — +Z маркера (мир зеркален по x — поворот не разложить) else pos.copy(e.group.position).setY(e.h * 0.6);
+        void this.fx.play(x.fx, pos, q, e.scale, 'fx_other' in x ? e.aim : undefined);
+      }
+    });
+  }
+
   /** Гибель: проигрываем смерть и убираем модель. */
   kill(id: number, now: number) {
     const e = this.entries.get(id);
@@ -168,6 +201,7 @@ export class World3D {
       if (t > 1.8) this.remove(id);
     }
     for (const m of this.vents) m.emissiveIntensity = 1.5 + Math.sin(now / 350) * 0.5; // жилы дышат жаром
+    this.fx.update(now);
     this.blasts = this.blasts.filter(b => { const t = (now - b.t0) / 1000; if (t > b.a.duration) { this.scene.remove(b.a.root); return false; } b.a.pose('explode', t); return true; });
     const sx = (2 * S * zoom) / w, sy = (2 * S * zoom) / h, dz = 2 / (mapH + 120);
     // x → вправо; y экрана = (z − cy − HEIGHT·высота); глубина: ближе к зрителю тот, у кого больше z и выше точка

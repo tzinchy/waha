@@ -45,37 +45,6 @@ function addFactionSilhouette(parent: THREE.Group, faction: FactionId, role: Str
       for (let i = 0; i < 3; i++) add(new THREE.BoxGeometry(0.13, 0.28 + i * 0.1, 0.045), trim, [side * (0.2 + i * 0.13), height * 0.78, radius * 0.56], [0, 0, side * (0.2 + i * 0.1)]);
     }
     add(new THREE.OctahedronGeometry(0.18), light, [0, height * 0.83, radius * 0.57]);
-  } else if (faction === 'heretics') {
-    for (const side of [-1, 1]) {
-      add(new THREE.CylinderGeometry(0.12, 0.24, height * 0.64, 5), metal, [side * radius, height * 0.36, 0]);
-      add(new THREE.TorusGeometry(0.3, 0.075, 5, 10, Math.PI * 0.7), trim, [side * radius, height * 0.76, 0], [0, 0, side < 0 ? 0 : Math.PI]);
-      add(new THREE.ConeGeometry(0.08, 0.42, 5), trim, [side * (radius + 0.26), height * 0.92, 0], [0, 0, side * -0.45]);
-      for (let i = 0; i < 3; i++) add(new THREE.ConeGeometry(0.07, 0.32, 5), metal, [side * (0.22 + i * 0.25), height * 0.55, radius * 0.5], [Math.PI * 0.3, 0, side * 0.3]);
-    }
-    for (let i = 0; i < 4; i++) add(new THREE.BoxGeometry(0.045, 0.52, 0.05), light, [0, height * 0.72, radius * 0.56], [0, 0, i * Math.PI / 4]);
-  } else if (faction === 'scrap') {
-    for (let i = 0; i < 3; i++) {
-      const h = height * (0.75 + i * 0.19);
-      add(new THREE.CylinderGeometry(0.095, 0.14, h, 7), metal, [-radius + i * 0.3, h / 2, -0.18], [0, 0, -0.09 + i * 0.09]);
-      add(new THREE.TorusGeometry(0.14, 0.04, 4, 7), trim, [-radius + i * 0.3, h - 0.06, -0.18], [Math.PI / 2, 0, 0]);
-    }
-    add(new THREE.BoxGeometry(0.58, height * 0.58, 0.12), armor, [radius, height * 0.36, 0.05], [0.13, -0.2, 0.19]);
-    add(new THREE.BoxGeometry(0.45, 0.26, 0.16), trim, [radius + 0.1, height * 0.64, 0.06], [0, -0.15, -0.17]);
-    for (let i = 0; i < 4; i++) add(new THREE.ConeGeometry(0.07, 0.19 + i % 2 * 0.1, 4), trim, [0.18 + i * 0.16, height * 0.65, radius * 0.48], [0, 0, 0.3]);
-  } else if (faction === 'necrons') {
-    for (const side of [-1, 1]) {
-      for (let i = 0; i < 4; i++) add(new THREE.BoxGeometry(0.34 - i * 0.045, height * 0.24, 0.4 - i * 0.04), armor, [side * radius, height * (0.12 + i * 0.24), 0]);
-      add(new THREE.BoxGeometry(0.045, height * 0.84, 0.045), light, [side * radius, height * 0.5, 0.22]);
-      const crystal = add(new THREE.OctahedronGeometry(0.18), light, [side * radius, height * 1.15, 0]); crystal.scale.y = 1.8;
-      add(new THREE.BoxGeometry(0.5, 0.08, 0.48), trim, [side * radius, height * 0.1, 0]);
-    }
-  } else if (faction === 'drukhari') {
-    for (const side of [-1, 1]) {
-      add(new THREE.TorusGeometry(height * 0.45, 0.055, 4, 12, Math.PI * 0.8), armor, [side * radius, height * 0.48, 0], [0, side * 0.6, side < 0 ? -0.9 : -0.35]);
-      add(new THREE.ConeGeometry(0.15, height * 0.6, 3), trim, [side * (radius + 0.17), height * 0.87, 0], [0, side * 0.4, side * -0.27]);
-      add(new THREE.ConeGeometry(0.1, height * 0.48, 3), armor, [side * radius, height * 0.63, -0.25], [0, 0, side * 0.33]);
-      add(new THREE.OctahedronGeometry(0.095), light, [side * radius, height * 0.56, 0.1]);
-    }
   } else {
     for (const side of [-1, 1]) {
       const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(side * radius, 0.1, 0), new THREE.Vector3(side * (radius + 0.27), height * 0.38, 0.17), new THREE.Vector3(side * (radius + 0.12), height * 0.81, 0.24), new THREE.Vector3(side * (radius - 0.22), height * 1.06, 0.12)]);
@@ -236,8 +205,7 @@ export class StructureActor {
         crystal.rotation.z = Math.sin(angle) * 0.24;
       }
     } else if (role !== 'capture_point') {
-      const core = mesh(this.energy, faction === 'scrap' ? new THREE.BoxGeometry(0.18, 0.18, 0.18) : new THREE.OctahedronGeometry(0.14), glow, [0, 0, 0]);
-      core.scale.y = faction === 'necrons' ? 1.8 : 1;
+      mesh(this.energy, new THREE.OctahedronGeometry(0.14), glow, [0, 0, 0]);
       const energyRing = mesh(this.energy, new THREE.TorusGeometry(0.23, 0.025, 4, 12), trim, [0, 0, 0]);
       energyRing.rotation.x = Math.PI / 2;
     }

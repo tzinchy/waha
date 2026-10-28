@@ -6,6 +6,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "morale": {
+    "max": 150,
+    "rate": 8,
+    "minTime": 5,
+    "minMorale": 75,
+    "acc": 1,
+    "speed": 1.5
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_archivist",
     "name": "Archivist",
@@ -13,6 +23,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/archivist",
     "hp": 300,
     "armour": 100,
+    "armourType": "infantry_high",
     "regen": 1,
     "speed": 20,
     "sight": 20,
@@ -35,6 +46,16 @@ export const UA_INQUISITION = {
    "max": 6,
    "reinforce": 95,
    "ups": 4,
+   "morale": {
+    "max": 400,
+    "rate": 11,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_bodyguard",
     "name": "Bodyguards",
@@ -42,6 +63,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisition_bodyguard",
     "hp": 550,
     "armour": 100,
+    "armourType": "commander",
     "regen": 1,
     "speed": 16,
     "sight": 25,
@@ -61,6 +83,8 @@ export const UA_INQUISITION = {
        "max": 34,
        "pierce": 3,
        "morale": 3,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -69,7 +93,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10.800000190734863
        },
        "cost": 0,
        "power": 0,
@@ -88,6 +113,8 @@ export const UA_INQUISITION = {
        "max": 31,
        "pierce": 1,
        "morale": 20,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 10,
        "vs": {
@@ -96,7 +123,8 @@ export const UA_INQUISITION = {
         "light": 8.600000381469727,
         "veh": 0,
         "titan": 5,
-        "struct": 30
+        "struct": 30,
+        "cmd": 22
        },
        "cost": 20,
        "power": 5,
@@ -118,6 +146,8 @@ export const UA_INQUISITION = {
        "max": 200,
        "pierce": 10,
        "morale": 35,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -126,7 +156,8 @@ export const UA_INQUISITION = {
         "light": 80,
         "veh": 50,
         "titan": 5,
-        "struct": 10
+        "struct": 10,
+        "cmd": 15
        },
        "cost": 20,
        "power": 50,
@@ -148,6 +179,8 @@ export const UA_INQUISITION = {
        "max": 32,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -156,7 +189,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 10,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 17
        },
        "cost": 40,
        "power": 10,
@@ -180,6 +214,8 @@ export const UA_INQUISITION = {
        "max": 55,
        "pierce": 0,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -188,7 +224,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -231,6 +268,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "morale": {
+    "max": 1500,
+    "rate": 14,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.20000000298023224,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_chaplain",
     "name": "Grey Knight Brotherhood Champion",
@@ -238,6 +285,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/grey_knight_codex",
     "hp": 1070,
     "armour": 100,
+    "armourType": "commander",
     "regen": 36,
     "speed": 14,
     "sight": 25,
@@ -257,6 +305,8 @@ export const UA_INQUISITION = {
        "max": 22,
        "pierce": 0,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -265,7 +315,8 @@ export const UA_INQUISITION = {
         "light": 30,
         "veh": 10,
         "titan": 8,
-        "struct": 0
+        "struct": 0,
+        "cmd": 8.399999618530273
        },
        "cost": 30,
        "power": 70,
@@ -284,6 +335,8 @@ export const UA_INQUISITION = {
        "max": 170,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 1.5,
        "vs": {
@@ -292,7 +345,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 25,
         "titan": 8,
-        "struct": 10
+        "struct": 10,
+        "cmd": 8.399999618530273
        },
        "cost": 60,
        "power": 40,
@@ -311,6 +365,8 @@ export const UA_INQUISITION = {
        "max": 630,
        "pierce": 10,
        "morale": 55,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -319,7 +375,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 30,
        "power": 70,
@@ -340,6 +397,8 @@ export const UA_INQUISITION = {
        "max": 217,
        "pierce": 0,
        "morale": 100,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -348,7 +407,8 @@ export const UA_INQUISITION = {
         "light": 44,
         "veh": 38,
         "titan": 20,
-        "struct": 12.5
+        "struct": 12.5,
+        "cmd": 14.399999618530273
        },
        "cost": 0,
        "power": 0,
@@ -369,6 +429,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 14,
        "vs": {
@@ -377,7 +439,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 60,
        "power": 40,
@@ -402,6 +465,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 2,
    "unit": {
     "id": "inquisition_chimera_transport",
     "name": "Chimera Transport",
@@ -409,6 +474,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisition_chimera",
     "hp": 2400,
     "armour": 100,
+    "armourType": "vehicle_low",
     "regen": 0,
     "speed": 32,
     "sight": 30,
@@ -428,6 +494,8 @@ export const UA_INQUISITION = {
        "max": 128,
        "pierce": 0,
        "morale": 10.050000190734863,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -436,7 +504,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 18
        },
        "cost": 0,
        "power": 0,
@@ -455,6 +524,8 @@ export const UA_INQUISITION = {
        "max": 50,
        "pierce": 0,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 14,
        "vs": {
@@ -463,7 +534,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 10
+        "struct": 10,
+        "cmd": 17
        },
        "cost": 40,
        "power": 15,
@@ -482,6 +554,8 @@ export const UA_INQUISITION = {
        "max": 55,
        "pierce": 5,
        "morale": 17,
+       "setup": 0,
+       "moveAcc": 0.6000000238418579,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -490,7 +564,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 16,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 50,
        "power": 25,
@@ -511,6 +586,8 @@ export const UA_INQUISITION = {
        "max": 110,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.550000011920929,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -519,7 +596,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10.800000190734863
        },
        "cost": 0,
        "power": 0,
@@ -540,6 +618,8 @@ export const UA_INQUISITION = {
        "max": 110,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.550000011920929,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -548,7 +628,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10.800000190734863
        },
        "cost": 0,
        "power": 0,
@@ -569,6 +650,8 @@ export const UA_INQUISITION = {
        "max": 110,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.550000011920929,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -577,7 +660,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10.800000190734863
        },
        "cost": 0,
        "power": 0,
@@ -598,6 +682,8 @@ export const UA_INQUISITION = {
        "max": 110,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.550000011920929,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -606,7 +692,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10.800000190734863
        },
        "cost": 0,
        "power": 0,
@@ -627,6 +714,8 @@ export const UA_INQUISITION = {
        "max": 110,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.550000011920929,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -635,7 +724,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10.800000190734863
        },
        "cost": 0,
        "power": 0,
@@ -656,6 +746,8 @@ export const UA_INQUISITION = {
        "max": 110,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.550000011920929,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -664,7 +756,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10.800000190734863
        },
        "cost": 0,
        "power": 0,
@@ -685,6 +778,8 @@ export const UA_INQUISITION = {
        "max": 50,
        "pierce": 5,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.550000011920929,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -693,7 +788,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 16,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -724,6 +820,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 30,
    "ups": 0,
+   "morale": {
+    "max": 50,
+    "rate": 4,
+    "minTime": 5,
+    "minMorale": 15,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_civilian",
     "name": "Worker",
@@ -731,6 +837,7 @@ export const UA_INQUISITION = {
     "model": "",
     "hp": 70,
     "armour": 10,
+    "armourType": "infantry_low",
     "regen": 1,
     "speed": 12,
     "sight": 6,
@@ -753,6 +860,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 30,
    "ups": 0,
+   "morale": {
+    "max": 50,
+    "rate": 4,
+    "minTime": 5,
+    "minMorale": 15,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_civilian_ai",
     "name": "Worker",
@@ -760,6 +877,7 @@ export const UA_INQUISITION = {
     "model": "",
     "hp": 70,
     "armour": 10,
+    "armourType": "infantry_low",
     "regen": 1,
     "speed": 12,
     "sight": 6,
@@ -775,6 +893,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 3,
    "unit": {
     "id": "inquisition_damocles",
     "name": "Damocles",
@@ -782,6 +902,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/inquisition_damocles",
     "hp": 2000,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 0,
     "speed": 32,
     "sight": 60,
@@ -801,6 +922,8 @@ export const UA_INQUISITION = {
        "max": 51,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0.44999998807907104,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -809,7 +932,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 50,
        "power": 40,
@@ -830,6 +954,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -838,7 +964,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -859,6 +986,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -867,7 +996,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -888,6 +1018,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -896,7 +1028,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -927,6 +1060,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "morale": {
+    "max": 600,
+    "rate": 12,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.20000000298023224,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_death_cultist",
     "name": "Death Cult Assassin",
@@ -934,6 +1077,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/death_cultist",
     "hp": 800,
     "armour": 100,
+    "armourType": "infantry_high",
     "regen": 6,
     "speed": 25,
     "sight": 35,
@@ -953,6 +1097,8 @@ export const UA_INQUISITION = {
        "max": 240,
        "pierce": 0,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -961,7 +1107,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 30
        },
        "cost": 0,
        "power": 0,
@@ -992,6 +1139,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_dreadknight_titan",
     "name": "Nemesis Dreadknight",
@@ -999,6 +1148,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/dreadknight",
     "hp": 7500,
     "armour": 101,
+    "armourType": "vehicle_high",
     "regen": 0,
     "speed": 24,
     "sight": 70,
@@ -1018,6 +1168,8 @@ export const UA_INQUISITION = {
        "max": 1105,
        "pierce": 4,
        "morale": 176,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1026,7 +1178,8 @@ export const UA_INQUISITION = {
         "light": 23,
         "veh": 13,
         "titan": 40,
-        "struct": 13
+        "struct": 13,
+        "cmd": 25
        },
        "cost": 0,
        "power": 0,
@@ -1047,6 +1200,8 @@ export const UA_INQUISITION = {
        "max": 172,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 4,
        "vs": {
@@ -1055,7 +1210,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 35,
         "titan": 8,
-        "struct": 20
+        "struct": 20,
+        "cmd": 8.399999618530273
        },
        "cost": 60,
        "power": 40,
@@ -1076,6 +1232,8 @@ export const UA_INQUISITION = {
        "max": 105,
        "pierce": 0,
        "morale": 45,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 18,
        "vs": {
@@ -1084,7 +1242,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 40,
        "power": 20,
@@ -1103,6 +1262,8 @@ export const UA_INQUISITION = {
        "max": 180,
        "pierce": 20,
        "morale": 34,
+       "setup": 0,
+       "moveAcc": 0.4300000071525574,
        "melee": false,
        "aoe": 3,
        "vs": {
@@ -1111,7 +1272,8 @@ export const UA_INQUISITION = {
         "light": 45,
         "veh": 55,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 30
        },
        "cost": 225,
        "power": 225,
@@ -1134,6 +1296,8 @@ export const UA_INQUISITION = {
        "max": 2596,
        "pierce": 10,
        "morale": 433,
+       "setup": 2.5,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1142,7 +1306,8 @@ export const UA_INQUISITION = {
         "light": 55,
         "veh": 30,
         "titan": 60,
-        "struct": 20
+        "struct": 20,
+        "cmd": 40
        },
        "cost": 0,
        "power": 0,
@@ -1161,6 +1326,8 @@ export const UA_INQUISITION = {
        "max": 9556,
        "pierce": 20,
        "morale": 1000,
+       "setup": 2.5,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1169,7 +1336,8 @@ export const UA_INQUISITION = {
         "light": 55,
         "veh": 30,
         "titan": 60,
-        "struct": 20
+        "struct": 20,
+        "cmd": 40
        },
        "cost": 660,
        "power": 660,
@@ -1202,6 +1370,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 3,
    "unit": {
     "id": "inquisition_dreadnought",
     "name": "Dreadnought",
@@ -1209,6 +1379,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/grey_knights_dreadnought",
     "hp": 4000,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 0,
     "speed": 18,
     "sight": 30,
@@ -1228,6 +1399,8 @@ export const UA_INQUISITION = {
        "max": 22,
        "pierce": 0,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1236,7 +1409,8 @@ export const UA_INQUISITION = {
         "light": 30,
         "veh": 10,
         "titan": 8,
-        "struct": 0
+        "struct": 0,
+        "cmd": 8.399999618530273
        },
        "cost": 30,
        "power": 70,
@@ -1255,6 +1429,8 @@ export const UA_INQUISITION = {
        "max": 170,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 1.5,
        "vs": {
@@ -1263,7 +1439,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 25,
         "titan": 8,
-        "struct": 10
+        "struct": 10,
+        "cmd": 8.399999618530273
        },
        "cost": 60,
        "power": 40,
@@ -1282,6 +1459,8 @@ export const UA_INQUISITION = {
        "max": 630,
        "pierce": 10,
        "morale": 55,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1290,7 +1469,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 30,
        "power": 70,
@@ -1311,6 +1491,8 @@ export const UA_INQUISITION = {
        "max": 217,
        "pierce": 0,
        "morale": 100,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1319,7 +1501,8 @@ export const UA_INQUISITION = {
         "light": 44,
         "veh": 38,
         "titan": 20,
-        "struct": 12.5
+        "struct": 12.5,
+        "cmd": 14.399999618530273
        },
        "cost": 0,
        "power": 0,
@@ -1340,6 +1523,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 14,
        "vs": {
@@ -1348,7 +1533,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 60,
        "power": 40,
@@ -1379,6 +1565,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 4,
    "unit": {
     "id": "inquisition_dreadnought_assault",
     "name": "Purgation Assault Dreadnought",
@@ -1386,6 +1574,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/id_gk_dreadnought",
     "hp": 4000,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 0,
     "speed": 16,
     "sight": 30,
@@ -1405,6 +1594,8 @@ export const UA_INQUISITION = {
        "max": 22,
        "pierce": 0,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1413,7 +1604,8 @@ export const UA_INQUISITION = {
         "light": 30,
         "veh": 10,
         "titan": 8,
-        "struct": 0
+        "struct": 0,
+        "cmd": 8.399999618530273
        },
        "cost": 30,
        "power": 70,
@@ -1432,6 +1624,8 @@ export const UA_INQUISITION = {
        "max": 100,
        "pierce": 10,
        "morale": 17,
+       "setup": 0,
+       "moveAcc": 0.75,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1440,7 +1634,8 @@ export const UA_INQUISITION = {
         "light": 45,
         "veh": 55,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 30
        },
        "cost": 80,
        "power": 50,
@@ -1459,6 +1654,8 @@ export const UA_INQUISITION = {
        "max": 60,
        "pierce": 5,
        "morale": 15,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1467,7 +1664,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 16,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 30,
        "power": 60,
@@ -1486,6 +1684,8 @@ export const UA_INQUISITION = {
        "max": 400,
        "pierce": 0,
        "morale": 55,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1494,7 +1694,8 @@ export const UA_INQUISITION = {
         "light": 88,
         "veh": 53,
         "titan": 5,
-        "struct": 25
+        "struct": 25,
+        "cmd": 15
        },
        "cost": 45,
        "power": 200,
@@ -1515,6 +1716,8 @@ export const UA_INQUISITION = {
        "max": 330,
        "pierce": 10,
        "morale": 100,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1523,7 +1726,8 @@ export const UA_INQUISITION = {
         "light": 54,
         "veh": 48,
         "titan": 55,
-        "struct": 25
+        "struct": 25,
+        "cmd": 45
        },
        "cost": 0,
        "power": 0,
@@ -1544,6 +1748,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 14,
        "vs": {
@@ -1552,7 +1758,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 60,
        "power": 40,
@@ -1573,6 +1780,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1581,7 +1790,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 0,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -1602,6 +1812,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1610,7 +1822,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -1631,6 +1844,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1639,7 +1854,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -1660,6 +1876,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1668,7 +1886,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -1699,6 +1918,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 4,
    "unit": {
     "id": "inquisition_dreadnought_support",
     "name": "Purgation Hellfire Dreadnought",
@@ -1706,6 +1927,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/id_gk_dreadnought",
     "hp": 3500,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 0,
     "speed": 16,
     "sight": 40,
@@ -1725,6 +1947,8 @@ export const UA_INQUISITION = {
        "max": 22,
        "pierce": 0,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1733,7 +1957,8 @@ export const UA_INQUISITION = {
         "light": 30,
         "veh": 10,
         "titan": 8,
-        "struct": 0
+        "struct": 0,
+        "cmd": 8.399999618530273
        },
        "cost": 30,
        "power": 70,
@@ -1752,6 +1977,8 @@ export const UA_INQUISITION = {
        "max": 170,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 1.5,
        "vs": {
@@ -1760,7 +1987,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 25,
         "titan": 8,
-        "struct": 10
+        "struct": 10,
+        "cmd": 8.399999618530273
        },
        "cost": 60,
        "power": 40,
@@ -1779,6 +2007,8 @@ export const UA_INQUISITION = {
        "max": 630,
        "pierce": 10,
        "morale": 55,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -1787,7 +2017,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 30,
        "power": 70,
@@ -1806,6 +2037,8 @@ export const UA_INQUISITION = {
        "max": 400,
        "pierce": 10,
        "morale": 30,
+       "setup": 1,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 5,
        "vs": {
@@ -1814,7 +2047,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 17
        },
        "cost": 70,
        "power": 80,
@@ -1835,6 +2069,8 @@ export const UA_INQUISITION = {
        "max": 400,
        "pierce": 0,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0.699999988079071,
        "melee": false,
        "aoe": 4,
        "vs": {
@@ -1843,7 +2079,8 @@ export const UA_INQUISITION = {
         "light": 60,
         "veh": 50,
         "titan": 10,
-        "struct": 14
+        "struct": 14,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -1864,6 +2101,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 14,
        "vs": {
@@ -1872,7 +2111,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 60,
        "power": 40,
@@ -1893,6 +2133,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 14,
        "vs": {
@@ -1901,7 +2143,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 0,
        "power": 0,
@@ -1922,6 +2165,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1930,7 +2175,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -1951,6 +2197,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1959,7 +2207,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -1980,6 +2229,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -1988,7 +2239,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2019,6 +2271,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 5,
    "unit": {
     "id": "inquisition_dreadnought_venerable",
     "name": "Venerable Dreadnought",
@@ -2026,6 +2280,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/grey_knight_ven_dread",
     "hp": 8000,
     "armour": 104,
+    "armourType": "vehicle_med",
     "regen": 0.10000000149011612,
     "speed": 26,
     "sight": 30,
@@ -2045,6 +2300,8 @@ export const UA_INQUISITION = {
        "max": 170,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 1.5,
        "vs": {
@@ -2053,7 +2310,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 25,
         "titan": 8,
-        "struct": 10
+        "struct": 10,
+        "cmd": 8.399999618530273
        },
        "cost": 60,
        "power": 40,
@@ -2072,6 +2330,8 @@ export const UA_INQUISITION = {
        "max": 630,
        "pierce": 10,
        "morale": 55,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2080,7 +2340,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 30,
        "power": 70,
@@ -2101,6 +2362,8 @@ export const UA_INQUISITION = {
        "max": 604,
        "pierce": 0,
        "morale": 125,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2109,7 +2372,8 @@ export const UA_INQUISITION = {
         "light": 44,
         "veh": 38,
         "titan": 20,
-        "struct": 12.5
+        "struct": 12.5,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -2130,6 +2394,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 6,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2138,7 +2404,8 @@ export const UA_INQUISITION = {
         "light": 30,
         "veh": 10,
         "titan": 8,
-        "struct": 0
+        "struct": 0,
+        "cmd": 8.399999618530273
        },
        "cost": 30,
        "power": 70,
@@ -2159,6 +2426,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2167,7 +2436,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2188,6 +2458,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2196,7 +2468,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2217,6 +2490,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2225,7 +2500,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2246,6 +2522,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2254,7 +2532,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2291,6 +2570,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_ds_turret",
     "name": "",
@@ -2298,6 +2579,7 @@ export const UA_INQUISITION = {
     "model": "races/imperial_turrs/structures/dehun_turret_heavy_bolter",
     "hp": 1000,
     "armour": 100,
+    "armourType": "building_low",
     "regen": 0,
     "speed": 0,
     "sight": 20,
@@ -2317,6 +2599,8 @@ export const UA_INQUISITION = {
        "max": 70,
        "pierce": 0,
        "morale": 14,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2325,7 +2609,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 5,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -2344,6 +2629,8 @@ export const UA_INQUISITION = {
        "max": 654,
        "pierce": 0,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 3,
        "vs": {
@@ -2352,7 +2639,8 @@ export const UA_INQUISITION = {
         "light": 60,
         "veh": 50,
         "titan": 10,
-        "struct": 14
+        "struct": 14,
+        "cmd": 12
        },
        "cost": 25,
        "power": 90,
@@ -2383,6 +2671,16 @@ export const UA_INQUISITION = {
    "max": 8,
    "reinforce": 45,
    "ups": 2,
+   "morale": {
+    "max": 350,
+    "rate": 10,
+    "minTime": 5,
+    "minMorale": 30,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "inquisition_grenaider_troops",
     "name": "Grenaiders",
@@ -2390,6 +2688,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisition_shocktroop",
     "hp": 400,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 16,
     "sight": 25,
@@ -2409,6 +2708,8 @@ export const UA_INQUISITION = {
        "max": 106,
        "pierce": 0,
        "morale": 12,
+       "setup": 1,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 4,
        "vs": {
@@ -2417,7 +2718,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 20,
-        "struct": 7
+        "struct": 7,
+        "cmd": 9.600000381469727
        },
        "cost": 25,
        "power": 10,
@@ -2439,6 +2741,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 70,
+       "setup": 1,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 13,
        "vs": {
@@ -2447,7 +2751,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 50,
         "titan": 25,
-        "struct": 25
+        "struct": 25,
+        "cmd": 100
        },
        "cost": 30,
        "power": 15,
@@ -2469,6 +2774,8 @@ export const UA_INQUISITION = {
        "max": 106,
        "pierce": 0,
        "morale": 12,
+       "setup": 1,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 5,
        "vs": {
@@ -2477,7 +2784,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 20,
-        "struct": 7
+        "struct": 7,
+        "cmd": 9.600000381469727
        },
        "cost": 20,
        "power": 10,
@@ -2501,6 +2809,8 @@ export const UA_INQUISITION = {
        "max": 30,
        "pierce": 0,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2509,7 +2819,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -2540,6 +2851,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "morale": {
+    "max": 2000,
+    "rate": 14,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.20000000298023224,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_grey_knight_champion",
     "name": "Grey Knight Brotherhood Champion",
@@ -2547,6 +2868,7 @@ export const UA_INQUISITION = {
     "model": "races/space_marines/troops/gknight_champion",
     "hp": 1070,
     "armour": 100,
+    "armourType": "commander",
     "regen": 36,
     "speed": 14,
     "sight": 25,
@@ -2566,6 +2888,8 @@ export const UA_INQUISITION = {
        "max": 25,
        "pierce": 3,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2574,7 +2898,8 @@ export const UA_INQUISITION = {
         "light": 7.599999904632568,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 24
        },
        "cost": 0,
        "power": 0,
@@ -2595,6 +2920,8 @@ export const UA_INQUISITION = {
        "max": 724,
        "pierce": 10,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2603,7 +2930,8 @@ export const UA_INQUISITION = {
         "light": 55,
         "veh": 30,
         "titan": 60,
-        "struct": 20
+        "struct": 20,
+        "cmd": 40
        },
        "cost": 0,
        "power": 0,
@@ -2624,6 +2952,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2632,7 +2962,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2653,6 +2984,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2661,7 +2994,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2682,6 +3016,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2690,7 +3026,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2711,6 +3048,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2719,7 +3058,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2738,6 +3078,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2746,7 +3088,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2771,6 +3114,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "morale": {
+    "max": 2000,
+    "rate": 20,
+    "minTime": 10,
+    "minMorale": 150,
+    "acc": 0.20000000298023224,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_grey_knight_hero",
     "name": "The Grand Master",
@@ -2778,6 +3131,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/grey_knight_hero",
     "hp": 10000,
     "armour": 107,
+    "armourType": "commander",
     "regen": 250,
     "speed": 16,
     "sight": 60,
@@ -2797,6 +3151,8 @@ export const UA_INQUISITION = {
        "max": 80,
        "pierce": 3,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2805,7 +3161,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -2826,6 +3183,8 @@ export const UA_INQUISITION = {
        "max": 1110,
        "pierce": 10,
        "morale": 100,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2834,7 +3193,8 @@ export const UA_INQUISITION = {
         "light": 23,
         "veh": 13,
         "titan": 40,
-        "struct": 13
+        "struct": 13,
+        "cmd": 25
        },
        "cost": 0,
        "power": 0,
@@ -2855,6 +3215,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2863,7 +3225,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2884,6 +3247,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2892,7 +3257,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2913,6 +3279,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2921,7 +3289,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -2942,6 +3311,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -2950,7 +3321,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -2969,6 +3341,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -2977,7 +3351,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3014,6 +3389,16 @@ export const UA_INQUISITION = {
    "max": 5,
    "reinforce": 130,
    "ups": 2,
+   "morale": {
+    "max": 1400,
+    "rate": 20,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "inquisition_grey_knights",
     "name": "Grey Knights Strike Team",
@@ -3021,6 +3406,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/id_grey_knight",
     "hp": 2200,
     "armour": 102,
+    "armourType": "infantry_heavy_med",
     "regen": 3.5,
     "speed": 16,
     "sight": 25,
@@ -3040,6 +3426,8 @@ export const UA_INQUISITION = {
        "max": 45,
        "pierce": 3,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3048,7 +3436,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -3067,6 +3456,8 @@ export const UA_INQUISITION = {
        "max": 50,
        "pierce": 0,
        "morale": 29,
+       "setup": 2,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 20,
        "vs": {
@@ -3075,7 +3466,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 40,
        "power": 20,
@@ -3097,6 +3489,8 @@ export const UA_INQUISITION = {
        "max": 65,
        "pierce": 10,
        "morale": 15,
+       "setup": 2,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3105,7 +3499,8 @@ export const UA_INQUISITION = {
         "light": 45,
         "veh": 55,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 30
        },
        "cost": 20,
        "power": 50,
@@ -3129,6 +3524,8 @@ export const UA_INQUISITION = {
        "max": 70,
        "pierce": 15,
        "morale": 12,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3137,7 +3534,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 20,
         "titan": 10,
-        "struct": 20
+        "struct": 20,
+        "cmd": 30
        },
        "cost": 60,
        "power": 30,
@@ -3158,6 +3556,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3166,7 +3566,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3187,6 +3588,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3195,7 +3598,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3216,6 +3620,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3224,7 +3630,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3245,6 +3652,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3253,7 +3662,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3272,6 +3682,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3280,7 +3692,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3305,6 +3718,16 @@ export const UA_INQUISITION = {
    "max": 5,
    "reinforce": 130,
    "ups": 2,
+   "morale": {
+    "max": 1400,
+    "rate": 20,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "inquisition_grey_knights_astra",
     "name": "Grey Knights Strike Team",
@@ -3312,6 +3735,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/id_grey_knight",
     "hp": 2200,
     "armour": 102,
+    "armourType": "infantry_heavy_med",
     "regen": 3.5,
     "speed": 16,
     "sight": 25,
@@ -3331,6 +3755,8 @@ export const UA_INQUISITION = {
        "max": 45,
        "pierce": 3,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3339,7 +3765,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -3358,6 +3785,8 @@ export const UA_INQUISITION = {
        "max": 50,
        "pierce": 0,
        "morale": 29,
+       "setup": 2,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 20,
        "vs": {
@@ -3366,7 +3795,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 40,
        "power": 20,
@@ -3388,6 +3818,8 @@ export const UA_INQUISITION = {
        "max": 65,
        "pierce": 10,
        "morale": 15,
+       "setup": 2,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3396,7 +3828,8 @@ export const UA_INQUISITION = {
         "light": 45,
         "veh": 55,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 30
        },
        "cost": 20,
        "power": 50,
@@ -3420,6 +3853,8 @@ export const UA_INQUISITION = {
        "max": 70,
        "pierce": 15,
        "morale": 12,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3428,7 +3863,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 20,
         "titan": 10,
-        "struct": 20
+        "struct": 20,
+        "cmd": 30
        },
        "cost": 60,
        "power": 30,
@@ -3449,6 +3885,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3457,7 +3895,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3478,6 +3917,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3486,7 +3927,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3507,6 +3949,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3515,7 +3959,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3536,6 +3981,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3544,7 +3991,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3563,6 +4011,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3571,7 +4021,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3602,6 +4053,16 @@ export const UA_INQUISITION = {
    "max": 5,
    "reinforce": 140,
    "ups": 4,
+   "morale": {
+    "max": 1400,
+    "rate": 20,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "inquisition_grey_knights_interceptor",
     "name": "Grey Knight Interceptors",
@@ -3609,6 +4070,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/grey_knight_codex",
     "hp": 2550,
     "armour": 102,
+    "armourType": "infantry_heavy_med",
     "regen": 3.5,
     "speed": 16,
     "sight": 25,
@@ -3628,6 +4090,8 @@ export const UA_INQUISITION = {
        "max": 55,
        "pierce": 3,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3636,7 +4100,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -3657,6 +4122,8 @@ export const UA_INQUISITION = {
        "max": 100,
        "pierce": 15,
        "morale": 12,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3665,7 +4132,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 20,
         "titan": 10,
-        "struct": 20
+        "struct": 20,
+        "cmd": 30
        },
        "cost": 60,
        "power": 30,
@@ -3684,6 +4152,8 @@ export const UA_INQUISITION = {
        "max": 108,
        "pierce": 1,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3692,7 +4162,8 @@ export const UA_INQUISITION = {
         "light": 23,
         "veh": 13,
         "titan": 40,
-        "struct": 13
+        "struct": 13,
+        "cmd": 25
        },
        "cost": 30,
        "power": 50,
@@ -3714,6 +4185,8 @@ export const UA_INQUISITION = {
        "max": 70,
        "pierce": 1,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3722,7 +4195,8 @@ export const UA_INQUISITION = {
         "light": 23,
         "veh": 13,
         "titan": 20,
-        "struct": 13
+        "struct": 13,
+        "cmd": 23
        },
        "cost": 100,
        "power": 50,
@@ -3744,6 +4218,8 @@ export const UA_INQUISITION = {
        "max": 400,
        "pierce": 3,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3752,7 +4228,8 @@ export const UA_INQUISITION = {
         "light": 55,
         "veh": 30,
         "titan": 60,
-        "struct": 20
+        "struct": 20,
+        "cmd": 40
        },
        "cost": 100,
        "power": 130,
@@ -3778,6 +4255,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3786,7 +4265,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3807,6 +4287,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3815,7 +4297,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3836,6 +4319,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3844,7 +4329,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3865,6 +4351,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3873,7 +4361,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3894,6 +4383,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3902,7 +4393,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -3921,6 +4413,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -3929,7 +4423,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -3960,6 +4455,16 @@ export const UA_INQUISITION = {
    "max": 5,
    "reinforce": 140,
    "ups": 5,
+   "morale": {
+    "max": 1400,
+    "rate": 20,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "inquisition_grey_knights_purgator",
     "name": "Grey Knight Purgators",
@@ -3967,6 +4472,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/grey_knight_codex",
     "hp": 2200,
     "armour": 102,
+    "armourType": "infantry_heavy_med",
     "regen": 3.5,
     "speed": 16,
     "sight": 25,
@@ -3986,6 +4492,8 @@ export const UA_INQUISITION = {
        "max": 65,
        "pierce": 10,
        "morale": 15,
+       "setup": 2,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -3994,7 +4502,8 @@ export const UA_INQUISITION = {
         "light": 45,
         "veh": 55,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 30
        },
        "cost": 20,
        "power": 50,
@@ -4016,6 +4525,8 @@ export const UA_INQUISITION = {
        "max": 50,
        "pierce": 0,
        "morale": 29,
+       "setup": 2,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 20,
        "vs": {
@@ -4024,7 +4535,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 40,
        "power": 20,
@@ -4048,6 +4560,8 @@ export const UA_INQUISITION = {
        "max": 34,
        "pierce": 0,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4056,7 +4570,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -4077,6 +4592,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4085,7 +4602,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4106,6 +4624,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4114,7 +4634,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4135,6 +4656,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4143,7 +4666,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4164,6 +4688,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4172,7 +4698,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -4191,6 +4718,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4199,7 +4728,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4230,6 +4760,16 @@ export const UA_INQUISITION = {
    "max": 5,
    "reinforce": 160,
    "ups": 0,
+   "morale": {
+    "max": 1400,
+    "rate": 20,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "inquisition_grey_knights_purifier",
     "name": "Grey Knight Purifiers",
@@ -4237,6 +4777,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/grey_knight_psyker",
     "hp": 2200,
     "armour": 102,
+    "armourType": "infantry_heavy_med",
     "regen": 4,
     "speed": 16,
     "sight": 25,
@@ -4256,6 +4797,8 @@ export const UA_INQUISITION = {
        "max": 55,
        "pierce": 3,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4264,7 +4807,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -4285,6 +4829,8 @@ export const UA_INQUISITION = {
        "max": 80,
        "pierce": 0,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4293,7 +4839,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 48,
-        "struct": 0
+        "struct": 0,
+        "cmd": 45
        },
        "cost": 0,
        "power": 0,
@@ -4314,6 +4861,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4322,7 +4871,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4343,6 +4893,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4351,7 +4903,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4372,6 +4925,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4380,7 +4935,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4401,6 +4957,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4409,7 +4967,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -4428,6 +4987,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4436,7 +4997,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4467,6 +5029,8 @@ export const UA_INQUISITION = {
    "max": 5,
    "reinforce": 280,
    "ups": 2,
+   "cap": 6,
+   "support": 0,
    "unit": {
     "id": "inquisition_grey_knights_terminator",
     "name": "Grey Knight Terminators",
@@ -4474,6 +5038,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/grey_knight_terminator",
     "hp": 3500,
     "armour": 103,
+    "armourType": "infantry_heavy_high",
     "regen": 3,
     "speed": 16,
     "sight": 30,
@@ -4493,6 +5058,8 @@ export const UA_INQUISITION = {
        "max": 70,
        "pierce": 3,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4501,7 +5068,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -4520,6 +5088,8 @@ export const UA_INQUISITION = {
        "max": 68,
        "pierce": 0,
        "morale": 29,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 20,
        "vs": {
@@ -4528,7 +5098,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 40,
        "power": 20,
@@ -4550,6 +5121,8 @@ export const UA_INQUISITION = {
        "max": 76,
        "pierce": 10,
        "morale": 17,
+       "setup": 0,
+       "moveAcc": 0.550000011920929,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4558,7 +5131,8 @@ export const UA_INQUISITION = {
         "light": 45,
         "veh": 55,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 30
        },
        "cost": 50,
        "power": 20,
@@ -4582,6 +5156,8 @@ export const UA_INQUISITION = {
        "max": 190,
        "pierce": 8,
        "morale": 24,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4590,7 +5166,8 @@ export const UA_INQUISITION = {
         "light": 23,
         "veh": 13,
         "titan": 40,
-        "struct": 13
+        "struct": 13,
+        "cmd": 25
        },
        "cost": 50,
        "power": 25,
@@ -4614,6 +5191,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4622,7 +5201,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4643,6 +5223,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4651,7 +5233,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4672,6 +5255,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4680,7 +5265,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4701,6 +5287,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4709,7 +5297,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -4728,6 +5317,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4736,7 +5327,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4767,6 +5359,8 @@ export const UA_INQUISITION = {
    "max": 3,
    "reinforce": 500,
    "ups": 3,
+   "cap": 9,
+   "support": 0,
    "unit": {
     "id": "inquisition_grey_knights_terminator_paladin",
     "name": "Grey Knight Paladins",
@@ -4774,6 +5368,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/grey_knight_terminator_codex",
     "hp": 4500,
     "armour": 104,
+    "armourType": "infantry_heavy_high",
     "regen": 4,
     "speed": 12,
     "sight": 30,
@@ -4793,6 +5388,8 @@ export const UA_INQUISITION = {
        "max": 70,
        "pierce": 3,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4801,7 +5398,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -4820,6 +5418,8 @@ export const UA_INQUISITION = {
        "max": 68,
        "pierce": 0,
        "morale": 29,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 20,
        "vs": {
@@ -4828,7 +5428,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 40,
        "power": 20,
@@ -4850,6 +5451,8 @@ export const UA_INQUISITION = {
        "max": 76,
        "pierce": 10,
        "morale": 17,
+       "setup": 0,
+       "moveAcc": 0.550000011920929,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -4858,7 +5461,8 @@ export const UA_INQUISITION = {
         "light": 45,
         "veh": 55,
         "titan": 30,
-        "struct": 20
+        "struct": 20,
+        "cmd": 30
        },
        "cost": 50,
        "power": 20,
@@ -4882,6 +5486,8 @@ export const UA_INQUISITION = {
        "max": 190,
        "pierce": 8,
        "morale": 24,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4890,7 +5496,8 @@ export const UA_INQUISITION = {
         "light": 23,
         "veh": 13,
         "titan": 40,
-        "struct": 13
+        "struct": 13,
+        "cmd": 25
        },
        "cost": 50,
        "power": 25,
@@ -4912,6 +5519,8 @@ export const UA_INQUISITION = {
        "max": 1000,
        "pierce": 3,
        "morale": 100,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4920,7 +5529,8 @@ export const UA_INQUISITION = {
         "light": 55,
         "veh": 30,
         "titan": 60,
-        "struct": 20
+        "struct": 20,
+        "cmd": 40
        },
        "cost": 250,
        "power": 90,
@@ -4945,6 +5555,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4953,7 +5565,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -4974,6 +5587,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -4982,7 +5597,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -5003,6 +5619,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5011,7 +5629,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -5042,6 +5661,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 6,
+   "morale": {
+    "max": 19000,
+    "rate": 16,
+    "minTime": 5,
+    "minMorale": 100,
+    "acc": 1,
+    "speed": 1
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_imperator_titan.rgd",
     "name": "Imperator Titan",
@@ -5049,6 +5678,7 @@ export const UA_INQUISITION = {
     "model": "races/imperators/troops/ig_imperator",
     "hp": 200000,
     "armour": 105,
+    "armourType": "titan",
     "regen": 10,
     "speed": 9,
     "sight": 250,
@@ -5068,6 +5698,8 @@ export const UA_INQUISITION = {
        "max": 18000,
        "pierce": 0,
        "morale": 9999,
+       "setup": 20,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 40,
        "vs": {
@@ -5076,7 +5708,8 @@ export const UA_INQUISITION = {
         "light": 150,
         "veh": 150,
         "titan": 50,
-        "struct": 15
+        "struct": 15,
+        "cmd": 150
        },
        "cost": 0,
        "power": 0,
@@ -5097,6 +5730,8 @@ export const UA_INQUISITION = {
        "max": 6000,
        "pierce": 15,
        "morale": 1800,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 10,
        "vs": {
@@ -5105,7 +5740,8 @@ export const UA_INQUISITION = {
         "light": 100.66699981689453,
         "veh": 90,
         "titan": 50,
-        "struct": 30
+        "struct": 30,
+        "cmd": 60
        },
        "cost": 125,
        "power": 200,
@@ -5142,6 +5778,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "morale": {
+    "max": 350,
+    "rate": 12,
+    "minTime": 10,
+    "minMorale": 150,
+    "acc": 0.20000000298023224,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_inquisitor_lord",
     "name": "Inquisitor Lord",
@@ -5149,6 +5795,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisitor_lord",
     "hp": 940,
     "armour": 100,
+    "armourType": "commander",
     "regen": 31,
     "speed": 16,
     "sight": 50,
@@ -5168,6 +5815,8 @@ export const UA_INQUISITION = {
        "max": 25,
        "pierce": 3,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5176,7 +5825,8 @@ export const UA_INQUISITION = {
         "light": 7.599999904632568,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 24
        },
        "cost": 0,
        "power": 0,
@@ -5195,6 +5845,8 @@ export const UA_INQUISITION = {
        "max": 55,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5203,7 +5855,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 10,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 17
        },
        "cost": 0,
        "power": 0,
@@ -5224,6 +5877,8 @@ export const UA_INQUISITION = {
        "max": 248,
        "pierce": 0,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5232,7 +5887,8 @@ export const UA_INQUISITION = {
         "light": 35.63600158691406,
         "veh": 25,
         "titan": 30,
-        "struct": 10.666999816894531
+        "struct": 10.666999816894531,
+        "cmd": 30
        },
        "cost": 0,
        "power": 0,
@@ -5251,6 +5907,8 @@ export const UA_INQUISITION = {
        "max": 588,
        "pierce": 10,
        "morale": 48,
+       "setup": 1,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5259,7 +5917,8 @@ export const UA_INQUISITION = {
         "light": 75,
         "veh": 60,
         "titan": 125,
-        "struct": 15
+        "struct": 15,
+        "cmd": 40
        },
        "cost": 0,
        "power": 0,
@@ -5280,6 +5939,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5288,7 +5949,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -5307,6 +5969,8 @@ export const UA_INQUISITION = {
        "max": 40,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5315,7 +5979,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 65,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -5340,6 +6005,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "morale": {
+    "max": 600,
+    "rate": 12,
+    "minTime": 10,
+    "minMorale": 150,
+    "acc": 0.20000000298023224,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_inquisitor_ordo_malleus",
     "name": "Ordo Malleus Supreme Lord",
@@ -5347,6 +6022,7 @@ export const UA_INQUISITION = {
     "model": "",
     "hp": 940,
     "armour": 100,
+    "armourType": "commander",
     "regen": 31,
     "speed": 16,
     "sight": 45,
@@ -5366,6 +6042,8 @@ export const UA_INQUISITION = {
        "max": 55,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5374,7 +6052,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 10,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 17
        },
        "cost": 0,
        "power": 0,
@@ -5395,6 +6074,8 @@ export const UA_INQUISITION = {
        "max": 248,
        "pierce": 0,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5403,7 +6084,8 @@ export const UA_INQUISITION = {
         "light": 35.63600158691406,
         "veh": 25,
         "titan": 30,
-        "struct": 10.666999816894531
+        "struct": 10.666999816894531,
+        "cmd": 30
        },
        "cost": 0,
        "power": 0,
@@ -5422,6 +6104,8 @@ export const UA_INQUISITION = {
        "max": 588,
        "pierce": 10,
        "morale": 48,
+       "setup": 1,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -5430,7 +6114,8 @@ export const UA_INQUISITION = {
         "light": 75,
         "veh": 60,
         "titan": 125,
-        "struct": 15
+        "struct": 15,
+        "cmd": 40
        },
        "cost": 0,
        "power": 0,
@@ -5461,6 +6146,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_land_raider",
     "name": "Land Raider Phobos",
@@ -5468,6 +6155,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/land_raidgk_codex",
     "hp": 8500,
     "armour": 100,
+    "armourType": "vehicle_high",
     "regen": 0,
     "speed": 24,
     "sight": 30,
@@ -5487,6 +6175,8 @@ export const UA_INQUISITION = {
        "max": 216.8000030517578,
        "pierce": 5,
        "morale": 12,
+       "setup": 0,
+       "moveAcc": 0.75,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5495,7 +6185,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 16,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -5516,6 +6207,8 @@ export const UA_INQUISITION = {
        "max": 1850,
        "pierce": 10,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5524,7 +6217,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -5545,6 +6239,8 @@ export const UA_INQUISITION = {
        "max": 1850,
        "pierce": 10,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5553,7 +6249,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -5574,6 +6271,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5582,7 +6281,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 0,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -5613,6 +6313,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_land_raider_crusader",
     "name": "Land Raider Crusader",
@@ -5620,6 +6322,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/land_raidgk_crusader",
     "hp": 8500,
     "armour": 100,
+    "armourType": "vehicle_high",
     "regen": 0,
     "speed": 24,
     "sight": 30,
@@ -5639,6 +6342,8 @@ export const UA_INQUISITION = {
        "max": 65,
        "pierce": 0,
        "morale": 6,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5647,7 +6352,8 @@ export const UA_INQUISITION = {
         "light": 30,
         "veh": 10,
         "titan": 8,
-        "struct": 0
+        "struct": 0,
+        "cmd": 8.399999618530273
        },
        "cost": 0,
        "power": 0,
@@ -5668,6 +6374,8 @@ export const UA_INQUISITION = {
        "max": 160,
        "pierce": 5,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5676,7 +6384,8 @@ export const UA_INQUISITION = {
         "light": 35,
         "veh": 25,
         "titan": 50,
-        "struct": 25
+        "struct": 25,
+        "cmd": 30
        },
        "cost": 60,
        "power": 20,
@@ -5697,6 +6406,8 @@ export const UA_INQUISITION = {
        "max": 160,
        "pierce": 5,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5705,7 +6416,8 @@ export const UA_INQUISITION = {
         "light": 35,
         "veh": 25,
         "titan": 50,
-        "struct": 25
+        "struct": 25,
+        "cmd": 30
        },
        "cost": 60,
        "power": 20,
@@ -5726,6 +6438,8 @@ export const UA_INQUISITION = {
        "max": 600,
        "pierce": 20,
        "morale": 36,
+       "setup": 0,
+       "moveAcc": 0.75,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5734,7 +6448,8 @@ export const UA_INQUISITION = {
         "light": 88,
         "veh": 53,
         "titan": 5,
-        "struct": 25
+        "struct": 25,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -5753,6 +6468,8 @@ export const UA_INQUISITION = {
        "max": 340,
        "pierce": 10,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5761,7 +6478,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 75,
-        "struct": 25
+        "struct": 25,
+        "cmd": 15
        },
        "cost": 45,
        "power": 15,
@@ -5782,6 +6500,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5790,7 +6510,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -5811,6 +6532,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5819,7 +6542,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -5850,6 +6574,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_land_raider_daemonhunter",
     "name": "Land Raider Daemon Hunter",
@@ -5857,6 +6583,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/id_crusader",
     "hp": 9000,
     "armour": 102,
+    "armourType": "vehicle_high",
     "regen": 0,
     "speed": 24,
     "sight": 50,
@@ -5876,6 +6603,8 @@ export const UA_INQUISITION = {
        "max": 65,
        "pierce": 0,
        "morale": 6,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5884,7 +6613,8 @@ export const UA_INQUISITION = {
         "light": 30,
         "veh": 10,
         "titan": 8,
-        "struct": 0
+        "struct": 0,
+        "cmd": 8.399999618530273
        },
        "cost": 0,
        "power": 0,
@@ -5903,6 +6633,8 @@ export const UA_INQUISITION = {
        "max": 216.8000030517578,
        "pierce": 5,
        "morale": 12,
+       "setup": 0,
+       "moveAcc": 0.75,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5911,7 +6643,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 16,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -5932,6 +6665,8 @@ export const UA_INQUISITION = {
        "max": 160,
        "pierce": 5,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5940,7 +6675,8 @@ export const UA_INQUISITION = {
         "light": 35,
         "veh": 25,
         "titan": 50,
-        "struct": 25
+        "struct": 25,
+        "cmd": 30
        },
        "cost": 60,
        "power": 20,
@@ -5959,6 +6695,8 @@ export const UA_INQUISITION = {
        "max": 1850,
        "pierce": 10,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5967,7 +6705,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -5988,6 +6727,8 @@ export const UA_INQUISITION = {
        "max": 1850,
        "pierce": 10,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -5996,7 +6737,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -6017,6 +6759,8 @@ export const UA_INQUISITION = {
        "max": 160,
        "pierce": 5,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6025,7 +6769,8 @@ export const UA_INQUISITION = {
         "light": 35,
         "veh": 25,
         "titan": 50,
-        "struct": 25
+        "struct": 25,
+        "cmd": 30
        },
        "cost": 60,
        "power": 20,
@@ -6044,6 +6789,8 @@ export const UA_INQUISITION = {
        "max": 1850,
        "pierce": 10,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6052,7 +6799,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -6073,6 +6821,8 @@ export const UA_INQUISITION = {
        "max": 1850,
        "pierce": 10,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6081,7 +6831,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -6102,6 +6853,8 @@ export const UA_INQUISITION = {
        "max": 1400,
        "pierce": 20,
        "morale": 36,
+       "setup": 0,
+       "moveAcc": 0.75,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6110,7 +6863,8 @@ export const UA_INQUISITION = {
         "light": 88,
         "veh": 53,
         "titan": 5,
-        "struct": 25
+        "struct": 25,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -6129,6 +6883,8 @@ export const UA_INQUISITION = {
        "max": 0,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6137,7 +6893,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 0,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -6168,6 +6925,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_land_raider_redeemer",
     "name": "Land Raider Redeemer",
@@ -6175,6 +6934,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/land_raidgk_redeemer",
     "hp": 8500,
     "armour": 100,
+    "armourType": "vehicle_high",
     "regen": 0,
     "speed": 24,
     "sight": 30,
@@ -6194,6 +6954,8 @@ export const UA_INQUISITION = {
        "max": 95,
        "pierce": 5,
        "morale": 8,
+       "setup": 0,
+       "moveAcc": 0.44999998807907104,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6202,7 +6964,8 @@ export const UA_INQUISITION = {
         "light": 30,
         "veh": 10,
         "titan": 8,
-        "struct": 0
+        "struct": 0,
+        "cmd": 8.399999618530273
        },
        "cost": 30,
        "power": 70,
@@ -6223,6 +6986,8 @@ export const UA_INQUISITION = {
        "max": 180,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 6,
        "vs": {
@@ -6231,7 +6996,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 15,
         "titan": 60,
-        "struct": 50
+        "struct": 50,
+        "cmd": 12
        },
        "cost": 70,
        "power": 40,
@@ -6252,6 +7018,8 @@ export const UA_INQUISITION = {
        "max": 180,
        "pierce": 0,
        "morale": 30,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 6,
        "vs": {
@@ -6260,7 +7028,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 15,
         "titan": 60,
-        "struct": 50
+        "struct": 50,
+        "cmd": 12
        },
        "cost": 70,
        "power": 40,
@@ -6281,6 +7050,8 @@ export const UA_INQUISITION = {
        "max": 180,
        "pierce": 5,
        "morale": 18,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6289,7 +7060,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 16,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 45,
        "power": 15,
@@ -6320,6 +7092,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 150,
+   "cap": 0,
+   "support": 4,
    "unit": {
     "id": "inquisition_predator",
     "name": "Predator Annihilator",
@@ -6327,6 +7101,7 @@ export const UA_INQUISITION = {
     "model": "races/space_marines/troops/predator_codex",
     "hp": 6820,
     "armour": 102,
+    "armourType": "vehicle_med",
     "regen": 0,
     "speed": 24,
     "sight": 35,
@@ -6346,6 +7121,8 @@ export const UA_INQUISITION = {
        "max": 900,
        "pierce": 0,
        "morale": 100,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6354,7 +7131,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 45,
        "power": 90,
@@ -6377,6 +7155,8 @@ export const UA_INQUISITION = {
        "max": 43,
        "pierce": 0,
        "morale": 12,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6385,7 +7165,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 16,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -6406,6 +7187,8 @@ export const UA_INQUISITION = {
        "max": 43,
        "pierce": 0,
        "morale": 12,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6414,7 +7197,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 16,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -6435,6 +7219,8 @@ export const UA_INQUISITION = {
        "max": 126,
        "pierce": 0,
        "morale": 2,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6443,7 +7229,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -6474,6 +7261,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 2,
    "unit": {
     "id": "inquisition_razorback",
     "name": "Razorback Transport",
@@ -6481,6 +7270,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/inquisition_razorback_scorpion",
     "hp": 2600,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 0,
     "speed": 28,
     "sight": 30,
@@ -6500,6 +7290,8 @@ export const UA_INQUISITION = {
        "max": 60,
        "pierce": 0,
        "morale": 40,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 14,
        "vs": {
@@ -6508,7 +7300,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 5,
         "titan": 5,
-        "struct": 20
+        "struct": 20,
+        "cmd": 11
        },
        "cost": 60,
        "power": 40,
@@ -6539,6 +7332,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 1,
    "unit": {
     "id": "inquisition_rhino",
     "name": "Rhino Transport",
@@ -6546,6 +7341,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisitorial_rhino",
     "hp": 2000,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 0,
     "speed": 32,
     "sight": 30,
@@ -6565,6 +7361,8 @@ export const UA_INQUISITION = {
        "max": 70,
        "pierce": 3,
        "morale": 6,
+       "setup": 0,
+       "moveAcc": 0.6000000238418579,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6573,7 +7371,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 20,
        "power": 5,
@@ -6592,6 +7391,8 @@ export const UA_INQUISITION = {
        "max": 700,
        "pierce": 0,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0.6499999761581421,
        "melee": false,
        "aoe": 4,
        "vs": {
@@ -6600,7 +7401,8 @@ export const UA_INQUISITION = {
         "light": 60,
         "veh": 50,
         "titan": 10,
-        "struct": 14
+        "struct": 14,
+        "cmd": 12
        },
        "cost": 20,
        "power": 60,
@@ -6631,6 +7433,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "morale": {
+    "max": 500,
+    "rate": 12,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.20000000298023224,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_scholars_astropath",
     "name": "Astropath",
@@ -6638,6 +7450,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/scholars",
     "hp": 400,
     "armour": 100,
+    "armourType": "infantry_high",
     "regen": 1,
     "speed": 15,
     "sight": 60,
@@ -6657,6 +7470,8 @@ export const UA_INQUISITION = {
        "max": 15,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.44999998807907104,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6665,7 +7480,8 @@ export const UA_INQUISITION = {
         "light": 3,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 3
        },
        "cost": 0,
        "power": 0,
@@ -6686,6 +7502,8 @@ export const UA_INQUISITION = {
        "max": 51,
        "pierce": 0,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -6694,7 +7512,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 20,
-        "struct": 0
+        "struct": 0,
+        "cmd": 29
        },
        "cost": 0,
        "power": 0,
@@ -6715,6 +7534,8 @@ export const UA_INQUISITION = {
        "max": 200,
        "pierce": 0,
        "morale": 0,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -6723,7 +7544,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 0,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -6754,6 +7576,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_scholars_calculus_logi",
     "name": "Calculus Logistic Pskyer",
@@ -6761,6 +7585,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/scholars",
     "hp": 250,
     "armour": 100,
+    "armourType": "infantry_heavy_med",
     "regen": 1,
     "speed": 15,
     "sight": 10,
@@ -6780,6 +7605,8 @@ export const UA_INQUISITION = {
        "max": 200,
        "pierce": 0,
        "morale": 0,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -6788,7 +7615,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 0,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -6819,6 +7647,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "morale": {
+    "max": 500,
+    "rate": 12,
+    "minTime": 5,
+    "minMorale": 50,
+    "acc": 0.20000000298023224,
+    "speed": 1.2000000476837158
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_scholars_exorcist",
     "name": "Exorcist",
@@ -6826,6 +7664,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/scholars",
     "hp": 600,
     "armour": 100,
+    "armourType": "infantry_high",
     "regen": 1,
     "speed": 15,
     "sight": 30,
@@ -6845,6 +7684,8 @@ export const UA_INQUISITION = {
        "max": 200,
        "pierce": 10,
        "morale": 60,
+       "setup": 1,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -6853,7 +7694,8 @@ export const UA_INQUISITION = {
         "light": 46,
         "veh": 41,
         "titan": 20,
-        "struct": 20
+        "struct": 20,
+        "cmd": 25
        },
        "cost": 0,
        "power": 0,
@@ -6874,6 +7716,8 @@ export const UA_INQUISITION = {
        "max": 200,
        "pierce": 0,
        "morale": 0,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -6882,7 +7726,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 0,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -6913,6 +7758,16 @@ export const UA_INQUISITION = {
    "max": 9,
    "reinforce": 30,
    "ups": 0,
+   "morale": {
+    "max": 200,
+    "rate": 10,
+    "minTime": 5,
+    "minMorale": 30,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "inquisition_scholars",
     "name": "Scholars",
@@ -6920,6 +7775,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/scholars",
     "hp": 450,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 17,
     "sight": 20,
@@ -6939,6 +7795,8 @@ export const UA_INQUISITION = {
        "max": 15,
        "pierce": 0,
        "morale": 0.05000000074505806,
+       "setup": 0,
+       "moveAcc": 0.44999998807907104,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -6947,7 +7805,8 @@ export const UA_INQUISITION = {
         "light": 3,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 3
        },
        "cost": 0,
        "power": 0,
@@ -6968,6 +7827,8 @@ export const UA_INQUISITION = {
        "max": 51,
        "pierce": 0,
        "morale": 7,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -6976,7 +7837,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 20,
-        "struct": 0
+        "struct": 0,
+        "cmd": 29
        },
        "cost": 0,
        "power": 0,
@@ -6997,6 +7859,8 @@ export const UA_INQUISITION = {
        "max": 200,
        "pierce": 0,
        "morale": 0,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -7005,7 +7869,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 0,
-        "struct": 0
+        "struct": 0,
+        "cmd": 0
        },
        "cost": 0,
        "power": 0,
@@ -7030,6 +7895,8 @@ export const UA_INQUISITION = {
    "max": 3,
    "reinforce": 30,
    "ups": 0,
+   "cap": 1,
+   "support": 0,
    "unit": {
     "id": "inquisition_servitor_maintenance",
     "name": "Maintenance Servitors",
@@ -7037,6 +7904,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisition_servitor",
     "hp": 300,
     "armour": 100,
+    "armourType": "infantry_low",
     "regen": 1,
     "speed": 16,
     "sight": 25,
@@ -7056,6 +7924,8 @@ export const UA_INQUISITION = {
        "max": 60,
        "pierce": 10,
        "morale": 10,
+       "setup": 1,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -7064,7 +7934,8 @@ export const UA_INQUISITION = {
         "light": 35.63600158691406,
         "veh": 25,
         "titan": 15,
-        "struct": 10.666999816894531
+        "struct": 10.666999816894531,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -7095,6 +7966,8 @@ export const UA_INQUISITION = {
    "max": 8,
    "reinforce": 50,
    "ups": 2,
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "inquisition_servitor_melee",
     "name": "Assault Servitors",
@@ -7102,6 +7975,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisition_servitor",
     "hp": 690,
     "armour": 100,
+    "armourType": "infantry_heavy_med",
     "regen": 1,
     "speed": 20,
     "sight": 25,
@@ -7121,6 +7995,8 @@ export const UA_INQUISITION = {
        "max": 120,
        "pierce": 10,
        "morale": 10,
+       "setup": 1,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -7129,7 +8005,8 @@ export const UA_INQUISITION = {
         "light": 35.63600158691406,
         "veh": 25,
         "titan": 15,
-        "struct": 10.666999816894531
+        "struct": 10.666999816894531,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -7150,6 +8027,8 @@ export const UA_INQUISITION = {
        "max": 60,
        "pierce": 10,
        "morale": 10,
+       "setup": 1,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -7158,7 +8037,8 @@ export const UA_INQUISITION = {
         "light": 35.63600158691406,
         "veh": 25,
         "titan": 15,
-        "struct": 10.666999816894531
+        "struct": 10.666999816894531,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -7177,6 +8057,8 @@ export const UA_INQUISITION = {
        "max": 160,
        "pierce": 10,
        "morale": 60,
+       "setup": 1,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -7185,7 +8067,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 35,
         "titan": 15,
-        "struct": 10.666999816894531
+        "struct": 10.666999816894531,
+        "cmd": 15
        },
        "cost": 75,
        "power": 20,
@@ -7219,6 +8102,8 @@ export const UA_INQUISITION = {
    "max": 8,
    "reinforce": 50,
    "ups": 2,
+   "cap": 3,
+   "support": 0,
    "unit": {
     "id": "inquisition_servitor_weapon",
     "name": "Weapon Servitors",
@@ -7226,6 +8111,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisition_servitor",
     "hp": 500,
     "armour": 100,
+    "armourType": "infantry_heavy_med",
     "regen": 1,
     "speed": 16,
     "sight": 25,
@@ -7245,6 +8131,8 @@ export const UA_INQUISITION = {
        "max": 28,
        "pierce": 0,
        "morale": 10,
+       "setup": 3,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -7253,7 +8141,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 16,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 40,
        "power": 10,
@@ -7275,6 +8164,8 @@ export const UA_INQUISITION = {
        "max": 280,
        "pierce": 0,
        "morale": 55,
+       "setup": 3,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -7283,7 +8174,8 @@ export const UA_INQUISITION = {
         "light": 88,
         "veh": 53,
         "titan": 5,
-        "struct": 15
+        "struct": 15,
+        "cmd": 15
        },
        "cost": 20,
        "power": 75,
@@ -7307,6 +8199,8 @@ export const UA_INQUISITION = {
        "max": 60,
        "pierce": 10,
        "morale": 10,
+       "setup": 1,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -7315,7 +8209,8 @@ export const UA_INQUISITION = {
         "light": 35.63600158691406,
         "veh": 25,
         "titan": 15,
-        "struct": 10.666999816894531
+        "struct": 10.666999816894531,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -7334,6 +8229,8 @@ export const UA_INQUISITION = {
        "max": 160,
        "pierce": 10,
        "morale": 60,
+       "setup": 1,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -7342,7 +8239,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 35,
         "titan": 15,
-        "struct": 10.666999816894531
+        "struct": 10.666999816894531,
+        "cmd": 15
        },
        "cost": 75,
        "power": 20,
@@ -7376,6 +8274,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_servo_skull",
     "name": "Servo Skull",
@@ -7383,6 +8283,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/servo_skull",
     "hp": 250,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 25,
     "sight": 45,
@@ -7402,6 +8303,8 @@ export const UA_INQUISITION = {
        "max": 89,
        "pierce": 0,
        "morale": 8,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -7410,7 +8313,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 45
+        "struct": 45,
+        "cmd": 29
        },
        "cost": 0,
        "power": 0,
@@ -7435,6 +8339,16 @@ export const UA_INQUISITION = {
    "max": 8,
    "reinforce": 35,
    "ups": 4,
+   "morale": {
+    "max": 300,
+    "rate": 5,
+    "minTime": 5,
+    "minMorale": 30,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "inquisition_shock_troops",
     "name": "Elite Stormtroopers",
@@ -7442,6 +8356,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisition_shocktroop",
     "hp": 480,
     "armour": 100,
+    "armourType": "infantry_high",
     "regen": 1,
     "speed": 16,
     "sight": 25,
@@ -7461,6 +8376,8 @@ export const UA_INQUISITION = {
        "max": 21,
        "pierce": 3,
        "morale": 1,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -7469,7 +8386,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10.800000190734863
        },
        "cost": 0,
        "power": 0,
@@ -7488,6 +8406,8 @@ export const UA_INQUISITION = {
        "max": 19,
        "pierce": 1,
        "morale": 17,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 10,
        "vs": {
@@ -7496,7 +8416,8 @@ export const UA_INQUISITION = {
         "light": 8.600000381469727,
         "veh": 0,
         "titan": 5,
-        "struct": 30
+        "struct": 30,
+        "cmd": 22
        },
        "cost": 20,
        "power": 5,
@@ -7518,6 +8439,8 @@ export const UA_INQUISITION = {
        "max": 106,
        "pierce": 0,
        "morale": 12,
+       "setup": 1,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 4,
        "vs": {
@@ -7526,7 +8449,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 20,
-        "struct": 7
+        "struct": 7,
+        "cmd": 9.600000381469727
        },
        "cost": 25,
        "power": 10,
@@ -7548,6 +8472,8 @@ export const UA_INQUISITION = {
        "max": 25,
        "pierce": 10,
        "morale": 10,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -7556,7 +8482,8 @@ export const UA_INQUISITION = {
         "light": 15,
         "veh": 10,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 17
        },
        "cost": 40,
        "power": 10,
@@ -7579,6 +8506,8 @@ export const UA_INQUISITION = {
        "max": 185,
        "pierce": 10,
        "morale": 15,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -7587,7 +8516,8 @@ export const UA_INQUISITION = {
         "light": 80,
         "veh": 50,
         "titan": 5,
-        "struct": 10
+        "struct": 10,
+        "cmd": 15
        },
        "cost": 20,
        "power": 50,
@@ -7612,6 +8542,8 @@ export const UA_INQUISITION = {
        "max": 30,
        "pierce": 0,
        "morale": 5,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -7620,7 +8552,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -7638,6 +8571,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 1,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_stormraven_fury",
     "name": "Stormraven Fury",
@@ -7645,6 +8580,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/gkraven",
     "hp": 8000,
     "armour": 100,
+    "armourType": "vehicle_high",
     "regen": 0,
     "speed": 60,
     "sight": 70,
@@ -7664,6 +8600,8 @@ export const UA_INQUISITION = {
        "max": 1340,
        "pierce": 10,
        "morale": 65,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 6,
        "vs": {
@@ -7672,7 +8610,8 @@ export const UA_INQUISITION = {
         "light": 88,
         "veh": 53,
         "titan": 5,
-        "struct": 25
+        "struct": 25,
+        "cmd": 15
        },
        "cost": 100,
        "power": 100,
@@ -7693,6 +8632,8 @@ export const UA_INQUISITION = {
        "max": 130,
        "pierce": 5,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -7701,7 +8642,8 @@ export const UA_INQUISITION = {
         "light": 35,
         "veh": 25,
         "titan": 50,
-        "struct": 25
+        "struct": 25,
+        "cmd": 30
        },
        "cost": 60,
        "power": 20,
@@ -7722,6 +8664,8 @@ export const UA_INQUISITION = {
        "max": 130,
        "pierce": 5,
        "morale": 25,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -7730,7 +8674,8 @@ export const UA_INQUISITION = {
         "light": 35,
         "veh": 25,
         "titan": 50,
-        "struct": 25
+        "struct": 25,
+        "cmd": 30
        },
        "cost": 60,
        "power": 20,
@@ -7761,6 +8706,16 @@ export const UA_INQUISITION = {
    "max": 10,
    "reinforce": 15,
    "ups": 2,
+   "morale": {
+    "max": 200,
+    "rate": 4,
+    "minTime": 5,
+    "minMorale": 30,
+    "acc": 0.10000000149011612,
+    "speed": 1.2000000476837158
+   },
+   "cap": 2,
+   "support": 0,
    "unit": {
     "id": "inquisition_stormtrooper",
     "name": "",
@@ -7768,6 +8723,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisition_shocktroop",
     "hp": 220,
     "armour": 100,
+    "armourType": "infantry_med",
     "regen": 1,
     "speed": 16,
     "sight": 25,
@@ -7787,6 +8743,8 @@ export const UA_INQUISITION = {
        "max": 13,
        "pierce": 3,
        "morale": 1,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -7795,7 +8753,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 10.800000190734863
        },
        "cost": 0,
        "power": 0,
@@ -7814,6 +8773,8 @@ export const UA_INQUISITION = {
        "max": 15,
        "pierce": 1,
        "morale": 17,
+       "setup": 0,
+       "moveAcc": 0.30000001192092896,
        "melee": false,
        "aoe": 10,
        "vs": {
@@ -7822,7 +8783,8 @@ export const UA_INQUISITION = {
         "light": 8.600000381469727,
         "veh": 0,
         "titan": 5,
-        "struct": 30
+        "struct": 30,
+        "cmd": 22
        },
        "cost": 20,
        "power": 5,
@@ -7846,6 +8808,8 @@ export const UA_INQUISITION = {
        "max": 15,
        "pierce": 0,
        "morale": 4,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": true,
        "aoe": 0,
        "vs": {
@@ -7854,7 +8818,8 @@ export const UA_INQUISITION = {
         "light": 0,
         "veh": 0,
         "titan": 5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 15
        },
        "cost": 0,
        "power": 0,
@@ -7872,6 +8837,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 2,
    "unit": {
     "id": "inquisition_tempest",
     "name": "Land Speeder Tempest",
@@ -7879,6 +8846,7 @@ export const UA_INQUISITION = {
     "model": "races/space_marines/troops/tempest",
     "hp": 1050,
     "armour": 100,
+    "armourType": "air_med",
     "regen": 0,
     "speed": 60,
     "sight": 30,
@@ -7898,6 +8866,8 @@ export const UA_INQUISITION = {
        "max": 30,
        "pierce": 0,
        "morale": 1,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -7906,7 +8876,8 @@ export const UA_INQUISITION = {
         "light": 30,
         "veh": 10,
         "titan": 8,
-        "struct": 0
+        "struct": 0,
+        "cmd": 8.399999618530273
        },
        "cost": 0,
        "power": 0,
@@ -7927,6 +8898,8 @@ export const UA_INQUISITION = {
        "max": 300,
        "pierce": 0,
        "morale": 70,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 5,
        "vs": {
@@ -7935,7 +8908,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 1,
         "titan": 65,
-        "struct": 28
+        "struct": 28,
+        "cmd": 42
        },
        "cost": 70,
        "power": 30,
@@ -7966,6 +8940,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 1,
    "unit": {
     "id": "inquisition_thunderfire_cannon",
     "name": "Thunderfire Cannon",
@@ -7973,6 +8949,7 @@ export const UA_INQUISITION = {
     "model": "races/space_marines/troops/thunderfire_cannon",
     "hp": 1000,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 0,
     "speed": 16,
     "sight": 35,
@@ -7992,6 +8969,8 @@ export const UA_INQUISITION = {
        "max": 180,
        "pierce": 0,
        "morale": 25,
+       "setup": 5,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -8000,7 +8979,8 @@ export const UA_INQUISITION = {
         "light": 35,
         "veh": 25,
         "titan": 8,
-        "struct": 10
+        "struct": 10,
+        "cmd": 8.399999618530273
        },
        "cost": 0,
        "power": 0,
@@ -8031,6 +9011,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_transport_thunderhawk",
     "name": "",
@@ -8038,6 +9020,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisition_th_transporter",
     "hp": 0,
     "armour": 0,
+    "armourType": "vehicle_low",
     "regen": 0,
     "speed": 0,
     "sight": 30,
@@ -8053,6 +9036,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_trade_power",
     "name": "Resource Trade: Power",
@@ -8060,6 +9045,7 @@ export const UA_INQUISITION = {
     "model": "races/tyranids/structures/drop_building",
     "hp": 0,
     "armour": 100,
+    "armourType": "infantry_low",
     "regen": -5,
     "speed": 0,
     "sight": 0,
@@ -8082,6 +9068,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_trade_requisition",
     "name": "Resource Trade: Requisition",
@@ -8089,6 +9077,7 @@ export const UA_INQUISITION = {
     "model": "races/tyranids/structures/drop_building",
     "hp": 0,
     "armour": 100,
+    "armourType": "infantry_low",
     "regen": -5,
     "speed": 0,
     "sight": 0,
@@ -8111,6 +9100,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_transport_valkyrie",
     "name": "",
@@ -8118,6 +9109,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition_daemonhunt/troops/inquisition_valkyrie",
     "hp": 0,
     "armour": 0,
+    "armourType": "vehicle_low",
     "regen": 0,
     "speed": 0,
     "sight": 30,
@@ -8133,6 +9125,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 2,
    "unit": {
     "id": "inquisition_transport_valkyrie_uamod",
     "name": "Valkyrie Transport",
@@ -8140,6 +9134,7 @@ export const UA_INQUISITION = {
     "model": "races/imperial_guard/troops/valkyrie_extraction",
     "hp": 3000,
     "armour": 100,
+    "armourType": "vehicle_med",
     "regen": 0,
     "speed": 0,
     "sight": 36,
@@ -8168,6 +9163,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 0,
+   "cap": 0,
+   "support": 5,
    "unit": {
     "id": "inquisition_vulture",
     "name": "Vulture Gunship",
@@ -8175,6 +9172,7 @@ export const UA_INQUISITION = {
     "model": "races/armoured_company/troops/ac_vulture_gunship",
     "hp": 6000,
     "armour": 101,
+    "armourType": "air_med",
     "regen": 0,
     "speed": 59,
     "sight": 35,
@@ -8194,6 +9192,8 @@ export const UA_INQUISITION = {
        "max": 120,
        "pierce": 0,
        "morale": 20,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -8202,7 +9202,8 @@ export const UA_INQUISITION = {
         "light": 50,
         "veh": 35,
         "titan": 8,
-        "struct": 20
+        "struct": 20,
+        "cmd": 8.399999618530273
        },
        "cost": 40,
        "power": 10,
@@ -8221,6 +9222,8 @@ export const UA_INQUISITION = {
        "max": 800,
        "pierce": 10,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -8229,7 +9232,8 @@ export const UA_INQUISITION = {
         "light": 87.6259994506836,
         "veh": 52.55799865722656,
         "titan": 20,
-        "struct": 18.152000427246094
+        "struct": 18.152000427246094,
+        "cmd": 15
        },
        "cost": 50,
        "power": 50,
@@ -8254,6 +9258,8 @@ export const UA_INQUISITION = {
        "max": 160,
        "pierce": 0,
        "morale": 10.050000190734863,
+       "setup": 0,
+       "moveAcc": 0.3499999940395355,
        "melee": false,
        "aoe": 0,
        "vs": {
@@ -8262,7 +9268,8 @@ export const UA_INQUISITION = {
         "light": 25,
         "veh": 16,
         "titan": 5.5,
-        "struct": 0
+        "struct": 0,
+        "cmd": 20
        },
        "cost": 0,
        "power": 0,
@@ -8283,6 +9290,8 @@ export const UA_INQUISITION = {
        "max": 300,
        "pierce": 0,
        "morale": 80,
+       "setup": 0,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 3,
        "vs": {
@@ -8291,7 +9300,8 @@ export const UA_INQUISITION = {
         "light": 60,
         "veh": 50,
         "titan": 10,
-        "struct": 14
+        "struct": 14,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -8312,6 +9322,8 @@ export const UA_INQUISITION = {
        "max": 300,
        "pierce": 0,
        "morale": 80,
+       "setup": 0,
+       "moveAcc": 1,
        "melee": false,
        "aoe": 3,
        "vs": {
@@ -8320,7 +9332,8 @@ export const UA_INQUISITION = {
         "light": 60,
         "veh": 50,
         "titan": 10,
-        "struct": 14
+        "struct": 14,
+        "cmd": 12
        },
        "cost": 0,
        "power": 0,
@@ -8351,6 +9364,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 2,
+   "morale": {
+    "max": 1875,
+    "rate": 2,
+    "minTime": 60,
+    "minMorale": 50,
+    "acc": 1,
+    "speed": 1
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_warhound_titan",
     "name": "Warhound Purifier Titan",
@@ -8358,6 +9381,7 @@ export const UA_INQUISITION = {
     "model": "races/titans/troops/winter_warhound_idh",
     "hp": 25000,
     "armour": 100,
+    "armourType": "titan",
     "regen": 0,
     "speed": 18,
     "sight": 60,
@@ -8377,6 +9401,8 @@ export const UA_INQUISITION = {
        "max": 270,
        "pierce": 0,
        "morale": 80,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 6,
        "vs": {
@@ -8385,7 +9411,8 @@ export const UA_INQUISITION = {
         "light": 70,
         "veh": 55,
         "titan": 125,
-        "struct": 80
+        "struct": 80,
+        "cmd": 50
        },
        "cost": 100,
        "power": 100,
@@ -8406,6 +9433,8 @@ export const UA_INQUISITION = {
        "max": 270,
        "pierce": 0,
        "morale": 80,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 6,
        "vs": {
@@ -8414,7 +9443,8 @@ export const UA_INQUISITION = {
         "light": 70,
         "veh": 55,
         "titan": 125,
-        "struct": 80
+        "struct": 80,
+        "cmd": 50
        },
        "cost": 100,
        "power": 100,
@@ -8433,6 +9463,8 @@ export const UA_INQUISITION = {
        "max": 3000,
        "pierce": 20,
        "morale": 200,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 8,
        "vs": {
@@ -8441,7 +9473,8 @@ export const UA_INQUISITION = {
         "light": 80,
         "veh": 80,
         "titan": 40,
-        "struct": 30
+        "struct": 30,
+        "cmd": 25
        },
        "cost": 1500,
        "power": 1500,
@@ -8475,6 +9508,16 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 2,
+   "morale": {
+    "max": 1875,
+    "rate": 2,
+    "minTime": 60,
+    "minMorale": 50,
+    "acc": 1,
+    "speed": 1
+   },
+   "cap": 0,
+   "support": 0,
    "unit": {
     "id": "inquisition_warhound_vengence_titan",
     "name": "Warhound Vengence Titan",
@@ -8482,6 +9525,7 @@ export const UA_INQUISITION = {
     "model": "races/titans/troops/winter_warhound_idh",
     "hp": 25000,
     "armour": 100,
+    "armourType": "titan",
     "regen": 0,
     "speed": 18,
     "sight": 60,
@@ -8501,6 +9545,8 @@ export const UA_INQUISITION = {
        "max": 325,
        "pierce": 0,
        "morale": 6,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 4,
        "vs": {
@@ -8509,7 +9555,8 @@ export const UA_INQUISITION = {
         "light": 45,
         "veh": 30,
         "titan": 16.5,
-        "struct": 30
+        "struct": 30,
+        "cmd": 25
        },
        "cost": 40,
        "power": 70,
@@ -8530,6 +9577,8 @@ export const UA_INQUISITION = {
        "max": 3500,
        "pierce": 15,
        "morale": 200,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 7,
        "vs": {
@@ -8538,7 +9587,8 @@ export const UA_INQUISITION = {
         "light": 80,
         "veh": 80,
         "titan": 40,
-        "struct": 30
+        "struct": 30,
+        "cmd": 25
        },
        "cost": 400,
        "power": 400,
@@ -8557,6 +9607,8 @@ export const UA_INQUISITION = {
        "max": 3000,
        "pierce": 20,
        "morale": 200,
+       "setup": 0,
+       "moveAcc": 0,
        "melee": false,
        "aoe": 8,
        "vs": {
@@ -8565,7 +9617,8 @@ export const UA_INQUISITION = {
         "light": 80,
         "veh": 80,
         "titan": 40,
-        "struct": 30
+        "struct": 30,
+        "cmd": 25
        },
        "cost": 1500,
        "power": 1500,
@@ -8599,6 +9652,8 @@ export const UA_INQUISITION = {
    "max": 1,
    "reinforce": 0,
    "ups": 150,
+   "cap": 0,
+   "support": 5,
    "unit": {
     "id": "inquisition_whirlwind",
     "name": "Whirlwind Hyperios",
@@ -8606,6 +9661,7 @@ export const UA_INQUISITION = {
     "model": "races/inquisition/troops/inquisition_whirlwind_hyperios",
     "hp": 5280,
     "armour": 102,
+    "armourType": "vehicle_med",
     "regen": 0,
     "speed": 16,
     "sight": 50,
@@ -8625,6 +9681,8 @@ export const UA_INQUISITION = {
        "max": 400,
        "pierce": 0,
        "morale": 50,
+       "setup": 2,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 5,
        "vs": {
@@ -8633,7 +9691,8 @@ export const UA_INQUISITION = {
         "light": 10,
         "veh": 5,
         "titan": 30,
-        "struct": 50
+        "struct": 50,
+        "cmd": 20
        },
        "cost": 15,
        "power": 10,
@@ -8654,6 +9713,8 @@ export const UA_INQUISITION = {
        "max": 700,
        "pierce": 0,
        "morale": 50,
+       "setup": 0,
+       "moveAcc": 0.5,
        "melee": false,
        "aoe": 7,
        "vs": {
@@ -8662,7 +9723,8 @@ export const UA_INQUISITION = {
         "light": 90,
         "veh": 70,
         "titan": 50,
-        "struct": 30
+        "struct": 30,
+        "cmd": 30
        },
        "cost": 0,
        "power": 0,
@@ -8683,6 +9745,8 @@ export const UA_INQUISITION = {
        "max": 333.29998779296875,
        "pierce": 0,
        "morale": 28,
+       "setup": 0,
+       "moveAcc": 0.8500000238418579,
        "melee": false,
        "aoe": 3,
        "vs": {
@@ -8691,7 +9755,8 @@ export const UA_INQUISITION = {
         "light": 60,
         "veh": 50,
         "titan": 11,
-        "struct": 14.444000244140625
+        "struct": 14.444000244140625,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -8712,6 +9777,8 @@ export const UA_INQUISITION = {
        "max": 333.29998779296875,
        "pierce": 0,
        "morale": 28,
+       "setup": 0,
+       "moveAcc": 0.8500000238418579,
        "melee": false,
        "aoe": 3,
        "vs": {
@@ -8720,7 +9787,8 @@ export const UA_INQUISITION = {
         "light": 60,
         "veh": 50,
         "titan": 11,
-        "struct": 14.444000244140625
+        "struct": 14.444000244140625,
+        "cmd": 10
        },
        "cost": 0,
        "power": 0,
@@ -8755,6 +9823,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition_daemonhunt/structures/domus_astra_telepatica",
    "hp": 3500,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 0,
    "speed": 0,
    "sight": 40,
@@ -8814,6 +9883,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition/structures/civilian_structure",
    "hp": 800,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 0,
    "speed": 0,
    "sight": 15,
@@ -8833,6 +9903,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -8841,7 +9913,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -8860,6 +9933,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -8868,7 +9943,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -8887,6 +9963,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -8895,7 +9973,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -8914,6 +9993,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -8922,7 +10003,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -8941,6 +10023,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -8949,7 +10033,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -8970,6 +10055,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -8978,7 +10065,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -8997,6 +10085,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9005,7 +10095,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9024,6 +10115,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9032,7 +10125,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9051,6 +10145,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9059,7 +10155,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9078,6 +10175,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9086,7 +10185,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9107,6 +10207,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9115,7 +10217,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9134,6 +10237,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9142,7 +10247,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9161,6 +10267,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9169,7 +10277,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9224,6 +10333,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition/structures/civilian_structure",
    "hp": 500,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 0,
    "speed": 0,
    "sight": 15,
@@ -9243,6 +10353,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9251,7 +10363,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9270,6 +10383,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9278,7 +10393,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9297,6 +10413,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9305,7 +10423,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9324,6 +10443,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9332,7 +10453,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9351,6 +10473,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9359,7 +10483,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9380,6 +10505,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9388,7 +10515,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9407,6 +10535,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9415,7 +10545,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9434,6 +10565,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9442,7 +10575,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9461,6 +10595,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9469,7 +10605,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9488,6 +10625,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9496,7 +10635,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9517,6 +10657,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9525,7 +10667,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9544,6 +10687,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9552,7 +10697,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9571,6 +10717,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9579,7 +10727,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9625,6 +10774,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition_daemonhunt/structures/gk_teleporter",
    "hp": 3000,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 0,
    "speed": 0,
    "sight": 25,
@@ -9644,6 +10794,8 @@ export const UA_INQUISITION = {
       "max": 150,
       "pierce": 5,
       "morale": 20,
+      "setup": 0,
+      "moveAcc": 0.6499999761581421,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9652,7 +10804,8 @@ export const UA_INQUISITION = {
        "light": 25,
        "veh": 16,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 20
       },
       "cost": 0,
       "power": 0,
@@ -9671,6 +10824,8 @@ export const UA_INQUISITION = {
       "max": 950,
       "pierce": 10,
       "morale": 55,
+      "setup": 0,
+      "moveAcc": 0,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9679,7 +10834,8 @@ export const UA_INQUISITION = {
        "light": 87.6259994506836,
        "veh": 52.55799865722656,
        "titan": 20,
-       "struct": 18.152000427246094
+       "struct": 18.152000427246094,
+       "cmd": 15
       },
       "cost": 0,
       "power": 0,
@@ -9749,6 +10905,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition_daemonhunt/structures/imperial_icon",
    "hp": 2800,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 0,
    "speed": 0,
    "sight": 35,
@@ -9768,6 +10925,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9776,7 +10935,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 0,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9795,6 +10955,8 @@ export const UA_INQUISITION = {
       "max": 190,
       "pierce": 3,
       "morale": 60,
+      "setup": 0,
+      "moveAcc": 0.6499999761581421,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9803,7 +10965,8 @@ export const UA_INQUISITION = {
        "light": 20,
        "veh": 10,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 25
       },
       "cost": 0,
       "power": 0,
@@ -9822,6 +10985,8 @@ export const UA_INQUISITION = {
       "max": 190,
       "pierce": 10,
       "morale": 90,
+      "setup": 0,
+      "moveAcc": 0.6499999761581421,
       "melee": false,
       "aoe": 4,
       "vs": {
@@ -9830,7 +10995,8 @@ export const UA_INQUISITION = {
        "light": 60,
        "veh": 50,
        "titan": 30,
-       "struct": 0
+       "struct": 0,
+       "cmd": 25
       },
       "cost": 0,
       "power": 0,
@@ -9865,6 +11031,7 @@ export const UA_INQUISITION = {
    "model": "races/sisters/structures/sister_bunker_base",
    "hp": 5000,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 0,
    "speed": 0,
    "sight": 25,
@@ -9884,6 +11051,8 @@ export const UA_INQUISITION = {
       "max": 84,
       "pierce": 10,
       "morale": 10.050000190734863,
+      "setup": 0,
+      "moveAcc": 0.6499999761581421,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9892,7 +11061,8 @@ export const UA_INQUISITION = {
        "light": 25,
        "veh": 16,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 20
       },
       "cost": 0,
       "power": 0,
@@ -9911,6 +11081,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9919,7 +11091,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9940,6 +11113,8 @@ export const UA_INQUISITION = {
       "max": 84,
       "pierce": 10,
       "morale": 10.050000190734863,
+      "setup": 0,
+      "moveAcc": 0.6499999761581421,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9948,7 +11123,8 @@ export const UA_INQUISITION = {
        "light": 25,
        "veh": 16,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 20
       },
       "cost": 0,
       "power": 0,
@@ -9967,6 +11143,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -9975,7 +11153,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -9996,6 +11175,8 @@ export const UA_INQUISITION = {
       "max": 84,
       "pierce": 10,
       "morale": 10.050000190734863,
+      "setup": 0,
+      "moveAcc": 0.6499999761581421,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -10004,7 +11185,8 @@ export const UA_INQUISITION = {
        "light": 25,
        "veh": 16,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 20
       },
       "cost": 0,
       "power": 0,
@@ -10023,6 +11205,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -10031,7 +11215,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -10052,6 +11237,8 @@ export const UA_INQUISITION = {
       "max": 84,
       "pierce": 10,
       "morale": 10.050000190734863,
+      "setup": 0,
+      "moveAcc": 0.6499999761581421,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -10060,7 +11247,8 @@ export const UA_INQUISITION = {
        "light": 25,
        "veh": 16,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 20
       },
       "cost": 0,
       "power": 0,
@@ -10079,6 +11267,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -10087,7 +11277,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -10108,6 +11299,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0,
+      "setup": 0,
+      "moveAcc": 0.30000001192092896,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -10116,7 +11309,8 @@ export const UA_INQUISITION = {
        "light": 10,
        "veh": 0,
        "titan": 20,
-       "struct": 0
+       "struct": 0,
+       "cmd": 35
       },
       "cost": 0,
       "power": 0,
@@ -10167,6 +11361,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition_daemonhunt/structures/librarium",
    "hp": 2500,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 0,
    "speed": 0,
    "sight": 15,
@@ -10231,6 +11426,7 @@ export const UA_INQUISITION = {
    "model": "races/imperial_guard/structures/guard_mines",
    "hp": 1000,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 0,
    "speed": 0,
    "sight": 10,
@@ -10250,6 +11446,7 @@ export const UA_INQUISITION = {
    "model": "races/sisters/structures/sister_bunker_silo",
    "hp": 6000,
    "armour": 100,
+   "armourType": "building_super",
    "regen": 0,
    "speed": 0,
    "sight": 5,
@@ -10298,6 +11495,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition_daemonhunt/structures/purification_decree",
    "hp": 1200,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 0,
    "speed": 0,
    "sight": 35,
@@ -10334,6 +11532,7 @@ export const UA_INQUISITION = {
    "model": "races/sisters/structures/shrine_to_the_emperor",
    "hp": 3000,
    "armour": 100,
+   "armourType": "building_super",
    "regen": 0,
    "speed": 0,
    "sight": 6,
@@ -10390,6 +11589,7 @@ export const UA_INQUISITION = {
    "model": "",
    "hp": 0,
    "armour": 0,
+   "armourType": "building_low",
    "regen": 0,
    "speed": 0,
    "sight": 35,
@@ -10409,6 +11609,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": true,
       "aoe": 0,
       "vs": {
@@ -10417,7 +11619,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -10436,6 +11639,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": true,
       "aoe": 0,
       "vs": {
@@ -10444,7 +11649,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -10463,6 +11669,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": true,
       "aoe": 0,
       "vs": {
@@ -10471,7 +11679,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -10492,6 +11701,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 1,
       "melee": true,
       "aoe": 0,
       "vs": {
@@ -10500,7 +11711,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -10547,6 +11759,7 @@ export const UA_INQUISITION = {
    "model": "",
    "hp": 200,
    "armour": 120,
+   "armourType": "building_low",
    "regen": 0,
    "speed": 0,
    "sight": 0,
@@ -10566,6 +11779,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition_daemonhunt/structures/inquisition_tower",
    "hp": 7500,
    "armour": 100,
+   "armourType": "building_high",
    "regen": 0,
    "speed": 0,
    "sight": 60,
@@ -10616,6 +11830,7 @@ export const UA_INQUISITION = {
    "model": "races/idh/structures/idh_titan_assembly_tower",
    "hp": 15000,
    "armour": 100,
+   "armourType": "building_high",
    "regen": 0,
    "speed": 0,
    "sight": 45,
@@ -10668,6 +11883,7 @@ export const UA_INQUISITION = {
    "model": "races/imperial_turrs/structures/dehun_turret_heavy_bolter",
    "hp": 2800,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 0,
    "speed": 0,
    "sight": 55,
@@ -10687,6 +11903,8 @@ export const UA_INQUISITION = {
       "max": 70,
       "pierce": 0,
       "morale": 14,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -10695,7 +11913,8 @@ export const UA_INQUISITION = {
        "light": 10,
        "veh": 5,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 20
       },
       "cost": 0,
       "power": 0,
@@ -10714,6 +11933,8 @@ export const UA_INQUISITION = {
       "max": 654,
       "pierce": 0,
       "morale": 50,
+      "setup": 0,
+      "moveAcc": 0.6499999761581421,
       "melee": false,
       "aoe": 3,
       "vs": {
@@ -10722,7 +11943,8 @@ export const UA_INQUISITION = {
        "light": 60,
        "veh": 50,
        "titan": 10,
-       "struct": 14
+       "struct": 14,
+       "cmd": 12
       },
       "cost": 25,
       "power": 90,
@@ -10741,6 +11963,8 @@ export const UA_INQUISITION = {
       "max": 985,
       "pierce": 5,
       "morale": 154,
+      "setup": 0,
+      "moveAcc": 0.6499999761581421,
       "melee": false,
       "aoe": 10,
       "vs": {
@@ -10749,7 +11973,8 @@ export const UA_INQUISITION = {
        "light": 60,
        "veh": 50,
        "titan": 10,
-       "struct": 14
+       "struct": 14,
+       "cmd": 12
       },
       "cost": 25,
       "power": 90,
@@ -10768,6 +11993,8 @@ export const UA_INQUISITION = {
       "max": 0,
       "pierce": 0,
       "morale": 0.05000000074505806,
+      "setup": 0,
+      "moveAcc": 0.5,
       "melee": false,
       "aoe": 0,
       "vs": {
@@ -10776,7 +12003,8 @@ export const UA_INQUISITION = {
        "light": 0,
        "veh": 0,
        "titan": 5.5,
-       "struct": 0
+       "struct": 0,
+       "cmd": 0
       },
       "cost": 0,
       "power": 0,
@@ -10819,6 +12047,7 @@ export const UA_INQUISITION = {
    "model": "",
    "hp": 4000,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 0,
    "speed": 0,
    "sight": 5,
@@ -10866,6 +12095,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition_daemonhunt/structures/generator_small",
    "hp": 1500,
    "armour": 100,
+   "armourType": "building_low",
    "regen": 0,
    "speed": 0,
    "sight": 15,
@@ -10904,6 +12134,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition_daemonhunt/structures/generator_big",
    "hp": 2500,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 0,
    "speed": 0,
    "sight": 15,
@@ -10948,6 +12179,7 @@ export const UA_INQUISITION = {
    "model": "races/inquisition_daemonhunt/structures/inquisition_watch",
    "hp": 5000,
    "armour": 100,
+   "armourType": "building_med",
    "regen": 0,
    "speed": 0,
    "sight": 15,

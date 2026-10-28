@@ -53,7 +53,7 @@ const text = (id) => (typeof id === 'string' && id.startsWith('$') ? ucs[id.slic
 const lua = (p) => p.replace(/\.lua$/i, '.rgd').replace(/\\/g, '/').replace(/^(data:?\/*)?(attrib\/)?/i, ''); // бывает с префиксом data\attrib\
 
 /** Пробитие брони (%) по классам брони игры: пехота, тяжёлая пехота, лёгкая и бронетехника, титан (монстр), здание. */
-const ARMOR = { inf: 'infantry_med', hinf: 'infantry_heavy_med', light: 'vehicle_low', veh: 'vehicle_med', titan: 'monster_high', struct: 'building_med' };
+const ARMOR = { inf: 'infantry_med', hinf: 'infantry_heavy_med', light: 'vehicle_low', veh: 'vehicle_med', titan: 'monster_high', struct: 'building_med', cmd: 'commander' };
 function pierce(dmg) {
   const by = {};
   for (const e of entries(dmg[hash('armour_piercing_types')])) {
@@ -69,6 +69,7 @@ function weapon(path) {
     file: path.replace(/^.*\\|\.lua$/g, ''), name: text(get(t, 'ui_info', 'screen_name_id')),
     range: get(t, 'max_range') ?? 0, minRange: get(t, 'min_range') ?? 0, reload: get(t, 'reload_time') ?? 1, accuracy: get(t, 'accuracy') ?? 1,
     min: dmg[hash('min_damage')] ?? 0, max: dmg[hash('max_damage')] ?? 0, pierce: dmg[hash('armour_piercing')] ?? 0, morale: dmg[hash('morale_damage')] ?? 0,
+    setup: get(t, 'setup_time') ?? 0, moveAcc: get(t, 'accuracy_reduction_when_moving') ?? 0, // развёртывание (с) и потеря точности на ходу
     melee: !!get(t, 'melee_weapon'), aoe: get(t, 'area_effect', 'area_effect_information', 'radius') ?? 0, vs: pierce(dmg),
     cost: get(t, 'cost', 'cost', 'requisition') ?? 0, power: get(t, 'cost', 'cost', 'power') ?? 0, time: get(t, 'cost', 'time_seconds') ?? 0, // цена апгрейда ствола
     icon: get(t, 'ui_info', 'icon_name') ?? '', // кнопка ствола в панели отряда
@@ -92,14 +93,25 @@ function entity(path) {
     }
     if (list.length) hardpoints.push(list);
   }
+  // у части юнитов мода стволов в ebps нет (хормагаунт UA), хотя файл оружия под юнит лежит в weapon/ — берём его
+  const own = path.replace(/^.*\\|\.lua$/gi, '').replace(/^([a-z]+)_/, '$1_melee_');
+  if (!hardpoints.some((l) => l.some((w) => w.max > 0))) try { hardpoints.splice(0, hardpoints.length, [weapon(`weapon\\${own}.lua`)]); } catch { /* нет и такого */ }
   return {
     id: path.replace(/^.*\\|\.lua$/gi, ''), // имя юнита в моде: по нему модификаторы исследований находят цель
     name: text(get(t, 'ui_ext', 'ui_info', 'screen_name_id')), icon: get(t, 'ui_ext', 'ui_info', 'icon_name') ?? '',
     model: (JSON.stringify(t).match(/"((?:art(?:\\\\|\/))?races(?:\\\\|\/)[a-z_]+(?:\\\\|\/)(?:troops|structures)(?:\\\\|\/)[A-Za-z0-9_]+)"/i)?.[1] ?? '').replace(/\\\\/g, '/').replace(/^art\//i, '').toLowerCase(),
-    hp: get(t, 'health_ext', 'hitpoints') ?? 0, armour: get(t, 'health_ext', 'armour') ?? 0, regen: get(t, 'health_ext', 'regeneration_rate') ?? 0,
+    hp: get(t, 'health_ext', 'hitpoints') ?? 0, armour: get(t, 'health_ext', 'armour') ?? 0, armourType: JSON.stringify(get(t, 'type_ext', 'type_armour') ?? '').match(/tp_([a-z_]+)/)?.[1] ?? '', regen: get(t, 'health_ext', 'regeneration_rate') ?? 0, // armourType — класс брони DoW: infantry_med, vehicle_high, monster_med…
     speed: get(t, 'moving_ext', 'speed_max') ?? 0, sight: get(t, 'sight_ext', 'sight_radius') ?? 0,
     cost: cost[hash('cost')]?.[hash('requisition')] ?? 0, power: cost[hash('cost')]?.[hash('power')] ?? 0, time: cost[hash('time_seconds')] ?? 0, hardpoints,
   };
+}
+
+/** Мораль отряда: максимум, восстановление в секунду, надлом (не меньше broken_min_time с и пока мораль ниже broken_min_morale) и что он делает (точность, скорость). */
+function morale(m) {
+  if (!m || !m[hash('max')]) return undefined;
+  const mod = (name) => Object.values(m[hash('broken_modifiers')] ?? {}).find((v) => v && typeof v === 'object' && JSON.stringify(v).includes(name))?.[hash('value')];
+  return { max: m[hash('max')], rate: m[hash('rate_per_second')] ?? 0, minTime: m[hash('broken_min_time')] ?? 0, minMorale: m[hash('broken_min_morale')] ?? 0,
+    acc: mod('accuracy_weapon_modifier') ?? 1, speed: mod('speed_maximum_modifier') ?? 1 };
 }
 
 function squad(name) {
@@ -107,6 +119,8 @@ function squad(name) {
   const trooper = get(t, 'squad_loadout_ext', 'trooper_base', 'type');
   return { min: lo[hash('unit_min')] ?? 1, max: lo[hash('unit_max')] ?? 1, reinforce: get(t, 'squad_reinforce_ext', 'cost', 'cost', 'requisition') ?? 0,
     ups: get(t, 'squad_reinforce_ext', 'max_upgrades') ?? 0, // сколько бойцов отряда можно перевооружить
+    morale: morale(get(t, 'squad_morale_ext')), // мораль отряда мода (у тиранидов её нет — бесстрашны)
+    cap: get(t, 'squad_cap_ext', 'squad_cap_usage') ?? 0, support: get(t, 'squad_cap_ext', 'support_cap_usage') ?? 0, // сколько лимита пехоты и техники занимает отряд
     unit: entity(trooper) };
 }
 

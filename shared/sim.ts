@@ -1,4 +1,4 @@
-import { ARCH_OPTS, type FactionId } from './factions.ts';
+import { ARCH_OPTS, archFor, type FactionId } from './factions.ts';
 import { UA_TYRANIDS } from './ua-tyranids.ts';
 import { UA_INQUISITION } from './ua-inquisition.ts';
 
@@ -13,7 +13,8 @@ export const ARCHS: Arch[] = ['assault', 'commander', 'mystic'];
 export type CaptainCfg = { arch: Arch };
 export type Kind = 'captain' | 'builder' | 'guard' | 'hq' | 'barracks' | 'post' | 'turret' | 'foundry' | 'pump' | 'key1' | 'key2' | 'key3' | 'key4' | 'gate' | 'legend' | 'wall' | 'wallgate' | 'bunker' | 'mine'
   | 'sniper' | 'heavy' | 'support' | 'elite' | 'healer' | 'lveh' | 'mveh' | 'hveh' | 'titan' | 'deity' | 'aegis' | 'rturret' | 'fturret' | 'arty' | 'battery' | 'pylon' | 'pyre' | 'bell' | 'doom' | 'lighthouse' | 'obelisk' | 'megagun' | 'plague' | 'motorpool' | 'yard'
-  | 'air' | 'warpgate' | 'khorne' | 'nurgle' | 'tzeentch' | 'slaanesh' | 'jet' | 'portal' | 'spire' | 'bomber';
+  | 'air' | 'warpgate' | 'khorne' | 'nurgle' | 'tzeentch' | 'slaanesh' | 'jet' | 'portal' | 'spire' | 'bomber'
+  | `ua:${string}`; // отряды UA сверх ролей игры (UA_MORE): ua:<раса>:<отряд мода>
 export const KINDS: Kind[] = ['captain', 'builder', 'guard', 'hq', 'barracks', 'post', 'turret', 'foundry', 'pump', 'key1', 'key2', 'key3', 'key4', 'gate', 'legend', 'wall', 'wallgate', 'bunker', 'mine', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'aegis', 'rturret', 'fturret', 'arty', 'battery', 'pylon', 'pyre', 'bell', 'doom', 'lighthouse', 'obelisk', 'megagun', 'plague', 'motorpool', 'yard', 'air', 'warpgate', 'khorne', 'nurgle', 'tzeentch', 'slaanesh', 'jet', 'portal', 'spire', 'bomber']; // новые — только в конец: индексы идут в снимки
 const MOBILE = new Set<Kind>(['captain', 'builder', 'guard', 'legend', 'sniper', 'heavy', 'support', 'elite', 'healer', 'lveh', 'mveh', 'hveh', 'titan', 'deity', 'arty', 'air', 'khorne', 'nurgle', 'tzeentch', 'slaanesh', 'jet', 'bomber']);
 export const isStruct = (k: Kind) => !MOBILE.has(k);
@@ -89,7 +90,7 @@ export const STATS: Record<Kind, Stat> = {
  * (основная пехота ≈ прежняя). У каждой расы свой стол статов (FSTATS), остальные фракции — на STATS.
  */
 type ModRace = { squads: Record<string, { min: number; max: number; unit: ModUnit }>; buildings: Record<string, ModUnit> };
-type ModWeapon = { file?: string; name?: string; min: number; max: number; accuracy: number; reload: number; range: number; minRange?: number; aoe?: number; melee: boolean; vs: Record<Armor, number>; cost?: number; power?: number; time?: number };
+type ModWeapon = { morale?: number; setup?: number; moveAcc?: number; file?: string; name?: string; min: number; max: number; accuracy: number; reload: number; range: number; minRange?: number; aoe?: number; melee: boolean; vs: Record<Armor, number>; cost?: number; power?: number; time?: number };
 type ModUnit = { id?: string; name?: string; hp: number; regen?: number; speed: number; sight: number; cost: number; power?: number; time: number; hardpoints: readonly (readonly ModWeapon[])[] };
 /** Вид игры → отряд мода; здание игры → здание мода; легенды по номеру призыва. */
 export const MOD_RACES = {
@@ -110,9 +111,12 @@ export const FSTATS: Partial<Record<FactionId, Record<Kind, Stat>>> = {};
 /** Статы вида у фракции. */
 export const statOf = (k: Kind, f?: FactionId) => (f && FSTATS[f]?.[k]) || STATS[k];
 /** Герой и легенда: заказ и призыв идут по своей экономике игры — цена и время игровые, остальное из мода. */
-const SLOT = new Set<Kind>(['captain', 'legend']);
+const SLOT = new Set<Kind>(['legend']); // герой — как в UA: цена, энергия, время и стволы из мода
 /** Пробитие брони рас из модов по классам брони — из таблиц оружия (как в DoW: доля урона, что проходит по классу брони, %/100). */
 export const UA_VS: Partial<Record<FactionId, Partial<Record<Kind, Record<Armor, number>>>>> = {};
+/** Второе оружие вблизи у рас UA — ствол ближнего боя мода по умолчанию (урон и пробитие из мода). */
+type UAClose = { range: number; dmg: number; cd: number; type: DmgType; vs: Record<Armor, number> };
+export const UA_CLOSE: Partial<Record<FactionId, Partial<Record<Kind, UAClose>>>> = {};
 /** Апгрейды оружия рас UA (второй уровень юнита): во сколько раз растёт урон, на сколько дальность, новое пробитие. */
 type UAUp = { dmg: number; range: number; vs: Record<Armor, number>; aoe?: number; cd?: number }; // cd — множитель перезарядки (ствол аддона)
 export const UA_UPG: Partial<Record<FactionId, Partial<Record<Kind, Upgrade & UAUp>>>> = {};
@@ -122,9 +126,64 @@ export const upOf = (f: FactionId | undefined, k: Kind): (Upgrade & Partial<UAUp
 export const UA_WEAPONS: Partial<Record<FactionId, Partial<Record<Kind, string[]>>>> = {};
 /** Регенерация рас из модов: HP/с на бойца (health_ext.regeneration_rate × масштаб HP). */
 export const UA_REGEN: Partial<Record<FactionId, Partial<Record<Kind, number>>>> = {};
-const ARMORS: Armor[] = ['inf', 'hinf', 'light', 'veh', 'titan', 'struct'];
+const ARMORS: Armor[] = ['inf', 'hinf', 'light', 'veh', 'titan', 'struct', 'cmd'];
 /** Роли, которые в игре стреляют: им — стрелковые стволы мода. */
 const RANGED_ROLE = new Set<Kind>(['support', 'air', 'heavy', 'lveh', 'mveh', 'hveh', 'arty', 'captain', 'jet', 'sniper']);
+/**
+ * Отряды UA сверх ролей игры (задача 29): у каждого свой вид `ua:<раса>:<отряд>`, баланс — целиком из мода теми же циклами, что у ролей
+ * (HP, бойцы, скорость, обзор, цена, энергия, время, стволы, пробитие, броня, лимит, требования, исследования); здание найма — из spawns мода.
+ * Базовый вид даёт только поведение игры: пехота/техника/самолёт/артиллерия, строй, 3D-роль. Без стоимости в моде (варианты _max, вызовы способностей) не берём.
+ */
+const UA_MORE: Partial<Record<FactionId, Record<string, Kind>>> = {
+  tyranids: { swarmlord: 'elite', trygon: 'hveh', carnifex_uber: 'hveh', carnifex_skiller: 'mveh', tyrant_guard: 'elite', spore_cluster: 'guard', carnifex_tervigon: 'hveh', lictor_alpha: 'sniper', zoanthropes: 'heavy', broodlord: 'elite' },
+  inquisition: {
+    grey_knight_hero: 'elite', dreadknight_titan: 'mveh', grey_knight_champion: 'elite', // легенды игры — в UA обычный найм в зданиях мода
+    tempest: 'lveh', valkyrie_uamod: 'jet', vulture: 'jet', thunderfire_cannon: 'arty', grey_knights_astra: 'guard', dreadnought_support: 'mveh',
+    dreadnought_venerable: 'mveh', dreadnought_assault: 'mveh', grey_knights_purifier: 'guard', grey_knights_terminator_paladin: 'elite',
+    scholar_exorcist: 'support', scholar_calculus_logi: 'support', death_cultist: 'guard', bodyguard: 'guard',
+    scholars: 'support', servitor_maintenance: 'support', servitor_weapon: 'heavy', servitor_melee: 'guard', grenaider_troops: 'guard',
+    rhino: 'lveh', chimera_transport: 'lveh', damocles: 'lveh', land_raider: 'hveh', land_raider_crusader: 'hveh', land_raider_redeemer: 'hveh', land_raider_daemonhunter: 'hveh',
+    imperator_titan: 'titan', warhound_vengence_titan: 'titan', servo_skull: 'support',
+  },
+};
+/** Вид отряда UA_MORE → базовый вид игры (поведение). */
+export const UA_BASE: Partial<Record<Kind, Kind>> = {};
+/** Здание найма отряда UA_MORE: первое здание мода, в spawns которого он есть. */
+const UA_FROM: Partial<Record<Kind, Kind>> = {};
+for (const [f, more] of Object.entries(UA_MORE) as [FactionId, Record<string, Kind>][]) {
+  const race = MOD_RACES[f as keyof typeof MOD_RACES];
+  for (const [id, base] of Object.entries(more)) {
+    const k: Kind = `ua:${f}:${id}`, from = Object.entries(race.build).find(([, b]) => (race.data.buildings[b] as ModUnit & { spawns?: string[] })?.spawns?.some(x => x.endsWith('squad_' + id)));
+    if (!race.data.squads[id] || !from) continue;
+    UA_BASE[k] = base; UA_FROM[k] = from[0] as Kind; KINDS.push(k); STATS[k] = structuredClone(STATS[base]);
+    (race.unit as Partial<Record<Kind, string>>)[k] = id;
+  }
+}
+/** Запись базового вида — всем отрядам UA_MORE (таблицы и множества по видам). */
+export function inherit<T extends Partial<Record<Kind, unknown>> | Set<Kind>>(t: T): T {
+  for (const [k, b] of Object.entries(UA_BASE) as [Kind, Kind][]) {
+    if (t instanceof Set) { if (t.has(b)) t.add(k); }
+    else if (b in t && !(k in t)) (t as Partial<Record<Kind, unknown>>)[k] = (t as Partial<Record<Kind, unknown>>)[b];
+  }
+  return t;
+}
+inherit(MOBILE); inherit(RANGED_ROLE);
+/** Класс брони DoW (type_armour мода) → класс игры; пробитие мода взято по этим же классам (tools/ua-race.mjs, ARMOR). */
+const modArmor = (t = ''): Armor | undefined => /^commander/.test(t) ? 'cmd' : /^infantry_heavy|^monster_med|^monster_low/.test(t) ? 'hinf' : /^infantry|^hivefleet/.test(t) ? 'inf'
+  : /^vehicle_low|^air/.test(t) ? 'light' : /^vehicle/.test(t) ? 'veh' : /^monster_high|^titan/.test(t) ? 'titan' : /^building/.test(t) ? 'struct' : undefined;
+/** Броня и лимит (squad_cap / support_cap мода) видов рас UA. 0 в моде (командиры, лэндрейдеры, титаны — у них свои ограничения UA) — лимит роли игры. */
+export const UA_ARMOR: Partial<Record<FactionId, Partial<Record<Kind, Armor>>>> = {};
+/** Развёртывание основного ствола (setup_time мода, с): на ходу не стреляет, после остановки ждёт столько. И доля точности на ходу (accuracy_reduction_when_moving). */
+export const UA_SETUP: Partial<Record<FactionId, Partial<Record<Kind, number>>>> = {};
+const UA_MOVEACC: Partial<Record<FactionId, Partial<Record<Kind, number>>>> = {};
+/** Мораль отрядов UA (squad_morale_ext мода): максимум, восстановление/с, надлом (минимум времени и морали для выхода) и его эффект — точность, скорость. Нет у тиранидов. */
+type UAMorale = { max: number; rate: number; minTime: number; minMorale: number; acc: number; speed: number };
+export const UA_MOR: Partial<Record<FactionId, Partial<Record<Kind, UAMorale>>>> = {};
+/** Урон по морали за выстрел бойца (morale_damage стволов мода × точность, в темпе основного ствола). */
+const UA_MDMG: Partial<Record<FactionId, Partial<Record<Kind, number>>>> = {};
+/** Площадь основного ствола отрядов UA, м (вместо площади роли игры). */
+export const UA_AOE: Partial<Record<FactionId, Partial<Record<Kind, number>>>> = {};
+const UA_POP: Partial<Record<FactionId, Partial<Record<Kind, number>>>> = {};
 /** Метр DoW → метр игры: так же масштабированы карты из DoW (tools/ua-map.mjs), поэтому дальность, обзор и скорость относительно карты — как в UA. */
 export const DOW_M = 1.5;
 /** Перевод единиц мода в игровые: расстояния — один масштаб с картой, здоровье, урон и цены — как в UA. */
@@ -139,11 +198,12 @@ export const energyOf = (k: Kind, f?: FactionId) => (f && UA_ENERGY[f]?.[k]) ?? 
 export const UA_UNARMED = new Set<string>();
 export const UA_SQ: Partial<Record<FactionId, Partial<Record<Kind, { max: number; cost: number; time: number }>>>> = {};
 /** Стволы юнита или турели мода → урон, пробитие (V), апгрейд оружия (UP), имена стволов (WP). Возвращает основной ствол или undefined. */
-function modWeapons(u: ModUnit, k: Kind, n: number, WP: Partial<Record<Kind, string[]>>, V: Partial<Record<Kind, Record<Armor, number>>>, UP: Partial<Record<Kind, Upgrade & UAUp>>, struct = false) {
+function modWeapons(u: ModUnit, k: Kind, n: number, WP: Partial<Record<Kind, string[]>>, V: Partial<Record<Kind, Record<Armor, number>>>, UP: Partial<Record<Kind, Upgrade & UAUp>>, struct = false, CL?: Partial<Record<Kind, UAClose>>) {
   // урон — сумма по точкам крепления (в DoW каждая стреляет сама); у стрелковых ролей — первый стрелковый ствол точки (в моде ставится апгрейдом), иначе базовый
   // здание бьёт одним стволом: у бункера четыре пулемёта по сторонам света — по цели стреляет один
   const ranged = RANGED_ROLE.has(k), dps = (w: ModWeapon) => ((w.min + w.max) / 2) * w.accuracy / Math.max(0.1, w.reload);
-  const all = u.hardpoints.map(l => (ranged && l.find(w => !w.melee && w.max > 0)) || l.find(w => w.max > 0)).filter((w): w is ModWeapon => !!w);
+  // герой — как в моде: в каждой точке крепления ствол по умолчанию (первый), остальные — покупное снаряжение
+  const all = (k === 'captain' || SLOT.has(k) ? u.hardpoints.map(l => l[0]?.max > 0 ? l[0] : undefined) : u.hardpoints.map(l => (ranged && l.find(w => !w.melee && w.max > 0)) || l.find(w => w.max > 0))).filter((w): w is ModWeapon => !!w);
   const picks = struct ? all.sort((a, b) => dps(b) - dps(a)).slice(0, 1) : all;
   const shots = picks.some(w => !w.melee) ? picks.filter(w => !w.melee) : picks, main = shots[0];
   WP[k] = picks.map(w => w.file ?? '');
@@ -162,7 +222,10 @@ function modWeapons(u: ModUnit, k: Kind, n: number, WP: Partial<Record<Kind, str
     aoe: Math.max(0, ...bshots.map(w => w.aoe ?? 0)) * UA_K.range,
   };
   if (shots.length && k !== 'builder' && k !== 'mine') { const tot = shots.reduce((a, x) => a + dps(x), 0) || 1; V[k] = Object.fromEntries(ARMORS.map(a => [a, +(shots.reduce((m, x) => m + x.vs[a] * dps(x), 0) / tot / 100).toFixed(3)])) as Record<Armor, number>; }
-  return main && { cd: Math.max(0.3, main.reload), range: main.melee ? 0 : Math.max(...shots.map(x => x.range)), melee: main.melee, total: shots.reduce((a, x) => a + dps(x), 0), aoe: Math.max(0, ...shots.map(x => x.aoe ?? 0)), minRange: main.minRange ?? 0, name: u.name };
+  const mel = picks.filter(w => w.melee); // ствол ближнего боя по умолчанию у стрелка (меч Инквизитора) — второе оружие вблизи, как в DoW
+  if (CL && shots.length && !shots[0].melee && mel.length) { const md = mel.reduce((a, x) => a + dps(x), 0), mcd = Math.max(0.3, ...mel.map(x => x.reload));
+    CL[k] = { range: 3, dmg: +(md * mcd).toFixed(1), cd: mcd, type: 'melee', vs: Object.fromEntries(ARMORS.map(a => [a, +(mel.reduce((m, x) => m + x.vs[a] * dps(x), 0) / md / 100).toFixed(3)])) as Record<Armor, number> }; }
+  return main && { cd: Math.max(0.3, main.reload), range: main.melee ? 0 : Math.max(...shots.map(x => x.range)), melee: main.melee, total: shots.reduce((a, x) => a + dps(x), 0), aoe: Math.max(0, ...shots.map(x => x.aoe ?? 0)), minRange: main.minRange ?? 0, name: u.name, file: main.file, mor: shots.reduce((a, x) => a + (x.morale ?? 0) * x.accuracy / Math.max(0.1, x.reload), 0) };
 }
 for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RACES)[keyof typeof MOD_RACES]][]) {
   const T = FSTATS[f] = structuredClone(STATS), V: Partial<Record<Kind, Record<Armor, number>>> = UA_VS[f] = {}, RG: Partial<Record<Kind, number>> = UA_REGEN[f] = {};
@@ -172,15 +235,24 @@ for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RAC
   const EN: Partial<Record<Kind, number>> = UA_ENERGY[f] = {};
   for (const [k, id] of Object.entries(race.unit) as [Kind, string][]) {
     const q = race.data.squads[id], u = q.unit, st = T[k], n = Math.max(1, q.min); // стартовый размер отряда мода
+    const ar = modArmor((u as { armourType?: string }).armourType), pop = (q as { cap?: number; support?: number }).cap || (q as { support?: number }).support;
+    if (ar) (UA_ARMOR[f] ??= {})[k] = ar;
+    if (pop) (UA_POP[f] ??= {})[k] = pop;
     if (q.max > n && !SLOT.has(k)) SQ[k] = { max: q.max, cost: (q as { reinforce?: number }).reinforce || u.cost, time: Math.max(1, u.time) };
     RG[k] = +((u.regen ?? 0) * UA_K.hp).toFixed(2);
-    const w = modWeapons(u, k, n, WP, V, UP);
+    const w = modWeapons(u, k, n, WP, V, UP, false, UA_CLOSE[f] ??= {});
     if (!SLOT.has(k)) EN[k] = Math.round((u.power ?? 0) * n * UA_K.cost);
     Object.assign(st, {
       hp: Math.round(u.hp * UA_K.hp), n, speed: +(u.speed * UA_K.speed).toFixed(1), sight: Math.round(u.sight * UA_K.sight),
       ...(SLOT.has(k) ? {} : { cost: Math.round(u.cost * n * UA_K.cost), time: Math.round(u.time * n) }), // отряд мода = бойцы × цена и время бойца
       ...(w && k !== 'builder' && k !== 'mine' ? { dmg: +(w.total * w.cd * UA_K.dmg).toFixed(1), cd: w.cd, range: w.melee ? Math.min(st.range, 2.6) : Math.round(w.range * UA_K.range) } : {}),
     });
+    (UA_AOE[f] ??= {})[k] = w ? +(w.aoe * UA_K.range).toFixed(1) : 0; // площадь — из ствола мода (0 — точечный)
+    const mw = u.hardpoints.flat().find(x => x.file === w?.file) as ModWeapon | undefined;
+    const qm = (q as { morale?: UAMorale }).morale; if (qm) (UA_MOR[f] ??= {})[k] = qm;
+    (UA_MDMG[f] ??= {})[k] = w ? +((w.mor ?? 0) * w.cd).toFixed(1) : 0;
+    (UA_SETUP[f] ??= {})[k] = mw?.setup ?? 0;
+    (UA_MOVEACC[f] ??= {})[k] = mw ? Math.max(0, mw.accuracy - (mw.moveAcc ?? 0)) / Math.max(0.01, mw.accuracy) : 1; // ponytail: снижение точности вычитаем из точности (у ласпушки 2 > 1 — на ходу не попадает); если в DoW множитель — поправить здесь
   }
   for (const [k, id] of Object.entries(race.build) as [Kind, string][]) {
     const b = race.data.buildings[id];
@@ -392,7 +464,7 @@ export const MIN_RANGE: Partial<Record<Kind, number>> = { arty: 10, battery: 8, 
 /** ПВО: самолёты (jet) получают от построек ×3, от тяжёлого оружия пехоты ×1.5; сами по зданиям бьют вполсилы — штурмовики, а не бомбардировщики. */
 export const AA = { struct: 3, heavy: 1.5, jetVsStruct: 0.5 };
 /** Осадная дальность: артиллерия бьёт по зданиям дальше, чем по войскам (нужна разведка или засвет). */
-export const SIEGE_RANGE: Partial<Record<Kind, number>> = { arty: 15 };
+export const SIEGE_RANGE: Partial<Record<Kind, number>> = {}; // как в UA: дальность по зданиям — та же, что у ствола
 /** Засвет из штаба: круг r м открыт t с, видны и скрытые порталом; стоит энергии, перезарядка cd. */
 export const SCAN = { energy: 75, cd: 40, r: 22, t: 12 };
 
@@ -416,15 +488,13 @@ export const PYRE = { r: 8, dps: 18 }, BELL = { r: 14, dmg: 0.8, speed: 0.8 };
 export const AEGIS = { pool: 1200, r: 12, regen: 1200 / 30, broken: 10 };   // щит купола: 1200 урона, полностью за 30 с, после пробоя 10 с не работает
 export const DEITY = { energy: 600, lvl: 10, tier: 4, stop: 12, stopTime: 3, stopCd: 45, deathLock: 300, rise: 4 };
 /** Победные очки: держишь меньше точек, чем враг, — твои очки тают; критическая точка (центр) считается за две. */
-export const VP_START = 500;
-export const VP_RATE = 0.5; // очков в секунду за каждую точку перевеса противника (перевес в 3 точки ≈ 5.5 минуты до поражения)
 /** Туман войны: радиус обзора по умолчанию у построек и юнитов без своего обзора. */
 export const SIGHT_STRUCT = 12;
 /** Захват точки отрядом, секунд (без поста); прогресс без отряда спадает вдвое медленнее. */
 export const CAPTURE_TIME = 12;
 
 // ---------- состав армии: откуда, с какого тира, сколько Легиона, броня и тип урона ----------
-export type Armor = 'inf' | 'hinf' | 'light' | 'veh' | 'titan' | 'struct'; // light — лёгкая техника: стрелковое оружие её царапает
+export type Armor = 'inf' | 'hinf' | 'light' | 'veh' | 'titan' | 'struct' | 'cmd'; // cmd — командир (type_armour commander мода) // light — лёгкая техника: стрелковое оружие её царапает
 export type DmgType = 'small' | 'sniper' | 'heavy' | 'melee' | 'blast';
 export type Role = { from: Kind; tier: number; pop: number; armor: Armor; dmg: DmgType; energy?: number; relics?: number; aoe?: number; heal?: number; meters: number; one?: boolean; fac?: FactionId; noFac?: FactionId[] };
 /** Постройки, которых нет у фракции в Ultimate Apocalypse (у тиранидов нет стен и бункеров, у Инквизиции — ворот, ни у кого — уникальных построек базовой игры). */
@@ -441,7 +511,7 @@ export const ROLES: Partial<Record<Kind, Role>> = {
   mveh: { from: 'motorpool', tier: 3, pop: 6, armor: 'veh', dmg: 'small', energy: 220, aoe: 3, meters: 6 },
   hveh: { from: 'motorpool', tier: 3, pop: 8, armor: 'veh', dmg: 'heavy', energy: 350, aoe: 2.5, meters: 8 },
   arty: { from: 'motorpool', tier: 3, pop: 6, armor: 'veh', dmg: 'blast', energy: 300, aoe: 5, meters: 6 },
-  titan: { from: 'yard', tier: 4, pop: 20, armor: 'titan', dmg: 'blast', energy: 3000, relics: 1, aoe: 7, meters: 34, one: true },
+  titan: { from: 'yard', tier: 4, pop: 20, armor: 'titan', dmg: 'blast', energy: 3000, aoe: 7, meters: 34, one: true },
   jet: { from: 'motorpool', tier: 3, pop: 6, armor: 'light', dmg: 'heavy', energy: 280, meters: 7, noFac: ['tyranids'] }, // у тиранидов нет модели в Ultimate Apocalypse
   air: { from: 'barracks', tier: 2, pop: 3, armor: 'inf', dmg: 'small', energy: 80, meters: 2.6 },
   khorne: { from: 'warpgate', tier: 3, pop: 4, armor: 'hinf', dmg: 'melee', energy: 90, meters: 2.6 },
@@ -451,26 +521,22 @@ export const ROLES: Partial<Record<Kind, Role>> = {
 };
 /** Урон по броне (как в DoW/WH40k): болтеры и пулемёты почти не пробивают технику, снайпер косит пехоту, противотанковое — технику, взрывчатка — здания. */
 export const VS: Record<DmgType, Record<Armor, number>> = {
-  small: { inf: 1, hinf: 0.7, light: 0.5, veh: 0.04, titan: 0.01, struct: 0.15 },
-  sniper: { inf: 1.8, hinf: 0.8, light: 0.1, veh: 0.02, titan: 0.01, struct: 0.05 },
-  heavy: { inf: 0.4, hinf: 1.1, light: 1.3, veh: 1.2, titan: 1, struct: 1.2 },
-  melee: { inf: 1.1, hinf: 1, light: 0.6, veh: 0.4, titan: 0.15, struct: 0.4 },
-  blast: { inf: 1.2, hinf: 0.9, light: 0.9, veh: 0.7, titan: 0.5, struct: 1.6 },
+  small: { inf: 1, hinf: 0.7, light: 0.5, veh: 0.04, titan: 0.01, struct: 0.15, cmd: 0.7 },
+  sniper: { inf: 1.8, hinf: 0.8, light: 0.1, veh: 0.02, titan: 0.01, struct: 0.05, cmd: 0.8 },
+  heavy: { inf: 0.4, hinf: 1.1, light: 1.3, veh: 1.2, titan: 1, struct: 1.2, cmd: 1.1 },
+  melee: { inf: 1.1, hinf: 1, light: 0.6, veh: 0.4, titan: 0.15, struct: 0.4, cmd: 1 },
+  blast: { inf: 1.2, hinf: 0.9, light: 0.9, veh: 0.7, titan: 0.5, struct: 1.6, cmd: 0.9 },
 };
 /** Тяжёлое оружие пехоты: у Орды пулемёты-шуты, у Синклита огнемёты — это против пехоты, не против брони. */
 const HEAVY_SMALL = new Set<FactionId>();
 const STRUCT_DMG: Partial<Record<Kind, DmgType>> = { rturret: 'blast', battery: 'blast', pylon: 'heavy', obelisk: 'heavy', megagun: 'blast' };
 export const STRUCT_AOE: Partial<Record<Kind, number>> = { rturret: 3, battery: 4, megagun: 6 };
 /** Уникальные турели фракций (множители к STATS.turret): тираниды — дальнобойная биопушка со сплэшем, Хаос — Статуя Кхорна (аура ярости, см. KHORNE). */
-export const TURRET_FAC: Partial<Record<FactionId, UnitMod & { name: string }>> = {
-  tyranids: { name: 'Споровая мортира', info: 'Навесом кислотными спорами: 25 м, площадь 4 м, мёртвая зона 6 м. Улучшенная: 33 м, площадь 6 м.', dmg: 2.6, range: 12, cd: 2.6, type: 'blast', aoe: 4, minRange: 6, up: { range: 8, aoe: 2 } },
-};
+export const TURRET_FAC: Partial<Record<FactionId, UnitMod & { name: string }>> = {}; // у рас UA турели бьют стволами мода, без бонусов игры
 /** Свой «движ» у техники, титанов и части пехоты по фракциям (множители к STATS и особые эффекты попадания).
  *  fire — земля горит (FIRE), freeze — цель замирает на N с, leech — доля урона лечит стрелка. */
 export type UnitMod = { info: string; dmg?: number; range?: number; cd?: number; type?: DmgType; aoe?: number; fire?: boolean; freeze?: number; leech?: number; minRange?: number; up?: { range: number; aoe: number } }; // up — прибавка улучшенной версии (ур. 2)
-export const UNIT_FAC: Partial<Record<FactionId, Partial<Record<Kind, UnitMod>>>> = {
-  tyranids: { titan: { info: 'Тригон: биоэлектрический шторм — площадь 8 м.', aoe: 8 }, arty: { info: 'Биоворы: кислотные споры по площади 4 м (как в моде).', aoe: 4 }, lveh: { info: 'Равенер: рвёт добычу — 20% урона лечит.', leech: 0.2 }, jet: { info: 'Гарпия: споровые мины — кислота по площади 4 м.', aoe: 4, fire: true, cd: 1.5 } },
-};
+export const UNIT_FAC: Partial<Record<FactionId, Partial<Record<Kind, UnitMod>>>> = {}; // у рас UA — только стволы мода, без бонусов игры (площадь Тригона, вампиризм Равенера)
 /** Свойства юнита с учётом фракции: турели — TURRET_FAC, остальное — UNIT_FAC. */
 export const modOf = (f: FactionId, k: Kind): UnitMod | undefined => (k === 'turret' ? TURRET_FAC[f] : UNIT_FAC[f]?.[k]);
 /** Второе оружие вблизи (как в Dawn of War: у отряда несколько стволов разной дальности). Цель ближе range — бьёт им.
@@ -486,7 +552,9 @@ export const TRIBUTE = 20;                                  // Хаос: каж�
 export const PAIN = { per: 10, step: 0.03, max: 0.15 };     // Тёмные эльдар: +3% урона за 10 убийств, до +15%
 export const SYNAPSE = { r: 20, on: 1.1, off: 0.85 };       // Тираниды: у синапса +10%, без него −15%
 const SYNAPSE_KINDS = new Set<Kind>(['captain', 'healer', 'legend', 'hq']);
-export const armorOf = (k: Kind): Armor => (isStruct(k) ? 'struct' : ROLES[k]?.armor ?? (k === 'legend' || k === 'captain' ? 'hinf' : 'inf'));
+export const armorOf = (k: Kind, f?: FactionId): Armor => (isStruct(k) ? 'struct' : (f && UA_ARMOR[f]?.[k]) || ROLES[k]?.armor || (k === 'legend' || k === 'captain' ? 'hinf' : 'inf')); // у рас UA — класс брони мода
+/** Сколько лимита занимает отряд: у рас UA — squad_cap/support_cap мода, иначе роль игры. */
+export const popOf = (k: Kind, f?: FactionId) => (f && UA_POP[f]?.[k]) || ROLES[k]?.pop || 0;
 export const dmgOf = (k: Kind, f: FactionId): DmgType => (k === 'guard' && isMelee('guard', f)) || k === 'captain' || k === 'legend' || k === 'deity' ? 'melee' : k === 'heavy' && HEAVY_SMALL.has(f) ? 'small' : ROLES[k]?.dmg ?? STRUCT_DMG[k] ?? 'small';
 export const LEGION_CAP = 60, MOTOR_CAP = 45; // пехота и техника считаются отдельно
 export const SQUADS = new Set<Kind>(['guard', 'sniper', 'heavy', 'support', 'elite', 'air', 'khorne', 'nurgle', 'tzeentch', 'slaanesh']); // пополняются бойцами
@@ -506,8 +574,10 @@ export const FROM_FAC: Partial<Record<FactionId, Partial<Record<Kind, Kind>>>> =
   tyranids: { sniper: 'key1', heavy: 'key1', lveh: 'key1', arty: 'key1', elite: 'hq' }, // как в UA: воины, ликторы, равенеры и биоворы — из Выводкового улья, генокрады — из Шпиля
   inquisition: { support: 'motorpool', sniper: 'hq', mveh: 'barracks', jet: 'key2' }, // как в UA: штурмовики — из Дозора, астропаты — из Башни, дредноуты — из Телепортера Серых Рыцарей, Штормовой ворон — из Астра Телепатика
 };
+for (const [k, b] of Object.entries(UA_BASE) as [Kind, Kind][]) ROLES[k] = { ...ROLES[b]!, from: UA_FROM[k]!, fac: k.split(':')[1] as FactionId, noFac: undefined };
+[MIN_RANGE, SIEGE_RANGE, CLOSE, SETUP, SYNAPSE_KINDS, SQUADS, VEHICLES, AIRCRAFT].forEach(t => inherit(t));
 export const fromOf = (k: Kind, f?: FactionId) => (f && FROM_FAC[f]?.[k]) ?? ROLES[k]!.from;
-export const PRODUCERS = new Set<Kind>(['hq', 'gate', ...(Object.values(ROLES).map(r => r!.from)), ...Object.values(FROM_FAC).flatMap(m => Object.values(m!))]);
+export const PRODUCERS = new Set<Kind>(['hq', 'gate', ...(Object.values(ROLES).map(r => r!.from)), ...Object.values(FROM_FAC).flatMap(m => Object.values(m!) as Kind[])]);
 export const producible = (b: Kind, f?: FactionId) => (Object.keys(ROLES) as Kind[]).filter(k => fromOf(k, f) === b && (!f || (!ROLES[k]!.fac || ROLES[k]!.fac === f) && !ROLES[k]!.noFac?.includes(f)));
 export const TURRET_CAP = 12;
 /** Постройки держат удар: пехота и капитаны наносят им 40% урона (как в DoW — здания ломают техникой и тяжёлым оружием). */
@@ -674,7 +744,7 @@ export const BUILD_TIER: Record<Buildable, number> = { hq: 2, barracks: 1, post:
 for (const [f, race] of Object.entries(MOD_RACES)) NO_BUILD[f as FactionId] = (Object.keys(BUILD_TIER) as Buildable[]).filter(k => !(k in race.build));
 /** Постройки только своей фракции. */
 /** null — постройка снятых фракций (Консенсус, Нежить): вид остаётся в KINDS ради стабильных индексов, строить нельзя. */
-export const FACTION_ONLY: Partial<Record<Buildable, FactionId | null>> = { aegis: null, rturret: null, fturret: null, battery: null, bell: 'tyranids', pylon: null, pyre: null, lighthouse: null, obelisk: null, megagun: null, plague: 'tyranids', warpgate: null, portal: null }; // null — постройки удалённых рас: никому
+export const FACTION_ONLY: Partial<Record<Buildable, FactionId | null>> = { aegis: null, rturret: null, fturret: null, battery: null, bell: null, pylon: null, pyre: null, lighthouse: null, obelisk: null, megagun: null, plague: null, warpgate: null, portal: null }; // null — постройки удалённых рас: никому
 export const maxHp = (k: Kind, f?: FactionId) => statOf(k, f).hp * statOf(k, f).n;
 /** Статы и полное здоровье конкретного юнита — по его фракции. */
 export const ST = (u: Unit) => statOf(u.kind, u.f);
@@ -747,6 +817,7 @@ export type Unit = {
   build: number;                // 0..1, готовность постройки (у юнитов всегда 1)
   dead: number;                 // таймер возрождения капитана
   by: number;                   // кто ударил последним (опыт за убийство)
+  mor?: number; brk?: number; // мораль отряда UA и сколько он уже надломлен (с; undefined — не надломлен)
   rush: number; stand: number;  // Рывок и Последний рубеж: оставшиеся секунды
   reinf: boolean; rt: number;   // идёт пополнение отряда
   hit: number;                  // секунд с последнего урона (пополнять под огнём нельзя)
@@ -777,7 +848,6 @@ export type State = {
   tick: number; units: Unit[]; points: Point[]; players: Player[]; nextId: number;
   winner: number | null; shots: number[][];
   dev?: boolean; // разработка: разрешён чит
-  vp: number[];  // победные очки (пресет CapturePoint)
   died: number[]; // кто погиб с прошлого снимка (чтобы отличать смерть от ухода в туман)
   rewind: { owner: number; x: number; y: number; t: number }[]; // Перезавод Династий: отряды, которые встанут
   blasts: { x: number; y: number; t: number; g: number; owner: number }[]; // летящие гранаты
@@ -823,10 +893,9 @@ const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
 export function newState(n: number, factions: FactionId[] = [], archs: Arch[] = []): State {
-  const s: State = { tick: 0, units: [], points: [...POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), ...RELICS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1, relic: true }))], players: [], nextId: 1, winner: null, shots: [], rewind: [], blasts: [], smoke: [], vp: [], died: [], strikes: [], scans: [], plagues: [] };
+  const s: State = { tick: 0, units: [], points: [...POINTS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1 })), ...RELICS.map(([x, y]) => ({ x, y, owner: -1, prog: 0, by: -1, relic: true }))], players: [], nextId: 1, winner: null, shots: [], rewind: [], blasts: [], smoke: [], died: [], strikes: [], scans: [], plagues: [] };
   for (let i = 0; i < n; i++) {
-    s.players.push({ req: START_REQ, energy: START_ENERGY, relics: 0, alive: true, tier: 1, faction: factions[i] ?? 'inquisition', arch: archs[i] ?? 'commander', rage: 0, waagh: 0, remains: 0, research: 0, unlock: 0, stopCd: 0, revive: 0, doom: 0, kills: 0, scanCd: 0 });
-    s.vp.push(VP_START);
+    s.players.push({ req: START_REQ, energy: START_ENERGY, relics: 0, alive: true, tier: 1, faction: factions[i] ?? 'inquisition', arch: archFor(factions[i] ?? 'inquisition', archs[i] ?? 'commander'), rage: 0, waagh: 0, remains: 0, research: 0, unlock: 0, stopCd: 0, revive: 0, doom: 0, kills: 0, scanCd: 0 });
     const [hx, hy] = HQ_POS[i];
     spawn(s, i, 'hq', hx, hy);
     spawn(s, i, 'builder', ...nearHq(hx, hy, 9)); // как в Dawn of War: начинаем со штабом, капитаном и строителями
@@ -842,7 +911,6 @@ const nearHq = (hx: number, hy: number, d: number): [number, number] => {
 export function spawn(s: State, owner: number, kind: Kind, x: number, y: number): Unit {
   const f = s.players[owner]?.faction;
   const u: Unit = { id: s.nextId++, owner, f, kind, x, y, hp: maxHp(kind, f), face: Math.atan2(MAP.h / 2 - y, MAP.w / 2 - x), cd: 0, order: null, q: 0, prog: 0, que: [], paid: [], gear: 0, ch: [0, 0, 0], gcd: 0, sh: kind === 'aegis' ? AEGIS.pool : 0, off: 0, frozen: 0, carry: 0, rise: 0, build: 1, dead: 0, reinf: false, rt: 0, hit: 9, ah: 0, lvl: 1, upg: -1, sm: 1, by: -1, rush: 0, stand: 0 };
-  if (kind === 'captain') u.hero = { xp: 0, lvl: 1, pts: 1, abil: 0, acd: ABILITIES.map(() => 0) };
   s.units.push(u);
   refreshUnit(s, u); u.hp = hpOf(u); // новый юнит — сразу с изученными HP и размером отряда
   return u;
@@ -853,7 +921,7 @@ const hqOf = (s: State, owner: number) => s.units.find(u => u.kind === 'hq' && u
 const producing = (k: Kind, f?: FactionId): Kind | null => producible(k, f)[0] ?? null;
 export const queued = (s: State, owner: number, what: Kind) => s.units.reduce((n, u) => n + (u.owner === owner ? u.que.filter(k => k === what).length : 0), 0);
 /** Занятый Легион: живые и заказанные боевые юниты; veh — техника (свой лимит), иначе пехота. */
-export const legion = (s: State, owner: number, veh = false) => { const pop = (k: Kind) => (VEHICLES.has(k) || k === 'arty') === veh && !ROLES[k]?.one ? ROLES[k]?.pop ?? 0 : 0; /* титан — свой слот, лимит техники не занимает */ return s.units.reduce((n, u) => n + (u.owner === owner && u.hp > 0 ? pop(u.kind) : 0) + (u.owner === owner ? u.que.reduce((m, k) => m + pop(k), 0) : 0), 0); };
+export const legion = (s: State, owner: number, veh = false) => { const f = s.players[owner]?.faction, pop = (k: Kind) => (VEHICLES.has(k) || k === 'arty') === veh && !ROLES[k]?.one ? popOf(k, f) : 0; /* титан — свой слот, лимит техники не занимает */ return s.units.reduce((n, u) => n + (u.owner === owner && u.hp > 0 ? pop(u.kind) : 0) + (u.owner === owner ? u.que.reduce((m, k) => m + pop(k), 0) : 0), 0); };
 export const legionCap = (p: Player, veh = false) => (veh ? MOTOR_CAP : LEGION_CAP) + (has(p, 12) ? 6 : 0) + (veh ? uaMods(p).support : uaMods(p).squad);
 
 /** Весь урон проходит здесь: сначала личный щит (дрон), потом купол-эгида рядом, потом здоровье. */
@@ -880,38 +948,15 @@ const fac = (s: State, owner: number) => s.players[owner].faction;
 const nearOwn = (s: State, owner: number, x: number, y: number, r: number, kinds?: Kind[]) =>
   s.units.some(u => u.owner === owner && u.hp > 0 && u.build >= 1 && isStruct(u.kind) && (!kinds || kinds.includes(u.kind)) && dist(u, { x, y }) < r + ST(u).radius);
 /** Множитель скорости: Орден медленнее, Орда в ВААГХ быстрее. */
-const speedMul = (s: State, u: Unit) => { const p = s.players[u.owner]; return (s.units.some(w => w.kind === 'bell' && w.owner !== u.owner && w.build >= 1 && w.hp > 0 && dist(w, u) < BELL.r) ? BELL.speed : 1) * (u.kind === 'captain' && archOf(s, u) === 'assault' ? 1.15 : 1) * (u.carry ? 0.6 : 1) * (u.kind === 'guard' && isMelee('guard', p.faction) ? MELEE_GUARD.speed / STATS.guard.speed : 1) * (has(p, 7) ? 1.1 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 2 : 1) * modsOf(s, u).speed; }; // скорость из исследований UA
-/** Урон атакующего: ВААГХ +30%. */
+const speedMul = (s: State, u: Unit) => (u.carry ? 0.6 : 1) * modsOf(s, u).speed * (u.brk !== undefined ? UA_MOR[u.f!]?.[u.kind]?.speed ?? 1 : 1); // как в UA: скорость из мода и его исследований
+/** Урон атакующего — как в UA: только исследования и аддоны мода. */
 function dmgMul(s: State, u: Unit) {
-  const p = s.players[u.owner];
-  const fear = (s.units.some(w => w.kind === 'bell' && w.owner !== u.owner && w.build >= 1 && w.hp > 0 && dist(w, u) < BELL.r) ? BELL.dmg : 1); // Колокол Скорби
-  const capA = (u.kind === 'captain' && archOf(s, u) === 'assault' ? 1.3 : 1) * fear, cmdA = !isStruct(u.kind) && u.kind !== 'captain' && nearArch(s, u, 'commander') ? 1.1 : 1;
-  const r = capA * cmdA * (u.kind === 'guard' ? (has(p, 2) ? 1.1 : 1) * (has(p, 9) ? 1.1 : 1) : 1) * (u.kind === 'turret' && has(p, 5) ? 1.25 : 1) * (u.kind === 'captain' && has(p, 10) ? 1.2 : 1) * (u.kind === 'legend' && u.q === 1 ? 1.5 : 1) * (u.rush > 0 ? 1.5 : 1) * (u.kind === 'guard' && nearCapWith(s, u, 6, 12) ? 1.15 : 1);
-  return r * factionDmg(s, u, p) * modsOf(s, u).dmg; // исследования UA
+  return modsOf(s, u).dmg;
 }
-function factionDmg(s: State, u: Unit, p: Player) {
-  if (p.faction === 'tyranids' && !isStruct(u.kind)) return SYNAPSE_KINDS.has(u.kind) || s.units.some(w => w.owner === u.owner && SYNAPSE_KINDS.has(w.kind) && w.hp > 0 && w.build >= 1 && dist(w, u) < SYNAPSE.r) ? SYNAPSE.on : SYNAPSE.off; // Синапс
-  return 1;
-}
-/** Получаемый урон: Орден и Династии −8% (Орден у своих реликвариев и штаба ещё −20%, Свет веры), Орда +10%. */
-function armorMul(s: State, t: Unit) {
-  const f = fac(s, t.owner), p = s.players[t.owner];
-  if (isStruct(t.kind)) return (has(p, 4) ? 0.8 : 1) * (t.kind === 'post' && t.lvl >= 2 ? 0.5 : 1) * (t.kind === 'wall' ? 0.6 : 1);
-  if (s.units.some(b => b.kind === 'bunker' && b.owner === t.owner && b.build >= 1 && b.hp > 0 && dist(b, t) < STATS.bunker.radius + 3)) return 0.5; // крипта-бункер
-  const res = (s.units.some(l => l.kind === 'lighthouse' && l.owner === t.owner && l.build >= 1 && l.hp > 0 && dist(l, t) < LIGHTHOUSE.r) ? LIGHTHOUSE.armor : 1)
-    * (t.kind === 'captain' && archOf(s, t) === 'assault' ? 0.9 : 1)
-    * (t.kind !== 'captain' && nearArch(s, t, 'commander') ? 0.9 : 1)
-    * (!(fac(s, t.owner) in MOD_RACES) && s.units.some(a => a.kind === 'support' && a.owner === t.owner && a.hp > 0 && dist(a, t) < 10) ? 0.85 : 1) // Знаменосец легиона; у рас UA «поддержка» — обычный боевой отряд мода, ауры нет
-    * (nearCapWith(s, t, 0, 12) ? 0.85 : 1)
-    * (t.kind === 'guard' && has(p, 0) ? 0.9 : 1)
-    * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
-  return res * factionArmor(f, s, t);
-}
-function factionArmor(f: FactionId, s: State, t: Unit) {
-  return 1;
-}
+/** Получаемый урон — как в UA: броня и пробитие мода (класс брони), исследования мода — в combatArmorMul. Бонусов игры (бункер, стены, пост, исследования игры) нет. */
+const armorMul = (_s: State, _t: Unit) => 1;
 /** Weapon and ground-fire protection belongs to each victim, including its upgrade. */
-const combatArmorMul = (s: State, t: Unit) => armorMul(s, t) * (t.lvl > 1 && !UA_UPG[t.f!]?.[t.kind] ? LVL2.armor[t.kind] ?? 1 : 1) * modsOf(s, t).taken; // броня из исследований UA
+const combatArmorMul = (s: State, t: Unit) => armorMul(s, t) * modsOf(s, t).taken; // броня из исследований UA
 /** Цена для сервера и интерфейса: Династии платят энергией. */
 export function resourceCost(faction: FactionId, req: number, energy = 0, availableEnergy = 0) {
   return { req, energy };
@@ -947,10 +992,10 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (UA_REQ[p.faction]?.[what]) { const miss = uaMissing(p.faction, UA_REQ[p.faction]![what], haveOf(s, owner), b.ad); if (miss) return miss; }
     else if (p.tier < r.tier) return `Нужен тир ${r.tier}`;
     if (what === 'builder' && count(s, owner, 'builder') + queued(s, owner, 'builder') >= CAP.builder) return 'Достигнут лимит строителей';
-    if (r.one && s.points[0]?.owner !== owner) return 'Титан строится, только пока вы держите критическую точку'; // как реликвийные юниты Soulstorm: за центр надо драться
     const veh = VEHICLES.has(what) || what === 'arty';
     // титан-класс — вне лимитов
-    if (r.pop && !r.one && legion(s, owner, veh) + r.pop > legionCap(p, veh)) return veh ? 'Не хватает лимита техники' : 'Не хватает Легиона';
+    const pop = popOf(what, p.faction);
+    if (pop && !r.one && legion(s, owner, veh) + pop > legionCap(p, veh)) return veh ? 'Не хватает лимита техники' : 'Не хватает Легиона';
     const c = resourceCost(p.faction, trainCost(p.faction, what, p), trainEnergy(p.faction, what, p), p.energy);
     const e = pay(p, trainCost(p.faction, what, p), trainEnergy(p.faction, what, p), r.relics ?? 0);
     if (e) return e;
@@ -963,11 +1008,11 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (heroBusy(s, owner, a)) return 'Этот герой уже в армии или в очереди';
     const fallen = s.units.find(u => u.owner === owner && u.kind === 'captain' && u.hp <= 0 && archOf(s, u) === a);
     if (fallen && fallen.dead < 0) return `Герой вернётся в строй через ${Math.ceil(-fallen.dead)} с`; // павший Бог-Механизм
-    if (!main && p.tier < HERO.tier) return 'Нужен тир II';
+    if (!main) return 'Герой у расы один — как в UA';
     const ok = (u: Unit) => u.owner === owner && u.kind === from && u.hp > 0 && u.build >= 1 && u.que.length < QUEUE_MAX;
     const b = s.units.find(u => u.id === cmd.id && ok(u)) ?? s.units.filter(ok).sort((x, y) => x.que.length - y.que.length)[0];
     if (!b) return from === 'hq' ? 'Нужен штаб' : 'Нужны казармы';
-    const c = main ? { cost: CAPTAIN_COST.cost, energy: CAPTAIN_COST.energy, relics: 0 } : HERO, paidC = resourceCost(p.faction, c.cost, c.energy, p.energy);
+    const c = { cost: trainCost(p.faction, 'captain', p), energy: trainEnergy(p.faction, 'captain', p), relics: 0 }, paidC = resourceCost(p.faction, c.cost, c.energy, p.energy);
     const e = pay(p, c.cost, c.energy, c.relics);
     if (e) return e;
     b.que.push('captain'); b.paid.push([paidC.req, paidC.energy, 0, 0, ARCHS.indexOf(a)]);
@@ -983,6 +1028,9 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (i === 0) b.prog = 0;
     return;
   }
+  // механики игры, которых нет в UA: исследования и открытия игры, удар по карте, засвет, снаряжение (гранаты, заряд, дым), способности героя, укрепление поста и стен
+  if (['timestop', 'learn', 'ability', 'unlock', 'strike', 'scan', 'research', 'gear', 'throw'].includes(cmd.c)) return 'Нет в UA';
+  if (cmd.c === 'upgrade' && s.units.some(v => v.id === cmd.id && v.owner === owner && (v.kind === 'post' || v.kind === 'wall' || v.kind === 'wallgate'))) return 'Нет в UA';
   if (cmd.c === 'upgrade' && s.units.some(v => v.id === cmd.id && v.kind === 'hq' && v.owner === owner)) { // переход тира
     if (UA_ADDONS[p.faction]) return 'Тир штаба — аддоном штаба'; // в UA переход тира — достройка штаба (команда uaa)
     const hq = hqOf(s, owner)!, t = TIER_UP[p.tier];
@@ -1123,16 +1171,8 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     b.q = i + 1; b.prog = 0;
     return;
   }
-  if (cmd.c === 'summon') {
-    const g = s.units.find(v => v.id === cmd.id && v.owner === owner && v.kind === 'gate' && v.hp > 0 && v.build >= 1);
-    const v = Number(cmd.v);
-    if (!g || !Number.isInteger(v) || v < 0 || v > 2) return;
-    if (g.q > 0 || s.units.some(u => u.owner === owner && u.kind === 'legend' && u.hp > 0)) return 'Врата заняты';
-    const c = LEGEND_COST[v], e = pay(p, 0, c.energy, c.relics);
-    if (e) return e;
-    g.q = v + 1; g.prog = 0;
-    return;
-  }
+  if (cmd.c === 'summon') return 'Легенды — обычный найм в зданиях, как в UA';
+
   if (cmd.c === 'upgrade' && s.units.some(v => v.id === cmd.id && v.kind === 'post' && v.owner === owner)) { // прокачка точки I→II→III
     const u = s.units.find(v => v.id === cmd.id)!, up = POST_UP[u.lvl];
     if (u.build < 1) return 'Строительство не завершено';
@@ -1364,7 +1404,7 @@ export function step(s: State, dt = DT): void {
     for (const v of s.units) {
       if (v.owner === z.owner || v.hp <= 0 || (!z.fire && isStruct(v.kind)) || dist(v, z) >= (z.fire ? FIRE.r : 18)) continue;
       if (!z.fire) { hurt(s, v, hpOf(v) * 0.06, z.owner); continue; } // кислотная чума сохраняет свой процентный урон
-      const damage = FIRE.dps * VS.small[armorOf(v.kind)] * combatArmorMul(s, v);
+      const damage = FIRE.dps * VS.small[armorOf(v.kind, v.f)] * combatArmorMul(s, v);
       const previous = burning.get(v);
       if (!previous || damage > previous.damage) burning.set(v, { damage, owner: z.owner });
     }
@@ -1379,7 +1419,7 @@ export function step(s: State, dt = DT): void {
     if (b.g === 2) s.smoke.push({ x: b.x, y: b.y, t: SMOKE_TIME });
     else for (const v of s.units) { // только врагов: своих не задевает
       if (v.hp <= 0 || v.owner === b.owner || dist(v, b) > G.r + (isStruct(v.kind) ? ST(v).radius : 0)) continue;
-      const a = armorOf(v.kind), k = b.g === 1 ? (a === 'veh' || a === 'light' || a === 'struct' ? 1 : a === 'titan' ? 0.5 : 0.25) : a === 'inf' ? 1 : a === 'hinf' ? 0.6 : 0.2;
+      const a = armorOf(v.kind, v.f), k = b.g === 1 ? (a === 'veh' || a === 'light' || a === 'struct' ? 1 : a === 'titan' ? 0.5 : 0.25) : a === 'inf' ? 1 : a === 'hinf' ? 0.6 : 0.2;
       hurt(s, v, G.dmg * k, b.owner);
     }
     if (s.shots.length < 200) s.shots.push([b.x, b.y, b.x, b.y - 0.1, b.g === 2 ? 9 : 8]);
@@ -1389,7 +1429,6 @@ export function step(s: State, dt = DT): void {
   s.smoke = s.smoke.filter(c => c.t > 0);
   separate(s);
   capture(s, dt);
-  victoryPoints(s, dt);
   cleanup(s);
 }
 
@@ -1453,7 +1492,7 @@ function produce(s: State, b: Unit, dt: number) {
     const at = nearHq(b.x, b.y, ST(b).radius + 2.5 + statOf(what, b.f).radius);
     if (what === 'captain') { // герой: павший встаёт с прежним уровнем и снаряжением, иначе — новый
       const a = ARCHS[ai ?? -1] ?? p.arch, fallen = s.units.find(u => u.owner === b.owner && u.kind === 'captain' && u.hp <= 0 && archOf(s, u) === a);
-      if (fallen) { fallen.hp = maxHp('captain'); fallen.dead = 0; fallen.order = null; [fallen.x, fallen.y] = at; }
+      if (fallen) { fallen.hp = maxHp('captain', b.f); fallen.dead = 0; fallen.order = null; [fallen.x, fallen.y] = at; }
       else { const h = spawn(s, b.owner, 'captain', ...at); if (a !== p.arch) h.arch = a; }
     } else spawn(s, b.owner, what, ...at);
   }
@@ -1570,6 +1609,7 @@ function freeNear(g: Grid, x: number, y: number) {
 }
 let budget = { s: null as State | null, tick: -1, n: 0 };
 function go(s: State, u: Unit, x: number, y: number, dt: number) {
+  const su = UA_SETUP[fac(s, u.owner)]?.[u.kind]; if (su) u.cd = Math.max(u.cd, su); // ствол с развёртыванием (setup_time мода): на ходу не стреляет, встал — ждёт развёртывания
   const g = grid(s, u.owner, sizeK(u));
   if (g.any && !flies(u.kind, fac(s, u.owner)) && !cellFree(g, x, y)) ({ x, y } = freeNear(g, x, y)); // цель в скале: к ближайшей свободной клетке
   if (g.any && !flies(u.kind, fac(s, u.owner)) && !lineClear(g, u.x, u.y, x, y, PATH_W)) { // путь загорожен: идём по точкам A*
@@ -1593,8 +1633,6 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
   u.sm = speedMul(s, u);
   if (u.queue && u.queue.length > QUEUE_ORDERS) u.queue.length = QUEUE_ORDERS;
   if (!u.order && u.queue?.length) { u.order = u.queue.shift()!; if (!u.queue.length) u.queue = undefined; } // текущий выполнен — берём следующий из очереди
-  if (u.kind === 'legend' && u.q === 0) for (const v of s.units) if (v.owner === u.owner && v !== u && !isStruct(v.kind) && v.hp > 0 && dist(v, u) < 15) v.hp = Math.min(hpOf(v), v.hp + hpOf(v) * 0.05 * dt); // аура лечения
-  if (u.kind === 'captain' && archOf(s, u) === 'mystic') for (const v of s.units) if (v.owner === u.owner && v !== u && !isStruct(v.kind) && !VEHICLES.has(v.kind) && v.hp > 0 && dist(v, u) < 10) v.hp = Math.min(hpOf(v), v.hp + hpOf(v) * 0.015 * dt); // Мистик: лампа лечит
   if (MEGA.has(u.kind) && u.build >= 1 && (u.prog += dt) >= MEGA_SHOT.cd) { // дальний удар мегапостройки
     const foes = s.units.filter(v => v.owner !== u.owner && v.hp > 0 && s.players[v.owner]?.alive && dist(v, u) < MEGA_SHOT.range);
     let t: Unit | undefined, best = 0;
@@ -1606,18 +1644,22 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
     if (t) {
       u.prog = 0;
       const tx = t.x, ty = t.y;
-      for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && dist(v, { x: tx, y: ty }) < MEGA_SHOT.aoe + ST(v).radius) hurt(s, v, MEGA_SHOT.dmg * VS.blast[armorOf(v.kind)], u.owner);
+      for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && dist(v, { x: tx, y: ty }) < MEGA_SHOT.aoe + ST(v).radius) hurt(s, v, MEGA_SHOT.dmg * VS.blast[armorOf(v.kind, v.f)], u.owner);
       s.scans.push({ x: tx, y: ty, t: MEGA_SHOT.t, owner: u.owner });
       if (s.shots.length < 200) s.shots.push([u.x, u.y, tx, ty, 12], [tx, ty, tx, ty - 0.1, 8]);
     } else u.prog = MEGA_SHOT.cd;
   }
   if (u.kind === 'plague' && u.build >= 1 && s.tick % 20 === 0) for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && !isStruct(v.kind) && dist(v, u) < PLAGUE.r) hurt(s, v, hpOf(v) * PLAGUE.pct, u.owner); // Чумной шпиль: −1%/с
   if (u.kind === 'pyre' && u.build >= 1 && s.tick % 4 === 0) for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && !isStruct(v.kind) && dist(v, u) < PYRE.r) { hurt(s, v, PYRE.dps * dt * 4, u.owner); if (s.shots.length < 200 && Math.random() < 0.3) s.shots.push([u.x, u.y, v.x, v.y, FX.fire]); } // Огненная яма
-  if (u.kind === 'titan' && u.order && s.tick % 4 === 0) for (const v of s.units) if (v.owner !== u.owner && !isStruct(v.kind) && armorOf(v.kind) === 'inf' && v.hp > 0 && dist(v, u) < STATS.titan.radius + 1) { hurt(s, v, 40, u.owner); } // шаг титана давит пехоту
+  if (u.kind === 'titan' && u.order && s.tick % 4 === 0) for (const v of s.units) if (v.owner !== u.owner && !isStruct(v.kind) && armorOf(v.kind, v.f) === 'inf' && v.hp > 0 && dist(v, u) < STATS.titan.radius + 1) { hurt(s, v, 40, u.owner); } // шаг титана давит пехоту
   if (u.kind === 'nurgle' && u.hp > 0 && u.hp < hpOf(u)) u.hp = Math.min(hpOf(u), u.hp + hpOf(u) * 0.02 * dt); // гниль Нургла
+  const mc = u.f && UA_MOR[u.f]?.[u.kind];
+  if (mc) { // мораль как в UA: восстанавливается; надлом — не меньше minTime с и пока мораль ниже minMorale
+    u.mor = Math.min(mc.max, (u.mor ?? mc.max) + mc.rate * dt);
+    if (u.brk !== undefined && (u.brk += dt) >= mc.minTime && u.mor >= mc.minMorale) u.brk = undefined;
+  }
   const regen = UA_REGEN[fac(s, u.owner)]?.[u.kind]; // у рас из модов — регенерация юнита из мода (HP/с на бойца)
   if (regen !== undefined) { const m = modsOf(s, u); if (u.hp < hpOf(u) && u.hit > 2) u.hp = Math.min(hpOf(u), u.hp + (regen * m.regen + m.regenAdd * UA_K.hp) * membersOf(u) * dt); }
-  else if (fac(s, u.owner) === 'tyranids' && !isStruct(u.kind) && u.hp < hpOf(u)) u.hp = Math.min(hpOf(u), u.hp + hpOf(u) * 0.01 * dt); // демоническая плоть
   if (isStruct(u.kind) && u.build < 1) return; // стройка ещё не работает
   const o = u.order;
   if (o?.t === 'build') {
@@ -1664,13 +1706,13 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
     const base = st.dmg * (multi(u) ? membersOf(u) : 1) * (main?.dmg ?? 1) * (u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1) * dmgMul(s, u);
     for (const v of s.units) if (v.owner !== u.owner && v.hp > 0 && dist(v, o) < aoe + ST(v).radius) {
       const smoked = st.range > 4 && s.smoke.some(c => dist(c, v) < 6 || dist(c, u) < 6);
-      hurt(s, v, base * (UA_VS[fac(s, u.owner)]?.[u.kind] || VS[type])[armorOf(v.kind)] * combatArmorMul(s, v) * (smoked ? 0.5 : 1), u.owner);
+      hurt(s, v, base * (UA_VS[fac(s, u.owner)]?.[u.kind] || VS[type])[armorOf(v.kind, v.f)] * combatArmorMul(s, v) * (smoked ? 0.5 : 1), u.owner);
     }
     if (s.shots.length < 200) s.shots.push([u.x, u.y, o.x, o.y, attackFx(u.kind, fac(s, u.owner), u.q)]);
     return;
   }
   if (o?.t === 'move') { // как в DoW: на марше стреляют по тем, кто в досягаемости, но не останавливаются
-    if (st.dmg > 0 && u.cd === 0 && !SETUP.has(u.kind)) { const t = s.units.filter(v => v.owner !== u.owner && v.hp > 0 && s.players[v.owner].alive).sort((a, b) => dist(u, a) - dist(u, b))[0]; if (t) shoot(s, u, t); }
+    if (st.dmg > 0 && u.cd === 0 && (UA_SETUP[fac(s, u.owner)] ? !UA_SETUP[fac(s, u.owner)]![u.kind] : !SETUP.has(u.kind))) { const t = s.units.filter(v => v.owner !== u.owner && v.hp > 0 && s.players[v.owner].alive).sort((a, b) => dist(u, a) - dist(u, b))[0]; if (t) { moving = UA_MOVEACC[fac(s, u.owner)]?.[u.kind] ?? 1; shoot(s, u, t); moving = 1; } }
     const g = grid(s, u.owner, sizeK(u));
     if (g.any && !flies(u.kind, fac(s, u.owner)) && !cellFree(g, o.x, o.y)) ({ x: o.x, y: o.y } = freeNear(g, o.x, o.y)); // точка в скале (или юниту не пролезть) — встаём у края
     if (Math.hypot(o.x - u.x, o.y - u.y) < 0.6 + (g.any && !cellFree(g, o.x + ST(u).radius, o.y) || !cellFree(g, o.x - ST(u).radius, o.y) || !cellFree(g, o.x, o.y + ST(u).radius) || !cellFree(g, o.x, o.y - ST(u).radius) ? ST(u).radius * 1.2 : 0)) u.order = null; else go(s, u, o.x, o.y, dt); // у скалы крупного юнита выталкивает — считаем дошедшим по его размеру
@@ -1714,18 +1756,27 @@ const aaMul = (u: Unit, t: Unit) => AIRCRAFT.has(t.kind) ? (isStruct(u.kind) ? A
 const spotted = (s: State, owner: number, v: Unit) => s.scans.some(c => c.owner === owner && dist(c, v) < (c.r ?? MEGA_SHOT.reveal))
   || s.units.some(o => o.owner === owner && o.hp > 0 && dist(o, v) < Math.max(sightOf(s.players[owner], o), 10));
 /** Выстрел, если цель в досягаемости: false — далеко (или в мёртвой зоне), надо подойти. */
+let moving = 1; // точность на ходу для текущего выстрела (UA_MOVEACC)
+/** Удар по морали: у отряда без морали в моде (тираниды) — ничего; до нуля — надлом. */
+function moraleHit(t: Unit, d: number) {
+  const mc = t.f && UA_MOR[t.f]?.[t.kind];
+  if (!mc || d <= 0 || t.hp <= 0) return;
+  t.mor = (t.mor ?? mc.max) - d;
+  if (t.mor <= 0) { t.mor = 0; t.brk ??= 0; }
+}
 function shoot(s: State, u: Unit, target: Unit): boolean {
   if (u.f && UA_UNARMED.has(`${u.f}/${u.kind}`) && !addonWeapon(u)) return true; // без аддона-ствола не стреляет (true — подходить некуда, здание)
   const st = ST(u), d = Math.max(0, dist(u, target) - ST(target).radius - (st.range < 5 ? ST(u).radius * 0.8 : 0)); // рукопашник бьёт от своего края: огромный Тригон достаёт соседа
-  const melee = u.kind === 'guard' && isMelee('guard', fac(s, u.owner));
-  const mystic = u.kind === 'captain' && archOf(s, u) === 'mystic'; // психосила библиария: дальше и по площади
+  const melee = false; // ponytail: рукопашник игры (MELEE_GUARD) убран — у рас UA удар и дальность из ствола мода
+  const mystic = false; // ponytail: сборки героя игры убраны (герой — как в UA), флаг остался в формулах ниже
   const deceiver = u.kind === 'deity' && archOf(s, u) !== 'assault'; // К'тан по сборке: Обманщик (золотой) жжёт звёздным огнём издалека, Несущий Ночь (штурм) косит в упор
   const tf = modOf(fac(s, u.owner), u.kind); // свой «движ» юнита или турели фракции
   const tooClose = (MIN_RANGE[u.kind] ?? tf?.minRange ?? 0) > d; // артиллерия и мортиры не бьют в упор
   const upR = (addonWeapon(u)?.range ?? 0) + (u.lvl > 1 ? (tf?.up?.range ?? 0) + (UA_UPG[fac(s, u.owner)]?.[u.kind]?.range ?? 0) : 0) + modsOf(s, u).range * UA_K.range; // дальность из исследований UA
-  let near = CLOSE[u.kind] && !UA_VS[fac(s, u.owner)]?.[u.kind] && d <= CLOSE[u.kind]!.range ? CLOSE[u.kind] : undefined; // второе оружие вблизи (у рас из модов стволы и так из мода)
+  const uc = UA_CLOSE[fac(s, u.owner)]?.[u.kind];
+  let near: { range: number; dmg: number; cd: number; type: DmgType; vs?: Record<Armor, number> } | undefined = uc ? (d <= uc.range ? uc : undefined) : CLOSE[u.kind] && !UA_VS[fac(s, u.owner)]?.[u.kind] && d <= CLOSE[u.kind]!.range ? CLOSE[u.kind] : undefined; // второе оружие вблизи: у рас UA — меч/когти мода по умолчанию
   if (near && (u.kind === 'heavy' || u.kind === 'hveh') && !tooClose && d <= st.range + (tf?.range ?? 0) + upR) {
-    const armor = armorOf(target.kind), mainType = tf?.type ?? dmgOf(u.kind, fac(s, u.owner));
+    const armor = armorOf(target.kind, target.f), mainType = tf?.type ?? dmgOf(u.kind, fac(s, u.owner));
     const mainDps = st.dmg * (tf?.dmg ?? 1) * VS[mainType][armor] / (st.cd * (tf?.cd ?? 1));
     const closeDps = near.dmg * VS[near.type][armor] / near.cd;
     if (mainDps > closeDps) near = undefined; // бронецель не заставляет бросать противотанковый ствол ради пистолета
@@ -1737,18 +1788,18 @@ function shoot(s: State, u: Unit, target: Unit): boolean {
       const ua2 = armOf(u) ?? addonWeapon(u) ?? (u.lvl > 1 ? UA_UPG[fac(s, u.owner)]?.[u.kind] : undefined); // оружие UA: купленное бойцам или апгрейд турели
       const mult = (ua2 ? ua2.dmg : u.lvl > 1 ? LVL2.dmg[u.kind] ?? 1 : 1) * (main?.dmg ?? 1);
       const vs = (t: Unit) => ((!melee && st.range > 4 && s.smoke.some(c => dist(c, t) < 6 || dist(c, u) < 6)) ? 0.5 : 1)
-        * ((!near && (ua2?.vs ?? UA_VS[fac(s, u.owner)]?.[u.kind])) || VS[near?.type ?? main?.type ?? (u.kind === 'turret' && u.lvl > 1 ? 'heavy' : dmgOf(u.kind, fac(s, u.owner)))])[armorOf(t.kind)];
-      const base = (near ? near.dmg : u.kind === 'post' && u.lvl >= 3 ? 14 : melee ? MELEE_GUARD.dmg : st.dmg) * (multi(u) ? membersOf(u) : 1) * mult * (deceiver ? 0.7 : 1) * dmgMul(s, u);
+        * (near?.vs || (!near && (ua2?.vs ?? UA_VS[fac(s, u.owner)]?.[u.kind])) || VS[near?.type ?? main?.type ?? (u.kind === 'turret' && u.lvl > 1 ? 'heavy' : dmgOf(u.kind, fac(s, u.owner)))])[armorOf(t.kind, t.f)];
+      const base = (near ? near.dmg : u.kind === 'post' && u.lvl >= 3 ? 14 : melee ? MELEE_GUARD.dmg : st.dmg) * (multi(u) ? membersOf(u) : 1) * mult * (deceiver ? 0.7 : 1) * dmgMul(s, u) * moving * (u.brk !== undefined ? UA_MOR[u.f!]?.[u.kind]?.acc ?? 1 : 1); // надломлен — точность мода
       const damageFor = (t: Unit) => base * combatArmorMul(s, t) * vs(t) * aaMul(u, t) * (st.range < 5 ? modsOf(s, t).melee : 1);
       const dealt = damageFor(target);
       hurt(s, target, dealt, u.owner); target.ah = u.id;
+      moraleHit(target, (UA_MDMG[fac(s, u.owner)]?.[u.kind] ?? 0) * (multi(u) ? membersOf(u) : 1) * moving);
       if (main?.leech) u.hp = Math.min(hpOf(u), u.hp + dealt * main.leech);
       if (main?.freeze && !isStruct(target.kind)) target.frozen = Math.max(target.frozen, main.freeze);
       if (main?.fire && s.plagues.length < 60) s.plagues.push({ x: target.x, y: target.y, t: FIRE.t, owner: u.owner, fire: true });
       const nade = u.kind === 'lveh' && u.lvl > 1; // Багги с гранатомётом
-      const aoe = near ? undefined : (nade ? 3 : undefined) ?? (addonWeapon(u)?.aoe || undefined) ?? ROLES[u.kind]?.aoe ?? STRUCT_AOE[u.kind] ?? (tf?.aoe ? tf.aoe + (u.lvl > 1 ? tf.up?.aoe ?? 0 : 0) : undefined) ?? (mystic ? 3 : deceiver ? 4 : undefined);
+      const aoe = near ? undefined : (nade ? 3 : undefined) ?? (addonWeapon(u)?.aoe || undefined) ?? (UA_AOE[fac(s, u.owner)]?.[u.kind] !== undefined ? UA_AOE[fac(s, u.owner)]![u.kind] || undefined : ROLES[u.kind]?.aoe) ?? STRUCT_AOE[u.kind] ?? (tf?.aoe ? tf.aoe + (u.lvl > 1 ? tf.up?.aoe ?? 0 : 0) : undefined) ?? (mystic ? 3 : deceiver ? 4 : undefined);
       if (aoe) for (const v of s.units) if (v !== target && v.owner !== u.owner && v.hp > 0 && dist(v, target) < aoe) { hurt(s, v, damageFor(v) * 0.6, u.owner); } // взрыв по площади: защита каждого потерпевшего
-      if (u.kind === 'legend' && u.q === 2) for (const v of s.units) if (v !== target && v.owner === target.owner && v.hp > 0 && dist(v, target) < 4) { hurt(s, v, damageFor(v) * 0.5, u.owner); } // огненная буря
       const pa = s.players[u.owner];
       if (u.kind === 'bomber' && s.shots.length < 200) s.shots.push([target.x, target.y, target.x + (aoe ?? 9), target.y, 18]); // мини-атомка: гриб радиусом взрыва
       if (s.shots.length < 200) s.shots.push([u.x, u.y, target.x, target.y, mystic ? FX.fire : deceiver ? FX.beam : nade ? 12 : attackFx(u.kind, fac(s, u.owner), u.q)]);
@@ -1792,16 +1843,6 @@ function doomStrike(s: State, st: { x: number; y: number; owner: number }) {
   };
   if (f === 'tyranids') { boom(st.x, st.y, R, 800); s.plagues.push({ x: st.x, y: st.y, t: 20, owner: st.owner }); } // Варп-шторм: облако 20 с
   else boom(st.x, st.y, R, 3500); // Экстерминатус Инквизиции: залп с ударного крейсера
-}
-
-function victoryPoints(s: State, dt: number) {
-  const held = s.players.map((_, i) => s.points.reduce((n, p, k) => n + (p.owner === i ? (k === 0 ? 2 : 1) : 0), 0));
-  s.players.forEach((p, i) => {
-    if (!p.alive) return;
-    const enemy = Math.max(0, ...held.filter((_, j) => j !== i && s.players[j].alive));
-    const drain = Math.max(0, enemy - held[i]) * VP_RATE * dt;
-    s.vp[i] = Math.max(0, s.vp[i] - drain); // только счёт перевеса: поражение — лишь когда пали все штабы
-  });
 }
 
 /** Кто что видит: id юнитов в обзоре своих войск и построек (туман войны считается на сервере). */
@@ -1871,7 +1912,7 @@ const prodPct = (u: Unit) => u.q <= 0 || u.kind === 'legend' ? 0
   : u.que[0] ? Math.floor((u.prog / statOf(u.que[0], u.f).time) * 100) : 0;
 
 /** Компактный снимок для сети: целые числа вместо float, чтобы JSON был короче. */
-export type Snap = { ad?: number[][]; wu?: number[][]; sq?: number[][]; ur?: number[][]; vp: number[]; d: number[]; ss: number[][]; mg: number[][]; tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; qk: Record<number, number[]>; sm: number[][]; ps: number[][]; sc?: number[][] };
+export type Snap = { mo?: number[][]; ad?: number[][]; wu?: number[][]; sq?: number[][]; ur?: number[][]; d: number[]; ss: number[][]; mg: number[][]; tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; qk: Record<number, number[]>; sm: number[][]; ps: number[][]; sc?: number[][] };
 /** Снимок для одного игрока: враги вне обзора вырезаны, выстрелы — только видимые концом или началом. */
 export function snapshotFor(s: State, owner: number): Snap {
   const full = snapshot(s), seen = visibleTo(s, owner), near = (x: number, y: number) => s.units.some(u => u.owner === owner && u.hp > 0 && Math.hypot(u.x - x / 10, u.y - y / 10) < Math.max(sightOf(s.players[owner], u), 12)) || s.points.some(p => p.owner === owner && Math.hypot(p.x - x / 10, p.y - y / 10) < SIGHT_STRUCT);
@@ -1879,7 +1920,7 @@ export function snapshotFor(s: State, owner: number): Snap {
 }
 export function snapshot(s: State): Snap {
   return {
-    vp: s.vp.map(Math.ceil), d: [...s.died], mg: s.units.filter(u => MEGA.has(u.kind) && u.hp > 0).map(u => [u.id, Math.round(u.x * 10), Math.round(u.y * 10), KINDS.indexOf(u.kind), u.owner, Math.floor(u.build * 100)]), /* мегапостройки видят все */ ss: s.strikes.map(st => [Math.round(st.x * 10), Math.round(st.y * 10), Math.ceil(st.t), st.owner]),
+    d: [...s.died], mg: s.units.filter(u => MEGA.has(u.kind) && u.hp > 0).map(u => [u.id, Math.round(u.x * 10), Math.round(u.y * 10), KINDS.indexOf(u.kind), u.owner, Math.floor(u.build * 100)]), /* мегапостройки видят все */ ss: s.strikes.map(st => [Math.round(st.x * 10), Math.round(st.y * 10), Math.ceil(st.t), st.owner]),
     tick: s.tick,
     // [id, owner, kind, x*10, y*10, hp, face*100, очередь, стройка %, пополняется, уровень, апгрейд %, найм текущего %]
     u: s.units.map(u => [u.id, u.owner, KINDS.indexOf(u.kind), Math.round(u.x * 10), Math.round(u.y * 10), (u.hp > 0 ? Math.max(1, Math.round(u.hp)) : 0), Math.round(u.face * 100), u.q, Math.floor(u.build * 100), u.reinf ? 1 : 0, u.lvl, u.upg < 0 ? -1 : Math.floor((u.upg / (u.kind === 'hq' ? TIER_TIME : u.kind === 'post' ? 12 : upOf(u.f, u.kind)!.time)) * 100), prodPct(u), u.gear, ...u.ch, Math.ceil(u.gcd), Math.round(u.sh), Math.ceil(u.frozen * 10), u.carry, Math.ceil(u.rise * 10), u.off > 0 ? 1 : 0, u.kind === 'captain' && u.hp <= 0 ? Math.ceil(-u.dead) : 0, u.kind === 'captain' ? ARCHS.indexOf(archOf(s, u)) : -1, ...(u.hero ? [u.hero.lvl, Math.floor(u.hero.xp), u.hero.pts, u.hero.abil, ...u.hero.acd.map(Math.ceil)] : [])] /* 25+ у героя: уровень, опыт, очки, способности, перезарядки */), // 24 — архетип героя // 23 — секунд, пока павшего героя нельзя заказать // 18 щит, 19 заморозка, 20 тащит/тащат, 21 вознесение, 22 купол пробит
@@ -1891,6 +1932,7 @@ export function snapshot(s: State): Snap {
     ur: s.players.map(p => p.ur ?? []), // изученное из UA_RESEARCH
     ad: s.units.filter(u => u.ad).map(u => [u.id, u.ad!]), // аддоны UA у зданий: [id, маска UA_ADDONS]
     wu: s.units.filter(u => u.hp > 0 && UA_ARM[u.f!]?.[u.kind]).map(u => [u.id, u.wq ?? -1, u.wq === undefined ? 0 : Math.floor((u.wt ?? 0) / UA_ARM[u.f!]![u.kind]!.opts[u.wq].time * 100), ...(u.wu ?? [])]), // стволы отрядов UA: ставится сейчас, %, куплено по вариантам
+    mo: s.units.filter(u => u.hp > 0 && u.mor !== undefined && u.f && UA_MOR[u.f]?.[u.kind]).map(u => [u.id, Math.round(u.mor! / UA_MOR[u.f!]![u.kind]!.max * 100), u.brk !== undefined ? 1 : 0]), // мораль отрядов: %, надломлен
     sq: s.units.filter(u => u.hp > 0 && (u.mn !== undefined || UA_SQ[u.f!]?.[u.kind])).map(u => [u.id, u.mh ?? ST(u).hp, u.mn ?? ST(u).n, squadCap(s, u)]), // отряды: HP бойца, бойцов, предел пополнения
     sh: s.shots.map(v => v.map(n => Math.round(n * 10))),
     w: s.winner,

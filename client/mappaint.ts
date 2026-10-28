@@ -1,5 +1,6 @@
 // Текстура карты: рисуется один раз в половинном разрешении и растягивается без сглаживания — получается пиксель-арт.
 import { BLOCKS, BRIDGES, COVER, CRATERS, HQ_POS, MAP, PLATEAUS, POINTS, RELICS, RIVER, ROADS, RUINS, VENTS } from '../shared/mapdata.ts';
+import { chunks, header } from './whm.ts';
 
 export const TEX = 13; // текселей на метр на небольших картах (S = 26 px → тексель 2×2 px); крупные — вдвое грубее
 type C = CanvasRenderingContext2D;
@@ -135,4 +136,37 @@ function tiles(x: C, cx: number, cy: number, rad: number, r: () => number, cols:
   x.save(); x.beginPath(); x.arc(cx, cy, rad, 0, Math.PI * 2); x.clip();
   for (let yy = cy - rad; yy < cy + rad; yy += 12) for (let xx = cx - rad; xx < cx + rad; xx += 16) { x.fillStyle = cols[(r() * cols.length) | 0]; x.fillRect(xx + (((yy - cy) / 12) % 2 ? 8 : 0), yy, 15, 11); }
   x.restore();
+}
+
+/** Земля карты DoW: `<карта>.tga` — нарисованная текстура всего рельефа (1 px/м), `.sgb` — рельеф HMAP.
+ *  Игровое поле — центр рельефа размером с карту проходимости (IMPA), его и вырезаем; HMAP — светотень, сверху мелкое зерно. */
+export function paintDow(tex: HTMLCanvasElement, tga: HTMLCanvasElement, sgb: ArrayBuffer): HTMLCanvasElement {
+  const v = header(sgb), at: Record<string, number> = {};
+  chunks(v, 24, sgb.byteLength, (c) => { if (c.type === 'DATA') at[c.id] ??= c.start; });
+  const hw = v.getUint32(at.HMAP, true), hh = v.getUint32(at.HMAP + 4, true), hm = new Uint8Array(sgb, at.HMAP + 8, hw * hh);
+  const cell = v.getFloat32(at.VDAT + 8, true), tw = (hw - 1) * cell, th = (hh - 1) * cell; // рельеф, м
+  const pw = v.getUint32(at.IMPA, true) * v.getFloat32(at.IMPA + 8, true), ph = v.getUint32(at.IMPA + 4, true) * v.getFloat32(at.IMPA + 8, true); // игровое поле, м
+  const x0 = (tw - pw) / 2, y0 = (th - ph) / 2, x = tex.getContext('2d')!;
+  const k = tga.width / tw, crop = [x0 * k, y0 * k, pw * k, ph * k] as const;
+  x.globalCompositeOperation = 'source-over'; x.drawImage(tga, ...crop, 0, 0, tex.width, tex.height);
+  // светотень по нормалям HMAP: вершина через cell м; HS — метров на единицу высоты (подбирается на глаз), свет с северо-запада
+  const HS = 0.25, L = [-0.5, -0.6, 0.62], sx = Math.round(x0 / cell), sy = Math.round(y0 / cell), w = Math.round(pw / cell) + 1, h = Math.round(ph / cell) + 1;
+  const sh = document.createElement('canvas'); sh.width = w; sh.height = h;
+  const img = new ImageData(w, h), H = (i: number, j: number) => hm[Math.min(hh - 1, Math.max(0, j)) * hw + Math.min(hw - 1, Math.max(0, i))] * HS;
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    const dx = (H(sx + i + 2, sy + j) - H(sx + i - 2, sy + j)) / (4 * cell), dy = (H(sx + i, sy + j + 2) - H(sx + i, sy + j - 2)) / (4 * cell); // шаг 2 — высоты в байтах, иначе лесенка
+    const s = Math.max(0, Math.min(1, 0.4 + ((-dx * L[0] - dy * L[1] + L[2]) / Math.hypot(dx, dy, 1)) * 0.95)), d = (j * w + i) * 4;
+    img.data[d] = img.data[d + 1] = img.data[d + 2] = s * 255; img.data[d + 3] = 255;
+  }
+  sh.getContext('2d')!.putImageData(img, 0, 0);
+  x.globalCompositeOperation = 'multiply'; x.imageSmoothingEnabled = true; x.drawImage(sh, 0, 0, tex.width, tex.height);
+  // ponytail: детальных тайлов (DSHD) и декалей (SMAP) этой карты в моде нет — они в архивах самой DoW; вместо них холодное зерно
+  const g = document.createElement('canvas'); g.width = g.height = 128;
+  const gi = new ImageData(128, 128), r = rng(11);
+  for (let i = 0; i < gi.data.length; i += 4) { const n = 222 + r() * 33; gi.data[i] = n - 8; gi.data[i + 1] = n - 3; gi.data[i + 2] = Math.min(255, n + 6); gi.data[i + 3] = 255; }
+  g.getContext('2d')!.putImageData(gi, 0, 0);
+  x.fillStyle = x.createPattern(g, 'repeat')!; x.fillRect(0, 0, tex.width, tex.height);
+  x.globalCompositeOperation = 'source-over';
+  const mini = document.createElement('canvas'); mini.width = mini.height = 200; mini.getContext('2d')!.drawImage(tex, 0, 0, 200, 200);
+  return mini;
 }

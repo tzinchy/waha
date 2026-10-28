@@ -147,7 +147,6 @@
   .w2d-specrow{display:grid;grid-template-columns:12px 1fr auto auto auto auto auto;gap:10px;align-items:center;font:500 12px/18px var(--font-label);color:var(--ink)}
   .w2d-specrow i{width:10px;height:10px;transform:rotate(45deg)}
   .w2d-specrow span{color:var(--ink-muted)}
-  .w2d-specrow .vp{color:var(--gilt-300)}
   .w2d-specrow.out{opacity:.4;text-decoration:line-through}
   .arch-info{margin:0 0 var(--space-2);font:400 13px/18px var(--font-body);color:var(--ink-muted)}
   .w2d-zone{position:absolute;border-radius:50%;transform:scaleY(.55);pointer-events:none;opacity:0;transition:opacity .3s}
@@ -356,7 +355,6 @@
     <div id="hud-res" class="lc-res" role="status" aria-label="Ресурсы">
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5 16.5 12 12 16.5 7.5 12Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-req">0</span><span class="lc-res__label">Влияние</span></div>
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 1 4 14h6.5L8 23 20 9h-6.5Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-energy">0</span><span class="lc-res__label">Энергия</span></div>
-      <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 22V13h2v-3h2V7h3V4h4v3h3v3h2v3h2v9h-7v-6h-4v6Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-relics">0</span><span class="lc-res__label">Реликвии</span></div>
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 22V13h2v-3h2V7h3V4h4v3h3v3h2v3h2v9h-7v-6h-4v6Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-tier" style="font-family:var(--font-display)">I</span><span class="lc-res__label">Тир</span></div>
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21h20v-3h-3v-3h-3v-3h-2V3h-4v9H8v3H5v3H2Z" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="lc-res__value" id="hud-builders">0</span><span class="lc-res__label">Строители</span></div>
       <div class="lc-res__item"><svg class="lc-res__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 5.5V12c0 4.6-3.3 8-8 9.5C7.3 20 4 16.6 4 12V5.5Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9l4 3 4-3v3l-4 3-4-3Z" fill="currentColor"/></svg><span class="lc-res__value" id="hud-squads">0</span><span class="lc-res__label">Легион</span></div>

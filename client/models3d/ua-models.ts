@@ -3,7 +3,7 @@
 // Файлов нет (на сервере нет ua/ или ua-slim/) — ничего не грузится и остаются процедурные модели.
 import * as THREE from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { buildWhm, meshVisible, parseRsh, parseWhe, parseWhm, wheClips, type Whe } from '../whm.ts';
+import { buildWhm, meshVisible, parseRsh, parseWhe, parseWhm, wheMotions, type Whe } from '../whm.ts';
 import { MOD_RACES, UA_WEAPONS, type Kind } from '../../shared/sim.ts';
 import type { FactionId } from '../../shared/factions.ts';
 import type { FactionId as Pack } from './faction-models.ts';
@@ -141,6 +141,12 @@ export const uaReady = typeof fetch !== 'undefined' && typeof document !== 'unde
   });
 })) : Promise.resolve([]);
 
+/** Движения выстрела и удара из .whe под стволы юнита (DoW: действие default с огнём и melee_attack) — с клипом, без прицела и слоёв видимости. */
+export function fireMotions(w: Whe, motion: string, weapons: string[]) {
+  const act = motion === 'shoot' ? 'default' : motion === 'attack' ? 'melee_attack' : '';
+  return act ? wheMotions(w, act, { moving: false, firing: motion === 'shoot' }, weapons).filter((m) => { const n = w.motions.get(m)!.anim!; return /fire|firing|shoot|melee|attack|strike/i.test(n) && !/aim|track|^vis|^ref/i.test(n); }) : [];
+}
+
 const BLEND_MS = 150;
 export class UAActor {
   readonly root = new THREE.Group();
@@ -153,15 +159,25 @@ export class UAActor {
     model.traverse((o) => { if ((o as THREE.SkinnedMesh).isSkinnedMesh) this.meshes.push(o); });
     this.root.add(model);
     this.mixer = new THREE.AnimationMixer(model);
+    // поворот башни, как в DoW: клип aim_horiz — полный оборот кости прицела, доля клипа = угол (0 → +Z модели, растёт к +X)
+    const aim = t.clips.find((c) => c.name === 'aim_horiz');
+    if (aim) for (const tr of aim.tracks) if (tr.values.some((v, i) => v !== tr.values[i % 4])) { // только кости, которые клип вращает
+      const bone = model.getObjectByName(tr.name.replace(/\.quaternion$/, ''));
+      if (bone) this.aimers.push({ bone, at: (tr as unknown as { createInterpolant(): THREE.Interpolant }).createInterpolant(), d: aim.duration });
+    }
     this.pose('idle', 0);
   }
+  private aimers: { bone: THREE.Object3D; at: THREE.Interpolant; d: number }[] = [];
+  private yaw: number | null = null;
+  /** Угол башни в осях модели (как rotation.y у юнитов: 0 — +Z). Модели без aim_horiz не поворачиваются. */
+  aim(yaw: number) { this.yaw = yaw; }
   private pick(motion: string) {
     if (!this.picks.has(motion)) {
       const clips = this.t.clips.filter((c) => !SKIP.test(c.name));
-      // выстрел и удар — как в моде: клип из дерева действий .whe под стволы этого юнита
-      const act = this.whe && (motion === 'shoot' ? 'default' : motion === 'attack' ? 'melee_attack' : '');
-      const own = act ? wheClips(this.whe!, act, { moving: false, firing: motion === 'shoot' }, this.weapons).filter((n) => /fire|firing|shoot|melee|attack|strike/i.test(n) && !/aim|track|^vis|^ref/i.test(n)) // прицел и видимость — вспомогательные слои, играем сам выстрел
-        .map((n) => this.t.clips.find((c) => c.name.toLowerCase() === n.toLowerCase())).find(Boolean) : undefined;
+      // выстрел и удар — как в моде: клип из дерева действий .whe под стволы этого юнита; его события (вспышка, снаряд) — для world3d
+      const ms = this.whe ? fireMotions(this.whe, motion, this.weapons) : [];
+      const own = ms.map((m) => this.t.clips.find((c) => c.name.toLowerCase() === this.whe!.motions.get(m)!.anim!.toLowerCase())).find(Boolean);
+      this.evs.set(motion, ms.flatMap((m) => this.whe!.motions.get(m)!.ev ?? []).flatMap(([n, t]) => { const e = this.whe!.events.get(n); return e?.fx ? [{ e, t: Math.max(0, t) }] : []; }));
       if (own) { this.picks.set(motion, own); return own; }
       this.picks.set(motion, (WANT[motion] ?? []).concat(WANT.idle).map((re) => clips.find((c) => re.test(c.name))).find(Boolean) ?? this.t.clips[0] ?? null);
     }
@@ -174,6 +190,11 @@ export class UAActor {
     return this.seq ??= this.t.clips.filter((c) => /^build\d/i.test(c.name) && !/^build0|landing|takeoff|descente/i.test(c.name))
       .sort((a, b) => parseInt(a.name.slice(5)) - parseInt(b.name.slice(5)));
   }
+  private evs = new Map<string, { e: Record<string, string>; t: number }[]>();
+  /** События эффектов движения: fx (у маркера) и fx_other (от маркера к цели), t — с от начала клипа. */
+  fxEvents(motion: string) { this.pick(motion); return this.evs.get(motion) ?? []; }
+  /** Маркер модели (кость marker_*), куда DoW ставит эффект. */
+  marker(name: string) { return this.root.getObjectByName(name); }
   pose(motion: string, t: number) {
     const seq = motion === 'build' ? this.buildSeq() : [];
     let clip = this.pick(motion);
@@ -196,10 +217,15 @@ export class UAActor {
     this.mixer.clipAction(clip).setEffectiveWeight(w);
     if (this.prev) { if (w >= 1) { this.prev.stop(); this.prev = null; } else this.prev.setEffectiveWeight(1 - w); }
     const d = clip.duration || 1;
-    // смерть и стройка не зацикливаются: стройка приходит в секундах процедурной модели — переводим в долю
-    this.mixer.clipAction(clip).time = motion === 'death' ? Math.min(t, d - 1e-3) : motion === 'build' ? Math.min(t / this.buildTime, 1) * (d - 1e-3) : t % d;
+    // стройка приходит в секундах процедурной модели — переводим в долю
+    // смерть и выстрел/удар не зацикливаются: выстрел играет клип один раз с момента выстрела (время отсчитывает world3d)
+    this.mixer.clipAction(clip).time = motion === 'death' || ((motion === 'shoot' || motion === 'attack') && /fire|shoot|melee|attack|strike/i.test(clip.name)) ? Math.min(t, d - 1e-3) : motion === 'build' ? Math.min(t / this.buildTime, 1) * (d - 1e-3) : t % d;
     this.prevT = this.mixer.clipAction(clip).time;
     this.mixer.update(0);
+    if (this.yaw !== null && motion !== 'build' && motion !== 'death') {
+      const f = ((this.yaw / (2 * Math.PI)) % 1 + 1) % 1;
+      for (const a of this.aimers) a.bone.quaternion.fromArray(a.at.evaluate(f * a.d));
+    }
   }
   private prev: THREE.AnimationAction | null = null;
   private prevT = 0;
