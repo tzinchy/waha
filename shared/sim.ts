@@ -128,18 +128,23 @@ const RANGED_ROLE = new Set<Kind>(['support', 'air', 'heavy', 'lveh', 'mveh', 'h
 /** Метр DoW → метр игры: так же масштабированы карты из DoW (tools/ua-map.mjs), поэтому дальность, обзор и скорость относительно карты — как в UA. */
 export const DOW_M = 1.5;
 /** Перевод единиц мода в игровые: расстояния — один масштаб с картой, здоровье, урон и цены — как в UA. */
-const UA_K = { hp: 1, dmg: 1, range: DOW_M, speed: DOW_M, sight: DOW_M, cost: 1, bhp: 1 };
+// скорость — не масштаб карты: ×DOW_M юниты UA бегали втрое быстрее юнитов игры (Серые рыцари 24 м/с — карта за 16 с); ×0.5 — около 8 м/с, как у пехоты игры
+const UA_K = { hp: 1, dmg: 1, range: DOW_M, speed: 0.5, sight: DOW_M, cost: 1, bhp: 1 };
 /** Отряды рас UA: до скольких бойцов пополняются, цена и время одного бойца (как в моде). */
 /** Цена в энергии (power мода) по видам рас UA: постройки и найм. */
 export const UA_ENERGY: Partial<Record<FactionId, Partial<Record<Kind, number>>>> = {};
 /** Энергия на постройку или найм вида у фракции: у рас UA — из мода, у остальных — игровая. */
 export const energyOf = (k: Kind, f?: FactionId) => (f && UA_ENERGY[f]?.[k]) ?? ENERGY_COST[k] ?? ROLES[k]?.energy ?? 0;
+/** Здания UA без ствола по умолчанию (пост Инквизиции): молчат, пока аддон не поставил оружие. Ключ — «раса/вид». */
+export const UA_UNARMED = new Set<string>();
 export const UA_SQ: Partial<Record<FactionId, Partial<Record<Kind, { max: number; cost: number; time: number }>>>> = {};
 /** Стволы юнита или турели мода → урон, пробитие (V), апгрейд оружия (UP), имена стволов (WP). Возвращает основной ствол или undefined. */
-function modWeapons(u: ModUnit, k: Kind, n: number, WP: Partial<Record<Kind, string[]>>, V: Partial<Record<Kind, Record<Armor, number>>>, UP: Partial<Record<Kind, Upgrade & UAUp>>) {
+function modWeapons(u: ModUnit, k: Kind, n: number, WP: Partial<Record<Kind, string[]>>, V: Partial<Record<Kind, Record<Armor, number>>>, UP: Partial<Record<Kind, Upgrade & UAUp>>, struct = false) {
   // урон — сумма по точкам крепления (в DoW каждая стреляет сама); у стрелковых ролей — первый стрелковый ствол точки (в моде ставится апгрейдом), иначе базовый
+  // здание бьёт одним стволом: у бункера четыре пулемёта по сторонам света — по цели стреляет один
   const ranged = RANGED_ROLE.has(k), dps = (w: ModWeapon) => ((w.min + w.max) / 2) * w.accuracy / Math.max(0.1, w.reload);
-  const picks = u.hardpoints.map(l => (ranged && l.find(w => !w.melee && w.max > 0)) || l.find(w => w.max > 0)).filter((w): w is ModWeapon => !!w);
+  const all = u.hardpoints.map(l => (ranged && l.find(w => !w.melee && w.max > 0)) || l.find(w => w.max > 0)).filter((w): w is ModWeapon => !!w);
+  const picks = struct ? all.sort((a, b) => dps(b) - dps(a)).slice(0, 1) : all;
   const shots = picks.some(w => !w.melee) ? picks.filter(w => !w.melee) : picks, main = shots[0];
   WP[k] = picks.map(w => w.file ?? '');
   // апгрейд оружия UA: лучший ствол в каждой точке крепления (в моде покупается за ресурсы, у турелей — аддоном) — второй уровень юнита
@@ -181,7 +186,8 @@ for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RAC
     const b = race.data.buildings[id];
     Object.assign(T[k], { hp: Math.round(b.hp * UA_K.bhp), sight: Math.round(b.sight * UA_K.sight), cost: Math.round(b.cost * UA_K.cost), time: Math.max(1, Math.round(b.time)) }); // цена и время стройки — как в моде
     EN[k] = Math.round((b.power ?? 0) * UA_K.cost);
-    const w = k !== 'mine' && b.hardpoints.length ? modWeapons(b, k, 1, WP, V, UP) : undefined; // турели и бункеры мода стреляют своими стволами
+    const w = k !== 'mine' && b.hardpoints.length ? modWeapons(b, k, 1, WP, V, UP, true) : undefined;
+    if (b.hardpoints[0]?.[0] && !(b.hardpoints[0][0].max > 0) && b.hardpoints[0].some(x => x.max > 0)) UA_UNARMED.add(`${f}/${k}`); // в моде ствол по умолчанию — пустышка: стреляет только с аддоном // турели и бункеры мода стреляют своими стволами
     if (w) Object.assign(T[k], { dmg: +(w.total * w.cd * UA_K.dmg).toFixed(1), cd: w.cd, range: w.melee ? T[k].range : Math.round(w.range * UA_K.range) });
   }
 }
@@ -274,10 +280,10 @@ for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RAC
   for (const k of swap) {
     const b = (race.data.buildings as Record<string, ModUnit>)[(race.build as Partial<Record<Kind, string>>)[k]!], hp1 = b?.hardpoints[0];
     if (!b || !hp1 || hp1.length < 2) continue;
-    const base = modWeapons(b, k, 1, {}, {}, {});
+    const base = modWeapons(b, k, 1, {}, {}, {}, true);
     H[k] = hp1.map((w, j) => {
       if (j === 0 || !base) return undefined;
-      const V: Partial<Record<Kind, Record<Armor, number>>> = {}, x = modWeapons({ ...b, hardpoints: [[w], ...b.hardpoints.slice(1)] }, k, 1, {}, V, {});
+      const V: Partial<Record<Kind, Record<Armor, number>>> = {}, x = modWeapons({ ...b, hardpoints: [[w], ...b.hardpoints.slice(1)] }, k, 1, {}, V, {}, true);
       return { name: w.name || w.file || '', tier: 1, relics: 0, cost: 0, energy: 0, time: 0, dmg: x ? +((x.total * x.cd) / (base.total * base.cd)).toFixed(2) : 0, cd: x ? +(x.cd / base.cd).toFixed(2) : 1, range: x && !x.melee ? Math.round((x.range - base.range) * UA_K.range) : 0, vs: V[k] ?? UA_VS[f]![k]!, aoe: (x?.aoe ?? 0) * UA_K.range };
     });
     delete UA_UPG[f]![k]; // ствол меняют аддоны, а не общий апгрейд второго уровня
@@ -316,22 +322,30 @@ const haveOf = (s: State, owner: number): UAHave => s.players[owner].cheat ? { b
   addon: (i) => s.units.some(u => u.owner === owner && u.hp > 0 && ((u.ad ?? 0) & (1 << i)) !== 0),
   research: (i) => !!s.players[owner].ur?.includes(i),
 });
-type Mods = { hp: number; hpAdd: number; n: number; dmg: number; speed: number; range: number; regen: number; regenAdd: number; taken: number; melee: number };
-type UAMods = { kinds: Partial<Record<Kind, Mods>>; req: number; power: number; prod: number };
-const NO_MODS: Mods = { hp: 1, hpAdd: 0, n: 0, dmg: 1, speed: 1, range: 0, regen: 1, regenAdd: 0, taken: 1, melee: 1 };
-/** Итог изученного игроком: по видам и общий (доход, производство). Кэш сбрасывается, когда исследование завершилось. */
-function uaMods(p: Player): UAMods {
+type Mods = { hp: number; hpAdd: number; n: number; dmg: number; speed: number; range: number; regen: number; regenAdd: number; taken: number; melee: number; sight: number; sightAdd: number; cost: number; costAdd: number; power: number; powerAdd: number; time: number; repair: number; build: number };
+type UAMods = { kinds: Partial<Record<Kind, Mods>>; req: number; power: number; prod: number; squad: number; support: number };
+const NO_MODS: Mods = { hp: 1, hpAdd: 0, n: 0, dmg: 1, speed: 1, range: 0, regen: 1, regenAdd: 0, taken: 1, melee: 1, sight: 1, sightAdd: 0, cost: 1, costAdd: 0, power: 1, powerAdd: 0, time: 1, repair: 1, build: 1 };
+/** Чьи модификаторы считать: игрок на сервере, в клиенте — то же из снимка (раса, изученное, аддоны своих зданий). */
+export type UAModsOf = Pick<Player, 'faction' | 'ur' | 'ad' | 'um'>;
+/** Итог изученного игроком: по видам и общий (доход, производство, лимиты). Кэш сбрасывается, когда исследование завершилось.
+ *  Нет механики в игре — не считаем: keen_sight_radius (нет невидимости), morale_* (нет морали), ability_recharge (способностей мода нет). */
+export function uaMods(p: UAModsOf): UAMods {
   if (p.um) return p.um;
-  const kinds: Partial<Record<Kind, Mods>> = {}, all = { req: 1, power: 1, prod: 1 }, list = UA_RESEARCH[p.faction] ?? [], T = UA_TARGET[p.faction];
-  // исследования и аддоны (у живых зданий игрока, p.ad); смена ствола аддоном (default_weapon_modifier_*) — у самого здания, не здесь
+  const kinds: Partial<Record<Kind, Mods>> = {}, all = { req: 1, power: 1, prod: 1, squad: 0, support: 0 }, list = UA_RESEARCH[p.faction] ?? [], T = UA_TARGET[p.faction];
+  // исследования и аддоны (у живых зданий игрока, p.ad); смена ствола аддоном (default_weapon_modifier_*) и on: 'entity' — у самого здания (addonSight), не здесь
   for (const m of [...(p.ur ?? []).flatMap(i => list[i]?.mods ?? []), ...(UA_ADDONS[p.faction] ?? []).flatMap((a, i) => ((p.ad ?? 0) & (1 << i) ? a.mods : []))]) {
     if (m.on === 'player') {
       if (m.type === 'income_requisition_player') all.req *= m.add ? 1 + m.value : m.value;
       if (m.type === 'income_power_player') all.power *= m.add ? 1 + m.value : m.value;
+      // лимит отрядов мода — в очках Легиона 1:1, поддержка — лимит техники; «максимум лимита» у нас то же, что лимит
+      if (m.add && (m.type === 'squad_cap_player' || m.type === 'max_squad_cap_player')) all.squad += m.value;
+      if (m.add && (m.type === 'support_cap_player' || m.type === 'max_support_cap_player')) all.support += m.value;
       continue;
     }
+    if (m.on === 'entity') continue;
     if (m.type === 'production_speed') { all.prod *= m.add ? 1 + m.value : m.value; continue; }
-    for (const k of T?.get(m.target) ?? []) {
+    // ремонт в моде у сервитора-техника Инквизиции, у нас чинят строители
+    for (const k of T?.get(m.target) ?? (m.type === 'repair_rate' ? ['builder' as Kind] : [])) {
       const o = kinds[k] ??= { ...NO_MODS }, mul = (v: number) => (m.add ? 1 + v : v);
       switch (m.type) {
         case 'health_maximum': if (m.add) o.hpAdd += m.value; else o.hp *= m.value; break;
@@ -342,12 +356,29 @@ function uaMods(p: Player): UAMods {
         case 'health_regeneration': if (m.add) o.regenAdd += m.value; else o.regen *= m.value; break;
         case 'armour': o.taken *= m.add ? Math.max(0.5, 1 - m.value / 100) : 1; break;
         case 'health_meleedamage_received': o.melee *= mul(m.value); break;
+        case 'sight_radius': if (m.add) o.sightAdd += m.value; else o.sight *= m.value; break;
+        case 'cost_requisition': if (m.add) o.costAdd += m.value; else o.cost *= m.value; break; // цена бойца мода
+        case 'cost_power': if (m.add) o.powerAdd += m.value; else o.power *= m.value; break;
+        case 'cost_time': o.time *= mul(m.value); break;
+        case 'repair_rate': o.repair *= mul(m.value); break;
+        case 'construction_speed': o.build *= mul(m.value); break;
       }
     }
   }
   return (p.um = { kinds, ...all });
 }
 const modsOf = (s: State, u: Unit) => uaMods(s.players[u.owner]).kinds[u.kind] ?? NO_MODS;
+/** Модификаторы вида у игрока (или без игрока — базовые). */
+export const kindMods = (p: UAModsOf | undefined, k: Kind) => (p && uaMods(p).kinds[k]) || NO_MODS;
+/** Обзор юнита: исследования по виду и аддоны самого здания (on: 'entity' — у зонда турели Инквизиции, ×2). */
+export function sightOf(p: UAModsOf | undefined, u: Pick<Unit, 'kind' | 'f' | 'ad'>) {
+  const m = kindMods(p, u.kind);
+  let mul = m.sight, add = m.sightAdd;
+  if (u.ad) UA_ADDONS[u.f!]?.forEach((a, i) => { if (u.ad! & (1 << i)) for (const x of a.mods) if (x.on === 'entity' && x.type === 'sight_radius') { if (x.add) add += x.value; else mul *= x.value; } });
+  return statOf(u.kind, u.f).sight * mul + add * UA_K.sight;
+}
+/** Время найма с исследованиями (cost_time мода). */
+export const trainTime = (f: FactionId | undefined, what: Kind, p?: UAModsOf) => statOf(what, f).time * kindMods(p, what).time;
 /** HP бойца и размер отряда с исследованиями: пишем на юнит (у hpOf нет доступа к состоянию). */
 function refreshUnit(s: State, u: Unit) {
   const m = modsOf(s, u), st = ST(u);
@@ -734,6 +765,7 @@ export type Player = {
   research: number;                  // битовая маска изученного (RESEARCH)
   ur?: number[]; um?: UAMods; // изученное из UA_RESEARCH и кэш его эффектов
   ad?: number; // UA: аддоны у живых зданий игрока (объединение u.ad) — для требований и модификаторов
+  gad?: number; // UA: аддоны турелей — общее улучшение: куплен раз — стоит на всех турелях игрока, и на новых тоже
   unlock: number;                    // открытия: 1 — мегапостройки, 2 — сверхоружие
   doom: number;                      // заряд сверхоружия, секунд
   stopCd: number; revive: number; // перезарядка Остановки времени; revive не используется (место в состоянии)
@@ -822,7 +854,7 @@ const producing = (k: Kind, f?: FactionId): Kind | null => producible(k, f)[0] ?
 export const queued = (s: State, owner: number, what: Kind) => s.units.reduce((n, u) => n + (u.owner === owner ? u.que.filter(k => k === what).length : 0), 0);
 /** Занятый Легион: живые и заказанные боевые юниты; veh — техника (свой лимит), иначе пехота. */
 export const legion = (s: State, owner: number, veh = false) => { const pop = (k: Kind) => (VEHICLES.has(k) || k === 'arty') === veh && !ROLES[k]?.one ? ROLES[k]?.pop ?? 0 : 0; /* титан — свой слот, лимит техники не занимает */ return s.units.reduce((n, u) => n + (u.owner === owner && u.hp > 0 ? pop(u.kind) : 0) + (u.owner === owner ? u.que.reduce((m, k) => m + pop(k), 0) : 0), 0); };
-export const legionCap = (p: Player, veh = false) => (veh ? MOTOR_CAP : LEGION_CAP) + (has(p, 12) ? 6 : 0);
+export const legionCap = (p: Player, veh = false) => (veh ? MOTOR_CAP : LEGION_CAP) + (has(p, 12) ? 6 : 0) + (veh ? uaMods(p).support : uaMods(p).squad);
 
 /** Весь урон проходит здесь: сначала личный щит (дрон), потом купол-эгида рядом, потом здоровье. */
 export function hurt(s: State, t: Unit, dmg: number, by: number) {
@@ -869,7 +901,7 @@ function armorMul(s: State, t: Unit) {
   const res = (s.units.some(l => l.kind === 'lighthouse' && l.owner === t.owner && l.build >= 1 && l.hp > 0 && dist(l, t) < LIGHTHOUSE.r) ? LIGHTHOUSE.armor : 1)
     * (t.kind === 'captain' && archOf(s, t) === 'assault' ? 0.9 : 1)
     * (t.kind !== 'captain' && nearArch(s, t, 'commander') ? 0.9 : 1)
-    * (s.units.some(a => a.kind === 'support' && a.owner === t.owner && a.hp > 0 && dist(a, t) < 10) ? 0.85 : 1) // Знаменосец легиона: силовая броня
+    * (!(fac(s, t.owner) in MOD_RACES) && s.units.some(a => a.kind === 'support' && a.owner === t.owner && a.hp > 0 && dist(a, t) < 10) ? 0.85 : 1) // Знаменосец легиона; у рас UA «поддержка» — обычный боевой отряд мода, ауры нет
     * (nearCapWith(s, t, 0, 12) ? 0.85 : 1)
     * (t.kind === 'guard' && has(p, 0) ? 0.9 : 1)
     * ((t.kind === 'captain' || t.kind === 'legend') && has(p, 13) ? 0.8 : 1);
@@ -892,7 +924,9 @@ function pay(p: Player, req: number, energy = 0, relics = 0): string | undefined
   p.req -= req; p.energy -= energy; // реликвии не списываются: это удержание точек
 }
 /** Цена найма с учётом фракции: Орда −20% на пехоту, Нежить поднимает отряд из останков бесплатно. */
-export const trainCost = (f: FactionId, what: Kind) => Math.round(statOf(what, f).cost);
+export const trainCost = (f: FactionId, what: Kind, p?: UAModsOf) => { const m = kindMods(p, what), st = statOf(what, f); return Math.max(0, Math.round(st.cost * m.cost + (SLOT.has(what) ? 0 : m.costAdd * st.n * UA_K.cost))); }; // прибавка мода — к цене бойца
+/** Энергия найма с исследованиями (cost_power мода). */
+export const trainEnergy = (f: FactionId, what: Kind, p?: UAModsOf) => { const m = kindMods(p, what); return Math.max(0, Math.round(energyOf(what, f) * m.power + (SLOT.has(what) ? 0 : m.powerAdd * statOf(what, f).n * UA_K.cost))); };
 
 /**
  * Команда игрока. Всё, что пришло от клиента, проверяется здесь: чужие юниты, NaN, огромные массивы.
@@ -917,8 +951,8 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     const veh = VEHICLES.has(what) || what === 'arty';
     // титан-класс — вне лимитов
     if (r.pop && !r.one && legion(s, owner, veh) + r.pop > legionCap(p, veh)) return veh ? 'Не хватает лимита техники' : 'Не хватает Легиона';
-    const c = resourceCost(p.faction, trainCost(p.faction, what), energyOf(what, p.faction), p.energy);
-    const e = pay(p, trainCost(p.faction, what), energyOf(what, p.faction), r.relics ?? 0);
+    const c = resourceCost(p.faction, trainCost(p.faction, what, p), trainEnergy(p.faction, what, p), p.energy);
+    const e = pay(p, trainCost(p.faction, what, p), trainEnergy(p.faction, what, p), r.relics ?? 0);
     if (e) return e;
     b.que.push(what); b.paid.push([c.req, c.energy, 0, 0]);
     return;
@@ -1218,7 +1252,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (cmd.kind === 'post') {
       const pt = s.points.filter(q => dist(q, { x, y }) < 9).sort((a, b) => dist(a, { x, y }) - dist(b, { x, y }))[0];
       if (!pt) return 'Пост строится у стратегической точки';
-      if (pt.owner >= 0 && pt.owner !== owner) return 'Точка занята врагом';
+      if (pt.owner !== owner) return pt.owner >= 0 ? 'Точка занята врагом' : 'Сначала захватите точку'; // как в DoW: пост — только на своей точке
       ({ x, y } = pt);
       if (s.units.some(u => u.kind === 'post' && u.hp > 0 && dist(u, pt) < 2)) return 'На точке уже есть пост';
     } else if (cmd.kind === 'pump' || cmd.kind === 'foundry') { // генераторы: обычный — где угодно, продвинутый (термо) — только на свободную жилу
@@ -1230,6 +1264,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
       }
     } else if (cmd.kind === 'mine' || cmd.kind === 'wallgate' || cmd.kind === 'bunker' || cmd.kind === 'wall' || cmd.kind === 'portal') { // укрепления и портал: своя или нейтральная земля
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) return 'Слишком близко к чужому штабу';
+      if (s.points.some(q => q.owner !== owner && dist(q, { x, y }) < POINT_R)) return 'Сначала захватите точку'; // на чужой и ничьей точке укрепляться нельзя
     } else if (cmd.kind === 'turret' || cmd.kind === 'aegis' || DEFENSE.has(cmd.kind) || /^key|^gate/.test(cmd.kind)) {
       if ((/^key|^gate/.test(cmd.kind) || cmd.kind === 'lighthouse' || cmd.kind === 'obelisk' || cmd.kind === 'megagun' || cmd.kind === 'plague') && s.units.some(u => u.owner === owner && u.kind === cmd.kind && u.hp > 0)) return 'Такое здание уже есть';
       if (!s.units.some(u => u.owner === owner && isStruct(u.kind) && u.kind !== 'turret' && u.hp > 0 && dist(u, { x, y }) < 16) && !((cmd.kind === 'turret' || DEFENSE.has(cmd.kind)) && nearOwnPoint(s, owner, x, y)))
@@ -1261,6 +1296,7 @@ export function step(s: State, dt = DT): void {
   s.players.forEach((p, i) => { // аддоны UA: здание пало — аддон пропал; тир штаба = 1 + аддоны штаба
     if (!UA_ADDONS[p.faction]) return;
     let ad = 0;
+    if (p.gad) for (const u of s.units) if (u.owner === i && u.hp > 0 && u.kind === 'turret' && u.build >= 1) u.ad = (u.ad ?? 0) | p.gad;
     for (const u of s.units) if (u.owner === i && u.hp > 0 && u.ad) ad |= u.ad;
     if (ad !== (p.ad ?? 0)) { p.ad = ad; p.um = undefined; for (const u of s.units) if (u.owner === i) refreshUnit(s, u); }
     const hqUps = UA_ADDONS[p.faction]!.filter((a, j) => a.at === 'hq' && ad & (1 << j)).length;
@@ -1389,7 +1425,7 @@ function produce(s: State, b: Unit, dt: number) {
   if (b.q >= 5000) { // аддон UA: достраивается к зданию
     const i = b.q - 5000, x = UA_ADDONS[p.faction]?.[i];
     if (!x) { b.q = 0; return; }
-    if ((b.prog += dt) >= x.time) { b.ad = (b.ad ?? 0) | (1 << i); b.q = 0; b.prog = 0; }
+    if ((b.prog += dt) >= x.time) { b.ad = (b.ad ?? 0) | (1 << i); b.q = 0; b.prog = 0; if (b.kind === 'turret') p.gad = (p.gad ?? 0) | (1 << i); } // аддон турели — на все турели игрока
     return;
   }
   if (b.q >= 1000) { // исследование UA
@@ -1411,7 +1447,7 @@ function produce(s: State, b: Unit, dt: number) {
   const what = b.que[0];
   if (!what) return;
   b.prog += dt * uaMods(p).prod; // скорость производства из исследований UA
-  if (b.prog >= statOf(what, b.f).time * (ROLES[what]?.from === 'barracks' && has(p, 1) ? 0.85 : 1)) {
+  if (b.prog >= trainTime(b.f, what, p) * (ROLES[what]?.from === 'barracks' && has(p, 1) ? 0.85 : 1)) {
     const [, , , , ai] = b.paid[0] ?? [];
     b.prog = 0; b.que.shift(); b.paid.shift(); b.q = b.que.length;
     const at = nearHq(b.x, b.y, ST(b).radius + 2.5 + statOf(what, b.f).radius);
@@ -1588,7 +1624,7 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
     const site = byId.get(o.id);
     if (site && site.hp > 0 && site.build >= 1 && site.hp < hpOf(site) - 1e-6 && site.owner === u.owner) { // ремонт постройки или техники
       if (dist(u, site) - ST(site).radius > 2) { go(s, u, site.x, site.y, dt); return; }
-      const rate = Math.min(REPAIR.rate, hpOf(site) / Math.max(8, (ST(site).time || 20) * 1.5)) * (site.hit < REPAIR.combatDelay ? REPAIR.combatMul : 1);
+      const rate = Math.min(REPAIR.rate, hpOf(site) / Math.max(8, (ST(site).time || 20) * 1.5)) * (site.hit < REPAIR.combatDelay ? REPAIR.combatMul : 1) * modsOf(s, u).repair;
       const add = Math.min(rate * dt, hpOf(site) - site.hp);
       if (pay(s.players[u.owner], (add / hpOf(site)) * Math.max(40, ST(site).cost) * 0.5)) { u.order = null; return; } // ремонт стоит половину цены за полное восстановление
       site.hp += add; u.face = Math.atan2(site.y - u.y, site.x - u.x);
@@ -1602,7 +1638,7 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
     }
     if (dist(u, site) - ST(site).radius > 2) { go(s, u, site.x, site.y, dt); return; }
     const c = ST(site);
-    const slow = (hasR(s, u.owner, 3) ? 1.2 : 1); // Династии −25%, Свитки каменщиков +20%
+    const slow = (hasR(s, u.owner, 3) ? 1.2 : 1) * modsOf(s, u).build; // Свитки каменщиков +20%, construction_speed мода
     site.build = Math.min(1, site.build + (dt * slow) / c.time);
     site.hp = Math.min(c.hp, site.hp + (c.hp * dt) / c.time);
     return;
@@ -1648,11 +1684,11 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
   }
   if (!target) { // свободный юнит и attack-move сами ищут ближайшего врага
     const um = modOf(fac(s, u.owner), u.kind), rng = st.range + (um?.range ?? 0) + (u.lvl > 1 ? um?.up?.range ?? 0 : 0);
-    const spotting = rng > st.sight && u.kind !== 'turret'; // артиллерия бьёт дальше своего обзора — по целям, которые видят свои; биопушка чует сама
-    let best: number = (spotting || u.kind === 'turret' ? Math.max(rng, st.sight) : st.sight) + (hasR(s, u.owner, 11) ? 4 : 0);
+    const sight = sightOf(s.players[u.owner], u), spotting = rng > sight && u.kind !== 'turret'; // артиллерия бьёт дальше своего обзора — по целям, которые видят свои; биопушка чует сама
+    let best: number = (spotting || u.kind === 'turret' ? Math.max(rng, sight) : sight) + (hasR(s, u.owner, 11) ? 4 : 0);
     for (const v of s.units) {
       if (v.owner === u.owner || v.hp <= 0 || !s.players[v.owner].alive) continue;
-      if (spotting && dist(u, v) > st.sight && !spotted(s, u.owner, v)) continue;
+      if (spotting && dist(u, v) > sight && !spotted(s, u.owner, v)) continue;
       if ((MIN_RANGE[u.kind] ?? um?.minRange ?? 0) > dist(u, v) - ST(v).radius && !ST(u).speed) continue; // стационарная батарея не целится в мёртвую зону
       const d = dist(u, v) - ST(v).radius - (isStruct(v.kind) ? SIEGE_RANGE[u.kind] ?? 0 : 0); // по зданиям артиллерия достаёт дальше
       if (d < best) { best = d; target = v; }
@@ -1676,9 +1712,10 @@ function act(s: State, u: Unit, dt: number, byId: Map<number, Unit>) {
 const aaMul = (u: Unit, t: Unit) => AIRCRAFT.has(t.kind) ? (isStruct(u.kind) ? AA.struct : u.kind === 'heavy' ? AA.heavy : 1) : u.kind === 'jet' && isStruct(t.kind) ? AA.jetVsStruct : 1;
 /** Цель видна игроку: обзор его юнитов и построек или засвет. */
 const spotted = (s: State, owner: number, v: Unit) => s.scans.some(c => c.owner === owner && dist(c, v) < (c.r ?? MEGA_SHOT.reveal))
-  || s.units.some(o => o.owner === owner && o.hp > 0 && dist(o, v) < Math.max(ST(o).sight, 10));
+  || s.units.some(o => o.owner === owner && o.hp > 0 && dist(o, v) < Math.max(sightOf(s.players[owner], o), 10));
 /** Выстрел, если цель в досягаемости: false — далеко (или в мёртвой зоне), надо подойти. */
 function shoot(s: State, u: Unit, target: Unit): boolean {
+  if (u.f && UA_UNARMED.has(`${u.f}/${u.kind}`) && !addonWeapon(u)) return true; // без аддона-ствола не стреляет (true — подходить некуда, здание)
   const st = ST(u), d = Math.max(0, dist(u, target) - ST(target).radius - (st.range < 5 ? ST(u).radius * 0.8 : 0)); // рукопашник бьёт от своего края: огромный Тригон достаёт соседа
   const melee = u.kind === 'guard' && isMelee('guard', fac(s, u.owner));
   const mystic = u.kind === 'captain' && archOf(s, u) === 'mystic'; // психосила библиария: дальше и по площади
@@ -1769,7 +1806,7 @@ function victoryPoints(s: State, dt: number) {
 
 /** Кто что видит: id юнитов в обзоре своих войск и построек (туман войны считается на сервере). */
 export function visibleTo(s: State, owner: number): Set<number> {
-  const eyes = [...s.units.filter(u => u.owner === owner && u.hp > 0).map(u => ({ x: u.x, y: u.y, r: Math.max(ST(u).sight, isStruct(u.kind) ? SIGHT_STRUCT : 10) + (hasR(s, owner, 11) ? 4 : 0) })),
+  const eyes = [...s.units.filter(u => u.owner === owner && u.hp > 0).map(u => ({ x: u.x, y: u.y, r: Math.max(sightOf(s.players[owner], u), isStruct(u.kind) ? SIGHT_STRUCT : 10) + (hasR(s, owner, 11) ? 4 : 0) })),
     ...s.points.filter(p => p.owner === owner).map(p => ({ x: p.x, y: p.y, r: SIGHT_STRUCT + (hasR(s, owner, 11) ? 4 : 0) })), // своя точка видит и без башни
     ...s.scans.filter(c => c.owner === owner).map(c => ({ x: c.x, y: c.y, r: c.r ?? MEGA_SHOT.reveal }))];
   const seen = new Set<number>();
@@ -1837,7 +1874,7 @@ const prodPct = (u: Unit) => u.q <= 0 || u.kind === 'legend' ? 0
 export type Snap = { ad?: number[][]; wu?: number[][]; sq?: number[][]; ur?: number[][]; vp: number[]; d: number[]; ss: number[][]; mg: number[][]; tick: number; u: number[][]; p: number[][]; pl: number[][]; sh: number[][]; w: number | null; qk: Record<number, number[]>; sm: number[][]; ps: number[][]; sc?: number[][] };
 /** Снимок для одного игрока: враги вне обзора вырезаны, выстрелы — только видимые концом или началом. */
 export function snapshotFor(s: State, owner: number): Snap {
-  const full = snapshot(s), seen = visibleTo(s, owner), near = (x: number, y: number) => s.units.some(u => u.owner === owner && u.hp > 0 && Math.hypot(u.x - x / 10, u.y - y / 10) < Math.max(ST(u).sight, 12)) || s.points.some(p => p.owner === owner && Math.hypot(p.x - x / 10, p.y - y / 10) < SIGHT_STRUCT);
+  const full = snapshot(s), seen = visibleTo(s, owner), near = (x: number, y: number) => s.units.some(u => u.owner === owner && u.hp > 0 && Math.hypot(u.x - x / 10, u.y - y / 10) < Math.max(sightOf(s.players[owner], u), 12)) || s.points.some(p => p.owner === owner && Math.hypot(p.x - x / 10, p.y - y / 10) < SIGHT_STRUCT);
   return { ...full, sc: s.scans.filter(c => c.owner === owner).map(c => [Math.round(c.x * 10), Math.round(c.y * 10), c.r ?? MEGA_SHOT.reveal]), u: full.u.filter(r => seen.has(r[0])), sq: full.sq?.filter(r => seen.has(r[0])), wu: full.wu?.filter(r => seen.has(r[0])), sh: full.sh.filter(v => near(v[0], v[1]) || near(v[2], v[3])), qk: Object.fromEntries(Object.entries(full.qk).filter(([id]) => s.units.some(u => u.id === Number(id) && u.owner === owner))) };
 }
 export function snapshot(s: State): Snap {

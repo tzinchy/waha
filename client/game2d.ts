@@ -4,7 +4,7 @@ import { World3D, has3d } from './world3d.ts';
 import { tgaCanvas, uaArtIcon, uaIcon } from './models3d/ua-models.ts';
 import { GROUND } from '../shared/mapdata.ts';
 import { ARCHS, CAPTAIN_COST, HERO, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
-import { UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, LIGHTHOUSE, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, LIGHTHOUSE, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { BUILD_NAME, PX_PACK, ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -704,8 +704,8 @@ export class Game {
     const pop = [0, 0], add = (k: Kind) => { if (!ROLES[k]?.one) pop[VEHICLES.has(k) || k === 'arty' ? 1 : 0] += ROLES[k]?.pop ?? 0; }; // титаны — свой слот // пехота и техника — раздельные лимиты
     for (const u of s.u) if (u[1] === this.slot) add(KINDS[u[2]]);
     for (const q of Object.values(s.qk ?? {})) for (const k of q) add(KINDS[k]);
-    const bonus = this.research & (1 << 12) ? 6 : 0;
-    $('hud-squads').textContent = `${pop[0]}/${LEGION_CAP + bonus}`; $('hud-motor').textContent = `${pop[1]}/${MOTOR_CAP + bonus}`; void guards;
+    const bonus = this.research & (1 << 12) ? 6 : 0, um = uaMods(this.me()); // лимиты из исследований UA — как legionCap на сервере
+    $('hud-squads').textContent = `${pop[0]}/${LEGION_CAP + bonus + um.squad}`; $('hud-motor').textContent = `${pop[1]}/${MOTOR_CAP + bonus + um.support}`; void guards;
     $('hud-sel').textContent = this.sel.size ? `Выбрано: ${this.sel.size}` : '';
     $('hud-dead').classList.toggle('hidden', !dead);
     s.pl.forEach(([, alive], i) => document.getElementById('hp' + i)?.classList.toggle('dead', !alive));
@@ -744,7 +744,7 @@ export class Game {
   /** Сколько сегментов стены можно оплатить сейчас (Династии платят энергией). */
   private wallBudget() { const one = this.price(STATS.wall.cost); return Math.floor(Math.min(one.cost ? this.req / one.cost : Infinity, one.en ? this.energy / one.en : Infinity)); }
   /** Секунд до выхода юнита из здания по проценту готовности. */
-  private qLeft(k: Kind, pct: number) { return Math.max(0, Math.ceil(statOf(k, this.fac()).time * (ROLES[k]?.from === 'barracks' && this.research & (1 << 1) ? 0.85 : 1) * (1 - pct / 100))); }
+  private qLeft(k: Kind, pct: number) { return Math.max(0, Math.ceil(trainTime(this.fac(), k, this.me()) * (ROLES[k]?.from === 'barracks' && this.research & (1 << 1) ? 0.85 : 1) * (1 - pct / 100))); }
   /** Очередь здания в карточке (как в Soulstorm): первый слот крупно с полосой и секундами, затем ожидающие, пустые слоты показывают, сколько ещё влезет. Клик — отменить. */
   private queueSlots(v: View) {
     const q = this.qk[v.id] ?? [], f = this.fac();
@@ -761,6 +761,14 @@ export class Game {
     return { built: k => mine.some(v => v.kind === k && v.build >= 1), addon: i => mine.some(v => ((this.ad.get(v.id) ?? 0) & (1 << i)) !== 0), research: i => this.ur.includes(i) };
   }
   /** Чего не хватает по дереву UA для постройки/найма вида (у остальных фракций — undefined, там тиры). */
+  private meN = -1; private meC: UAModsOf = { faction: 'inquisition' };
+  /** Свои исследования и аддоны из снимка — для цен, лимитов и обзора с модификаторами UA, как на сервере (кэш на снимок). */
+  private me(): UAModsOf {
+    if (this.meN !== this.snapN) { let ad = 0; for (const v of this.views.values()) if (v.owner === this.slot && !v.dead) ad |= this.ad.get(v.id) ?? 0; this.meC = { faction: this.fac(), ur: this.ur, ad }; this.meN = this.snapN; }
+    return this.meC;
+  }
+  private sight(v: { id: number; kind: Kind; owner: number }) { return v.owner === this.slot ? sightOf(this.me(), { kind: v.kind, f: this.fac(), ad: this.ad.get(v.id) }) : this.st(v).sight; }
+  private uaMelee(k: Kind, f = this.fac()) { return statOf(k, f).range <= 3; } // рукопашник мода: дальность как у удара
   private uaReq(k: Kind, at?: number) { const f = this.fac(), r = UA_REQ[f]?.[k]; return r ? uaMissing(f, r, this.uaHave(), at === undefined ? 0 : this.ad.get(at) ?? 0) : undefined; }
   private fac(owner = this.slot): FactionId { return this.players[owner]?.faction ?? 'tyranids'; }
   /** Статы и полное здоровье вида у фракции владельца (у рас из модов свои). */
@@ -827,10 +835,11 @@ export class Game {
         elite: 'Тяжёлая элита: держит удар, бьёт в упор.', healer: 'Целитель: лечит отряды в 15 м на 5%/с.', lveh: 'Лёгкая техника: разведка, захват точек, охота на строителей.',
         mveh: 'Средняя техника: огневая поддержка против пехоты, урон по площади.', hveh: 'Тяжёлая техника: осада, против зданий и техники.', arty: `Артиллерия: ${STATS.arty.range + (modOf(this.fac(), 'arty')?.range ?? 0)} м, по площади, в упор не стреляет — нужна разведка и прикрытие.`, titan: 'Титан: один на армию, давит пехоту шагами.', air: 'Авиация: быстрый отряд, летит над скалами и стенами — рейды по тылам.', jet: 'Самолёт: самый быстрый, летит высоко над всем, бьёт технику; постройки сбивают его втрое сильнее, по зданиям бьёт вполсилы.', bomber: 'Бомбовоз Орды: огромный самолёт титан-класса, мини-атомки по 9 м, земля горит. Нужна критическая точка; турели и тяжёлое оружие бьют по нему сильнее.',
         khorne: 'Кровопускатели Кхорна: рубят в ближнем бою, бьют сильнее всех демонов.', nurgle: 'Чумоносцы Нургла: медленные, очень живучие, гниль лечит их 2%/с.', tzeentch: 'Розовые ужасы Тзинча: варп-пламя на 16 м по площади.', slaanesh: 'Демонетки Слаанеш: самые быстрые, частые удары когтями.' };
+      if (UA_SQ[this.fac()]) for (const k of ['support', 'sniper'] as Kind[]) ROLE_INFO[k] = this.uaMelee(k) ? 'Боевой отряд ближнего боя.' : 'Боевой отряд стрелков.'; // у рас UA роли игры — только слоты: «поддержка» и «снайпер» тут обычные бойцы мода
       producible(st.kind, this.fac()).forEach((k, i) => {
         const r = ROLES[k]!, n = this.qk[st.id]?.filter(q => q === KINDS.indexOf(k)).length ?? 0, now = this.qk[st.id]?.[0] === KINDS.indexOf(k);
         const researching = (/^key[1-4]$/.test(st.kind) && st.q > 0 && !this.qk[st.id]?.length) || st.q > 100;
-        c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k), energyOf(k, this.fac()), r.relics ?? 0),
+        c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k, this.me()), trainEnergy(this.fac(), k, this.me()), r.relics ?? 0),
           info: `${ROLE_INFO[k] ?? ''}${modOf(this.fac(), k) ? ' ' + weaponModInfo(this.fac(), k) : ''}${CLOSE[k] ? ` Дополнительное оружие до ${CLOSE[k]!.range} м.${k === 'heavy' || k === 'hveh' ? ' Против брони сохраняется более эффективный ствол.' : ''}` : ''}${SETUP.has(k) ? ' На ходу не стреляет.' : ''} Легион: ${r.pop}.`, req: UA_REQ[this.fac()]?.[k] ? this.uaReq(k, st.id) ?? (researching ? 'Здание уже исследует' : undefined) : this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined });
       });
       if (st.kind === 'hq' || st.kind === 'barracks') { // герои заказываются в зданиях (Soulstorm): главный — в штабе, остальные архетипы — в казармах
@@ -857,7 +866,7 @@ export class Game {
         const done = (mask & (1 << a)) !== 0, busy = !done && ((st.q > 0 && st.q !== 5000 + a) || !!this.qk[st.id]?.length);
         const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask);
         c.push({ act: done || busy || miss ? '' : 'uaa:' + a, name: x.name, hot: '', icon: x.at === 'hq' ? ICON.tier : ICON.build, ...(done ? {} : this.price(x.cost, x.energy)), done,
-          info: `Аддон. ${x.info.replace(/^- /, '')} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 5000 + a ? st.prod : undefined });
+          info: `Аддон${st.kind === 'turret' ? ' на все турели' : ''}. ${x.info.replace(/^- /, '')} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 5000 + a ? st.prod : undefined });
       });
       const UR = UA_RESEARCH[this.fac()];
       if (UR) { // исследования UA этого здания: сначала неизученные
@@ -980,7 +989,7 @@ export class Game {
     if (sel.length > 1) return `<div class="w2d-group">${sel.slice(0, 18).map(v => `<button class="w2d-gp${v.owner !== this.slot ? ' foe' : ''}" data-pick="${v.id}">${miniArt(v.artPath)}<i style="--v:${Math.max(0, v.hp / this.mhp(v)) * 100}%"></i></button>`).join('')}${sel.length > 18 ? `<span class="w2d-more">+${sel.length - 18}</span>` : ''}</div>`;
     const v = sel[0], st = this.st(v), foe = v.owner !== this.slot, max = this.mhp(v), hp = Math.max(0, Math.round(v.hp));
     const melee = isMelee(v.kind, this.fac(v.owner));
-    const cls = v.kind === 'captain' ? `Герой · ур. ${foe ? '?' : this.cap.lvl}` : v.kind === 'builder' ? 'Строитель' : v.kind === 'guard' ? `Пехота · ${melee ? 'ближний бой' : 'стрелки'}` : v.kind === 'legend' ? 'Легенда' : ({ deity: 'Бог · летает', titan: 'Титан', arty: `Артиллерия · мёртвая зона ${MIN_RANGE.arty} м`, lveh: 'Лёгкая техника', mveh: 'Средняя техника', hveh: 'Тяжёлая техника', sniper: 'Снайпер', heavy: 'Тяжёлое оружие', support: 'Поддержка', elite: 'Тяжёлая элита', healer: 'Целитель' } as Partial<Record<Kind, string>>)[v.kind] ?? 'Постройка';
+    const cls = v.kind === 'captain' ? `Герой · ур. ${foe ? '?' : this.cap.lvl}` : v.kind === 'builder' ? 'Строитель' : v.kind === 'guard' || (UA_SQ[this.fac(v.owner)] && (v.kind === 'support' || v.kind === 'sniper')) ? `Пехота · ${(v.kind === 'guard' ? melee : this.uaMelee(v.kind, this.fac(v.owner))) ? 'ближний бой' : 'стрелки'}` : v.kind === 'legend' ? 'Легенда' : ({ deity: 'Бог · летает', titan: 'Титан', arty: `Артиллерия · мёртвая зона ${MIN_RANGE.arty} м`, lveh: 'Лёгкая техника', mveh: 'Средняя техника', hveh: 'Тяжёлая техника', sniper: 'Снайпер', heavy: 'Тяжёлое оружие', support: 'Поддержка', elite: 'Тяжёлая элита', healer: 'Целитель' } as Partial<Record<Kind, string>>)[v.kind] ?? 'Постройка';
     const stats: [string, string][] = [];
     const tf = modOf(this.fac(v.owner), v.kind), guardMelee = v.kind === 'guard' && melee;
     const weaponType = tf?.type ?? (v.kind === 'turret' && v.lvl > 1 ? 'heavy' : dmgOf(v.kind, this.fac(v.owner)));
@@ -1278,7 +1287,7 @@ export class Game {
       if (i < 0) return { ...g, ok: false };
       const [x, y] = all[i];
       const taken = vs.some(v => v.kind === 'post' && Math.hypot(v.x - x, v.y - y) < 2);
-      return { x, y, ok: (this.pointOwner[i] === this.slot || this.pointOwner[i] < 0) && !taken };
+      return { x, y, ok: this.pointOwner[i] === this.slot && !taken }; // только на своей точке, как на сервере
     }
     if (this.place === 'pump' || this.place === 'foundry') { // обычный генератор — где угодно, термо — на свободную жилу
       const pts = [...POINTS, ...RELICS].map(([x, y], i) => ({ x, y, owner: this.pointOwner[i] ?? -1 }));
@@ -1286,8 +1295,9 @@ export class Game {
       const gens = structs.filter(v => v.owner === this.slot && (v.kind === 'pump' || v.kind === 'foundry')).length;
       return { ...p, ok: (this.place === 'foundry' || !!an) && gens < GEN_CAP && footFree(structs, this.place, p.x, p.y) };
     }
-    if (this.place === 'wall') return { ...g, ok: wallOk(structs, this.slot, g.x, g.y) };
-    if (['mine', 'wallgate', 'bunker', 'portal'].includes(this.place ?? '')) return { ...g, ok: footFree(structs, this.place!, g.x, g.y) && !vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 20) };
+    const foePt = [...POINTS, ...RELICS].some(([px, py], i) => this.pointOwner[i] !== this.slot && Math.hypot(px - g.x, py - g.y) < POINT_R); // на чужой и ничьей точке не укрепляться
+    if (this.place === 'wall') return { ...g, ok: !foePt && wallOk(structs, this.slot, g.x, g.y) };
+    if (['mine', 'wallgate', 'bunker', 'portal'].includes(this.place ?? '')) return { ...g, ok: !foePt && footFree(structs, this.place!, g.x, g.y) && !vs.some(v => v.kind === 'hq' && v.owner !== this.slot && Math.hypot(v.x - g.x, v.y - g.y) < 20) };
     if (this.place === 'turret' || ['battery', 'pylon', 'pyre', 'bell', 'aegis', 'lighthouse', 'obelisk', 'megagun', 'plague', 'spire'].includes(this.place ?? '') || /^key|^gate/.test(this.place ?? '')) {
       const near = vs.some(v => v.owner === this.slot && isStruct(v.kind) && v.kind !== 'turret' && Math.hypot(v.x - g.x, v.y - g.y) < 16) || (['turret', 'battery', 'pylon', 'pyre', 'bell', 'lighthouse', 'obelisk', 'megagun', 'plague', 'spire', 'spire'].includes(this.place ?? '') && nearOwnPt(g.x, g.y));
       return { ...g, ok: near && footFree(structs, this.place!, g.x, g.y) };
@@ -1360,7 +1370,7 @@ export class Game {
 
   /** Видит ли игрок точку: в обзоре своих войск и построек (тот же расчёт, что на сервере). */
   private inSight(x: number, y: number) {
-    for (const v of this.views.values()) if (v.owner === this.slot && !v.dead && Math.hypot(v.x - x, v.y - y) < Math.max(this.st(v).sight, isStruct(v.kind) ? 12 : 10)) return true;
+    for (const v of this.views.values()) if (v.owner === this.slot && !v.dead && Math.hypot(v.x - x, v.y - y) < Math.max(this.sight(v), isStruct(v.kind) ? 12 : 10)) return true;
     if (this.scans.some(([sx, sy, sr]) => Math.hypot(sx / 10 - x, sy / 10 - y) < (sr ?? MEGA_SHOT.reveal))) return true;
     return this.ownPoints().some(([px, py]) => Math.hypot(px - x, py - y) < SIGHT_STRUCT);
   }
@@ -1376,7 +1386,7 @@ export class Game {
     x.fillStyle = 'rgba(6,5,9,0.6)'; x.fillRect(0, 0, c.width, c.height); // рельеф под туманом должен читаться
     x.globalCompositeOperation = 'destination-out';
     const holes: string[] = [];
-    const eyes = [...[...this.views.values()].filter(v => v.owner === this.slot && !v.dead).map(v => ({ x: v.x, y: v.y, r: Math.max(this.st(v).sight, isStruct(v.kind) ? 12 : 10) })),
+    const eyes = [...[...this.views.values()].filter(v => v.owner === this.slot && !v.dead).map(v => ({ x: v.x, y: v.y, r: Math.max(this.sight(v), isStruct(v.kind) ? 12 : 10) })),
       ...this.ownPoints().map(([x, y]) => ({ x, y, r: SIGHT_STRUCT })), ...this.scans.map(([x, y, r]) => ({ x: x / 10, y: y / 10, r: r ?? MEGA_SHOT.reveal }))]; // засвет: дальний удар и засвет из штаба
     for (const v of eyes) {
       const r = v.r + (this.research & (1 << 11) ? 4 : 0);

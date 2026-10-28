@@ -69,11 +69,14 @@ test('пополнение: докупаем потерянных бойцов �
   void before; // цену пополнения UA проверяет тест «пополнение отрядов UA»
 });
 
-test('пост: строитель ставит на ничьей точке, пост её забирает и держит; на вражеской нельзя', () => {
+test('пост: только на своей точке (как в DoW) и держит её; на ничьей и вражеской нельзя', () => {
   const s = freeState(2);
   const b = unit(s, 0, 'builder'), [px, py] = POINTS[1];
   s.points[2].owner = 1;
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: POINTS[2][0], y: POINTS[2][1] }) ?? '', /врагом/);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: px + 2, y: py }) ?? '', /захватите/);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'mine', x: px + 2, y: py }) ?? '', /захватите/);
+  s.points[1].owner = 0;
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: px + 2, y: py }), undefined);
   run(s, 60); // карта крупная: строителю идти до точки
   assert.equal(s.units.find(u => u.kind === 'post')!.build, 1);
@@ -193,7 +196,7 @@ test('сетка построек: здание привязано к клетк
 test('прокачка точки: столп → укреплённый → бастион, центр не укрепить', () => {
   const s = freeState(2);
   const p = s.players[0], b = unit(s, 0, 'builder');
-  p.req = 5000; p.energy = 5000; p.tier = 2;
+  p.req = 5000; p.energy = 5000; p.tier = 2; s.points[1].owner = 0;
   applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: POINTS[1][0], y: POINTS[1][1] });
   run(s, 40); // карта крупнее: строителю дальше идти
   const post = unit(s, 0, 'post');
@@ -462,4 +465,32 @@ test('аддоны UA: турель Инквизиции — ракетная п
   assert.ok(((t.ad ?? 0) & (1 << a)) !== 0, 'аддон достроен');
   assert.ok((addonWeapon(t)?.range ?? 0) > 0, 'ракетная бьёт дальше болтера');
   assert.ok(uaMissing('tyranids', UA_REQ.tyranids!.motorpool, { built: () => true, addon: () => false, research: () => false }), 'тираниды: Carnifex Hive — после Established Link');
+});
+
+test('модификаторы исследований UA: лимиты, цена, обзор, стройка; ствол поста — только с аддоном', async () => {
+  const { UA_RESEARCH, UA_ADDONS, legionCap, trainCost, sightOf, UA_UNARMED } = await import('./sim.ts');
+  const s = freeState(2, ['tyranids', 'inquisition']), ty = s.players[0], iq = s.players[1];
+  const R = (f: 'tyranids' | 'inquisition', id: string) => UA_RESEARCH[f]!.findIndex(r => r.id === id);
+  const cap0 = legionCap(ty), titan0 = trainCost('tyranids', 'titan', ty), sight0 = sightOf(ty, { kind: 'sniper', f: 'tyranids' });
+  ty.ur = [R('tyranids', 'tyranids_caps_research'), R('tyranids', 'tyranids_lictor_upgrade_research_1')];
+  ty.ad = 1 << UA_ADDONS.tyranids!.findIndex(a => a.id === 'tyranids_titanchamber_addon_1'); ty.um = undefined;
+  assert.equal(legionCap(ty), cap0 + 6);
+  assert.equal(trainCost('tyranids', 'titan', ty), titan0 - 500);
+  assert.ok(sightOf(ty, { kind: 'sniper', f: 'tyranids' }) > sight0, 'ликтор видит дальше');
+  assert.equal(legionCap(iq), legionCap({ ...iq, ur: [], um: undefined })); // чужие исследования не действуют
+  assert.ok(UA_UNARMED.has('inquisition/post'), 'пост Инквизиции без аддона не стреляет');
+});
+
+test('аддон турели — общее улучшение: ставится на все турели игрока, и на новые', async () => {
+  const { UA_ADDONS } = await import('./sim.ts');
+  const s = freeState(2, ['inquisition', 'inquisition']), hq = unit(s, 0, 'hq');
+  const t1 = spawn(s, 0, 'turret', hq.x + 12, hq.y), t2 = spawn(s, 0, 'turret', hq.x - 12, hq.y), foe = spawn(s, 1, 'turret', hq.x, hq.y + 20);
+  const a = UA_ADDONS.inquisition!.findIndex(x => x.id === 'inquisition_turret_addon');
+  assert.equal(applyCmd(s, 0, { c: 'uaa', id: t1.id, a }), undefined);
+  run(s, UA_ADDONS.inquisition![a].time + 1);
+  assert.ok(t2.ad! & (1 << a), 'вторая турель тоже улучшена');
+  const t3 = spawn(s, 0, 'turret', hq.x, hq.y - 12); run(s, 0.2);
+  assert.ok(t3.ad! & (1 << a), 'новая турель — сразу с улучшением');
+  assert.ok(!((foe.ad ?? 0) & (1 << a)), 'у противника нет');
+  assert.match(applyCmd(s, 0, { c: 'uaa', id: t2.id, a }) ?? '', /Уже/);
 });

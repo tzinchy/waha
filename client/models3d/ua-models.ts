@@ -141,6 +141,7 @@ export const uaReady = typeof fetch !== 'undefined' && typeof document !== 'unde
   });
 })) : Promise.resolve([]);
 
+const BLEND_MS = 150;
 export class UAActor {
   readonly root = new THREE.Group();
   private mixer: THREE.AnimationMixer;
@@ -166,20 +167,43 @@ export class UAActor {
     }
     return this.picks.get(motion)!;
   }
+  /** Стройка Инквизиции в моде — цепочка клипов build1…buildN. Посадку и взлёт капсулы (над зданием на 90–130 м) не играем:
+   *  в нашей косой проекции высота уходит вверх экрана — модель «летала по карте». */
+  private seq?: THREE.AnimationClip[];
+  private buildSeq() {
+    return this.seq ??= this.t.clips.filter((c) => /^build\d/i.test(c.name) && !/^build0|landing|takeoff|descente/i.test(c.name))
+      .sort((a, b) => parseInt(a.name.slice(5)) - parseInt(b.name.slice(5)));
+  }
   pose(motion: string, t: number) {
-    const clip = this.pick(motion);
+    const seq = motion === 'build' ? this.buildSeq() : [];
+    let clip = this.pick(motion);
+    if (seq.length) { // доля готовности → клип цепочки и время в нём
+      let left = Math.min(t / this.buildTime, 1) * seq.reduce((a, c) => a + c.duration, 0);
+      clip = seq.find((c) => (left -= c.duration) < 0) ?? seq[seq.length - 1];
+      t = Math.max(0, clip.duration + Math.min(0, left)) * (this.buildTime / Math.max(1e-3, clip.duration)); // ниже снова делится на buildTime
+    }
     if (!clip) return;
-    if (clip !== this.clip) {
-      this.clip = clip;
+    const now = typeof performance !== 'undefined' ? performance.now() : 0;
+    if (clip !== this.clip) { // смена клипа — короткое смешивание со старым, а не рывок позы (idle → выстрел → idle)
       this.mixer.stopAllAction();
+      this.prev = this.clip && motion !== 'death' ? this.mixer.clipAction(this.clip) : null;
+      if (this.prev) { this.prev.play(); this.prev.time = this.prevT; }
+      this.clip = clip; this.since = now;
       this.mixer.clipAction(clip).play();
       for (const m of this.meshes) m.visible = meshVisible(this.t.vis, clip.name, this.layers, m.name);
     }
+    const w = this.prev ? Math.min(1, (now - this.since) / BLEND_MS) : 1;
+    this.mixer.clipAction(clip).setEffectiveWeight(w);
+    if (this.prev) { if (w >= 1) { this.prev.stop(); this.prev = null; } else this.prev.setEffectiveWeight(1 - w); }
     const d = clip.duration || 1;
     // смерть и стройка не зацикливаются: стройка приходит в секундах процедурной модели — переводим в долю
     this.mixer.clipAction(clip).time = motion === 'death' ? Math.min(t, d - 1e-3) : motion === 'build' ? Math.min(t / this.buildTime, 1) * (d - 1e-3) : t % d;
+    this.prevT = this.mixer.clipAction(clip).time;
     this.mixer.update(0);
   }
+  private prev: THREE.AnimationAction | null = null;
+  private prevT = 0;
+  private since = 0;
 }
 
 /** Слои по умолчанию, если не заданы руками: «база» (vis_base/main/master/default/body…) и части под стволы, которые взял баланс (lascannon → vis_…lascannon).
