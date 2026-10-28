@@ -1180,6 +1180,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     const b = s.units.find(v => v.id === cmd.id && v.owner === owner && v.hp > 0 && v.build >= 1);
     if (!b || !x || !x.ats.includes(b.kind)) return;
     if (p.ur?.includes(r)) return 'Уже изучено';
+    if (s.units.some(v => v.owner === owner && v.hp > 0 && v.q === 1000 + r)) return 'Уже изучается в другом здании'; // исследование — на всю расу (все генераторы), а не на здание
     if (b.que.length || b.q > 0) return 'Здание занято';
     const miss = uaMissing(p.faction, x.req, haveOf(s, owner), b.ad);
     if (miss) return miss;
@@ -1348,6 +1349,9 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     } else if (cmd.kind === 'mine' || cmd.kind === 'wallgate' || cmd.kind === 'bunker' || cmd.kind === 'wall' || cmd.kind === 'portal') { // укрепления и портал: своя или нейтральная земля
       if (s.units.some(u => u.kind === 'hq' && u.owner !== owner && u.hp > 0 && dist(u, { x, y }) < 20)) return 'Слишком близко к чужому штабу';
       if (s.points.some(q => q.owner !== owner && dist(q, { x, y }) < POINT_R)) return 'Сначала захватите точку'; // на чужой и ничьей точке укрепляться нельзя
+    } else if (UA_REQ[p.faction] && cmd.kind !== 'hq') { // раса UA — как в DoW: любая постройка (кроме поста и генераторов выше) — на засвеченной земле
+      if (!inSight(s, owner, x, y)) return 'Строить можно только на разведанной земле — в обзоре своих войск и построек';
+      if ((/^key|^gate/.test(cmd.kind)) && s.units.some(u => u.owner === owner && u.kind === cmd.kind && u.hp > 0)) return 'Такое здание уже есть';
     } else if (cmd.kind === 'turret' || cmd.kind === 'aegis' || DEFENSE.has(cmd.kind) || /^key|^gate/.test(cmd.kind)) {
       if ((/^key|^gate/.test(cmd.kind) || cmd.kind === 'lighthouse' || cmd.kind === 'obelisk' || cmd.kind === 'megagun' || cmd.kind === 'plague') && s.units.some(u => u.owner === owner && u.kind === cmd.kind && u.hp > 0)) return 'Такое здание уже есть';
       if (!s.units.some(u => u.owner === owner && isStruct(u.kind) && u.kind !== 'turret' && u.hp > 0 && dist(u, { x, y }) < 16) && !((cmd.kind === 'turret' || DEFENSE.has(cmd.kind)) && nearOwnPoint(s, owner, x, y)))
@@ -1889,11 +1893,16 @@ function doomStrike(s: State, st: { x: number; y: number; owner: number }) {
 }
 
 /** Кто что видит: id юнитов в обзоре своих войск и построек (туман войны считается на сервере). */
-export function visibleTo(s: State, owner: number): Set<number> {
-  const eyes = [...s.units.filter(u => u.owner === owner && u.hp > 0).map(u => ({ x: u.x, y: u.y, r: Math.max(sightOf(s.players[owner], u), isStruct(u.kind) ? SIGHT_STRUCT : 10) + (hasR(s, owner, 11) ? 4 : 0) })),
+/** Чем игрок видит: юниты, постройки, свои точки, засветы — круги обзора. */
+function eyesOf(s: State, owner: number) {
+  return [...s.units.filter(u => u.owner === owner && u.hp > 0).map(u => ({ x: u.x, y: u.y, r: Math.max(sightOf(s.players[owner], u), isStruct(u.kind) ? SIGHT_STRUCT : 10) + (hasR(s, owner, 11) ? 4 : 0) })),
     ...s.points.filter(p => p.owner === owner).map(p => ({ x: p.x, y: p.y, r: SIGHT_STRUCT + (hasR(s, owner, 11) ? 4 : 0) })), // своя точка видит и без башни
     ...s.scans.filter(c => c.owner === owner).map(c => ({ x: c.x, y: c.y, r: c.r ?? MEGA_SHOT.reveal }))];
-  const seen = new Set<number>();
+}
+/** Место в обзоре игрока сейчас (как в DoW: строить можно на засвеченной земле). */
+export const inSight = (s: State, owner: number, x: number, y: number) => eyesOf(s, owner).some(e => (e.x - x) ** 2 + (e.y - y) ** 2 < e.r ** 2);
+export function visibleTo(s: State, owner: number): Set<number> {
+  const eyes = eyesOf(s, owner), seen = new Set<number>();
   for (const u of s.units) {
     if (u.owner === owner || (eyes.some(e => (e.x - u.x) ** 2 + (e.y - u.y) ** 2 < (e.r + ST(u).radius) ** 2))) seen.add(u.id);
   }

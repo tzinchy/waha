@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { buildWhm, meshVisible, parseRsh, parseWhe, parseWhm, wheMotions, type Whe } from '../whm.ts';
-import { DOW_M, MOD_RACES, UA_WEAPONS, type Kind } from '../../shared/sim.ts';
+import { DOW_M, isStruct, MOD_RACES, UA_WEAPONS, type Kind } from '../../shared/sim.ts';
 import type { FactionId } from '../../shared/factions.ts';
 import type { FactionId as Pack } from './faction-models.ts';
 
@@ -37,6 +37,8 @@ export const ART: Partial<Record<FactionId, Art>> = {
 /** Масштаб моделей мода (метры DoW → метры игры), один на все: в масштабе DoW (×DOW_M) здания вдвое шире своих следов в сетке,
  *  поэтому все модели — 0.6 от него (медиана подгонки зданий под их ширину в игре); пропорции юнитов и зданий — как в DoW. */
 export const UA_SCALE = DOW_M * 0.6;
+/** Юниты мода — 1:1 с DoW (×DOW_M, как дальность, обзор и скорость): при 0.6 бойцы были мелкими на карте ×2. Здания — UA_SCALE, под следы в сетке. */
+export const uaScale = (kind: Kind) => (isStruct(kind) ? UA_SCALE : DOW_M);
 /** Пакет 3D-моделей → фракция мода (Инквизиция стоит на пакете космодесанта). */
 const PACK_RACE: Partial<Record<Pack, FactionId>> = { tyranids: 'tyranids', legion: 'inquisition' };
 

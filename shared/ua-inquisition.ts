@@ -3381,6 +3381,12 @@ export const UA_INQUISITION = {
      "ids": [
       "inquisition_shrine_to_the_emperor"
      ]
+    },
+    {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
+     ]
     }
    ]
   },
@@ -6906,6 +6912,12 @@ export const UA_INQUISITION = {
     ]
    },
    "req": [
+    {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
+     ]
+    },
     {
      "t": "research",
      "ids": [
@@ -12745,6 +12757,18 @@ export const UA_INQUISITION = {
      "ids": [
       "inquisition_absolute_purification"
      ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_requisition_research_4"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_requisition_research_4"
+     ]
     }
    ],
    "mods": [
@@ -12866,6 +12890,18 @@ export const UA_INQUISITION = {
      "ids": [
       "inquisition_begin_purification"
      ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_requisition_research_3"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_requisition_research_3"
+     ]
     }
    ],
    "mods": [
@@ -12930,6 +12966,18 @@ export const UA_INQUISITION = {
      "ids": [
       "inquisition_temporal_power"
      ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_requisition_research_1"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_requisition_research_1"
+     ]
     }
    ],
    "mods": [
@@ -12958,6 +13006,18 @@ export const UA_INQUISITION = {
      "t": "research",
      "ids": [
       "inquisition_ultimate_forces"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_requisition_research_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_requisition_research_2"
      ]
     }
    ],
@@ -17000,9 +17060,27 @@ export const UA_INQUISITION = {
    ],
    "req": [
     {
+     "t": "structure",
+     "ids": [
+      "inquisition_nuclear_facility"
+     ]
+    },
+    {
      "t": "research",
      "ids": [
       "inquisition_absolute_purification"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "inquisition_shrine_to_the_emperor"
+     ]
+    },
+    {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
      ]
     }
    ],
@@ -17021,6 +17099,12 @@ export const UA_INQUISITION = {
     "inquisition_tome_exterminatus_1"
    ],
    "req": [
+    {
+     "t": "required_ownership",
+     "ids": [
+      "strategic_objective_struct"
+     ]
+    },
     {
      "t": "structure",
      "ids": [
@@ -17058,6 +17142,12 @@ export const UA_INQUISITION = {
    ],
    "req": [
     {
+     "t": "required_ownership",
+     "ids": [
+      "strategic_objective_struct"
+     ]
+    },
+    {
      "t": "structure",
      "ids": [
       "inquisition_tower_hq"
@@ -17093,6 +17183,12 @@ export const UA_INQUISITION = {
     "inquisition_tome_exterminatus_3"
    ],
    "req": [
+    {
+     "t": "required_ownership",
+     "ids": [
+      "strategic_objective_struct"
+     ]
+    },
     {
      "t": "structure",
      "ids": [
@@ -17140,6 +17236,18 @@ export const UA_INQUISITION = {
      "ids": [
       "inquisition_absolute_purification"
      ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "inquisition_shrine_to_the_emperor"
+     ]
+    },
+    {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
+     ]
     }
    ],
    "mods": [],
@@ -17157,6 +17265,12 @@ export const UA_INQUISITION = {
     "inquisition_absolute_purification"
    ],
    "req": [
+    {
+     "t": "required_ownership",
+     "ids": [
+      "strategic_objective_struct"
+     ]
+    },
     {
      "t": "structure",
      "ids": [
@@ -17181,7 +17295,20 @@ export const UA_INQUISITION = {
    "power": 1200,
    "time": 150,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "inquisition_shrine_to_the_emperor"
+     ]
+    },
+    {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
+     ]
+    }
+   ],
    "mods": [],
    "building": "shrine_to_the_emperor"
   },
@@ -17197,6 +17324,12 @@ export const UA_INQUISITION = {
     "inquisition_tome_exterminatus_4"
    ],
    "req": [
+    {
+     "t": "required_ownership",
+     "ids": [
+      "strategic_objective_struct"
+     ]
+    },
     {
      "t": "structure",
      "ids": [
@@ -17221,7 +17354,20 @@ export const UA_INQUISITION = {
    "power": 2000,
    "time": 150,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "inquisition_shrine_to_the_emperor"
+     ]
+    },
+    {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
+     ]
+    }
+   ],
    "mods": [],
    "building": "shrine_to_the_emperor"
   },
@@ -17233,7 +17379,20 @@ export const UA_INQUISITION = {
    "power": 800,
    "time": 200,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "inquisition_shrine_to_the_emperor"
+     ]
+    },
+    {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "max_troopers_squad",
@@ -17523,6 +17682,12 @@ export const UA_INQUISITION = {
      ]
     },
     {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
+     ]
+    },
+    {
      "t": "research",
      "ids": [
       "inquisition_increase_relic_1"
@@ -17712,6 +17877,12 @@ export const UA_INQUISITION = {
      ]
     },
     {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
+     ]
+    },
+    {
      "t": "addon",
      "ids": [
       "inquisition_tower_addon"
@@ -17808,6 +17979,12 @@ export const UA_INQUISITION = {
      "t": "research",
      "ids": [
       "inquisition_begin_purification"
+     ]
+    },
+    {
+     "t": "required_ownership",
+     "ids": [
+      "strategic_objective_struct"
      ]
     }
    ],
@@ -18264,6 +18441,18 @@ export const UA_INQUISITION = {
      "ids": [
       "inquisition_absolute_purification"
      ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_power_research_4"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_power_research_4"
+     ]
     }
    ],
    "mods": [
@@ -18292,6 +18481,18 @@ export const UA_INQUISITION = {
      "t": "research",
      "ids": [
       "inquisition_begin_purification"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_power_research_3"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_power_research_3"
      ]
     }
    ],
@@ -18322,6 +18523,18 @@ export const UA_INQUISITION = {
      "ids": [
       "inquisition_temporal_power"
      ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_power_research_1"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_power_research_1"
+     ]
     }
    ],
    "mods": [
@@ -18350,6 +18563,18 @@ export const UA_INQUISITION = {
      "t": "research",
      "ids": [
       "inquisition_ultimate_forces"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_power_research_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "inquisition_power_research_2"
      ]
     }
    ],

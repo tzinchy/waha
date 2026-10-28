@@ -4792,6 +4792,12 @@ export const UA_TYRANIDS = {
      ]
     },
     {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
+     ]
+    },
+    {
      "t": "structure",
      "ids": [
       "tyranids_hq"
@@ -7111,7 +7117,32 @@ export const UA_TYRANIDS = {
    "power": 100,
    "time": 125,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_power_research_4"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_power_research_4"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_apocalypse_research"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "income_power_player",
@@ -7131,7 +7162,32 @@ export const UA_TYRANIDS = {
    "power": 60,
    "time": 115,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_power_research_2"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_power_research_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "income_power_player",
@@ -7237,7 +7293,26 @@ export const UA_TYRANIDS = {
    "power": 40,
    "time": 95,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_power_research"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_power_research"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "income_power_player",
@@ -7257,7 +7332,32 @@ export const UA_TYRANIDS = {
    "power": 80,
    "time": 125,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_power_research_3"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_power_research_3"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "income_power_player",
@@ -7285,6 +7385,12 @@ export const UA_TYRANIDS = {
      "ids": [
       "tyranids_hq_addon_2"
      ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
     }
    ],
    "mods": [],
@@ -7298,7 +7404,20 @@ export const UA_TYRANIDS = {
    "power": 20,
    "time": 60,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_digest_pool"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "income_power_player",
@@ -7325,6 +7444,12 @@ export const UA_TYRANIDS = {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
      ]
     }
    ],
@@ -7357,6 +7482,12 @@ export const UA_TYRANIDS = {
     "tyranids_hq_addon_1"
    ],
    "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
     {
      "t": "addon",
      "ids": [
@@ -7498,6 +7629,12 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_1"
@@ -7544,7 +7681,20 @@ export const UA_TYRANIDS = {
    "power": 95,
    "time": 35,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_lictor_upgrade_research_1"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_lictor_upgrade_research_1"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "sight_radius",
@@ -7645,6 +7795,18 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "research",
+     "ids": [
+      "tyranids_genestealer_upgrade_research_1"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_genestealer_upgrade_research_1"
+     ]
+    },
+    {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_1"
@@ -7723,6 +7885,12 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_2"
@@ -7758,6 +7926,12 @@ export const UA_TYRANIDS = {
     "tyranids_hq_addon_2"
    ],
    "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
     {
      "t": "addon",
      "ids": [
@@ -7841,6 +8015,12 @@ export const UA_TYRANIDS = {
      "t": "research",
      "ids": [
       "tyranids_arrival3_research"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
      ]
     },
     {
@@ -8006,6 +8186,12 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_1"
@@ -8055,6 +8241,18 @@ export const UA_TYRANIDS = {
     "tyranids_hq_addon_2"
    ],
    "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_lictor_upgrade_research_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_lictor_upgrade_research_2"
+     ]
+    },
     {
      "t": "addon",
      "ids": [
@@ -8226,6 +8424,12 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_1"
@@ -8352,6 +8556,18 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "research",
+     "ids": [
+      "tyranids_genestealer_upgrade_research_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_genestealer_upgrade_research_2"
+     ]
+    },
+    {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_2"
@@ -8443,6 +8659,18 @@ export const UA_TYRANIDS = {
     "tyranids_hq_addon_1"
    ],
    "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_gaunt_upgrade_research_1"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_gaunt_upgrade_research_1"
+     ]
+    },
     {
      "t": "addon",
      "ids": [
@@ -8714,7 +8942,26 @@ export const UA_TYRANIDS = {
    "power": 300,
    "time": 50,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "enable_infiltration_veil_of_darkness",
@@ -8752,9 +8999,21 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "research",
+     "ids": [
+      "tyranids_gaunt_upgrade_research_2"
+     ]
+    },
+    {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_gaunt_upgrade_research_2"
      ]
     },
     {
@@ -9297,6 +9556,12 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_1"
@@ -9681,7 +9946,32 @@ export const UA_TYRANIDS = {
    "power": 1100,
    "time": 125,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_requisition_research_4"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_requisition_research_4"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_apocalypse_research"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "income_requisition_player",
@@ -9701,7 +9991,32 @@ export const UA_TYRANIDS = {
    "power": 550,
    "time": 125,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_requisition_research_3"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_requisition_research_3"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_assimilation_research"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "income_requisition_player",
@@ -9721,7 +10036,26 @@ export const UA_TYRANIDS = {
    "power": 350,
    "time": 95,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_requisition_research_1"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_requisition_research_1"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "income_requisition_player",
@@ -9741,7 +10075,32 @@ export const UA_TYRANIDS = {
    "power": 450,
    "time": 115,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_requisition_research_2"
+     ]
+    },
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_requisition_research_2"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "income_requisition_player",
@@ -9761,7 +10120,20 @@ export const UA_TYRANIDS = {
    "power": 250,
    "time": 60,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "addon",
+     "ids": [
+      "tyranids_hq_addon_1"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_spore_chimney"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "income_requisition_player",
@@ -9788,6 +10160,18 @@ export const UA_TYRANIDS = {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_carnifex_hive"
      ]
     }
    ],
@@ -9852,6 +10236,18 @@ export const UA_TYRANIDS = {
      "t": "addon",
      "ids": [
       "tyranids_hq_addon_2"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_carnifex_hive"
      ]
     }
    ],
@@ -9931,6 +10327,30 @@ export const UA_TYRANIDS = {
      "ids": [
       "tyranids_hq_addon_2"
      ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_arrival3_research"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_carnifex_ext_carapace_research"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_carnifex_ext_carapace_research"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_carnifex_hive"
+     ]
     }
    ],
    "mods": [
@@ -9995,6 +10415,18 @@ export const UA_TYRANIDS = {
      "ids": [
       "tyranids_hq_addon_2"
      ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_carnifex_hive"
+     ]
     }
    ],
    "mods": [
@@ -10044,7 +10476,20 @@ export const UA_TYRANIDS = {
    "power": 200,
    "time": 30,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_carnifex_hive"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "health_maximum",
@@ -10099,7 +10544,20 @@ export const UA_TYRANIDS = {
    "power": 150,
    "time": 30,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_caps_research_1"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_caps_research_1"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "squad_cap_player",
@@ -10139,7 +10597,20 @@ export const UA_TYRANIDS = {
    "power": 150,
    "time": 30,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_caps_research_3"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_caps_research_3"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "support_cap_player",
@@ -10162,6 +10633,12 @@ export const UA_TYRANIDS = {
     "tyranids_hq_addon_2"
    ],
    "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_xeno_hive"
+     ]
+    },
     {
      "t": "local_addon",
      "ids": [
@@ -10249,6 +10726,18 @@ export const UA_TYRANIDS = {
      "ids": [
       "tyranids_assimilation_research"
      ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_capillary_tower"
+     ]
+    },
+    {
+     "t": "required_ownership",
+     "ids": [
+      "strategic_objective_struct"
+     ]
     }
    ],
    "mods": [],
@@ -10267,6 +10756,12 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "structure",
+     "ids": [
+      "tyranids_relic_hive"
+     ]
+    },
+    {
      "t": "research",
      "ids": [
       "tyranids_assimilation_research"
@@ -10282,6 +10777,12 @@ export const UA_TYRANIDS = {
      "t": "research",
      "ids": [
       "tyranids_relic_research_1"
+     ]
+    },
+    {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
      ]
     }
    ],
@@ -10319,6 +10820,18 @@ export const UA_TYRANIDS = {
      "ids": [
       "tyranids_arrival3_research"
      ]
+    },
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
+     "t": "required_ownership",
+     "ids": [
+      "relic_struct"
+     ]
     }
    ],
    "mods": [
@@ -10347,7 +10860,20 @@ export const UA_TYRANIDS = {
    "power": 150,
    "time": 30,
    "requires": [],
-   "req": [],
+   "req": [
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_caps_research"
+     ]
+    },
+    {
+     "t": "research",
+     "ids": [
+      "tyranids_caps_research"
+     ]
+    }
+   ],
    "mods": [
     {
      "type": "squad_cap_player",
@@ -10370,6 +10896,12 @@ export const UA_TYRANIDS = {
     "tyranids_apocalypse_research"
    ],
    "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
     {
      "t": "research",
      "ids": [
@@ -10512,6 +11044,12 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
      "t": "research",
      "ids": [
       "tyranids_apocalypse_research"
@@ -10533,6 +11071,12 @@ export const UA_TYRANIDS = {
    ],
    "req": [
     {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
+    {
      "t": "research",
      "ids": [
       "tyranids_apocalypse_research"
@@ -10553,6 +11097,12 @@ export const UA_TYRANIDS = {
     "tyranids_apocalypse_research"
    ],
    "req": [
+    {
+     "t": "structure",
+     "ids": [
+      "tyranids_hq"
+     ]
+    },
     {
      "t": "research",
      "ids": [

@@ -156,7 +156,7 @@ function reqs2(table) {
   for (const e of entries(table)) {
     const vals = Object.values(e).filter((v) => typeof v === 'string'), type = vals.map((v) => v.match(/^requirements\\([a-z_]+)\.lua$/i)?.[1]).find(Boolean);
     if (!type || type === 'required_none') continue;
-    const ids = vals.map((v) => v.match(/^(?:data\\attrib\\)?(?:ebps|addons|research)\\(?:.*\\)?([a-z0-9_]+)\.lua$/i)?.[1]).filter(Boolean);
+    const ids = vals.map((v) => v.match(/^(?:(?:data\\attrib\\)?(?:ebps|addons|research)\\(?:.*\\)?)?([a-z0-9_]+)(?:\.lua)?$/i)?.[1]).filter(Boolean); // путь к .lua или голое имя (tyranids_power_research_2: «tyranids_hq_addon_2» без пути — раньше терялось, исследование было без требований)
     const t = { required_structure: 'structure', required_structure_either: 'either', global_required_addon: 'addon', local_required_addon: 'local_addon', local_required_addon_exclusive: 'no_local_addon', required_research: 'research', required_structure_ratio: 'structure' }[type] ?? type;
     if (ids.length) out.push({ t, ids });
   }

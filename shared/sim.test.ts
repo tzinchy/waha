@@ -89,10 +89,10 @@ test('пост: только на своей точке (как в DoW) и де�
   assert.equal(s.points[1].owner, 0);
 });
 
-test('турель ставится у своих построек, строится за время мода', () => {
+test('турель ставится на разведанной земле (как в DoW), строится за время мода', () => {
   const s = freeState(2);
   const hq = unit(s, 0, 'hq'), b = unit(s, 0, 'builder');
-  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: hq.x + 60, y: hq.y + 60 }) ?? '', /у своих построек|скалах/);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: hq.x + 150, y: hq.y + 150 }) ?? '', /разведанной|скалах/); // вне обзора
   assert.equal(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'turret', x: hq.x + 7, y: hq.y }), undefined);
   run(s, STATS.turret.time + 5);
   assert.equal(unit(s, 0, 'turret').build, 1);
@@ -110,7 +110,7 @@ test('команды: чужими юнитами управлять нельз�
   applyCmd(s, 0, { c: 'move', ids: [enemy.id], x: 50, y: 50 });
   assert.equal(enemy.order, null);
   const b = unit(s, 0, 'builder');
-  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: 100, y: 150 }) ?? '', /рядом со штабом/);
+  assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'barracks', x: 100, y: 150 }) ?? '', /разведанной земле/); // раса UA: казармы где угодно в обзоре, не в тумане
   assert.match(applyCmd(s, 0, { c: 'build', ids: [b.id], kind: 'post', x: 60, y: 60 }) ?? '', /точки/);
   assert.equal(applyCmd(s, 0, { c: 'move', ids: [captainAt(s, 0).id], x: NaN, y: 1 }), undefined);
   assert.equal(captainAt(s, 0).order, null);
@@ -323,7 +323,8 @@ test('исследования UA: изучаются в своём здании
   Object.assign(p, { req: 1e4, energy: 1e4 });
   assert.equal(applyCmd(s, 0, { c: 'uar', id: b.id, r: i }), undefined);
   assert.ok(p.req < 1e4 || p.energy < 1e4, 'исследование стоит ресурсов');
-  assert.match(applyCmd(s, 0, { c: 'uar', id: b.id, r: i }) ?? '', /занято/);
+  assert.match(applyCmd(s, 0, { c: 'uar', id: b.id, r: i }) ?? '', /занято|другом здании/);
+  { const b2 = spawn(s, 0, x.at, hq.x - 20, hq.y - 20); b2.build = 1; assert.match(applyCmd(s, 0, { c: 'uar', id: b2.id, r: i }) ?? '', /другом здании/, 'исследование — одно на расу, второй генератор его не ведёт'); }
   run(s, x.time + 1);
   assert.ok(p.ur?.includes(i), 'изучено');
   assert.ok(hpOf(lictor) > hp0, 'ликтор крепче после исследования');

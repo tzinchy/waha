@@ -1,7 +1,7 @@
 // 2D-клиент матча на силуэтах дизайн-системы «Латунный Собор»: каждый юнит и здание — живой SVG из ds/assets,
 // окрашенный палитрой art-* и анимированный классами lc-anim-* из bundle.css. Правил игры здесь нет: только снимки сервера и ввод.
 import { World3D, has3d } from './world3d.ts';
-import { UA_SCALE, uaArtIcon, uaIcon } from './models3d/ua-models.ts';
+import { uaScale, uaArtIcon, uaIcon } from './models3d/ua-models.ts';
 import { ARCHS, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
 import { armedStat, HERO_AT, UA_TIERS, UA_BASE, UA_SETUP, inherit, MOD_RACES, UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, popOf, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { BUILD_NAME, PX_PACK, ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
@@ -64,7 +64,7 @@ export const SLOT_COLORS = [0x4fa392, 0xe0675c, 0xe0a53a, 0xb9c3c6];
 const WIDTH: Record<string, number> = { doom: 8, plague: 10, bell: 3.8, captain: 3.2, builder: 2.3, guard: 2.4, hq: 11, barracks: 8, post: 4.2, turret: 3.6, foundry: 6.5, pump: 4.4, key1: 6, key2: 6.5, key3: 6.5, key4: 7, gate: 9, motorpool: 9, yard: 14, legend: 6, wall: 3.4, wallgate: 4.6, bunker: 5.5, mine: 1.6 };
 /** Ширина силуэта на карте = рост в метрах (все силуэты дизайн-системы в одном поле 120×164): Стражник 2.4 м, титан — 26–34 м. */
 /** Модель мода, как её рисует World3D (UA_SCALE): [ширина, высота] в метрах игры или undefined (нет модели). */
-const uaSize = (kind: Kind, f: FactionId) => { const z = MOD_RACES[f as keyof typeof MOD_RACES] ? UA_SIZE[`${f}/${kind}`] : undefined; return z && ([z[0] * UA_SCALE, z[1] * UA_SCALE] as const); };
+const uaSize = (kind: Kind, f: FactionId) => { const z = MOD_RACES[f as keyof typeof MOD_RACES] ? UA_SIZE[`${f}/${kind}`] : undefined; return z && ([z[0] * uaScale(kind), z[1] * uaScale(kind)] as const); };
 const widthOf = (kind: Kind, f: FactionId) => uaSize(kind, f)?.[0] ?? (kind === 'titan' ? ROSTER[f].titanM : kind === 'turret' && f === 'tyranids' ? 5.4 : ROLES[kind]?.meters && !WIDTH[kind] ? ROLES[kind]!.meters : WIDTH[kind] ?? 2.4);
 /** Постройки, нарисованные для каждой фракции (tools/sprites.py); у Ордена — исходные из дизайн-системы. */
 const FAC_BUILD = new Set<Kind>(['key1', 'key2', 'key3', 'key4', 'gate', 'foundry', 'pump', 'wall', 'wallgate', 'bunker', 'mine']);
@@ -911,10 +911,10 @@ export class Game {
       if (UR) { // исследования UA этого здания: сначала неизученные
         const mine = UR.map((x, r) => ({ x, r })).filter(({ x, r }) => x.ats.includes(st.kind) && !(nt?.T.t === 'research' && nt.T.i === r)).sort((a, b) => +this.ur.includes(a.r) - +this.ur.includes(b.r));
         for (const { x, r } of mine.slice(0, Math.max(0, 12 - c.length))) {
-          const done = this.ur.includes(r), busy = !done && ((st.q > 0 && st.q !== 1000 + r) || !!this.qk[st.id]?.length);
+          const done = this.ur.includes(r), elsewhere = !done && st.q !== 1000 + r && [...this.views.values()].some(v => v.owner === this.slot && !v.dead && v.id !== st.id && v.q === 1000 + r), busy = !done && ((st.q > 0 && st.q !== 1000 + r) || !!this.qk[st.id]?.length || elsewhere);
           const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask, this.bName);
           c.push({ act: done || busy || miss ? '' : 'uar:' + r, name: x.name, hot: '', icon: ICON.research, ...(done ? {} : this.price(x.cost, x.energy)), done,
-            info: `${x.info.replace(/^- /, '')} ${x.info ? '(' + uaModsInfo(x) + ')' : uaModsInfo(x)} ${x.time} с.`, req: busy ? 'Здание занято' : miss, prog: st.q === 1000 + r ? st.prod : undefined, left: st.q === 1000 + r ? Math.max(0, Math.ceil(x.time * (1 - st.prod / 100))) : undefined });
+            info: `${x.info.replace(/^- /, '')} ${x.info ? '(' + uaModsInfo(x) + ')' : uaModsInfo(x)} ${x.time} с. Изучается один раз — на всю расу.`, req: elsewhere ? 'Изучается в другом здании — действует на все' : busy ? 'Здание занято' : miss, prog: st.q === 1000 + r ? st.prod : undefined, left: st.q === 1000 + r ? Math.max(0, Math.ceil(x.time * (1 - st.prod / 100))) : undefined });
         }
       }
       if (st.kind === 'gate') {
@@ -997,7 +997,8 @@ export class Game {
       ['Оборона', [...(NO_BUILD[this.fac()]?.includes('turret') ? [] : [card('turret', BUILD_NAME[this.fac()].turret, 'Y', TURRET_FAC[this.fac()]?.info ?? 'Стреляет сама, голова поворачивается к цели.')]), ...(NO_BUILD[this.fac()]?.includes('wall') ? [] : [card('wall', 'Стена', 'L', 'Протяжка: клик — начало, клик — конец. 30 за сегмент.'), card('wallgate', 'Ворота', 'G', 'Свои проходят, чужие нет.'), card('bunker', 'Бункер', 'X', 'Пехота рядом получает −50% урона.', this.tier < 2 ? 'Нужен тир II' : undefined)]), card('mine', 'Мина', 'V', 'Невидима врагу, 180 урона по 6 м.'),
         ]],
       ['Святыни', (() => {
-        const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — когда пали штабы и все здания найма.', this.tier < 2 ? 'Нужен тир II' : undefined); const k = keyKind(); return k ? [extra, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra]; })()],
+        const extra = card('hq', HQ_NAME[this.fac()], '·', 'Ещё один штаб: нанимает строителей, держит базу. Ставится у своей точки или построек; проигрыш — когда пали штабы и все здания найма.', this.tier < 2 ? 'Нужен тир II' : undefined); if (UA_REQ[this.fac()]) return [extra, ...(['key1', 'key2', 'key3', 'key4', 'gate'] as const).map(k => card(k, this.bName(k), 'K', 'Исследования и аддоны мода.'))]; // раса UA: все ключевые здания сразу, под требованиями мода (тир игры у неё не растёт — показывалось одно здание, ветка тира закрыта)
+        const k = keyKind(); return k ? [extra, card(k as Buildable, k === 'gate' ? F.gate : F.keys[Number(k[3]) - 1], 'K', k === 'gate' ? 'Врата призыва легенд, тир V.' : `Ключевое здание тира ${['I', 'II', 'III', 'IV'][Number(k[3]) - 1]}: открывает переход и 4 исследования.`)] : [extra]; })()],
     ];
     const all = tabs.flatMap(t => t[1]).filter(c => !NO_BUILD[this.fac()]?.includes(c.k)); // у рас UA — только их постройки из UA
     return `<div class="lc-buildhead">${miniArt(artFor('builder', this.fac()))}<div><div class="lc-buildhead__who">${F.builder} ×${bs.length}</div><div class="lc-buildhead__meta">скорость стройки ×${bs.length}</div></div><button class="lc-btn lc-btn--sm lc-btn--ghost" data-act="cmdgrid">Команды ▸</button></div>`
@@ -1175,7 +1176,7 @@ export class Game {
       else this.click(e.clientX, e.clientY, e.shiftKey);
       this.renderCmd();
     }, sig);
-    cv.addEventListener('wheel', e => { e.preventDefault(); this.cam.zoom = Math.max(0.2, Math.min(1.8, this.cam.zoom * (1 - Math.sign(e.deltaY) * 0.1))); }, { passive: false, ...sig });
+    cv.addEventListener('wheel', e => { e.preventDefault(); this.cam.zoom = Math.max(0.2, Math.min(3, this.cam.zoom * (1 - Math.sign(e.deltaY) * 0.1))); }, { passive: false, ...sig });
     addEventListener('keydown', e => {
       if (e.target instanceof HTMLInputElement && e.target.offsetParent) return; // фокус в скрытом поле меню не глушит клавиши матча
       const k = keyOf(e);

@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { FactionActor, ROLE_MOTIONS, motionDuration, type Motion, type UnitRole, type FactionId as Pack } from './models3d/faction-models.ts';
 import { StructureActor, STRUCTURE_ROLE_MOTIONS, structureMotionDuration, type StructureMotion, type StructureRole } from './models3d/structure-models.ts';
 import { NuclearBlastActor } from './models3d/effect-models.ts';
-import { UA_SCALE, uaActor, uaReady, type UAActor } from './models3d/ua-models.ts';
+import { uaScale, uaActor, uaReady, type UAActor } from './models3d/ua-models.ts';
 import { FxLayer, fxVisible, hitVisible, HITS, loadEvents } from './models3d/ua-fx.ts';
 import { inherit, type Kind } from '../shared/sim.ts';
 
@@ -65,7 +65,7 @@ export class World3D {
       this.native.set(key, w); return w;
     })();
     // модели мода — в метрах DoW, все в одном масштабе UA_SCALE: соотношение размеров как в игре (улей больше Тирана, Карнифекс больше гаунта)
-    const scale = ua ? UA_SCALE : (widthM / base) * (kind === 'legend' ? 1.3 : 1);
+    const scale = ua ? uaScale(kind) : (widthM / base) * (kind === 'legend' ? 1.3 : 1);
     for (const a of actors) { a.root.position.multiplyScalar(1 / scale); } // строй — в метрах игры, модель — в своих
     group.scale.setScalar(scale);
     group.traverse(o => { o.frustumCulled = false; const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && !Array.isArray(m)) m.side = THREE.DoubleSide; }); // косоугольная проекция зеркалит обход граней — рисуем обе стороны
