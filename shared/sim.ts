@@ -198,12 +198,13 @@ export const energyOf = (k: Kind, f?: FactionId) => (f && UA_ENERGY[f]?.[k]) ?? 
 export const UA_UNARMED = new Set<string>();
 export const UA_SQ: Partial<Record<FactionId, Partial<Record<Kind, { max: number; cost: number; time: number }>>>> = {};
 /** Стволы юнита или турели мода → урон, пробитие (V), апгрейд оружия (UP), имена стволов (WP). Возвращает основной ствол или undefined. */
+/** Ствол точки крепления по умолчанию — как в DoW: первый в списке; пустышка (урон 0) — точка пуста, пока ствол не куплен (Био-плазма воина, Душитель карнифекса). */
+const modDefault = (l: readonly ModWeapon[]) => (l[0]?.max > 0 ? l[0] : undefined);
 function modWeapons(u: ModUnit, k: Kind, n: number, WP: Partial<Record<Kind, string[]>>, V: Partial<Record<Kind, Record<Armor, number>>>, UP: Partial<Record<Kind, Upgrade & UAUp>>, struct = false, CL?: Partial<Record<Kind, UAClose>>) {
-  // урон — сумма по точкам крепления (в DoW каждая стреляет сама); у стрелковых ролей — первый стрелковый ствол точки (в моде ставится апгрейдом), иначе базовый
+  // урон — сумма по точкам крепления (в DoW каждая стреляет сама), в каждой — ствол мода по умолчанию; остальное покупается бойцу (UA_ARM)
   // здание бьёт одним стволом: у бункера четыре пулемёта по сторонам света — по цели стреляет один
   const ranged = RANGED_ROLE.has(k), dps = (w: ModWeapon) => ((w.min + w.max) / 2) * w.accuracy / Math.max(0.1, w.reload);
-  // герой — как в моде: в каждой точке крепления ствол по умолчанию (первый), остальные — покупное снаряжение
-  const all = (k === 'captain' || SLOT.has(k) ? u.hardpoints.map(l => l[0]?.max > 0 ? l[0] : undefined) : u.hardpoints.map(l => (ranged && l.find(w => !w.melee && w.max > 0)) || l.find(w => w.max > 0))).filter((w): w is ModWeapon => !!w);
+  const all = u.hardpoints.map(l => (struct ? l.find(w => w.max > 0) : modDefault(l))).filter((w): w is ModWeapon => !!w); // у здания ствол ставит аддон (addonWeapon) — статы от первого настоящего
   const picks = struct ? all.sort((a, b) => dps(b) - dps(a)).slice(0, 1) : all;
   const shots = picks.some(w => !w.melee) ? picks.filter(w => !w.melee) : picks, main = shots[0];
   WP[k] = picks.map(w => w.file ?? '');
@@ -268,15 +269,15 @@ for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RAC
  * Оружие отрядов UA, как в моде: в панели отряда стволы на выбор, каждый покупается одному бойцу (сколько всего — max_upgrades отряда,
  * в одну точку крепления — не больше живых бойцов). Цена, время и требования — из файла ствола. Заменяет уровень 2 у отрядов UA.
  */
-type ArmOpt = { h: number; file: string; name: string; icon: string; cost: number; power: number; time: number; requires: string[]; d: number; dv: Record<Armor, number> };
+type ArmOpt = { h: number; file: string; name: string; icon: string; cost: number; power: number; time: number; requires: string[]; d: number; dv: Record<Armor, number>; range: number }; // range — дальность купленного стрелкового ствола, м игры (0 — рукопашный)
 export const UA_ARM: Partial<Record<FactionId, Partial<Record<Kind, { ups: number; opts: ArmOpt[]; d0: number; v0: Record<Armor, number> }>>>> = {};
 for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RACES)[keyof typeof MOD_RACES]][]) {
   const A: NonNullable<(typeof UA_ARM)[FactionId]> = UA_ARM[f] = {};
   for (const [k, id] of Object.entries(race.unit) as [Kind, string][]) {
     const q = race.data.squads[id] as (typeof race.data.squads)[string] & { ups?: number };
     if (!q?.ups || SLOT.has(k) || k === 'builder') continue;
-    const dps = (w: ModWeapon) => ((w.min + w.max) / 2) * w.accuracy / Math.max(0.1, w.reload), ranged = RANGED_ROLE.has(k);
-    const hps = q.unit.hardpoints, pick = hps.map(l => (ranged && l.find(w => !w.melee && w.max > 0)) || l.find(w => w.max > 0) || l[0]);
+    const dps = (w: ModWeapon) => ((w.min + w.max) / 2) * w.accuracy / Math.max(0.1, w.reload);
+    const hps = q.unit.hardpoints, pick = hps.map(l => l[0]);
     const shots = pick.filter(w => w && w.max > 0 && (!pick.some(x => x && !x.melee && x.max > 0) || !w.melee)), d0 = shots.reduce((a, w) => a + dps(w), 0);
     if (!d0) continue;
     const v0 = Object.fromEntries(ARMORS.map(a => [a, shots.reduce((m, w) => m + w.vs[a] * dps(w), 0) / 100])) as Record<Armor, number>; // урон × пробитие стартового бойца
@@ -284,7 +285,7 @@ for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RAC
     hps.forEach((l, h) => { for (const w of l) if (w !== pick[h] && w.max > 0 && (w.cost || w.power)) {
       const b = pick[h] && shots.includes(pick[h]) ? pick[h] : undefined, bd = b ? dps(b) : 0, x = w as ModWeapon & { icon?: string; requires?: string[] };
       opts.push({ h, file: w.file ?? '', name: w.name || (w.file ?? '').replace(/^[a-z]+_|_/g, ' ').trim(), icon: x.icon ?? '', cost: w.cost ?? 0, power: w.power ?? 0, time: Math.max(1, w.time ?? 1), requires: x.requires ?? [],
-        d: dps(w) - bd, dv: Object.fromEntries(ARMORS.map(a => [a, (dps(w) * w.vs[a] - bd * (b?.vs[a] ?? 0)) / 100])) as Record<Armor, number> }); // прибавка к залпу и пробитию бойца с этим стволом
+        range: w.melee ? 0 : Math.round(w.range * UA_K.range), d: dps(w) - bd, dv: Object.fromEntries(ARMORS.map(a => [a, (dps(w) * w.vs[a] - bd * (b?.vs[a] ?? 0)) / 100])) as Record<Armor, number> }); // прибавка к залпу и пробитию бойца с этим стволом
     } });
     if (opts.length) { A[k] = { ups: q.ups, opts, d0, v0 }; delete UA_UPG[f]![k]; }
   }
@@ -747,7 +748,7 @@ for (const [f, race] of Object.entries(MOD_RACES)) NO_BUILD[f as FactionId] = (O
 export const FACTION_ONLY: Partial<Record<Buildable, FactionId | null>> = { aegis: null, rturret: null, fturret: null, battery: null, bell: null, pylon: null, pyre: null, lighthouse: null, obelisk: null, megagun: null, plague: null, warpgate: null, portal: null }; // null — постройки удалённых рас: никому
 export const maxHp = (k: Kind, f?: FactionId) => statOf(k, f).hp * statOf(k, f).n;
 /** Статы и полное здоровье конкретного юнита — по его фракции. */
-export const ST = (u: Unit) => statOf(u.kind, u.f);
+export const ST = (u: Unit) => u.st ?? statOf(u.kind, u.f);
 export const hpOf = (u: Unit) => (u.mh ?? ST(u).hp) * (u.mn ?? ST(u).n);
 /** Живых бойцов в отряде по его HP (с исследованиями). */
 export const membersOf = (u: Unit) => (u.hp <= 0 ? 0 : Math.min(u.mn ?? ST(u).n, Math.ceil(u.hp / (u.mh ?? ST(u).hp) - 1e-6)));
@@ -763,6 +764,11 @@ export function armOf(u: Unit): { dmg: number; vs: Record<Armor, number> } | und
   let d = A.d0 * n; const v = { ...A.v0 }; for (const a of ARMORS) v[a] *= n;
   A.opts.forEach((o, i) => { const c = Math.min(u.wu![i] ?? 0, n - (used.get(o.h) ?? 0)); if (c <= 0) return; used.set(o.h, (used.get(o.h) ?? 0) + c); d += c * o.d; for (const a of ARMORS) v[a] += c * o.dv[a]; });
   return { dmg: Math.max(0.1, d / (A.d0 * n)), vs: Object.fromEntries(ARMORS.map(a => [a, Math.max(0, v[a] / Math.max(1e-6, d))])) as Record<Armor, number> };
+}
+/** Рукопашный по умолчанию отряд UA купил стрелковый ствол — бьёт с его дальности (как в DoW: боец со стволом стреляет, сходится врукопашную сам). */
+function armRange(u: Unit) {
+  const A = UA_ARM[u.f!]?.[u.kind], base = statOf(u.kind, u.f), r = Math.max(0, ...(A?.opts ?? []).map((o, i) => ((u.wu?.[i] ?? 0) > 0 ? o.range : 0)));
+  u.st = r > base.range ? { ...base, range: r } : undefined;
 }
 /** Требования ствола мода: исследования UA изучены, здания построены; аддоны штаба — тир (hq_addon_N → N+1, прочие → 2). Неизвестные (схемы без модификаторов) пока не держат. */
 export function armReq(s: State, owner: number, req: string[]) {
@@ -801,6 +807,7 @@ export type Unit = {
   mh?: number; mn?: number; // HP бойца и размер отряда с исследованиями UA
   ad?: number; // UA: купленные аддоны здания (биты — индексы UA_ADDONS расы)
   wu?: number[]; wq?: number; wt?: number; // UA: стволов куплено по вариантам UA_ARM, какой ставится сейчас и сколько секунд
+  st?: Stat; // UA: свои статы бойца — рукопашный отряд купил стрелковый ствол (воины с пожирателем бьют издали)
   sz?: number; // бойцов докуплено пополнением сверх стартового (отряды UA растут до максимума мода)
   id: number; owner: number; kind: Kind; x: number; y: number; hp: number; face: number;
   cd: number; order: Order | null;
@@ -1382,7 +1389,7 @@ export function step(s: State, dt = DT): void {
     if (u.build >= 1) produce(s, u, dt);
     act(s, u, dt, byId);
     reinforce(s, u, dt);
-    if (u.wq !== undefined && (u.wt = (u.wt ?? 0) + dt) >= UA_ARM[u.f!]![u.kind]!.opts[u.wq].time) { (u.wu ??= [])[u.wq] = (u.wu[u.wq] ?? 0) + 1; u.wq = undefined; } // ствол бойцу поставлен
+    if (u.wq !== undefined && (u.wt = (u.wt ?? 0) + dt) >= UA_ARM[u.f!]![u.kind]!.opts[u.wq].time) { (u.wu ??= [])[u.wq] = (u.wu[u.wq] ?? 0) + 1; u.wq = undefined; armRange(u); } // ствол бойцу поставлен
   }
   for (const t of s.units) if (t.carry && isStruct(t.kind)) { // турель едет за несущим отрядом
     const sq = s.units.find(v => v.id === t.carry && v.hp > 0);

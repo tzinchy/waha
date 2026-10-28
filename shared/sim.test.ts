@@ -325,6 +325,20 @@ test('исследования UA: изучаются в своём здании
   assert.ok(hpOf(spawn(s, 0, 'sniper', hq.x + 12, hq.y)) > hp0, 'новый ликтор — тоже');
 });
 
+test('стволы UA по умолчанию — как в моде: воины тиранид рукопашные, пожиратель покупается и даёт дальность', async () => {
+  const { UA_ARM, UA_WEAPONS, ST } = await import('./sim.ts');
+  assert.ok(!UA_WEAPONS.tyranids!.heavy!.some(w => /devourer|bioplasma/.test(w)), 'пожиратель и биоплазма не даются даром');
+  assert.ok(statOf('heavy', 'tyranids').range <= 3, 'без покупки — ближний бой');
+  const A = UA_ARM.tyranids!.heavy!, w = A.opts.findIndex(o => /devourer/.test(o.file)), o = A.opts[w];
+  assert.ok(w >= 0 && o.range > 20, 'пожиратель — в покупках, стрелковый');
+  const s = freeState(2, ['tyranids', 'inquisition']), g = spawn(s, 0, 'heavy', 100, 100);
+  s.players[0].tier = 4; spawn(s, 0, 'key4', 60, 60).build = 1; // требования ствола: тир и здание
+  assert.equal(applyCmd(s, 0, { c: 'uaw', id: g.id, w }), undefined);
+  run(s, o.time + 0.5);
+  assert.equal(ST(g).range, o.range, 'со стволом бьёт с его дальности');
+  assert.ok(statOf('heavy', 'tyranids').range <= 3, 'у других отрядов того же вида — по-прежнему ближний бой');
+});
+
 test('оружие UA побойцово: Серые Рыцари покупают психопушку из панели отряда, бьют сильнее, лимит отряда держит', async () => {
   const { UA_ARM } = await import('./sim.ts');
   const A = UA_ARM.inquisition?.guard, w = A?.opts.findIndex(o => /psycannon/.test(o.file)) ?? -1, o = A!.opts[w];
