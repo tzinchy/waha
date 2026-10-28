@@ -838,6 +838,8 @@ export class Game {
     return c;
   }
   private buildCells(sel: View[]): Cell[] {
+    // чужое (и зрителю) — без приказов: иначе панель показывала очередь, аддоны и исследования чужого здания кнопками своей расы — у двух Инквизиций чужое улучшение выглядело своим
+    if (sel.some(v => v.owner !== this.slot)) return [];
     const F = FACTIONS[this.fac()], R = ['I', 'II', 'III', 'IV', 'V'], c: Cell[] = [];
     const hv = sel.length === 1 && sel[0].owner === this.slot && sel[0].hero && !sel[0].dead ? sel[0] : null;
     if (hv && this.treeOpen) return this.treeCells(hv);
