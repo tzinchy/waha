@@ -13,7 +13,7 @@ export type MapDef = {
 };
 export const MAPS: MapDef[] = [MAP_ZERO, MAP_VALLEY, MAP_ARENA];
 /** Карты, которые видят игроки. */
-export const PLAY_MAPS = [2]; // играют на «Перевале»; карты DoW (0, 1) — для тестов и разработки
+export const PLAY_MAPS = [2, 0, 1]; // по умолчанию «Перевал»; карты DoW (Абсолютный ноль, Долина Императоров) — с объёмной землёй из рельефа .sgb
 export let MAP = MAPS[0].map, HQ_POS = MAPS[0].hq, POINTS = MAPS[0].points, RELICS = MAPS[0].relics, VENTS = MAPS[0].vents;
 export let ROADS = MAPS[0].roads, RIVER = MAPS[0].river, BRIDGES = MAPS[0].bridges, PLATEAUS = MAPS[0].plateaus, RUINS = MAPS[0].ruins, CRATERS = MAPS[0].craters, COVER = MAPS[0].cover;
 export let BLOCKS: Rect[] = MAPS[0].blocks;

@@ -11,6 +11,7 @@ import { audio } from './audio.ts';
 import { paintDow, paintMap } from './mappaint.ts';
 import { voice } from './voice.ts';
 import { UA_SIZE } from './models3d/ua-sizes.ts';
+import { hasRelief, lift, pick, setRelief } from './terrain.ts';
 
 const S = 26; // пикселей мира на единицу симуляции
 /** Цвет выстрелов фракции: [трассер/огонь, луч/свечение] — чтобы с первого взгляда было видно, кто стреляет. */
@@ -202,7 +203,7 @@ function mapSvg() {
   const diamond = (x: number, y: number, r = 1.2) => `M${P(x, y - r)}L${P(x + r, y)}L${P(x, y + r)}L${P(x - r, y)}Z`;
   const star = (x: number, y: number, r: number) => { let d = ''; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, rr = i % 2 ? r * 0.55 : r; d += (i ? 'L' : 'M') + P(x + Math.sin(a) * rr, y - Math.cos(a) * rr); } return d + 'Z'; };
   const letters = PT_LETTERS;
-  const pts = POINTS.map(([x, y], i) => i === 0
+  const pts = POINTS.map(([x, y0], i) => ({ x, y: lift(x, y0), i })).map(({ x, y, i }) => i === 0
     ? `<path class="pt-crit" d="${star(x, y - POINT_R - 2.2, 1.6)}"/><text class="t t-on" x="${x * k}" y="${(y - POINT_R - 1.8) * k}" style="font-size:22px">II</text>`
     : `<path class="pt-inf" d="${diamond(x, y - POINT_R - 2)}"/><text class="t" x="${x * k}" y="${(y - POINT_R - 1.6) * k}" style="font-size:22px">${letters[i]}</text>`).join('');
   return `<svg class="lc-bigmap" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="position:absolute;left:0;top:0;pointer-events:none;background:none">${pts}</svg>`; // метки точек поверх текстуры
@@ -339,11 +340,15 @@ export class Game {
     Object.assign(tex.style, { position: 'absolute', left: '0', top: '0', width: MAP.w * S + 'px', height: MAP.h * S + 'px', imageRendering: 'auto' });
     this.ground.append(tex);
     const get = (u: string) => fetch(u).then(r => (r.ok ? r.arrayBuffer() : null));
+    setRelief(null);
     if (GROUND) void Promise.all([get(GROUND), get(GROUND.replace(/\.tga$/i, '.sgb'))]).then(([b, sgb]) => { // карта из DoW: её текстура и рельеф вместо нарисованной земли
       const img = b && tgaCanvas(b);
       if (!img || !sgb) return;
       const t = paintDow(tex, img, sgb), mini = document.querySelector('#mini-svg image');
       if (mini) mini.setAttribute('href', t.toDataURL());
+      // объёмная земля: сетка по рельефу в 3D, плоский слой земли и тумана под ней не нужен (туман рисуется в тот же холст — он текстура сетки)
+      setRelief(sgb.slice(0)); this.w3d.terrain(tex, this.fogCv, MAP.w, MAP.h); this.under.style.visibility = 'hidden';
+      this.ground.querySelector('.lc-bigmap')?.remove(); this.world.insertAdjacentHTML('afterbegin', mapSvg()); // метки точек — над землёй, на её высоте
     }).catch(() => undefined);
     this.ground.insertAdjacentHTML('beforeend', mapSvg());
     // Three distinct capture-site silhouettes and a command/capture animation layer.
@@ -396,7 +401,7 @@ export class Game {
   /** Ставит элемент в мир ногами в точку (x, y); глубина — по y. */
   private place2(el: HTMLElement, x: number, y: number) {
     el.classList.add('w2d-ent');
-    el.style.transform = `translate(${x * S}px, ${y * S}px)`;
+    el.style.transform = `translate(${x * S}px, ${lift(x, y) * S}px)`;
     el.style.zIndex = String(Math.round(y * 10));
     this.world.append(el);
     return el;
@@ -544,7 +549,7 @@ export class Game {
     const ns = 'http://www.w3.org/2000/svg', g = document.createElementNS(ns, 'g');
     const hv = melee ? this.nearest(x2, y2) : undefined, hr = hv && isStruct(hv.kind) ? (foot(hv.kind) * BCELL) / 2 : 0, hd = Math.hypot(x1 - x2, y1 - y2); // удар по зданию — у его края со стороны бойца, а не в центре под моделью
     const hx = hr && hd > hr ? x2 + ((x1 - x2) / hd) * hr : x2, hy = hr && hd > hr ? y2 + ((y1 - y2) / hd) * hr : y2;
-    const h = best && !isStruct(best.kind) ? 1.2 : 2.2, X1 = x1 * S, Y1 = (y1 - h) * S, X2 = hx * S, Y2 = (hy - 1) * S;
+    const h = best && !isStruct(best.kind) ? 1.2 : 2.2, X1 = x1 * S, Y1 = (lift(x1, y1) - h) * S, X2 = hx * S, Y2 = (lift(hx, hy) - 1) * S;
     const dir = Math.sign(X2 - X1) || 1;
     const wf = best && MOD_RACES[this.fac(best.owner) as keyof typeof MOD_RACES] ? UA_WEAPONS[this.fac(best.owner)]?.[best.kind] ?? [] : [], tv = wf.length ? this.nearest(x2, y2) : undefined;
     const surf = !tv ? '' : isStruct(tv.kind) ? 'stone' : this.fac(tv.owner) === 'tyranids' ? 'flesh' : VEHICLES.has(UA_BASE[tv.kind] ?? tv.kind) ? 'heavy_metal_armour' : 'light_metal_armour'; // поверхность цели — как type_surface в DoW
@@ -1118,7 +1123,8 @@ export class Game {
   }
   private toWorld(sx: number, sy: number) {
     const r = this.root.getBoundingClientRect(), z = this.cam.zoom;
-    return { x: this.cam.x + (sx - r.left - r.width / 2) / (S * z), y: this.cam.y + (sy - r.top - r.height / 2) / (S * z) };
+    const x = this.cam.x + (sx - r.left - r.width / 2) / (S * z), y = this.cam.y + (sy - r.top - r.height / 2) / (S * z);
+    return hasRelief() ? pick(x, y) : { x, y }; // на рельефе — точка земли под курсором, а не плоскости
   }
 
   private bind() {
@@ -1394,6 +1400,7 @@ export class Game {
       holes.push(`<circle cx="${(v.x / MAP.w) * 100}" cy="${(v.y / MAP.h) * 100}" r="${(r / MAP.w) * 100}" fill="#000"/>`);
     }
     this.miniFog.innerHTML = holes.join('');
+    this.w3d.terrainFog();
   }
 
   /** Точки захвата: ромбы по буквам в цвете владельца. */
@@ -1526,7 +1533,7 @@ export class Game {
       const g = this.placePoint(this.mouse.x, this.mouse.y);
       this.ghost.classList.remove('hidden');
       this.ghost.classList.toggle('bad', !g.ok);
-      this.ghost.style.transform = `translate(${g.x * S}px, ${g.y * S}px)`;
+      this.ghost.style.transform = `translate(${g.x * S}px, ${lift(g.x, g.y) * S}px)`;
     }
     if (wg !== this.wallGhostHtml) this.wallGhost.innerHTML = this.wallGhostHtml = wg;
 
@@ -1535,7 +1542,7 @@ export class Game {
     for (const v of this.views.values()) {
       const moving = Math.hypot(v.tx - v.x, v.ty - v.y) > 0.06;
       v.x += (v.tx - v.x) * a; v.y += (v.ty - v.y) * a;
-      v.el.style.transform = `translate(${v.x * S}px, ${v.y * S}px)`;
+      v.el.style.transform = `translate(${v.x * S}px, ${lift(v.x, v.y) * S}px)`; // на рельефе DoW — на высоте земли
       v.el.style.zIndex = String(Math.round(v.y * 10));
       if (isStruct(v.kind)) {
         this.w3d.update(v.id, v.x, v.y, v.f, v.build < 1 ? 'build' : now < v.atkUntil ? 'shoot' : 'idle', now, { build: v.build, ghost: v.el.classList.contains('ghost'), shot: v.shotAt });

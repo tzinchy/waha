@@ -9,6 +9,7 @@ import { NuclearBlastActor } from './models3d/effect-models.ts';
 import { UA_SCALE, uaActor, uaReady, type UAActor } from './models3d/ua-models.ts';
 import { FxLayer, fxVisible, hitVisible, HITS, loadEvents } from './models3d/ua-fx.ts';
 import { inherit, type Kind } from '../shared/sim.ts';
+import { groundH } from './terrain.ts';
 
 /** Вид юнита → роль модели. Чего здесь нет (мины), рисуется по-старому. */
 export const UNIT_ROLE: Partial<Record<Kind, UnitRole>> = { captain: 'captain', legend: 'elite', guard: 'guard', builder: 'builder', sniper: 'sniper', heavy: 'heavy', support: 'scout', elite: 'elite', healer: 'medic', lveh: 'transport', mveh: 'walker', hveh: 'tank', arty: 'artillery', titan: 'titan', air: 'flyer', jet: 'aircraft', bomber: 'aircraft' };
@@ -77,7 +78,7 @@ export class World3D {
   update(id: number, x: number, y: number, face: number, motion: string, now: number, opts: { alive?: number; build?: number; ghost?: boolean; fly?: boolean; veil?: boolean; shot?: number } = {}) {
     const e = this.entries.get(id);
     if (!e || e.dead) return;
-    e.group.position.set(x, opts.fly ? (e.kind === 'bomber' ? 12 : e.kind === 'jet' ? 8 : 3) + Math.sin(now / 400 + id) * 0.3 : 0, y); // летуны висят над землёй и покачиваются
+    e.group.position.set(x, groundH(x, y) + (opts.fly ? (e.kind === 'bomber' ? 12 : e.kind === 'jet' ? 8 : 3) + Math.sin(now / 400 + id) * 0.3 : 0), y); // летуны висят над землёй и покачиваются
     if (!!opts.veil !== !!e.veil) { // скрыт Теневым порталом: свой юнит полупрозрачный (материалы копируем — они общие у моделей)
       e.veil = opts.veil;
       e.group.traverse(o => {
@@ -107,7 +108,7 @@ export class World3D {
   private points = new Map<number, { a: StructureActor; g: THREE.Group; relic: boolean; rings: THREE.Object3D[] }>();
   point(i: number, x: number, y: number, kind: 'normal' | 'key' | 'relic', widthM: number) {
     const a = new StructureActor('legion', kind === 'relic' ? 'resource_point' : 'capture_point', kind === 'key' ? 2 : 1, { primary: 0x5b5246, metal: 0x3e3933, trim: kind === 'key' ? 0xd8a24a : 0x9c8a62, glow: kind === 'relic' ? 0x5dff8a : 0xb9c3c6 }); // ключевая — с пилонами, реликвия — зелёная
-    const g = new THREE.Group(); g.add(a.root); g.position.set(x, 0, y);
+    const g = new THREE.Group(); g.add(a.root); g.position.set(x, groundH(x, y), y);
     const b = new THREE.Box3().setFromObject(a.root).getSize(new THREE.Vector3());
     g.scale.setScalar(widthM / Math.max(0.5, b.x, b.z));
     g.traverse(o => { o.frustumCulled = false; const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && !Array.isArray(m)) m.side = THREE.DoubleSide; });
@@ -126,9 +127,9 @@ export class World3D {
     }
     const pool = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.05, 10), lava); pool.position.y = 0.14; g.add(pool);
     for (let i = 0; i < 5; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.16 + (i % 2) * 0.08), rock), a = i * 1.3; r.position.set(Math.sin(a) * 0.95, 0.12, Math.cos(a) * 0.95); g.add(r); }
-    g.position.set(x, 0, y); g.scale.setScalar(widthM / 2.2);
+    g.position.set(x, groundH(x, y), y); g.scale.setScalar(widthM / 2.2);
     g.traverse(o => { o.frustumCulled = false; });
-    this.scene.add(g); this.vents.push(lava);
+    this.scene.add(g); this.vents.push(lava); this.decor.push(g);
   }
   /** color — цвет владельца или захватчика (null — нейтральная), prog — доля захвата 0..1. */
   pointState(i: number, color: number | null, owned: boolean, prog: number, now: number) {
@@ -141,10 +142,29 @@ export class World3D {
     else p.a.pose('capture', (owned ? 1 - prog : prog) * structureMotionDuration('capture') * 0.8); // флаг ползёт вверх при захвате и вниз, когда чужие сбивают
   }
 
+  /** Объёмная земля карты DoW: сетка по рельефу (шаг ~3 м) с нарисованной землёй; туман войны — второй слой по той же сетке.
+   *  Холсты земли и тумана — те же, что у 2D-слоя (он под ней не виден); после перерисовки тумана — terrainFog(). */
+  private fogTex: THREE.CanvasTexture | null = null;
+  private decor: THREE.Group[] = []; // жилы: ставятся до рельефа, он их поднимает
+  terrain(ground: HTMLCanvasElement, fog: HTMLCanvasElement, w: number, h: number) {
+    const nx = Math.ceil(w / 3), nz = Math.ceil(h / 3), pos: number[] = [], uv: number[] = [], idx: number[] = [];
+    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) { const x = (i / nx) * w, z = (j / nz) * h; pos.push(x, groundH(x, z), z); uv.push(i / nx, 1 - j / nz); }
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const a = j * (nx + 1) + i, b = a + nx + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+    const geo = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)).setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)).setIndex(idx);
+    const tex = new THREE.CanvasTexture(ground); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    this.fogTex = new THREE.CanvasTexture(fog);
+    const land = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })); // светотень уже в текстуре (paintDow)
+    const veil = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: this.fogTex, transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
+    land.renderOrder = -2; veil.renderOrder = -1;
+    for (const m of [land, veil]) { m.frustumCulled = false; this.scene.add(m); }
+    for (const g of [...this.decor, ...[...this.points.values()].map(p => p.g)]) g.position.y = groundH(g.position.x, g.position.z); // поставлены до загрузки рельефа
+  }
+  terrainFog() { if (this.fogTex) this.fogTex.needsUpdate = true; }
+
   /** Сверхоружие: ядерный гриб на r метров (пыль модели расходится примерно на 4.3 своих единицы). */
   private blasts: { a: NuclearBlastActor; t0: number }[] = [];
   blast(x: number, y: number, r: number, now: number) {
-    const a = new NuclearBlastActor(); a.root.position.set(x, 0, y); a.root.scale.setScalar(r / 4.3);
+    const a = new NuclearBlastActor(); a.root.position.set(x, groundH(x, y), y); a.root.scale.setScalar(r / 4.3);
     a.root.traverse(o => { o.frustumCulled = false; });
     this.scene.add(a.root); this.blasts.push({ a, t0: now });
   }
