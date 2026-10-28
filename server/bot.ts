@@ -1,4 +1,4 @@
-import { MOD_RACES, UA_ADDONS, UA_ARM, UA_REQ, UA_RESEARCH, type UAReq, canReinforce, hpOf, statOf, fromOf, PRODUCERS, GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
+import { MOD_RACES, UA_ADDONS, UA_TIERS, UA_ARM, UA_REQ, UA_RESEARCH, type UAReq, canReinforce, hpOf, statOf, fromOf, PRODUCERS, GEN_CAP, TIER_UP, has, VENTS, genAnchor, ABILITIES, canLearn, applyCmd, heroesOf, isStruct, maxHp, producible, ROLES, SQUADS, VEHICLES, MAP, STATS, type Kind, type State } from '../shared/sim.ts';
 
 /** Бот играет по тем же правилам: казармы, второй строитель, посты на точках, гвардия с пополнением, атака на штаб. */
 export function botThink(s: State, me: number): void {
@@ -46,6 +46,11 @@ export function botThink(s: State, me: number): void {
     }
   };
   const firstArmy = producible('hq', F0).some(k => k !== 'builder' && !isStruct(k)) || of('barracks').some(b => b.build >= 1); // есть где нанять первый отряд
+  const T = UA_TIERS[F0]?.find(x => x.n === pl.tier); // следующая ступень тира мода — в штабе, как игрок; чего не хватает — снимаем unlock
+  if (T && army0 >= 3 && !mine.some(u => u.q === (T.t === 'addon' ? 5000 : 1000) + T.i)) {
+    const x = T.t === 'addon' ? UA0[T.i] : UR0[T.i];
+    if (applyCmd(s, me, T.t === 'addon' ? { c: 'uaa', id: hq.id, a: T.i } : { c: 'uar', id: hq.id, r: T.i })) unlock(x.req);
+  }
   if (army0 >= 2 || req > 400 || !firstArmy) for (const k of ['barracks', 'key' + Math.min(pl.tier, 4), 'motorpool', 'yard'] as Kind[]) if (!of(k).length) unlock(UA_REQ[F0]?.[k]); // сначала отряд на точки, потом тех
   if (!barracks.length && builders.length && req >= statOf('barracks', F0).cost) {
     for (const [r, a] of [[14, 0.6], [14, -0.6], [17, 1.1], [17, -1.1]]) {

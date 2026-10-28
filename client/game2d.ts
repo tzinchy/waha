@@ -3,7 +3,7 @@
 import { World3D, has3d } from './world3d.ts';
 import { UA_SCALE, uaArtIcon, uaIcon } from './models3d/ua-models.ts';
 import { ARCHS, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
-import { armedStat, HERO_AT, UA_BASE, UA_SETUP, inherit, MOD_RACES, UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, popOf, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { armedStat, HERO_AT, UA_TIERS, UA_BASE, UA_SETUP, inherit, MOD_RACES, UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, popOf, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { BUILD_NAME, PX_PACK, ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -19,7 +19,7 @@ const keyOf = (e: KeyboardEvent) => /^Key[A-Z]$/.test(e.code) ? e.code.slice(3).
 const $ = (id: string) => document.getElementById(id)!;
 
 /** Ячейка сетки команд (пресет CommandGrid) и её подсказка (Tooltip). */
-type Cell = { act: string; name: string; hot: string; icon?: string; art?: string; cost?: number; en?: number; rel?: number; ok?: boolean; info?: string; req?: string; done?: boolean; prog?: number; left?: number; cd?: number; cdMax?: number; active?: boolean; ult?: boolean; queue?: number };
+type Cell = { act: string; tip?: string; name: string; hot: string; icon?: string; art?: string; cost?: number; en?: number; rel?: number; ok?: boolean; info?: string; req?: string; done?: boolean; prog?: number; left?: number; cd?: number; cdMax?: number; active?: boolean; ult?: boolean; queue?: number };
 const ico = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 /** Иконки команд из пресета CommandGrid (одна форма — один смысл). */
 const ICON = {
@@ -684,7 +684,7 @@ export class Game {
     this.req = me[0]; this.energy = me[3] ?? 0; this.relics = me[4] ?? 0;
     const learnt = (me[8] ?? 0) & ~this.research;
     if (learnt && this.snapN > 2) RESEARCH.forEach((n, i) => { if (learnt & (1 << i)) this.alert('ok', 'Исследовано', n); });
-    if ((s.pl[this.slot][2] ?? 1) > this.tier && this.snapN > 2) this.alert('ok', `Тир ${['I', 'II', 'III', 'IV', 'V'][s.pl[this.slot][2] - 1]}`, 'новые постройки и войска');
+    if ((s.pl[this.slot][2] ?? 1) > this.tier && this.snapN > 2) this.alert('ok', `Тир ${this.tierLabel(s.pl[this.slot][2] ?? 1)}`, 'новые постройки и войска');
     this.research = me[8] ?? 0;
     this.ur = s.ur?.[this.slot] ?? [];
     this.ad = new Map((s.ad ?? []).map(([id, m]) => [id, m] as [number, number]));
@@ -700,7 +700,9 @@ export class Game {
     extra.innerHTML = f === 'tyranids' ? 'Синапс' : 'Силовая броня · не ведают страха';
     extra.title = FACTIONS[f].mech;
     this.tier = s.pl[this.slot][2] ?? 1;
-    $('hud-tier').textContent = ['I', 'II', 'III', 'IV', 'V'][this.tier - 1] ?? String(this.tier);
+    $('hud-tier').textContent = this.tierLabel(this.tier);
+    const nt = this.nextTier(), tierBox = $('hud-tier').closest('.lc-res__item') as HTMLElement | null;
+    if (tierBox) tierBox.title = nt ? `Следующий тир ${nt.label}: ${nt.what}${nt.miss ? ` — ${nt.miss}` : nt.busy ? ' — идёт' : ' — можно начать в штабе'}` : UA_TIERS[this.fac()] ? 'Высший тир' : '';
     let builders = 0, guards = 0, dead = false;
     for (const u of s.u) if (u[1] === this.slot) { if (u[2] === 1) builders++; else if (u[2] === 2) guards++; else if (u[2] === 0 && u[5] <= 0) dead = true; }
     $('hud-req').textContent = String(this.req);
@@ -773,6 +775,19 @@ export class Game {
   }
   private sight(v: { id: number; kind: Kind; owner: number }) { return v.owner === this.slot ? sightOf(this.me(), { kind: v.kind, f: this.fac(), ad: this.ad.get(v.id) }) : this.st(v).sight; }
   private uaMelee(k: Kind, f = this.fac()) { return statOf(k, f).range <= 3; } // рукопашник мода: дальность как у удара
+  /** Тир для показа: у рас UA — нумерация мода (0 на старте, ступень «(Tier N)» — тир N), у остальных — тир игры. */
+  private tierLabel(t: number) { const R = ['0', 'I', 'II', 'III', 'IV', 'V']; return UA_TIERS[this.fac()] ? R[t - 1] ?? String(t - 1) : R[t] ?? String(t); }
+  /** Следующая ступень тира расы UA: что это (аддон или исследование мода), где, чего не хватает. */
+  private nextTier() {
+    const f = this.fac(), T = UA_TIERS[f]?.find(x => x.n === this.tier); // сделан тир мода tier − 1 — следующий n = tier
+    if (!T) return undefined;
+    const hq = [...this.views.values()].find(v => v.owner === this.slot && v.kind === 'hq' && !v.dead && v.build >= 1), mask = hq ? this.ad.get(hq.id) ?? 0 : 0;
+    const x = T.t === 'addon' ? UA_ADDONS[f]![T.i] : UA_RESEARCH[f]![T.i], code = (T.t === 'addon' ? 5000 : 1000) + T.i;
+    const busy = [...this.views.values()].some(v => v.owner === this.slot && v.q === code);
+    const where = x.ats.map(k => `«${this.bName(k)}»`).join(' или ');
+    return { T, x, hq, code, busy, label: ['I', 'II', 'III', 'IV', 'V'][T.n - 1], what: `${T.t === 'addon' ? 'аддон' : 'исследование'} «${x.name.replace(/\s*\(Tier [IVX]+\)/, '')}» в здании ${where}`,
+      miss: hq ? uaMissing(f, x.req, this.uaHave(), mask, this.bName) : 'Нужен штаб' };
+  }
   private uaReq(k: Kind, at?: number) { const f = this.fac(), r = UA_REQ[f]?.[k]; return r ? uaMissing(f, r, this.uaHave(), at === undefined ? 0 : this.ad.get(at) ?? 0, this.bName) : undefined; }
   /** Имя постройки своей расы, как в меню строителя (ключевые здания и врата — по FACTIONS). */
   private bName = (k: Kind) => { const F = FACTIONS[this.fac()]; return /^key[1-4]$/.test(k) ? F.keys[Number(k[3]) - 1] : k === 'gate' ? F.gate : this.kindName(k, this.fac()); };
@@ -868,6 +883,13 @@ export class Game {
         const o = ARCH_OPTS[this.fac()][main], h = [...this.views.values()].some(v => v.owner === this.slot && v.kind === 'captain' && !v.dead);
         if (o) c.push({ act: '', name: o.name, hot: '', art: artFor('captain', this.fac(), 1, main), req: h ? 'Уже в армии' : `Нанимается в здании «${this.bName(heroAt)}»`, info: `Герой расы — как в UA, нанимается в здании «${this.bName(heroAt)}» (строится сразу, нужен только штаб).` });
       }
+      const nt = st.kind === 'hq' ? this.nextTier() : undefined;
+      if (nt) { // раса UA: переход на следующий тир — первой кнопкой штаба, с тем, чего не хватает
+        const run = st.q === nt.code;
+        c.unshift({ act: nt.miss || nt.busy ? '' : (nt.T.t === 'addon' ? 'uaa:' : 'uar:') + nt.T.i, name: `Тир ${nt.label}`, hot: 'U', icon: ICON.tier, ...this.price(nt.x.cost, nt.x.energy),
+          req: nt.miss ?? (nt.busy && !run ? 'Здание занято' : undefined), prog: run ? st.prod : undefined, left: run ? Math.max(0, Math.ceil(nt.x.time * (1 - st.prod / 100))) : undefined,
+          info: `Следующий тир: ${nt.what}. ${nt.x.time} с.` }); // чего не хватает — строкой req ниже
+      } else if (st.kind === 'hq' && UA_TIERS[this.fac()]) c.unshift({ act: '', name: 'Высший тир', hot: '', icon: ICON.tier, info: 'Все тиры мода пройдены.' });
       if (st.kind === 'hq') {
         const t = UA_REQ[this.fac()] ? undefined : TIER_UP[this.tier], keyOk = t && own(t.key) && [...this.views.values()].some(v => v.owner === this.slot && v.kind === t.key && v.build >= 1);
         if (UA_REQ[this.fac()]) { /* раса UA: тир — аддоны штаба мода (ниже), тиров игры нет */ }
@@ -879,7 +901,7 @@ export class Game {
       }
       const UA = UA_ADDONS[this.fac()], mask = this.ad.get(st.id) ?? 0;
       if (UA) UA.forEach((x, a) => { // аддоны UA этого здания (достройки; у штаба — переход тира)
-        if (!x.ats.includes(st.kind)) return;
+        if (!x.ats.includes(st.kind) || (nt?.T.t === 'addon' && nt.T.i === a)) return; // ступень тира — уже первой кнопкой
         const done = (mask & (1 << a)) !== 0, busy = !done && ((st.q > 0 && st.q !== 5000 + a) || !!this.qk[st.id]?.length);
         const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask, this.bName);
         c.push({ act: done || busy || miss ? '' : 'uaa:' + a, name: x.name, hot: '', icon: x.at === 'hq' ? ICON.tier : ICON.build, ...(done ? {} : this.price(x.cost, x.energy)), done,
@@ -887,7 +909,7 @@ export class Game {
       });
       const UR = UA_RESEARCH[this.fac()];
       if (UR) { // исследования UA этого здания: сначала неизученные
-        const mine = UR.map((x, r) => ({ x, r })).filter(({ x }) => x.ats.includes(st.kind)).sort((a, b) => +this.ur.includes(a.r) - +this.ur.includes(b.r));
+        const mine = UR.map((x, r) => ({ x, r })).filter(({ x, r }) => x.ats.includes(st.kind) && !(nt?.T.t === 'research' && nt.T.i === r)).sort((a, b) => +this.ur.includes(a.r) - +this.ur.includes(b.r));
         for (const { x, r } of mine.slice(0, Math.max(0, 12 - c.length))) {
           const done = this.ur.includes(r), busy = !done && ((st.q > 0 && st.q !== 1000 + r) || !!this.qk[st.id]?.length);
           const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask, this.bName);
@@ -950,7 +972,7 @@ export class Game {
     const shade = x.prog !== undefined ? 100 - x.prog : x.cd ? (x.cd / (x.cdMax ?? x.cd)) * 100 : 0;
     const icon = x.art ? miniArt(x.art) : x.icon;
     const cost = x.done ? '✓' : x.cost || x.en || x.rel ? [x.cost ? `◆${x.cost}` : '', x.en ? `ϟ${x.en}` : '', x.rel ? `⌂${x.rel}` : ''].filter(Boolean).join(' ') : '';
-    return `<button class="${cls}" data-act="${x.act}" data-hot="${x.hot.toLowerCase()}" ${x.active ? 'aria-pressed="true"' : ''} ${locked ? 'aria-disabled="true"' : ''} style="--cd:${shade}%">${icon}<span class="lc-cmd__key">${x.hot}</span>${cost ? `<span class="lc-cmd__cost">${cost}</span>` : ''}${cooling ? `<span class="lc-cmd__timer">${x.left !== undefined ? x.left + ' с' : x.prog !== undefined ? x.prog + '%' : x.cd}</span>` : ''}${x.queue ? `<span class="lc-cmd__charges">${x.queue}</span>` : ''}</button>`;
+    return `<button class="${cls}" data-act="${x.act}" data-tip="${(x.tip ?? x.act).replace(/"/g, '&quot;')}" data-hot="${x.hot.toLowerCase()}" ${x.active ? 'aria-pressed="true"' : ''} ${locked ? 'aria-disabled="true"' : ''} style="--cd:${shade}%">${icon}<span class="lc-cmd__key">${x.hot}</span>${cost ? `<span class="lc-cmd__cost">${cost}</span>` : ''}${cooling ? `<span class="lc-cmd__timer">${x.left !== undefined ? x.left + ' с' : x.prog !== undefined ? x.prog + '%' : x.cd}</span>` : ''}${x.queue ? `<span class="lc-cmd__charges">${x.queue}</span>` : ''}</button>`;
   }
 
   /** Меню строителя: как в Dawn of War / UA — все постройки в одном окне, без вкладок по типу. */
@@ -1018,6 +1040,7 @@ export class Game {
     const builders = sel.some(v => v.kind === 'builder') && !sel.some(v => isStruct(v.kind));
     if (!builders) this.buildOpen = false;
     this.cells = this.buildCells(sel);
+    this.cells.forEach((c, i) => { c.tip = c.act || `#${i}:${c.name}`; }); // ключ подсказки: у закрытой кнопки нет действия, но причина («Нужно: …») должна показываться
     let panel: string;
     if (this.buildOpen) panel = this.buildMenuHtml(sel);
     else {
@@ -1034,14 +1057,14 @@ export class Game {
 
   /** Подсказка (пресет Tooltip): имя, клавиша, цена с нехваткой, описание, невыполненные требования. */
   private showTip(act: string, el?: HTMLElement) {
-    const tip = $('hud-tip'), x = this.cells.find(c => c.act === act && act);
-    if (act && (!el || !el.isConnected)) el = $('hud-cmd').querySelector<HTMLElement>(`[data-act="${act}"]`) ?? el; // сетка перерисовалась
+    const tip = $('hud-tip'), x = this.cells.find(c => (c.tip ?? c.act) === act && act);
+    if (act && (!el || !el.isConnected)) el = $('hud-cmd').querySelector<HTMLElement>(`[data-tip="${CSS.escape(act)}"]`) ?? el; // сетка перерисовалась
     this.tipAct = act;
     let html = '';
     if (x) {
       const lack = (n: number, have: number) => (n > have ? ' class="lack"' : '');
       const cost = [x.cost ? `<span${lack(x.cost, this.req)}>◆ ${x.cost} влияния</span>` : '', x.en ? `<span${lack(x.en, this.energy)}>ϟ ${x.en} энергии</span>` : '', x.rel ? `<span${lack(x.rel, this.relics)}>⌂ ключевая точка</span>` : '', x.cdMax ? `<span>⧗ ${x.cdMax} с</span>` : ''].filter(Boolean).join('');
-      html = `<p class="lc-tip__title"><strong>${x.name}</strong><kbd>${x.hot}</kbd></p>${cost ? `<p class="lc-tip__cost">${cost}</p>` : ''}<p class="lc-tip__body">${x.info ?? ''}</p>${x.req ? `<p class="lc-tip__req">${/^Нужн/.test(x.req) ? x.req : 'Нужно: ' + x.req}</p>` : ''}`;
+      html = `<p class="lc-tip__title"><strong>${x.name}</strong><kbd>${x.hot}</kbd></p>${cost ? `<p class="lc-tip__cost">${cost}</p>` : ''}<p class="lc-tip__body">${x.info ?? ''}</p>${x.req ? `<p class="lc-tip__req">${/^(Нужн|Нанимается|Уже|Здание|Можно)/.test(x.req) ? x.req : 'Нужно: ' + x.req}</p>` : ''}`;
     } else if (el?.dataset.tipname) html = `<p class="lc-tip__title"><strong>${el.dataset.tipname}</strong><kbd>${el.querySelector('kbd')?.textContent ?? ''}</kbd></p><p class="lc-tip__body">${el.dataset.tipinfo ?? ''}</p>`;
     tip.innerHTML = html;
     tip.classList.toggle('hidden', !html);
@@ -1198,10 +1221,10 @@ export class Game {
     }, sig);
     let tipT = 0;
     hc.addEventListener('pointerover', e => { // подсказка через 250 мс после наведения
-      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-tip]');
       clearTimeout(tipT);
       if (!b) return this.hideTip();
-      tipT = window.setTimeout(() => this.showTip(b.dataset.act ?? '', b), 250);
+      tipT = window.setTimeout(() => this.showTip(b.dataset.tip ?? '', b), 250);
     }, sig);
     hc.addEventListener('pointerleave', () => { clearTimeout(tipT); this.hideTip(); }, sig);
     $('hud-card').addEventListener('click', e => { const q = (e.target as HTMLElement).closest<HTMLElement>('[data-b]'); if (q) return this.cmd({ c: 'cancel', id: Number(q.dataset.b), i: Number(q.dataset.i) }); // отмена места в очереди

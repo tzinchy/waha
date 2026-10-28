@@ -342,6 +342,10 @@ export const UA_ADDONS: Partial<Record<FactionId, UAAddon[]>> = {};
 /** Требования вида у фракции UA: постройки — по зданию мода, найм — по отряду мода. */
 export const UA_REQ: Partial<Record<FactionId, Partial<Record<Kind, UAReq>>>> = {};
 /** Имя мода → вид игры (здания) и индексы исследований/аддонов; имена для подсказок «Нужно: …». */
+/** Ступени тира рас UA по порядку: N — «(Tier N)» в имени; сделана ступень N — тир игры N + 1 (старт — I). */
+export const UA_TIERS: Partial<Record<FactionId, { n: number; t: 'addon' | 'research'; i: number }[]>> = {};
+/** Тир игрока UA по сделанным ступеням мода (аддоны — на любом своём здании, исследования — p.ur). */
+export const uaTier = (f: FactionId, ur: readonly number[] | undefined, ad: number) => 1 + Math.max(0, ...(UA_TIERS[f] ?? []).filter(x => (x.t === 'research' ? ur?.includes(x.i) : (ad & (1 << x.i)) !== 0)).map(x => x.n));
 const UA_IDX: Partial<Record<FactionId, { kind: Map<string, Kind>; research: Map<string, number>; addon: Map<string, number>; name: Map<string, string> }>> = {};
 for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RACES)[keyof typeof MOD_RACES]][]) {
   const data = race.data as unknown as { buildings: Record<string, ModUnit & { req?: UAReq }>; squads: Record<string, { req?: UAReq }>; addons?: Record<string, ModResearch & { building: string }> };
@@ -350,6 +354,9 @@ for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RAC
   UA_ADDONS[f] = Object.entries(data.addons ?? {}).filter(([id]) => ats(id).length).map(([id, a]) => ({
     id, name: a.name || id.replace(/^[a-z]+_|_addon$/g, '').replace(/_/g, ' '), info: a.info, icon: a.icon, cost: Math.round(a.cost * UA_K.cost), energy: Math.round(a.power * UA_K.cost), time: Math.max(1, Math.round(a.time)), at: ats(id)[0], ats: ats(id), mods: a.mods, req: a.req ?? [],
   }));
+  // ступени тира мода — исследования и аддоны с «(Tier N)» в имени (у Инквизиции после аддона штаба тиры II–V — исследования)
+  const roman = { I: 1, II: 2, III: 3, IV: 4, V: 5 } as Record<string, number>, tierOf = (n: string) => roman[/\(Tier (V|IV|I{1,3})\)/.exec(n)?.[1] ?? ''] ?? 0;
+  UA_TIERS[f] = [...UA_ADDONS[f]!.map((x, i) => ({ n: tierOf(x.name), t: 'addon' as const, i })), ...UA_RESEARCH[f]!.map((x, i) => ({ n: tierOf(x.name), t: 'research' as const, i }))].filter(x => x.n).sort((a, b) => a.n - b.n);
   const R: Partial<Record<Kind, UAReq>> = UA_REQ[f] = {}, I = UA_IDX[f] = { kind: new Map(), research: new Map(), addon: new Map(), name: new Map() };
   for (const [k, id] of Object.entries(race.build) as [Kind, string][]) { const b = data.buildings[id]; if (!b) continue; R[k] = b.req ?? []; if (b.id) { I.kind.set(b.id, k); I.name.set(b.id, b.name || id); } }
   for (const [k, id] of Object.entries(race.unit) as [Kind, string][]) R[k] = data.squads[id]?.req ?? [];
@@ -1369,14 +1376,14 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
 export function step(s: State, dt = DT): void {
   if (s.winner !== null) return;
   s.tick++;
-  s.players.forEach((p, i) => { // аддоны UA: здание пало — аддон пропал; тир штаба = 1 + аддоны штаба
+  s.players.forEach((p, i) => { // аддоны UA: здание пало — аддон пропал; тир — по ступеням мода
     if (!UA_ADDONS[p.faction]) return;
     let ad = 0;
     if (p.gad) for (const u of s.units) if (u.owner === i && u.hp > 0 && u.kind === 'turret' && u.build >= 1) u.ad = (u.ad ?? 0) | p.gad;
     for (const u of s.units) if (u.owner === i && u.hp > 0 && u.ad) ad |= u.ad;
     if (ad !== (p.ad ?? 0)) { p.ad = ad; p.um = undefined; for (const u of s.units) if (u.owner === i) refreshUnit(s, u); }
-    const hqUps = UA_ADDONS[p.faction]!.filter((a, j) => a.at === 'hq' && ad & (1 << j)).length;
-    if (1 + hqUps > p.tier) p.tier = 1 + hqUps;
+    const t = uaTier(p.faction, p.ur, ad); // тир — ступени мода «(Tier N)»: аддоны штаба и исследования (у Инквизиции тиры II–V — исследования)
+    if (t > p.tier) p.tier = t;
   });
   const income = s.players.map(() => BASE_INCOME), energy = s.players.map(() => 0);
   for (const pt of s.points) if (pt.owner >= 0) {

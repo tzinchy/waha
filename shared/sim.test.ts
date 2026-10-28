@@ -390,6 +390,18 @@ test('пополнение отрядов UA: павшие возвращают�
   assert.ok(Math.abs(ctl.players[0].req - p.req - sq.cost * (2 + sq.max - 6)) < 1, 'каждый боец — по цене пополнения мода');
 });
 
+test('тир рас UA — по ступеням мода «(Tier N)»: аддон штаба и исследования (у Инквизиции тиры II–V — исследования)', async () => {
+  const { uaTier, UA_ADDONS, UA_RESEARCH } = await import('./sim.ts');
+  const A = UA_ADDONS.inquisition!.findIndex(x => x.id === 'inquisition_tower_addon'), R = (id: string) => UA_RESEARCH.inquisition!.findIndex(x => x.id === id);
+  assert.equal(uaTier('inquisition', [], 0), 1, 'старт');
+  assert.equal(uaTier('inquisition', [], 1 << A), 2, 'Tribunal (Tier I)');
+  assert.equal(uaTier('inquisition', [R('inquisition_temporal_power')], 1 << A), 3, 'Temporal Power (Tier II) — исследование');
+  assert.equal(uaTier('inquisition', [R('inquisition_begin_purification')], 0), 5, 'Begin Purification (Tier IV)');
+  const s = freeState(2, ['inquisition', 'inquisition']), p = s.players[0];
+  p.ur = [R('inquisition_temporal_power')]; run(s, 1);
+  assert.equal(p.tier, 3, 'в игре тир растёт и от исследования');
+});
+
 test('прогресс аддона в снимке — от его времени: не за 100%, обратный отсчёт не уходит в минус', async () => {
   const { UA_ADDONS, snapshot } = await import('./sim.ts');
   const s = freeState(2, ['inquisition', 'inquisition']), hq = unit(s, 0, 'hq');
