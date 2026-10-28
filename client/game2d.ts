@@ -984,7 +984,9 @@ export class Game {
       if (UA_REQ[this.fac()]?.[k]) req = this.uaReq(k); // раса UA — требования мода вместо тиров
       if (UA_REQ[this.fac()]) { // раса UA — что здание нанимает по моду (тексты игры про тиры к ней не относятся)
         const f = this.fac(), who = [...(HERO_AT[f] === k ? [Object.values(ARCH_OPTS[f])[0]?.name ?? 'герой'] : []), ...producible(k as Kind, f).filter(x => x !== 'builder').map(x => this.kindName(x, f))];
-        if (who.length) info = `Нанимает: ${who.join(', ')}.`;
+        const rs = (UA_RESEARCH[f] ?? []).filter(x => x.ats.includes(k)), as = (UA_ADDONS[f] ?? []).filter(x => x.ats.includes(k));
+        const parts = [who.length ? `Нанимает: ${who.join(', ')}.` : '', rs.length ? `Исследования (${rs.length}): ${rs.slice(0, 4).map(x => x.name).join(', ')}${rs.length > 4 ? '…' : ''}.` : '', as.length ? `Аддоны: ${as.map(x => x.name).join(', ')}.` : ''].filter(Boolean);
+        if (parts.length) info = parts.join(' ').replace(/"/g, '&quot;'); // что здание делает в моде: найм, исследования, аддоны
       }
       const p = this.price(statOf(k, this.fac()).cost, energyOf(k, this.fac())), lack = (n: number, have: number) => (n > have ? ' class="lack"' : '');
       const cost = req ? `<span>${req}</span>` : [p.cost ? `<span${lack(p.cost, this.req)}>◆ ${p.cost}</span>` : '', p.en ? `<span${lack(p.en, this.energy)}>ϟ ${p.en}</span>` : '', `<span>⧗ ${statOf(k, this.fac()).time} с</span>`].join('');
@@ -1222,7 +1224,7 @@ export class Game {
     }, sig);
     let tipT = 0;
     hc.addEventListener('pointerover', e => { // подсказка через 250 мс после наведения
-      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-tip]');
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-tip], [data-tipname]'); // карточки меню строителя — data-tipname (что здание делает)
       clearTimeout(tipT);
       if (!b) return this.hideTip();
       tipT = window.setTimeout(() => this.showTip(b.dataset.tip ?? '', b), 250);
