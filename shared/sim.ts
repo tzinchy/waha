@@ -140,7 +140,7 @@ const UA_MORE: Partial<Record<FactionId, Record<string, Kind>>> = {
     grey_knight_hero: 'elite', dreadknight_titan: 'mveh', grey_knight_champion: 'elite', // легенды игры — в UA обычный найм в зданиях мода
     tempest: 'lveh', valkyrie_uamod: 'jet', vulture: 'jet', thunderfire_cannon: 'arty', grey_knights_astra: 'guard', dreadnought_support: 'mveh',
     dreadnought_venerable: 'mveh', dreadnought_assault: 'mveh', grey_knights_purifier: 'guard', grey_knights_terminator_paladin: 'elite',
-    scholar_exorcist: 'support', scholar_calculus_logi: 'support', death_cultist: 'guard', bodyguard: 'guard',
+    scholar_exorcist: 'support', scholar_calculus_logi: 'support', death_cultist: 'guard', bodyguard: 'guard', stormtroopers: 'support',
     scholars: 'support', servitor_maintenance: 'support', servitor_weapon: 'heavy', servitor_melee: 'guard', grenaider_troops: 'guard',
     rhino: 'lveh', chimera_transport: 'lveh', damocles: 'lveh', land_raider: 'hveh', land_raider_crusader: 'hveh', land_raider_redeemer: 'hveh', land_raider_daemonhunter: 'hveh',
     imperator_titan: 'titan', warhound_vengence_titan: 'titan', servo_skull: 'support',
@@ -297,15 +297,25 @@ for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RAC
  */
 type ModResearch = { req?: UAReq; name: string; info: string; icon: string; cost: number; power: number; time: number; building: string; requires: string[]; mods: { type: string; value: number; add: boolean; target: string; on: string }[] };
 export type UAReq = { t: string; ids: string[] }[];
-export type UAResearch = { id: string; name: string; info: string; icon: string; cost: number; energy: number; time: number; at: Kind; mods: ModResearch['mods']; req: UAReq };
+/** Где в моде ведут исследование или ставят аддон: здания расы, в чьих списках research/addons оно есть (их виды в игре, по порядку сборки). */
+function modWhere(race: (typeof MOD_RACES)[keyof typeof MOD_RACES], list: 'research' | 'addons', at: Map<string, Kind>) {
+  const W = new Map<string, Kind[]>();
+  for (const [bid, b] of Object.entries(race.data.buildings as Record<string, { research?: string[]; addons?: string[] }>)) {
+    const k = at.get(bid);
+    if (k) for (const id of b[list] ?? []) { const l = W.get(id) ?? []; if (!l.includes(k)) l.push(k); W.set(id, l); }
+  }
+  return (id: string) => W.get(id) ?? [];
+}
+export type UAResearch = { id: string; name: string; info: string; icon: string; cost: number; energy: number; time: number; at: Kind; ats: Kind[]; mods: ModResearch['mods']; req: UAReq }; // ats — все здания, где его ведут в моде (списки research зданий), at — первое
 export const UA_RESEARCH: Partial<Record<FactionId, UAResearch[]>> = {};
 const UA_TARGET: Partial<Record<FactionId, Map<string, Kind[]>>> = {};
 for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RACES)[keyof typeof MOD_RACES]][]) {
   const at = new Map(Object.entries(race.build).map(([k, id]) => [id, k as Kind])), pre = f === 'inquisition' ? 'inquisition' : f;
   const data = race.data as unknown as { research?: Record<string, ModResearch> };
   // все исследования зданий расы, и без модификаторов: «схемы» и прочие открывают юнитов и постройки через требования (UA_REQ)
-  UA_RESEARCH[f] = Object.entries(data.research ?? {}).filter(([, r]) => at.has(r.building)).map(([id, r]) => ({
-    req: r.req ?? [], id, name: r.name || id.replace(/^[a-z]+_|_research$/g, '').replace(/_/g, ' '), info: r.info, icon: r.icon, cost: Math.round(r.cost * UA_K.cost), energy: Math.round(r.power * UA_K.cost), time: Math.max(1, Math.round(r.time)), at: at.get(r.building)!, mods: r.mods,
+  const ats = modWhere(race, 'research', at);
+  UA_RESEARCH[f] = Object.entries(data.research ?? {}).filter(([id]) => ats(id).length).map(([id, r]) => ({
+    req: r.req ?? [], id, name: r.name || id.replace(/^[a-z]+_|_research$/g, '').replace(/_/g, ' '), info: r.info, icon: r.icon, cost: Math.round(r.cost * UA_K.cost), energy: Math.round(r.power * UA_K.cost), time: Math.max(1, Math.round(r.time)), at: ats(id)[0], ats: ats(id), mods: r.mods,
   }));
   const T = new Map<string, Kind[]>(), put = (name: string, k: Kind) => { const l = T.get(name) ?? []; if (!l.includes(k)) l.push(k); T.set(name, l); };
   for (const [k, id] of [...Object.entries(race.unit), ...race.legends.map(id => ['legend', id] as const)] as [Kind, string][]) {
@@ -327,7 +337,7 @@ for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RAC
  * Дерево требований UA (задача 4 в docs/UA-TODO.md): что нужно для постройки, найма, исследования и аддона — построенное здание, аддон, изученное исследование.
  * Аддоны (задача 5) — достройки здания за ресурсы: у тиранидов и Инквизиции тир штаба тоже аддон. На юните — битовая маска ad (индексы UA_ADDONS расы).
  */
-export type UAAddon = { id: string; name: string; info: string; icon: string; cost: number; energy: number; time: number; at: Kind; mods: ModResearch['mods']; req: UAReq };
+export type UAAddon = { id: string; name: string; info: string; icon: string; cost: number; energy: number; time: number; at: Kind; ats: Kind[]; mods: ModResearch['mods']; req: UAReq };
 export const UA_ADDONS: Partial<Record<FactionId, UAAddon[]>> = {};
 /** Требования вида у фракции UA: постройки — по зданию мода, найм — по отряду мода. */
 export const UA_REQ: Partial<Record<FactionId, Partial<Record<Kind, UAReq>>>> = {};
@@ -336,8 +346,9 @@ const UA_IDX: Partial<Record<FactionId, { kind: Map<string, Kind>; research: Map
 for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RACES)[keyof typeof MOD_RACES]][]) {
   const data = race.data as unknown as { buildings: Record<string, ModUnit & { req?: UAReq }>; squads: Record<string, { req?: UAReq }>; addons?: Record<string, ModResearch & { building: string }> };
   const at = new Map(Object.entries(race.build).map(([k, id]) => [id, k as Kind]));
-  UA_ADDONS[f] = Object.entries(data.addons ?? {}).filter(([, a]) => at.has(a.building)).map(([id, a]) => ({
-    id, name: a.name || id.replace(/^[a-z]+_|_addon$/g, '').replace(/_/g, ' '), info: a.info, icon: a.icon, cost: Math.round(a.cost * UA_K.cost), energy: Math.round(a.power * UA_K.cost), time: Math.max(1, Math.round(a.time)), at: at.get(a.building)!, mods: a.mods, req: a.req ?? [],
+  const ats = modWhere(race, 'addons', at);
+  UA_ADDONS[f] = Object.entries(data.addons ?? {}).filter(([id]) => ats(id).length).map(([id, a]) => ({
+    id, name: a.name || id.replace(/^[a-z]+_|_addon$/g, '').replace(/_/g, ' '), info: a.info, icon: a.icon, cost: Math.round(a.cost * UA_K.cost), energy: Math.round(a.power * UA_K.cost), time: Math.max(1, Math.round(a.time)), at: ats(id)[0], ats: ats(id), mods: a.mods, req: a.req ?? [],
   }));
   const R: Partial<Record<Kind, UAReq>> = UA_REQ[f] = {}, I = UA_IDX[f] = { kind: new Map(), research: new Map(), addon: new Map(), name: new Map() };
   for (const [k, id] of Object.entries(race.build) as [Kind, string][]) { const b = data.buildings[id]; if (!b) continue; R[k] = b.req ?? []; if (b.id) { I.kind.set(b.id, k); I.name.set(b.id, b.name || id); } }
@@ -349,7 +360,7 @@ for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RAC
  *  зонд — пустой ствол (датчик), у тиранидов — кислотные споры. Варианты — как апгрейд UA (во сколько раз урон, прибавка дальности, пробитие) к базовому стволу. */
 const UA_HP1: Partial<Record<FactionId, Partial<Record<Kind, ((Upgrade & UAUp) | undefined)[]>>>> = {};
 for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RACES)[keyof typeof MOD_RACES]][]) {
-  const H: Partial<Record<Kind, ((Upgrade & UAUp) | undefined)[]>> = UA_HP1[f] = {}, swap = new Set(UA_ADDONS[f]!.filter(a => a.mods.some(m => m.type === 'default_weapon_modifier_hardpoint1')).map(a => a.at));
+  const H: Partial<Record<Kind, ((Upgrade & UAUp) | undefined)[]>> = UA_HP1[f] = {}, swap = new Set(UA_ADDONS[f]!.filter(a => a.mods.some(m => m.type === 'default_weapon_modifier_hardpoint1')).flatMap(a => a.ats));
   for (const k of swap) {
     const b = (race.data.buildings as Record<string, ModUnit>)[(race.build as Partial<Record<Kind, string>>)[k]!], hp1 = b?.hardpoints[0];
     if (!b || !hp1 || hp1.length < 2) continue;
@@ -698,7 +709,15 @@ export const HERO = { cost: 400, energy: 250, relics: 1, tier: 2 };
 /** Главный капитан: заказ и повторный заказ после гибели — в штабе. */
 export const CAPTAIN_COST = { cost: 150, energy: 50 };
 /** Где заказывают героя: главного — в штабе, остальных — в казармах (как командир и библиарий/капеллан в Soulstorm). */
-export const heroFrom = (p: Player, a: Arch): Kind => (a === p.arch ? 'hq' : 'barracks');
+/** Здание найма героя расы — как в моде: то, в spawns которого его отряд (Тиран улья — улей, Лорд-инквизитор — «Дозор»). */
+export const HERO_AT: Partial<Record<FactionId, Kind>> = {};
+for (const [f, race] of Object.entries(MOD_RACES) as [FactionId, (typeof MOD_RACES)[keyof typeof MOD_RACES]][]) {
+  const id = (race.unit as Partial<Record<Kind, string>>).captain, B = race.data.buildings as Record<string, { spawns?: string[] }>;
+  const b = id && Object.keys(B).find(x => B[x].spawns?.some(q => q.endsWith('_squad_' + id)));
+  const k = b && (Object.entries(race.build) as [Kind, string][]).find(([, v]) => v === b)?.[0];
+  if (k) HERO_AT[f] = k;
+}
+export const heroFrom = (p: Player, a: Arch): Kind => (a === p.arch ? HERO_AT[p.faction] ?? 'hq' : 'barracks');
 /** Герой этого архетипа уже на поле или в чьей-то очереди. */
 export const heroBusy = (s: State, owner: number, a: Arch) => s.units.some(u => u.owner === owner && ((u.kind === 'captain' || u.kind === 'deity') && u.hp > 0 && archOf(s, u) === a || u.paid.some((x, i) => u.que[i] === 'captain' && ARCHS[x[4]] === a)));
 /** Живые герои игрока (капитаны всех архетипов и Бог-Механизм). */
@@ -1019,7 +1038,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
     if (!main) return 'Герой у расы один — как в UA';
     const ok = (u: Unit) => u.owner === owner && u.kind === from && u.hp > 0 && u.build >= 1 && u.que.length < QUEUE_MAX;
     const b = s.units.find(u => u.id === cmd.id && ok(u)) ?? s.units.filter(ok).sort((x, y) => x.que.length - y.que.length)[0];
-    if (!b) return from === 'hq' ? 'Нужен штаб' : 'Нужны казармы';
+    if (!b) { const race = MOD_RACES[p.faction as keyof typeof MOD_RACES], id = (race?.build as Partial<Record<Kind, string>> | undefined)?.[from]; return `Нужно здание: ${(id && (race.data.buildings as Record<string, { name?: string }>)[id]?.name) || from}`; }
     const c = { cost: trainCost(p.faction, 'captain', p), energy: trainEnergy(p.faction, 'captain', p), relics: 0 }, paidC = resourceCost(p.faction, c.cost, c.energy, p.energy);
     const e = pay(p, c.cost, c.energy, c.relics);
     if (e) return e;
@@ -1143,7 +1162,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
   if (cmd.c === 'uar') { // исследование UA: в своём здании, по одному за раз, вместо найма
     const R = UA_RESEARCH[p.faction], r = Number(cmd.r), x = R?.[r];
     const b = s.units.find(v => v.id === cmd.id && v.owner === owner && v.hp > 0 && v.build >= 1);
-    if (!b || !x || b.kind !== x.at) return;
+    if (!b || !x || !x.ats.includes(b.kind)) return;
     if (p.ur?.includes(r)) return 'Уже изучено';
     if (b.que.length || b.q > 0) return 'Здание занято';
     const miss = uaMissing(p.faction, x.req, haveOf(s, owner), b.ad);
@@ -1156,7 +1175,7 @@ export function applyCmd(s: State, owner: number, cmd: Cmd): string | undefined 
   if (cmd.c === 'uaa') { // аддон UA: у своего здания, по одному за раз
     const a = Number(cmd.a), x = UA_ADDONS[p.faction]?.[a];
     const b = s.units.find(v => v.id === cmd.id && v.owner === owner && v.hp > 0 && v.build >= 1);
-    if (!b || !x || b.kind !== x.at) return;
+    if (!b || !x || !x.ats.includes(b.kind)) return;
     if ((b.ad ?? 0) & (1 << a)) return 'Уже достроено';
     if (b.que.length || b.q > 0) return 'Здание занято';
     const miss = uaMissing(p.faction, x.req, haveOf(s, owner), b.ad);

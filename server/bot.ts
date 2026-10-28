@@ -70,7 +70,7 @@ export function botThink(s: State, me: number): void {
   const UR = UA_RESEARCH[F]; // исследования UA: свободное здание, ресурсов с запасом — изучаем первое недоступное (раз в ход, чтобы не съесть всю казну)
   if (UR && !saving && req > 400) for (const b of mine) {
     if (!isStruct(b.kind) || b.build < 1 || b.q > 0 || b.que.length) continue;
-    const r = UR.findIndex((x, i) => x.at === b.kind && !P0.ur?.includes(i) && x.cost < req - 250 && x.energy < pl.energy - 150);
+    const r = UR.findIndex((x, i) => x.ats.includes(b.kind) && !P0.ur?.includes(i) && x.cost < req - 250 && x.energy < pl.energy - 150);
     if (r >= 0 && !applyCmd(s, me, { c: 'uar', id: b.id, r })) break;
   }
   const uniq = ({ order: 'battery', clockwork: 'pylon', ashen: 'pyre', eldar: 'aegis', tyranids: 'bell' } as const)[F as 'order'];

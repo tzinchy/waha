@@ -3,7 +3,7 @@
 import { World3D, has3d } from './world3d.ts';
 import { UA_SCALE, uaArtIcon, uaIcon } from './models3d/ua-models.ts';
 import { ARCHS, QUEUE_MAX, STRUCT_AOE, MELEE_GUARD, LVL2, VS, MIN_RANGE, armorOf, dmgOf, canFireGround, type Arch, type Armor, type DmgType } from '../shared/sim.ts';
-import { armedStat, UA_BASE, UA_SETUP, inherit, MOD_RACES, UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, popOf, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
+import { armedStat, HERO_AT, UA_BASE, UA_SETUP, inherit, MOD_RACES, UA_WEAPONS, UA_ARM, UA_SQ, energyOf, uaMods, sightOf, trainEnergy, trainTime, type UAModsOf, uaMissing, UA_REQ, UA_ADDONS, type UAHave, UA_UPG, upOf, UA_RESEARCH, type UAResearch, NO_BUILD, GEN_CAP, genAnchor, SCAN, MEGA_SHOT, PLAGUE, TURRET_FAC, modOf, CLOSE, SETUP, TRIBUTE, PAIN, flies, resourceCost, DOOM_SHOT, DOOM_R, FIRE, UNLOCKS, isMelee, ROLES, popOf, GEAR, SQUADS, SIGHT_STRUCT, VEHICLES, LEGION_CAP, MOTOR_CAP, producible, ABILITIES, MAX_LVL, canLearn, xpNeed, CAP, ENERGY_COST, LEGEND_COST, POST_UP, BCELL, foot, footFree, snapB, wallCells, wallOk, RAGE_MAX, RESEARCH, RESEARCH_INFO, TIER_UP, researchCost, trainCost, KINDS, MAP, POINTS, POINT_R, REINFORCE_COST, RELICS, STATS, UPGRADES, VENTS, isStruct, maxHp, statOf, members, type Buildable, type Cmd, type Kind, type Snap } from '../shared/sim.ts';
 import { BUILD_NAME, PX_PACK, ART_BASE, ARCH_OPTS, CAPTAIN_ART, DOOM_OF, FACTIONS, FACTION_IDS, HQ_NAME, PACK, PROD_NAME, ROSTER, archFor, type FactionId } from '../shared/factions.ts';
 import type { LobbyPlayer } from '../shared/protocol.ts';
 import { audio } from './audio.ts';
@@ -852,9 +852,9 @@ export class Game {
         c.push({ act: 'train:' + k, name: this.kindName(k, this.fac()), hot: k === 'titan' ? 'Z' : HOT[i] ?? '', art: artFor(k, this.fac()), ...this.price(trainCost(this.fac(), k, this.me()), trainEnergy(this.fac(), k, this.me()), r.relics ?? 0),
           info: `${ROLE_INFO[k] ?? ''}${modOf(this.fac(), k) ? ' ' + weaponModInfo(this.fac(), k) : ''}${CLOSE[k] && !UA_SQ[this.fac()] ? ` Дополнительное оружие до ${CLOSE[k]!.range} м.${k === 'heavy' || k === 'hveh' ? ' Против брони сохраняется более эффективный ствол.' : ''}` : ''}${(UA_SQ[this.fac()] ? UA_SETUP[this.fac()]?.[k] : SETUP.has(k)) ? ` На ходу не стреляет, развёртывание ${UA_SETUP[this.fac()]?.[k] ?? ''} с.` : ''} Легион: ${popOf(k, this.fac())}.`, req: UA_REQ[this.fac()]?.[k] ? this.uaReq(k, st.id) ?? (researching ? 'Здание уже исследует' : undefined) : this.tier < r.tier ? `Нужен тир ${['I', 'II', 'III', 'IV', 'V'][r.tier - 1]}` : researching ? 'Здание уже исследует' : undefined, queue: n || undefined, prog: now ? st.prod : undefined, left: now ? this.qLeft(k, st.prod) : undefined });
       });
-      if (st.kind === 'hq' || st.kind === 'barracks') { // герои заказываются в зданиях (Soulstorm): главный — в штабе, остальные архетипы — в казармах
-        const main = archFor(this.fac(), this.players[this.slot]?.captain.arch ?? 'commander');
-        (Object.keys(ARCH_OPTS[this.fac()]) as Arch[]).filter(a => (a === main) === (st.kind === 'hq')).forEach((a, i) => {
+      const main = archFor(this.fac(), this.players[this.slot]?.captain.arch ?? 'commander'), heroAt = HERO_AT[this.fac()] ?? 'hq';
+      if (st.kind === heroAt || st.kind === 'barracks') { // герой — в здании мода, где он нанимается (Лорд-инквизитор — «Дозор»)
+        (Object.keys(ARCH_OPTS[this.fac()]) as Arch[]).filter(a => (a === main) === (st.kind === heroAt)).forEach((a, i) => {
           const o = ARCH_OPTS[this.fac()][a]!, h = [...this.views.values()].find(v => v.owner === this.slot && (v.kind === 'captain' || v.kind === 'deity') && (v.arch ?? main) === a);
           const pr = this.price(trainCost(this.fac(), 'captain', this.me()), trainEnergy(this.fac(), 'captain', this.me())); // герой — по цене мода
           const req = h && !h.dead ? 'Уже в армии' : h?.respawn ? `Можно заказать через ${h.respawn} с` : undefined;
@@ -872,7 +872,7 @@ export class Game {
       }
       const UA = UA_ADDONS[this.fac()], mask = this.ad.get(st.id) ?? 0;
       if (UA) UA.forEach((x, a) => { // аддоны UA этого здания (достройки; у штаба — переход тира)
-        if (x.at !== st.kind) return;
+        if (!x.ats.includes(st.kind)) return;
         const done = (mask & (1 << a)) !== 0, busy = !done && ((st.q > 0 && st.q !== 5000 + a) || !!this.qk[st.id]?.length);
         const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask);
         c.push({ act: done || busy || miss ? '' : 'uaa:' + a, name: x.name, hot: '', icon: x.at === 'hq' ? ICON.tier : ICON.build, ...(done ? {} : this.price(x.cost, x.energy)), done,
@@ -880,7 +880,7 @@ export class Game {
       });
       const UR = UA_RESEARCH[this.fac()];
       if (UR) { // исследования UA этого здания: сначала неизученные
-        const mine = UR.map((x, r) => ({ x, r })).filter(({ x }) => x.at === st.kind).sort((a, b) => +this.ur.includes(a.r) - +this.ur.includes(b.r));
+        const mine = UR.map((x, r) => ({ x, r })).filter(({ x }) => x.ats.includes(st.kind)).sort((a, b) => +this.ur.includes(a.r) - +this.ur.includes(b.r));
         for (const { x, r } of mine.slice(0, Math.max(0, 12 - c.length))) {
           const done = this.ur.includes(r), busy = !done && ((st.q > 0 && st.q !== 1000 + r) || !!this.qk[st.id]?.length);
           const miss = done || busy ? undefined : uaMissing(this.fac(), x.req, this.uaHave(), mask);

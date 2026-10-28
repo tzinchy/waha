@@ -26,16 +26,21 @@ function withGuard(s: State) {
   return unit(s, 0, 'guard');
 }
 
-test('старт: штаб и строители, герой заказывается в штабе по цене мода и после гибели сам не встаёт', () => {
+test('старт: штаб и строители, герой заказывается в здании мода по цене мода и после гибели сам не встаёт', async () => {
+  const { HERO_AT } = await import('./sim.ts');
+  assert.equal(HERO_AT.tyranids, 'hq', 'Тиран улья — в улье, как в моде');
+  assert.equal(HERO_AT.inquisition, 'motorpool', 'Лорд-инквизитор — в «Дозоре» (watch), как в моде');
   const s = freeState(2), p = s.players[0];
   for (const k of ['hq', 'builder'] as Kind[]) assert.ok(unit(s, 0, k), k);
   assert.ok(!s.units.some(u => u.kind === 'captain'), 'капитана на старте нет');
   assert.equal(newState(2).players[0].req, START_REQ, 'стартовые ресурсы');
-  assert.equal(applyCmd(s, 0, { c: 'hero', a: p.arch }), undefined, 'заказ в штабе');
+  assert.match(applyCmd(s, 0, { c: 'hero', a: p.arch }) ?? '', /Watch/, 'без «Дозора» Лорда не заказать');
+  const hq = unit(s, 0, 'hq'); spawn(s, 0, 'motorpool', hq.x + 16, hq.y).build = 1;
+  assert.equal(applyCmd(s, 0, { c: 'hero', a: p.arch }), undefined, 'заказ в «Дозоре»');
   assert.match(applyCmd(s, 0, { c: 'hero', a: p.arch }) ?? '', /уже/, 'второй раз в очередь не встаёт');
   run(s, statOf('captain', p.faction).time + 1);
   const c = unit(s, 0, 'captain');
-  assert.ok(c && c.hp > 0, 'капитан вышел из штаба');
+  assert.ok(c && c.hp > 0, 'капитан вышел из здания');
   assert.equal(c.hp, statOf('captain', p.faction).hp, 'HP героя — из мода');
   c.hp = 0; run(s, 60);
   assert.ok(c.hp <= 0, 'павший сам не возрождается');
